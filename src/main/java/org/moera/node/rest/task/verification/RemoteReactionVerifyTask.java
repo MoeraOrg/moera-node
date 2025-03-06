@@ -5,6 +5,7 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentRevisionInfo;
 import org.moera.lib.node.types.PostingInfo;
@@ -13,7 +14,6 @@ import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.ReactionInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.VerificationStatus;
-import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.fingerprint.CommentFingerprintBuilder;
@@ -67,7 +67,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                         reactionInfo.getPostingRevisionId()
                     );
                     verify(postingInfo, postingRevisionInfo, reactionInfo);
-                } catch (NodeApiNotFoundException e) {
+                } catch (MoeraNodeApiNotFoundException e) {
                     succeeded(false);
                 }
             } else {
@@ -89,7 +89,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                         commentInfo.getPostingRevisionId()
                     );
                     verify(postingInfo, postingRevisionInfo, commentInfo, commentRevisionInfo, reactionInfo);
-                } catch (NodeApiNotFoundException e) {
+                } catch (MoeraNodeApiNotFoundException e) {
                     succeeded(false);
                 }
             }

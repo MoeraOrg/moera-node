@@ -8,15 +8,15 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.FeedInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SheriffComplaintStatus;
 import org.moera.lib.node.types.WhoAmI;
-import org.moera.node.api.node.NodeApiException;
-import org.moera.node.api.node.NodeApiNotFoundException;
-import org.moera.node.api.node.NodeApiUnknownNameException;
+import org.moera.node.api.node.MoeraNodeUnknownNameException;
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.data.SheriffComplaintGroupRepository;
 import org.moera.node.data.SheriffOrder;
@@ -177,7 +177,7 @@ public class SheriffComplaintGroupPrepareJob
     }
 
     @Override
-    protected void execute() throws NodeApiException {
+    protected void execute() throws MoeraNodeException {
         try {
             if (!state.prepared) {
                 prepare();
@@ -185,10 +185,10 @@ public class SheriffComplaintGroupPrepareJob
                 checkpoint();
             }
             autoDecide();
-        } catch (NodeApiUnknownNameException e) {
+        } catch (MoeraNodeUnknownNameException e) {
             updateComplaintGroupStatus(SheriffComplaintStatus.NOT_FOUND);
-        } catch (NodeApiNotFoundException e) {
-            if (e.getResult() != null && Objects.equals(e.getResult().getErrorCode(), "comment.wrong-posting")) {
+        } catch (MoeraNodeApiNotFoundException e) {
+            if (Objects.equals(e.getErrorCode(), "comment.wrong-posting")) {
                 updateComplaintGroupStatus(SheriffComplaintStatus.INVALID_TARGET);
             } else {
                 updateComplaintGroupStatus(SheriffComplaintStatus.NOT_FOUND);
@@ -196,7 +196,7 @@ public class SheriffComplaintGroupPrepareJob
         }
     }
 
-    private void prepare() throws NodeApiException {
+    private void prepare() throws MoeraNodeException {
         if (state.whoAmI == null) {
             state.whoAmI = nodeApi.whoAmI(parameters.nodeName);
             checkpoint();

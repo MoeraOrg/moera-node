@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.ReactionAttributes;
 import org.moera.lib.node.types.ReactionCreated;
@@ -14,7 +15,6 @@ import org.moera.lib.node.types.ReactionDescription;
 import org.moera.lib.node.types.ReactionInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.WhoAmI;
-import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnReaction;
@@ -183,7 +183,7 @@ public class RemotePostingReactionPostJob
     }
 
     @Override
-    protected void execute() throws NodeApiException {
+    protected void execute() throws MoeraNodeException {
         if (state.target == null) {
             state.target = nodeApi.whoAmI(parameters.targetNodeName);
             checkpoint();

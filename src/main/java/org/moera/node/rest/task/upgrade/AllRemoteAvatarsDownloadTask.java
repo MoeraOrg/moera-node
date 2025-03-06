@@ -5,9 +5,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.AvatarImage;
-import org.moera.node.api.node.NodeApiException;
-import org.moera.node.api.node.NodeApiUnknownNameException;
+import org.moera.node.api.node.MoeraNodeUnknownNameException;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.DomainUpgradeRepository;
@@ -67,7 +67,7 @@ public class AllRemoteAvatarsDownloadTask extends Task {
                 .collect(Collectors.toSet());
     }
 
-    private void download(String targetNodeName) throws NodeApiException {
+    private void download(String targetNodeName) throws MoeraNodeException {
         AvatarImage targetAvatar = nodeApi.whoAmI(targetNodeName).getAvatar();
         MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, targetAvatar);
         if (mediaFile != null) {
@@ -81,7 +81,7 @@ public class AllRemoteAvatarsDownloadTask extends Task {
     }
 
     private void error(String targetNodeName, Throwable e) {
-        if (e instanceof NodeApiUnknownNameException) {
+        if (e instanceof MoeraNodeUnknownNameException) {
             log.error("Cannot find a node {}", targetNodeName);
         } else {
             log.error("Error downloading the avatar of node {}: {}", targetNodeName, e.getMessage());

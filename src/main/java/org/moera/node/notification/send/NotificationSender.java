@@ -14,15 +14,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.exception.MoeraNodeApiAuthenticationException;
+import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
+import org.moera.lib.node.exception.MoeraNodeApiOperationException;
+import org.moera.lib.node.exception.MoeraNodeApiValidationException;
 import org.moera.lib.node.types.NotificationPacket;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.notifications.Notification;
 import org.moera.lib.node.types.notifications.SubscriberNotification;
-import org.moera.node.api.node.NodeApiAuthenticationException;
-import org.moera.node.api.node.NodeApiNotFoundException;
-import org.moera.node.api.node.NodeApiOperationException;
-import org.moera.node.api.node.NodeApiUnknownNameException;
-import org.moera.node.api.node.NodeApiValidationException;
+import org.moera.node.api.node.MoeraNodeUnknownNameException;
 import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.fingerprint.NotificationPacketFingerprintBuilder;
@@ -226,7 +226,7 @@ public class NotificationSender extends Task {
                 pool.unsubscribe(UUID.fromString(sn.getSubscriberId()));
                 errorType = NotificationSenderError.FATAL;
             }
-        } else if (e instanceof NodeApiUnknownNameException) {
+        } else if (e instanceof MoeraNodeUnknownNameException) {
             errorType = NotificationSenderError.NAMING;
         } else if (isFatalError(e)) {
             errorType = NotificationSenderError.FATAL;
@@ -239,26 +239,25 @@ public class NotificationSender extends Task {
     }
 
     private boolean isUnsubscribeError(Throwable e) {
-        if (e instanceof NodeApiValidationException) {
-            String errorCode = ((NodeApiValidationException) e).getErrorCode();
+        if (e instanceof MoeraNodeApiValidationException ve) {
+            String errorCode = ve.getErrorCode();
             return errorCode.equals("subscription.unsubscribe") || errorCode.equals("notification.type.unknown");
         }
         return false;
     }
 
     private boolean isFatalError(Throwable e) {
-        if (e instanceof NodeApiNotFoundException) {
+        if (e instanceof MoeraNodeApiNotFoundException) {
             return true;
         }
-        if (e instanceof NodeApiAuthenticationException) {
+        if (e instanceof MoeraNodeApiAuthenticationException) {
             return true;
         }
         if (e instanceof JsonProcessingException) {
             return true;
         }
-        if (e instanceof NodeApiOperationException) {
-            String errorCode = ((NodeApiOperationException) e).getErrorCode();
-            return errorCode.equals("ask.too-many");
+        if (e instanceof MoeraNodeApiOperationException oe) {
+            return oe.getErrorCode().equals("ask.too-many");
         }
         return false;
     }

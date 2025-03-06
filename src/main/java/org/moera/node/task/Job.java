@@ -6,12 +6,12 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.moera.node.api.node.NodeApiAuthenticationException;
-import org.moera.node.api.node.NodeApiException;
-import org.moera.node.api.node.NodeApiNotFoundException;
-import org.moera.node.api.node.NodeApiOperationException;
-import org.moera.node.api.node.NodeApiUnknownNameException;
-import org.moera.node.api.node.NodeApiValidationException;
+import org.moera.lib.node.exception.MoeraNodeApiAuthenticationException;
+import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
+import org.moera.lib.node.exception.MoeraNodeApiOperationException;
+import org.moera.lib.node.exception.MoeraNodeApiValidationException;
+import org.moera.lib.node.exception.MoeraNodeException;
+import org.moera.node.api.node.MoeraNodeUnknownNameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -154,29 +154,28 @@ public abstract class Job<P, S> extends Task {
             }
         } else if (e instanceof InterruptedException) {
             recover(e);
-        } else if (e instanceof NodeApiException ex && isRecoverableError(ex)) {
+        } else if (e instanceof MoeraNodeException ex && isRecoverableError(ex)) {
             recover(e);
         } else {
             super.handleException(e);
         }
     }
 
-    protected boolean isRecoverableError(NodeApiException e) {
-        if (e instanceof NodeApiUnknownNameException) {
+    protected boolean isRecoverableError(MoeraNodeException e) {
+        if (e instanceof MoeraNodeUnknownNameException) {
             return false;
         }
-        if (e instanceof NodeApiValidationException) {
+        if (e instanceof MoeraNodeApiValidationException) {
             return false;
         }
-        if (e instanceof NodeApiAuthenticationException) {
+        if (e instanceof MoeraNodeApiAuthenticationException) {
             return false;
         }
-        if (e instanceof NodeApiNotFoundException) {
+        if (e instanceof MoeraNodeApiNotFoundException) {
             return false;
         }
-        if (e instanceof NodeApiOperationException ex) {
-            String errorCode = ex.getErrorCode();
-            return !errorCode.equals("ask.too-many");
+        if (e instanceof MoeraNodeApiOperationException ex) {
+            return !ex.getErrorCode().equals("ask.too-many");
         }
         return true;
     }

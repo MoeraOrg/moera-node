@@ -3,9 +3,9 @@ package org.moera.node.rest.task.verification;
 import java.util.Locale;
 import jakarta.inject.Inject;
 
-import org.moera.node.api.node.NodeApiErrorStatusException;
-import org.moera.node.api.node.NodeApiNotFoundException;
-import org.moera.node.api.node.NodeApiUnknownNameException;
+import org.moera.lib.node.exception.MoeraNodeApiException;
+import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
+import org.moera.node.api.node.MoeraNodeUnknownNameException;
 import org.moera.node.task.Task;
 import org.springframework.context.MessageSource;
 
@@ -18,10 +18,10 @@ public abstract class RemoteVerificationTask extends Task {
     }
 
     protected void error(Throwable e) {
-        if (e instanceof NodeApiUnknownNameException) {
+        if (e instanceof MoeraNodeUnknownNameException) {
             failed("remote-node.not-found", null);
-        } else if (e instanceof NodeApiErrorStatusException) {
-            if (e instanceof NodeApiNotFoundException) {
+        } else if (e instanceof MoeraNodeApiException) {
+            if (e instanceof MoeraNodeApiNotFoundException) {
                 failed("remote-node.object-not-found", null);
             } else {
                 failed("remote-node.internal-error", null);

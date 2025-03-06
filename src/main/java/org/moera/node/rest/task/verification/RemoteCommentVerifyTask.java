@@ -7,6 +7,8 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentRevisionInfo;
 import org.moera.lib.node.types.PostingInfo;
@@ -14,8 +16,6 @@ import org.moera.lib.node.types.PostingRevisionInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.VerificationStatus;
-import org.moera.node.api.node.NodeApiException;
-import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.data.RemoteCommentVerificationRepository;
 import org.moera.node.fingerprint.CommentFingerprintBuilder;
@@ -80,14 +80,14 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         }
     }
 
-    private void verify(PostingInfo postingInfo, CommentInfo commentInfo) throws NodeApiException {
+    private void verify(PostingInfo postingInfo, CommentInfo commentInfo) throws MoeraNodeException {
         PostingRevisionInfo revisionInfo;
         try {
             revisionInfo = nodeApi.getPostingRevision(
                 remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
                 commentInfo.getPostingRevisionId()
             );
-        } catch (NodeApiNotFoundException e) {
+        } catch (MoeraNodeApiNotFoundException e) {
             succeeded(false);
             return;
         }
@@ -144,14 +144,14 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
 
     private void verify(
         PostingInfo postingInfo, CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo
-    ) throws NodeApiException {
+    ) throws MoeraNodeException {
         PostingRevisionInfo postingRevisionInfo;
         try {
             postingRevisionInfo = nodeApi.getPostingRevision(
                 remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
                 commentInfo.getPostingRevisionId()
             );
-        } catch (NodeApiNotFoundException e) {
+        } catch (MoeraNodeApiNotFoundException e) {
             succeeded(false);
             return;
         }

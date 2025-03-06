@@ -20,6 +20,15 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.MoeraNode;
+import org.moera.lib.node.exception.MoeraNodeApiAuthenticationException;
+import org.moera.lib.node.exception.MoeraNodeApiException;
+import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
+import org.moera.lib.node.exception.MoeraNodeApiOperationException;
+import org.moera.lib.node.exception.MoeraNodeApiValidationException;
+import org.moera.lib.node.exception.MoeraNodeCallException;
+import org.moera.lib.node.exception.MoeraNodeConnectionException;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentCreated;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentRevisionInfo;
@@ -45,13 +54,13 @@ import org.moera.lib.node.types.UserListItemInfo;
 import org.moera.lib.node.types.UserListSliceInfo;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.lib.node.types.body.BodyMappingException;
+import org.moera.node.api.naming.NamingCache;
+import org.moera.node.api.naming.RegisteredNameDetails;
 import org.moera.node.data.MediaFile;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.TemporaryFile;
 import org.moera.node.media.TemporaryMediaFile;
 import org.moera.node.media.ThresholdReachedException;
-import org.moera.node.api.naming.NamingCache;
-import org.moera.node.api.naming.RegisteredNameDetails;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.UriUtil;
 import org.moera.node.util.Util;
@@ -81,21 +90,29 @@ public class NodeApi {
         return details != null ? UriUtil.normalize(details.getNodeUri()) : null;
     }
 
+    public MoeraNode at(String remoteNodeName) throws MoeraNodeUnknownNameException {
+        String nodeUri = fetchNodeUri(remoteNodeName);
+        if (nodeUri == null) {
+            throw new MoeraNodeUnknownNameException(remoteNodeName);
+        }
+        return new MoeraNode(nodeUri);
+    }
+
     private <T> T call(String method, String remoteNodeName, String location, String auth, Class<T> result)
-            throws NodeApiException {
+            throws MoeraNodeException {
 
         return call(method, remoteNodeName, location, auth, null, result);
     }
 
     private <T> T call(String method, String remoteNodeName, String location, String auth, Object body, Class<T> result)
-            throws NodeApiException {
+            throws MoeraNodeException {
 
         HttpRequest request = buildRequest(method, remoteNodeName, location, auth, body, null);
         HttpResponse<String> response;
         try {
             response = buildClient().send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
-            throw new NodeApiException(e);
+            throw new MoeraNodeConnectionException(e);
         }
         validateResponseStatus(response.statusCode(), response.uri(), response::body);
 
@@ -103,13 +120,13 @@ public class NodeApi {
     }
 
     private <T> T call(String method, String remoteNodeName, String location, String auth, String mimeType, Path body,
-                       Class<T> result) throws NodeApiException {
+                       Class<T> result) throws MoeraNodeException {
         HttpRequest request = buildRequest(method, remoteNodeName, location, auth, body, mimeType);
         HttpResponse<String> response;
         try {
             response = buildClient().send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
-            throw new NodeApiException(e);
+            throw new MoeraNodeConnectionException(e);
         }
         validateResponseStatus(response.statusCode(), response.uri(), response::body);
 
@@ -117,19 +134,19 @@ public class NodeApi {
     }
 
     private TemporaryMediaFile call(String method, String remoteNodeName, String location, String auth,
-                                    TemporaryFile tmpFile, int maxSize) throws NodeApiException {
+                                    TemporaryFile tmpFile, int maxSize) throws MoeraNodeException {
         HttpRequest request = buildRequest(method, remoteNodeName, location, auth, null, null);
         HttpResponse<InputStream> response;
         try {
             response = buildClient().send(request, HttpResponse.BodyHandlers.ofInputStream());
         } catch (IOException | InterruptedException e) {
-            throw new NodeApiException(e);
+            throw new MoeraNodeConnectionException(e);
         }
         validateResponseStatus(response.statusCode(), response.uri(), () -> streamToString(response.body()));
 
         String contentType = response.headers().firstValue("Content-Type").orElse(null);
         if (contentType == null) {
-            throw new NodeApiException("Response has no Content-Type");
+            throw new MoeraNodeException("Response has no Content-Type");
         }
         OptionalLong len = response.headers().firstValueAsLong("Content-Length");
         Long contentLength = len.isPresent() ? len.getAsLong() : null;
@@ -138,11 +155,11 @@ public class NodeApi {
                     response.body(), tmpFile.getOutputStream(), contentLength, maxSize);
             return new TemporaryMediaFile(out.getHash(), contentType, out.getDigest());
         } catch (ThresholdReachedException e) {
-            throw new NodeApiException(
+            throw new MoeraNodeLocalStorageException(
                     String.format("Media %s at %s reports a wrong size or larger than %d bytes",
                             location, remoteNodeName, maxSize));
         } catch (IOException e) {
-            throw new NodeApiException(
+            throw new MoeraNodeLocalStorageException(
                     String.format("Error downloading media %s: %s", location, e.getMessage()));
         }
     }
@@ -155,10 +172,10 @@ public class NodeApi {
     }
 
     private HttpRequest buildRequest(String method, String remoteNodeName, String location, String auth,
-                                     Object body, String mimeType) throws NodeApiException {
+                                     Object body, String mimeType) throws MoeraNodeException {
         String nodeUri = fetchNodeUri(remoteNodeName);
         if (nodeUri == null) {
-            throw new NodeApiUnknownNameException(remoteNodeName);
+            throw new MoeraNodeUnknownNameException(remoteNodeName);
         }
 
         var requestBuilder = HttpRequest.newBuilder()
@@ -170,7 +187,7 @@ public class NodeApi {
                         .header(HttpHeaders.CONTENT_TYPE, mimeType)
                         .method(method, HttpRequest.BodyPublishers.ofFile((Path) body));
             } catch (FileNotFoundException e) {
-                throw new NodeApiException(
+                throw new MoeraNodeLocalStorageException(
                         String.format("Cannot send a file %s", Objects.toString(body, "null")), e);
             }
         } else {
@@ -186,16 +203,16 @@ public class NodeApi {
     }
 
     private void validateResponseStatus(int status, URI uri, Supplier<String> bodySupplier)
-            throws NodeApiErrorStatusException {
+            throws MoeraNodeException {
 
         String body = null;
         HttpStatus httpStatus = HttpStatus.valueOf(status);
         switch (httpStatus) {
             case NOT_FOUND:
-                throw new NodeApiNotFoundException(uri);
+                throw new MoeraNodeApiNotFoundException(uri.toString());
 
             case FORBIDDEN:
-                throw new NodeApiAuthenticationException();
+                throw new MoeraNodeApiAuthenticationException();
 
             case OK:
             case CREATED:
@@ -209,9 +226,9 @@ public class NodeApi {
                     Result answer = jsonParse(body, Result.class);
                     switch (httpStatus) {
                         case BAD_REQUEST:
-                            throw new NodeApiValidationException(answer.getErrorCode());
+                            throw new MoeraNodeApiValidationException(answer.getErrorCode());
                         case CONFLICT:
-                            throw new NodeApiOperationException(answer.getErrorCode());
+                            throw new MoeraNodeApiOperationException(answer.getErrorCode());
                     }
                 } catch (BodyMappingException e) {
                     // fallthru
@@ -222,7 +239,7 @@ public class NodeApi {
                 if (body == null) {
                     body = bodySupplier.get();
                 }
-                throw new NodeApiErrorStatusException(status, body);
+                throw new MoeraNodeApiException(status, body);
         }
     }
 
@@ -239,59 +256,59 @@ public class NodeApi {
                 .collect(Collectors.joining("\n"));
     }
 
-    private HttpRequest.BodyPublisher jsonPublisher(Object body) throws NodeApiException {
+    private HttpRequest.BodyPublisher jsonPublisher(Object body) {
         if (body == null) {
             return HttpRequest.BodyPublishers.ofString("{}");
         }
         try {
             return HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body));
         } catch (JsonProcessingException e) {
-            throw new NodeApiException("Error converting to JSON", e);
+            throw new MoeraNodeCallException("Error converting to JSON", e);
         }
     }
 
-    private <T> T jsonParse(String data, Class<T> klass) {
+    private <T> T jsonParse(String data, Class<T> klass) throws MoeraNodeException {
         try {
             return objectMapper.readValue(data, klass);
         } catch (IOException e) {
-            throw new BodyMappingException(e);
+            throw new MoeraNodeException(e);
         }
     }
 
-    public WhoAmI whoAmI(String nodeName) throws NodeApiException {
+    public WhoAmI whoAmI(String nodeName) throws MoeraNodeException {
         return call("GET", nodeName, "/whoami", null, WhoAmI.class);
     }
 
-    public PostingInfo getPosting(String nodeName, String carte, String postingId) throws NodeApiException {
+    public PostingInfo getPosting(String nodeName, String carte, String postingId) throws MoeraNodeException {
         return call("GET", nodeName, String.format("/postings/%s", Util.ue(postingId)),
                 auth("carte", carte), PostingInfo.class);
     }
 
     public PostingRevisionInfo getPostingRevision(String nodeName, String carte, String postingId, String revisionId)
-            throws NodeApiException {
+            throws MoeraNodeException {
 
         return call("GET", nodeName,
                 String.format("/postings/%s/revisions/%s", Util.ue(postingId), Util.ue(revisionId)),
                 auth("carte", carte), PostingRevisionInfo.class);
     }
 
-    public PostingInfo postPosting(String nodeName, PostingText postingText) throws NodeApiException {
+    public PostingInfo postPosting(String nodeName, PostingText postingText) throws MoeraNodeException {
         return call("POST", nodeName, "/postings", null, postingText, PostingInfo.class);
     }
 
-    public PostingInfo putPosting(String nodeName, String postingId, PostingText postingText) throws NodeApiException {
+    public PostingInfo putPosting(String nodeName, String postingId, PostingText postingText) throws MoeraNodeException {
         return call("PUT", nodeName, String.format("/postings/%s", Util.ue(postingId)), null, postingText,
                 PostingInfo.class);
     }
 
     public ReactionCreated postPostingReaction(String nodeName, String postingId,
-                                               ReactionDescription reactionDescription) throws NodeApiException {
+                                               ReactionDescription reactionDescription) throws MoeraNodeException {
         return call("POST", nodeName, String.format("/postings/%s/reactions", Util.ue(postingId)), null,
                 reactionDescription, ReactionCreated.class);
     }
 
     public ReactionInfo getPostingReaction(String nodeName, String carte, String postingId, String reactionOwnerName)
-            throws NodeApiException {
+            throws MoeraNodeException {
 
         return call("GET", nodeName,
                 String.format("/postings/%s/reactions/%s", Util.ue(postingId), Util.ue(reactionOwnerName)),
@@ -299,47 +316,47 @@ public class NodeApi {
     }
 
     public ReactionCreated postCommentReaction(String nodeName, String postingId, String commentId,
-                                               ReactionDescription reactionDescription) throws NodeApiException {
+                                               ReactionDescription reactionDescription) throws MoeraNodeException {
         return call("POST", nodeName,
                 String.format("/postings/%s/comments/%s/reactions", Util.ue(postingId), Util.ue(commentId)), null,
                 reactionDescription, ReactionCreated.class);
     }
 
-    public Result postNotification(String nodeName, NotificationPacket notificationPacket) throws NodeApiException {
+    public Result postNotification(String nodeName, NotificationPacket notificationPacket) throws MoeraNodeException {
         return call("POST", nodeName, "/notifications", null, notificationPacket, Result.class);
     }
 
     public SubscriberInfo postSubscriber(String nodeName, String carte, SubscriberDescription subscriber)
-            throws NodeApiException {
+            throws MoeraNodeException {
 
         return call("POST", nodeName, "/people/subscribers", auth("carte", carte), subscriber,
                 SubscriberInfo.class);
     }
 
-    public Result deleteSubscriber(String nodeName, String carte, String subscriberId) throws NodeApiException {
+    public Result deleteSubscriber(String nodeName, String carte, String subscriberId) throws MoeraNodeException {
         return call("DELETE", nodeName, String.format("/people/subscribers/%s", Util.ue(subscriberId)),
                 auth("carte", carte), Result.class);
     }
 
-    public FeedInfo getFeed(String nodeName, String feedName) throws NodeApiException {
+    public FeedInfo getFeed(String nodeName, String feedName) throws MoeraNodeException {
         return call("GET", nodeName, String.format("/feeds/%s", Util.ue(feedName)), null, FeedInfo.class);
     }
 
-    public FeedSliceInfo getFeedStories(String nodeName, String feedName, int limit) throws NodeApiException {
+    public FeedSliceInfo getFeedStories(String nodeName, String feedName, int limit) throws MoeraNodeException {
         return call("GET", nodeName,
                 String.format("/feeds/%s/stories?limit=%d", Util.ue(feedName), limit), null,
                 FeedSliceInfo.class);
     }
 
     public CommentInfo getComment(String nodeName, String carte, String postingId,
-                                  String commentId) throws NodeApiException {
+                                  String commentId) throws MoeraNodeException {
         return call("GET", nodeName,
                 String.format("/postings/%s/comments/%s", Util.ue(postingId), Util.ue(commentId)),
                 auth("carte", carte), CommentInfo.class);
     }
 
     public CommentRevisionInfo getCommentRevision(String nodeName, String carte, String postingId, String commentId,
-                                                  String revisionId) throws NodeApiException {
+                                                  String revisionId) throws MoeraNodeException {
         return call("GET", nodeName,
                 String.format("/postings/%s/comments/%s/revisions/%s",
                         Util.ue(postingId), Util.ue(commentId), Util.ue(revisionId)), auth("carte", carte),
@@ -347,14 +364,14 @@ public class NodeApi {
     }
 
     public CommentCreated postComment(String nodeName, String postingId, CommentText commentText)
-            throws NodeApiException {
+            throws MoeraNodeException {
 
         return call("POST", nodeName, String.format("/postings/%s/comments", Util.ue(postingId)), null,
                 commentText, CommentCreated.class);
     }
 
     public CommentInfo putComment(String nodeName, String postingId, String commentId, CommentText commentText)
-            throws NodeApiException {
+            throws MoeraNodeException {
 
         return call("PUT", nodeName,
                 String.format("/postings/%s/comments/%s", Util.ue(postingId), Util.ue(commentId)), null,
@@ -362,7 +379,7 @@ public class NodeApi {
     }
 
     public ReactionInfo getCommentReaction(String nodeName, String carte, String postingId, String commentId,
-                                           String reactionOwnerName) throws NodeApiException {
+                                           String reactionOwnerName) throws MoeraNodeException {
         return call("GET", nodeName,
                 String.format("/postings/%s/comments/%s/reactions/%s",
                         Util.ue(postingId), Util.ue(commentId), Util.ue(reactionOwnerName)), auth("carte", carte),
@@ -370,44 +387,44 @@ public class NodeApi {
     }
 
     public TemporaryMediaFile getPublicMedia(String nodeName, String id, TemporaryFile tmpFile, int maxSize)
-            throws NodeApiException {
+            throws MoeraNodeException {
 
         return call("GET", nodeName, String.format("/media/public/%s/data", Util.ue(id)), null,
                 tmpFile, maxSize);
     }
 
-    public PublicMediaFileInfo getPublicMediaInfo(String nodeName, String id) throws NodeApiException {
+    public PublicMediaFileInfo getPublicMediaInfo(String nodeName, String id) throws MoeraNodeException {
         try {
             return call("GET", nodeName, String.format("/media/public/%s/info", Util.ue(id)), null,
                     PublicMediaFileInfo.class);
-        } catch (NodeApiNotFoundException e) {
+        } catch (MoeraNodeApiNotFoundException e) {
             return null;
         }
     }
 
     public PublicMediaFileInfo postPublicMedia(String nodeName, String carte,
-                                               MediaFile mediaFile) throws NodeApiException {
+                                               MediaFile mediaFile) throws MoeraNodeException {
         return call("POST", nodeName, "/media/public", auth("carte", carte),
                 mediaFile.getMimeType(), mediaOperations.getPath(mediaFile), PublicMediaFileInfo.class);
     }
 
     public TemporaryMediaFile getPrivateMedia(String nodeName, String carte, String id, TemporaryFile tmpFile,
-                                              int maxSize) throws NodeApiException {
+                                              int maxSize) throws MoeraNodeException {
         return call("GET", nodeName, String.format("/media/private/%s/data", Util.ue(id)),
                 auth("carte", carte), tmpFile, maxSize);
     }
 
-    public EntryInfo[] getPrivateMediaParent(String nodeName, String carte, String id) throws NodeApiException {
+    public EntryInfo[] getPrivateMediaParent(String nodeName, String carte, String id) throws MoeraNodeException {
         try {
             return call("GET", nodeName, String.format("/media/private/%s/parent", Util.ue(id)),
                     auth("carte", carte), EntryInfo[].class);
-        } catch (NodeApiNotFoundException e) {
+        } catch (MoeraNodeApiNotFoundException e) {
             return null;
         }
     }
 
     public SubscriberInfo[] getSubscribers(String nodeName, String carte, String remoteNodeName, SubscriptionType type,
-                                           String feedName, String entryId) throws NodeApiException {
+                                           String feedName, String entryId) throws MoeraNodeException {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString("/people/subscribers");
         if (remoteNodeName != null) {
             builder = builder.queryParam("nodeName", remoteNodeName);
@@ -426,21 +443,21 @@ public class NodeApi {
     }
 
     public SubscriberInfo putSubscriber(String nodeName, String carte, String id,
-                                        SubscriberOverride subscriberOverride) throws NodeApiException {
+                                        SubscriberOverride subscriberOverride) throws MoeraNodeException {
         return call("PUT", nodeName, String.format("/people/subscribers/%s", Util.ue(id)),
                 auth("carte", carte), subscriberOverride, SubscriberInfo.class);
     }
 
-    public Result postSheriffOrder(String nodeName, SheriffOrderDetails sheriffOrderDetails) throws NodeApiException {
+    public Result postSheriffOrder(String nodeName, SheriffOrderDetails sheriffOrderDetails) throws MoeraNodeException {
         return call("POST", nodeName, "/sheriff/orders", null, sheriffOrderDetails, Result.class);
     }
 
-    public UserListSliceInfo getUserListItems(String nodeName, String listName, long before) throws NodeApiException {
+    public UserListSliceInfo getUserListItems(String nodeName, String listName, long before) throws MoeraNodeException {
         return call("GET", nodeName, String.format("/user-lists/%s/items?before=%d", Util.ue(listName), before),
                 null, UserListSliceInfo.class);
     }
 
-    public UserListItemInfo getUserListItem(String nodeName, String listName, String name) throws NodeApiException {
+    public UserListItemInfo getUserListItem(String nodeName, String listName, String name) throws MoeraNodeException {
         return call("GET", nodeName, String.format("/user-lists/%s/items/%s", Util.ue(listName), Util.ue(name)),
                 null, UserListItemInfo.class);
     }

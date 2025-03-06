@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PostingRevisionInfo;
@@ -15,7 +16,6 @@ import org.moera.lib.node.types.ReactionAttributes;
 import org.moera.lib.node.types.ReactionCreated;
 import org.moera.lib.node.types.ReactionDescription;
 import org.moera.lib.node.types.Scope;
-import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.MediaFile;
 import org.moera.node.fingerprint.CommentFingerprintBuilder;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
@@ -149,7 +149,7 @@ public class RemoteCommentReactionPostJob
     }
 
     @Override
-    protected void execute() throws NodeApiException {
+    protected void execute() throws MoeraNodeException {
         if (state.commentInfo == null) {
             mediaManager.uploadPublicMedia(
                 parameters.targetNodeName,

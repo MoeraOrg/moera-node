@@ -1,18 +1,19 @@
 package org.moera.node.subscriptions;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoException;
+import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SubscriberDescription;
 import org.moera.lib.node.types.SubscriberInfo;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.api.naming.NamingNotAvailableException;
-import org.moera.node.api.node.NodeApiException;
-import org.moera.node.api.node.NodeApiNotFoundException;
-import org.moera.node.api.node.NodeApiUnknownNameException;
+import org.moera.node.api.node.MoeraNodeUnknownNameException;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Subscription;
@@ -125,10 +126,10 @@ public class SubscriptionTask extends Task {
                 targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE), description
             );
             subscriptionManager.succeededSubscribe(subscriptionId, subscriberInfo.getId());
-        } catch (CryptoException | NodeApiException | NamingNotAvailableException e) {
+        } catch (CryptoException | MoeraNodeException | NamingNotAvailableException e) {
             error(true, e);
             if (
-                e instanceof NodeApiNotFoundException ve && ve.getResult().getErrorCode().equals("posting.not-found")
+                e instanceof MoeraNodeApiNotFoundException ve && Objects.equals(ve.getErrorCode(), "posting.not-found")
             ) {
                 subscriptionManager.subscriptionInvalid(subscription);
             } else {
@@ -146,7 +147,7 @@ public class SubscriptionTask extends Task {
             nodeApi.deleteSubscriber(
                 targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE), subscription.getRemoteSubscriberId()
             );
-        } catch (CryptoException | NodeApiException e) {
+        } catch (CryptoException | MoeraNodeException e) {
             error(false, e);
         }
         // Ignore error, because unsubscription will happen anyway on notification
@@ -154,7 +155,7 @@ public class SubscriptionTask extends Task {
     }
 
     private void error(boolean subscribe, Throwable e) {
-        if (e instanceof NodeApiUnknownNameException) {
+        if (e instanceof MoeraNodeUnknownNameException) {
             log.error("Cannot find a node {}", targetNodeName);
         } else {
             if (subscribe) {

@@ -5,8 +5,8 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.UserListSliceInfo;
-import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.EntryRepository;
 import org.moera.node.data.RemoteUserListItem;
 import org.moera.node.data.RemoteUserListItemRepository;
@@ -149,7 +149,7 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
     }
 
     @Override
-    protected void execute() throws NodeApiException {
+    protected void execute() throws MoeraNodeException {
         if (parameters.nodeName == null) {
             if (!parameters.delete) {
                 addList();
@@ -165,7 +165,7 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
         }
     }
 
-    private void addList() throws NodeApiException {
+    private void addList() throws MoeraNodeException {
         if (entryRepository.countNotOwnedBy(universalContext.nodeId(), universalContext.nodeName()) == 0) {
             return;
         }

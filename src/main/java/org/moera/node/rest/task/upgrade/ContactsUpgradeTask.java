@@ -5,7 +5,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.WhoAmI;
-import org.moera.node.api.node.NodeApiUnknownNameException;
+import org.moera.node.api.node.MoeraNodeUnknownNameException;
 import org.moera.node.data.ContactUpgrade;
 import org.moera.node.data.ContactUpgradeRepository;
 import org.moera.node.data.MediaFile;
@@ -88,7 +88,7 @@ public class ContactsUpgradeTask extends Task {
     }
 
     private void error(ContactUpgrade upgrade, Throwable e) {
-        if (e instanceof NodeApiUnknownNameException) {
+        if (e instanceof MoeraNodeUnknownNameException) {
             log.error("Cannot find a node {}", upgrade.getRemoteNodeName());
         } else {
             log.error("Error downloading the profile of node {}: {}", upgrade.getRemoteNodeName(), e.getMessage());

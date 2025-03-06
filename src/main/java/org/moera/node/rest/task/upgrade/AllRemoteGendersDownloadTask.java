@@ -5,9 +5,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.WhoAmI;
-import org.moera.node.api.node.NodeApiException;
-import org.moera.node.api.node.NodeApiUnknownNameException;
+import org.moera.node.api.node.MoeraNodeUnknownNameException;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.DomainUpgradeRepository;
@@ -62,7 +62,7 @@ public class AllRemoteGendersDownloadTask extends Task {
                 .collect(Collectors.toSet());
     }
 
-    private void download(String targetNodeName) throws NodeApiException {
+    private void download(String targetNodeName) throws MoeraNodeException {
         WhoAmI target = nodeApi.whoAmI(targetNodeName);
         String targetFullName = target.getFullName();
         String targetGender = target.getGender();
@@ -77,7 +77,7 @@ public class AllRemoteGendersDownloadTask extends Task {
     }
 
     private void error(String targetNodeName, Throwable e) {
-        if (e instanceof NodeApiUnknownNameException) {
+        if (e instanceof MoeraNodeUnknownNameException) {
             log.error("Cannot find a node {}", targetNodeName);
         } else {
             log.error("Error downloading gender of node {}: {}", targetNodeName, e.getMessage());

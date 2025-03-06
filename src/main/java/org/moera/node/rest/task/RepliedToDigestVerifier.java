@@ -8,6 +8,8 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentRevisionInfo;
 import org.moera.lib.node.types.PostingInfo;
@@ -15,8 +17,6 @@ import org.moera.lib.node.types.PostingRevisionInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.api.node.NodeApi;
-import org.moera.node.api.node.NodeApiException;
-import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.fingerprint.CommentFingerprintBuilder;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.media.MediaManager;
@@ -43,7 +43,7 @@ public class RepliedToDigestVerifier {
         Map<String, PostingRevisionInfo> revisions,
         String repliedToId,
         String repliedToRevisionId
-    ) throws NodeApiException {
+    ) throws MoeraNodeException {
         if (repliedToId == null) {
             return null;
         }
@@ -71,7 +71,7 @@ public class RepliedToDigestVerifier {
         String id,
         Map<String, CommentRevisionInfo> commentRevisions,
         String revisionId
-    ) throws NodeApiException {
+    ) throws MoeraNodeException {
         if (id == null) {
             return null;
         }
@@ -84,7 +84,7 @@ public class RepliedToDigestVerifier {
             commentInfo = nodeApi.getComment(
                 targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_CONTENT), postingInfo.getId(), id
             );
-        } catch (NodeApiNotFoundException e) {
+        } catch (MoeraNodeApiNotFoundException e) {
             throw new ObjectNotFoundFailure("comment.reply-not-found");
         }
         CommentRevisionInfo commentRevisionInfo = commentRevisions.get(revisionId);
@@ -94,7 +94,7 @@ public class RepliedToDigestVerifier {
                     targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
                     id, revisionId
                 );
-            } catch (NodeApiNotFoundException e) {
+            } catch (MoeraNodeApiNotFoundException e) {
                 throw new ObjectNotFoundFailure("comment.reply-not-found");
             }
             commentRevisions.put(revisionId, commentRevisionInfo);
@@ -131,7 +131,7 @@ public class RepliedToDigestVerifier {
                     targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
                     commentRevisionInfo.getPostingRevisionId()
                 );
-            } catch (NodeApiNotFoundException e) {
+            } catch (MoeraNodeApiNotFoundException e) {
                 throw new ObjectNotFoundFailure("comment.reply-not-found");
             }
             postingRevisions.put(commentRevisionInfo.getPostingRevisionId(), postingRevisionInfo);

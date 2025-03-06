@@ -8,12 +8,12 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SubscriberOperations;
 import org.moera.lib.node.types.SubscriberOverride;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.task.Job;
@@ -101,7 +101,7 @@ public class AllRemoteSubscribersUpdateJob
                     override
                 );
                 state.updated.add(subscription.getId());
-            } catch (NodeApiException e) {
+            } catch (MoeraNodeException e) {
                 log.warn(
                     "Error updating subscriber info at node {}: {}",
                     subscription.getRemoteNodeName(), e.getMessage()

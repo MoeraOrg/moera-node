@@ -4,11 +4,11 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.EntryInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
-import org.moera.node.api.node.NodeApiException;
 import org.moera.node.liberin.model.RemoteCommentMediaReactionAddingFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingMediaReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;
@@ -107,7 +107,7 @@ public class RemoteMediaReactionFailedJob
     }
 
     @Override
-    protected void execute() throws NodeApiException {
+    protected void execute() throws MoeraNodeException {
         if (state.parentPosting == null) {
             EntryInfo[] parents = nodeApi.getPrivateMediaParent(
                 parameters.targetNodeName,

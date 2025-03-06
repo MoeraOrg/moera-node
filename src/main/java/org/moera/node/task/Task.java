@@ -11,7 +11,7 @@ import org.moera.lib.naming.types.RegisteredNameInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.api.node.NodeApi;
-import org.moera.node.api.node.NodeApiUnknownNameException;
+import org.moera.node.api.node.MoeraNodeUnknownNameException;
 import org.moera.node.data.Avatar;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
@@ -137,7 +137,7 @@ public abstract class Task implements Runnable {
     }
 
     protected void unhandledException(Throwable e) {
-        if (e instanceof NodeApiUnknownNameException ex) {
+        if (e instanceof MoeraNodeUnknownNameException ex) {
             log.error("Cannot find a node {}", ex.getNodeName());
         } else {
             log.error("Error executing task {}: {}", this.getClass().getSimpleName(), e.getMessage());

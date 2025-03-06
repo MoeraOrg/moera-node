@@ -8,13 +8,13 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SheriffOrderAttributes;
 import org.moera.lib.node.types.SheriffOrderDetails;
 import org.moera.lib.node.types.WhoAmI;
-import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.data.SheriffComplaintGroupRepository;
 import org.moera.node.data.SheriffOrder;
@@ -165,7 +165,7 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
     }
 
     @Override
-    protected void execute() throws NodeApiException {
+    protected void execute() throws MoeraNodeException {
         if (state.sheriffOrderId == null) {
             state.sheriffOrderId = UUID.randomUUID();
             checkpoint();

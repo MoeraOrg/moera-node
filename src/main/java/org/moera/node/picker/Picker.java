@@ -11,6 +11,8 @@ import jakarta.inject.Inject;
 
 import org.jetbrains.annotations.NotNull;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
@@ -19,8 +21,6 @@ import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.api.node.NodeApiException;
-import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
@@ -137,7 +137,7 @@ public class Picker extends Task {
         }
     }
 
-    private void fetchNodeDetails() throws NodeApiException {
+    private void fetchNodeDetails() throws MoeraNodeException {
         WhoAmI remote = nodeApi.whoAmI(remoteNodeName);
         remoteFullName = remote.getFullName();
         remoteAvatarMediaFile = mediaManager.downloadPublicMedia(remoteNodeName, remote.getAvatar());
@@ -165,8 +165,9 @@ public class Picker extends Task {
         succeeded(posting, pick);
     }
 
-    private Posting downloadPosting(String remotePostingId, String feedName, MediaFileOwner parentMedia,
-                                    List<Liberin> liberins, List<Pick> picks) throws NodeApiException {
+    private Posting downloadPosting(
+        String remotePostingId, String feedName, MediaFileOwner parentMedia, List<Liberin> liberins, List<Pick> picks
+    ) throws MoeraNodeException {
         PostingInfo postingInfo = nodeApi.getPosting(
             remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId
         );
@@ -268,7 +269,7 @@ public class Picker extends Task {
 
     private void downloadMedia(
         PostingInfo postingInfo, UUID entryId, EntryRevision revision, List<Pick> picks
-    ) throws NodeApiException {
+    ) throws MoeraNodeException {
         int ordinal = 0;
         for (MediaAttachment attach : postingInfo.getMedia()) {
             MediaFileOwner media = mediaManager.downloadPrivateMedia(
@@ -340,7 +341,7 @@ public class Picker extends Task {
     }
 
     private void failed(Pick pick, Throwable e) {
-        boolean fatal = e instanceof NodeApiNotFoundException;
+        boolean fatal = e instanceof MoeraNodeApiNotFoundException;
         pool.pickFailed(pick, fatal);
     }
 

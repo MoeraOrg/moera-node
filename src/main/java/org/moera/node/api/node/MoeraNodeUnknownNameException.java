@@ -1,10 +1,12 @@
 package org.moera.node.api.node;
 
-public class NodeApiUnknownNameException extends NodeApiException {
+import org.moera.lib.node.exception.MoeraNodeException;
+
+public class MoeraNodeUnknownNameException extends MoeraNodeException {
 
     private final String nodeName;
 
-    public NodeApiUnknownNameException(String nodeName) {
+    public MoeraNodeUnknownNameException(String nodeName) {
         super(String.format("Node name '%s' not found", nodeName));
         this.nodeName = nodeName;
     }

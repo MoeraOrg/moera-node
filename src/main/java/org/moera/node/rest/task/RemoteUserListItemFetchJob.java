@@ -8,9 +8,9 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.api.node.NodeApiException;
-import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRepository;
 import org.moera.node.data.RemoteUserListItem;
@@ -123,12 +123,13 @@ public class RemoteUserListItemFetchJob
     }
 
     @Override
-    protected void execute() throws NodeApiException {
+    protected void execute() throws MoeraNodeException {
         if (state.absent == null) {
             try {
                 state.absent = nodeApi.getUserListItem(
-                        parameters.sheriffName, UserList.SHERIFF_HIDE, parameters.ownerName) == null;
-            } catch (NodeApiNotFoundException e) {
+                    parameters.sheriffName, UserList.SHERIFF_HIDE, parameters.ownerName
+                ) == null;
+            } catch (MoeraNodeApiNotFoundException e) {
                 state.absent = true;
             }
             checkpoint();
