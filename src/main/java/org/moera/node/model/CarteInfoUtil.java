@@ -4,9 +4,9 @@ import java.net.InetAddress;
 import java.security.PrivateKey;
 import java.time.Instant;
 
+import org.moera.lib.node.carte.Carte;
 import org.moera.lib.node.types.CarteInfo;
 import org.moera.lib.node.types.Scope;
-import org.moera.node.util.Carte;
 
 public class CarteInfoUtil {
 

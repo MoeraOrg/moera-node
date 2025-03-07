@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.naming.NodeName;
 import org.moera.lib.naming.types.RegisteredNameInfo;
+import org.moera.lib.node.carte.Carte;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.api.node.NodeApi;
@@ -17,7 +18,6 @@ import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;
-import org.moera.node.util.Carte;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,7 +84,7 @@ public abstract class Task implements Runnable {
         String namingLocation = getOptions().getString("naming.location");
         NodeName registeredName = NodeName.parse(remoteNodeName);
         RegisteredNameInfo nameInfo =
-                namingClient.getPast(registeredName.getName(), registeredName.getGeneration(), at, namingLocation);
+            namingClient.getPast(registeredName.getName(), registeredName.getGeneration(), at, namingLocation);
         return nameInfo != null ? nameInfo.getSigningKey() : null;
     }
 
@@ -94,8 +94,10 @@ public abstract class Task implements Runnable {
 
     protected String generateCarte(String targetNodeName, Scope clientScope, Scope adminScope) {
         try {
-            return Carte.generate(nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName,
-                    clientScope.getMask(), adminScope.getMask());
+            return Carte.generate(
+                nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName, clientScope.getMask(),
+                adminScope.getMask()
+            );
         } catch (Exception e) {
             log.info("Error generating carte by {} {}", nodeId, universalContext.nodeId());
             throw e;
