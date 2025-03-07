@@ -1,7 +1,6 @@
 package org.moera.node.ui.helper;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -190,12 +189,12 @@ public class GalleriesHelperSource {
         return balance >= 0 ? "vertical" : "horizontal";
     }
 
-    public CharSequence entryGallery(String postingId, String commentId, MediaAttachment[] media) {
+    public CharSequence entryGallery(String postingId, String commentId, List<MediaAttachment> media) {
         if (ObjectUtils.isEmpty(media)) {
             return null;
         }
 
-        List<PrivateMediaFileInfo> images = Arrays.stream(media)
+        List<PrivateMediaFileInfo> images = media.stream()
             .filter(ma -> !ma.isEmbedded())
             .map(MediaAttachment::getMedia)
             .collect(Collectors.toList());

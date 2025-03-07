@@ -19,8 +19,8 @@
     <div class="row">
         {{#each subscribers}}
             <div class="person col-sm-4">
-                {{avatar avatar 48 nodeName=nodeName}}
-                {{nodename nodeName fullName}}
+                {{avatar contact.avatar 48 nodeName=nodeName}}
+                {{nodename nodeName contact.fullName}}
             </div>
         {{/each}}
     </div>

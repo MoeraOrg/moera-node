@@ -69,8 +69,11 @@ public class PeopleUiController {
         return "redirect:/people/subscribers";
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people/subscribers",
-            produces = "text/html")
+    @RequestMapping(
+        method = {RequestMethod.GET, RequestMethod.HEAD},
+        path = "/people/subscribers",
+        produces = "text/html"
+    )
     @VirtualPage
     @Transactional
     public String subscribers(Model model) {
@@ -78,16 +81,17 @@ public class PeopleUiController {
 
         PeopleGeneralInfo totals = getTotals();
         Comparator<Subscriber> comparator = Comparator.comparing(
-                sr -> sr.getContact().getRemoteFullName() != null
-                        ? sr.getContact().getRemoteFullName()
-                        : NodeName.shorten(sr.getRemoteNodeName()));
+            sr -> sr.getContact().getRemoteFullName() != null
+                ? sr.getContact().getRemoteFullName()
+                : NodeName.shorten(sr.getRemoteNodeName())
+        );
         List<SubscriberInfo> subscribers = Collections.emptyList();
         if (Subscriber.getViewAllE(requestContext.getOptions()).isPublic()) {
             subscribers = subscriberRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED).stream()
-                    .sorted(comparator)
-                    .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
-                    .map(s -> SubscriberInfoUtil.build(s, requestContext.getOptions(), requestContext))
-                    .collect(Collectors.toList());
+                .sorted(comparator)
+                .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
+                .map(s -> SubscriberInfoUtil.build(s, requestContext.getOptions(), requestContext))
+                .collect(Collectors.toList());
         }
 
         model.addAttribute("pageTitle", titleBuilder.build("Subscribers"));
@@ -102,8 +106,11 @@ public class PeopleUiController {
         return "subscribers";
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people/subscriptions",
-            produces = "text/html")
+    @RequestMapping(
+        method = {RequestMethod.GET, RequestMethod.HEAD},
+        path = "/people/subscriptions",
+        produces = "text/html"
+    )
     @VirtualPage
     @Transactional
     public String subscriptions(Model model) {
@@ -111,17 +118,18 @@ public class PeopleUiController {
 
         PeopleGeneralInfo totals = getTotals();
         Comparator<UserSubscription> comparator = Comparator.comparing(
-                sr -> sr.getContact().getRemoteFullName() != null
-                        ? sr.getContact().getRemoteFullName()
-                        : NodeName.shorten(sr.getRemoteNodeName()));
+            sr -> sr.getContact().getRemoteFullName() != null
+                ? sr.getContact().getRemoteFullName()
+                : NodeName.shorten(sr.getRemoteNodeName())
+        );
         List<SubscriptionInfo> subscriptions = Collections.emptyList();
         if (UserSubscription.getViewAllE(requestContext.getOptions()).isPublic()) {
             subscriptions = userSubscriptionRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED)
-                    .stream()
-                    .sorted(comparator)
-                    .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
-                    .map(s -> SubscriptionInfoUtil.build(s, requestContext.getOptions(), requestContext))
-                    .collect(Collectors.toList());
+                .stream()
+                .sorted(comparator)
+                .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
+                .map(s -> SubscriptionInfoUtil.build(s, requestContext.getOptions(), requestContext))
+                .collect(Collectors.toList());
         }
 
         model.addAttribute("pageTitle", titleBuilder.build("Subscriptions"));
@@ -140,7 +148,7 @@ public class PeopleUiController {
         int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
         int subscriptionsTotal = userSubscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
         Map<String, Integer> friendsTotal = friendRepository.countGroupsByNodeId(requestContext.nodeId()).stream()
-                .collect(Collectors.toMap(fg -> fg.getId().toString(), fg -> (int) fg.getTotal()));
+            .collect(Collectors.toMap(fg -> fg.getId().toString(), fg -> (int) fg.getTotal()));
         int friendOfsTotal = friendOfRepository.countByNodeId(requestContext.nodeId());
         int blockedTotal = blockedUserRepository.countByNodeId(requestContext.nodeId());
         int blockedByTotal = blockedByUserRepository.countByNodeId(requestContext.nodeId());

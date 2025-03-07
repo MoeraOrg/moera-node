@@ -2,7 +2,7 @@ package org.moera.node.ui.helper;
 
 import static org.moera.node.util.Util.ellipsize;
 
-import java.util.Arrays;
+import java.util.List;
 
 import com.github.jknack.handlebars.Handlebars;
 import org.moera.lib.node.types.MediaAttachment;
@@ -22,7 +22,7 @@ public class LinkPreviewHelper {
         String title,
         String description,
         String imageHash,
-        MediaAttachment[] media,
+        List<MediaAttachment> media,
         boolean small
     ) {
         if (ObjectUtils.isEmpty(url)) {
@@ -43,19 +43,20 @@ public class LinkPreviewHelper {
         boolean large = false;
         PrivateMediaFileInfo mediaFile = null;
         if (imageHash != null && media != null) {
-            mediaFile = Arrays.stream(media)
-                    .map(MediaAttachment::getMedia)
-                    .filter(mf -> mf != null && mf.getHash().equals(imageHash))
-                    .findFirst()
-                    .orElse(null);
+            mediaFile = media.stream()
+                .map(MediaAttachment::getMedia)
+                .filter(mf -> mf != null && mf.getHash().equals(imageHash))
+                .findFirst()
+                .orElse(null);
             large = !small && mediaFile != null && mediaFile.getWidth() > 450;
         }
 
         StringBuilder buf = new StringBuilder();
         buf.append("<a");
         HelperUtil.appendAttr(buf, "href", url);
-        HelperUtil.appendAttr(buf, "class",
-                "link-preview" + (large ? " large" : "") + (small ? " small" : ""));
+        HelperUtil.appendAttr(
+            buf, "class", "link-preview" + (large ? " large" : "") + (small ? " small" : "")
+        );
         buf.append('>');
         if (mediaFile != null) {
             boolean directServing = mediaFile.getDirectPath() != null;
@@ -66,8 +67,9 @@ public class LinkPreviewHelper {
             int imageHeight = preview != null ? preview.getHeight() : mediaFile.getHeight();
 
             buf.append("<img");
-            HelperUtil.appendAttr(buf, "src",
-                    directServing ? mediaLocation : MediaUtil.mediaPreview(mediaLocation, 800));
+            HelperUtil.appendAttr(
+                buf, "src", directServing ? mediaLocation : MediaUtil.mediaPreview(mediaLocation, 800)
+            );
             HelperUtil.appendAttr(buf, "srcset", MediaUtil.mediaSourcesInfo(mediaLocation, mediaFile.getPreviews()));
             HelperUtil.appendAttr(buf, "sizes", MediaUtil.mediaSizes(mediaFile));
             HelperUtil.appendAttr(buf, "width", imageWidth);
