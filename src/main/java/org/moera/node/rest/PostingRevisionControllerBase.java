@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 
 import org.moera.lib.node.types.PostingRevisionInfo;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.EntryAttachment;
@@ -23,7 +24,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingRevisionInfoUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.PostingOperations;
@@ -101,9 +101,7 @@ public abstract class PostingRevisionControllerBase {
         Posting posting = getPosting(postingId);
 
         limit = limit != null && limit <= MAX_REVISIONS_PER_REQUEST ? limit : MAX_REVISIONS_PER_REQUEST;
-        if (limit < 0) {
-            throw new ValidationFailure("limit.invalid");
-        }
+        ValidationUtil.assertion(limit >= 0, "limit.invalid");
 
         return entryRevisionRepository
             .findAllByEntryId(
@@ -145,9 +143,10 @@ public abstract class PostingRevisionControllerBase {
         );
 
         Posting posting = getPosting(postingId);
-        if (posting.getDeletedAt() == null && posting.getCurrentRevision().getId().equals(id)) {
-            throw new ValidationFailure("posting-revision.already-current");
-        }
+        ValidationUtil.assertion(
+            posting.getDeletedAt() != null || !posting.getCurrentRevision().getId().equals(id),
+            "posting-revision.already-current"
+        );
         EntryRevision latest = posting.getCurrentRevision();
         EntryRevision revision = getRevisionWithAttachments(postingId, id);
 

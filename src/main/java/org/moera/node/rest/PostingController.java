@@ -21,6 +21,7 @@ import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
@@ -52,7 +53,6 @@ import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.PostingTextUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.EntryOperations;
@@ -222,9 +222,7 @@ public class PostingController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!posting.isOriginal()) {
-            throw new ValidationFailure("posting.not-original");
-        }
+        ValidationUtil.assertion(posting.isOriginal(), "posting.not-original");
         Principal latestView = posting.getViewE();
         EntryRevision latest = posting.getCurrentRevision();
         mediaOperations.validateAvatar(postingText.getOwnerAvatar());
@@ -238,9 +236,10 @@ public class PostingController {
         if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
             throw new UserBlockedException();
         }
-        if (postingText.getPublications() != null && !postingText.getPublications().isEmpty()) {
-            throw new ValidationFailure("posting.publications.cannot-modify");
-        }
+        ValidationUtil.assertion(
+            postingText.getPublications() == null || postingText.getPublications().isEmpty(),
+            "posting.publications.cannot-modify"
+        );
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
             postingText.getMedia(),
             true,
@@ -303,15 +302,15 @@ public class PostingController {
                 throw new AuthenticationException();
             }
 
-            if (posting == null && postingText.getBodySrc() == null && ObjectUtils.isEmpty(postingText.getMedia())) {
-                throw new ValidationFailure("posting.body-src.blank");
-            }
-            if (
-                postingText.getBodySrc() != null
-                && postingText.getBodySrc().getEncoded().length() > getMaxPostingSize()
-            ) {
-                throw new ValidationFailure("posting.body-src.wrong-size");
-            }
+            ValidationUtil.assertion(
+                posting != null || postingText.getBodySrc() != null || !ObjectUtils.isEmpty(postingText.getMedia()),
+                "posting.body-src.blank"
+            );
+            ValidationUtil.maxSize(
+                postingText.getBodySrc() != null ? postingText.getBodySrc().getEncoded() : null,
+                getMaxPostingSize(),
+                "posting.body-src.wrong-size"
+            );
         } else {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
             byte[] fingerprint = PostingFingerprintBuilder.build(
@@ -322,26 +321,20 @@ public class PostingController {
             }
             digest = CryptoUtil.digest(fingerprint);
 
-            if (ObjectUtils.isEmpty(postingText.getBody()) && ObjectUtils.isEmpty(postingText.getMedia())) {
-                throw new ValidationFailure("posting.body.blank");
-            }
-            if (postingText.getBody().getEncoded().length() > getMaxPostingSize()) {
-                throw new ValidationFailure("posting.body.wrong-size");
-            }
-            if (ObjectUtils.isEmpty(postingText.getBodyFormat())) {
-                throw new ValidationFailure("posting.body-format.missing");
-            }
-            if (postingText.getCreatedAt() == null) {
-                throw new ValidationFailure("posting.created-at.missing");
-            }
-            if (
+            ValidationUtil.assertion(
+                !ObjectUtils.isEmpty(postingText.getBody()) || !ObjectUtils.isEmpty(postingText.getMedia()),
+                "posting.body.blank"
+            );
+            ValidationUtil.maxSize(postingText.getBody().getEncoded(), getMaxPostingSize(), "posting.body.wrong-size");
+            ValidationUtil.notNull(postingText.getBodyFormat(), "posting.body-format.missing");
+            ValidationUtil.notNull(postingText.getCreatedAt(), "posting.created-at.missing");
+            ValidationUtil.assertion(
                 Duration
                     .between(Instant.ofEpochSecond(postingText.getCreatedAt()), Instant.now())
                     .abs()
-                    .compareTo(CREATED_AT_MARGIN) > 0
-            ) {
-                throw new ValidationFailure("posting.created-at.out-of-range");
-            }
+                    .compareTo(CREATED_AT_MARGIN) <= 0,
+                "posting.created-at.out-of-range"
+            );
         }
         OperationsValidator.validateOperations(
             postingText.getOperations(),

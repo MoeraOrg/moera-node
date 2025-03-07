@@ -6,7 +6,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.body.BodyMappingException;
-import org.moera.lib.node.types.validate.ValidationException;
+import org.moera.lib.node.types.validate.ValidationFailure;
+import org.moera.node.api.naming.NamingNotAvailableException;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.InvalidCarteException;
@@ -15,8 +16,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.ValidationFailure;
-import org.moera.node.api.naming.NamingNotAvailableException;
 import org.moera.node.option.exception.OptionValueException;
 import org.moera.node.plugin.PluginInvocationException;
 import org.slf4j.Logger;
@@ -122,15 +121,8 @@ public class ExceptionsControllerAdvice {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Result validationException(ValidationException e) {
+    public Result validationException(ValidationFailure e) {
         String message = messageSource.getMessage(e.getErrorCode(), null, Locale.getDefault());
-        return new Result(e.getErrorCode(), message);
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Result validationFailure(ValidationFailure e) {
-        String message = messageSource.getMessage(e, Locale.getDefault());
         return new Result(e.getErrorCode(), message);
     }
 

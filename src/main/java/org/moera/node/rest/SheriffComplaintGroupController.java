@@ -30,7 +30,6 @@ import org.moera.node.model.SheriffComplaintDecisionTextUtil;
 import org.moera.node.model.SheriffComplaintGroupInfoUtil;
 import org.moera.node.model.SheriffComplaintInfoUtil;
 import org.moera.node.model.SheriffOrderAttributesUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.rest.task.SheriffOrderPostJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.SafeInteger;
@@ -71,23 +70,19 @@ public class SheriffComplaintGroupController {
     @GetMapping
     @Transactional
     public SheriffComplaintGroupsSliceInfo getAll(
-            @RequestParam(required = false) Long before,
-            @RequestParam(required = false) Long after,
-            @RequestParam(required = false) Integer limit,
-            @RequestParam(required = false) SheriffComplaintStatus status
+        @RequestParam(required = false) Long before,
+        @RequestParam(required = false) Long after,
+        @RequestParam(required = false) Integer limit,
+        @RequestParam(required = false) SheriffComplaintStatus status
     ) {
         log.info("GET /sheriff/complaints/groups (before = {}, after = {}, limit = {}, status = {})",
                 LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit),
                 LogUtil.format(Objects.toString(status, null)));
 
-        if (before != null && after != null) {
-            throw new ValidationFailure("sheriff-complaint-groups.before-after-exclusive");
-        }
+        ValidationUtil.assertion(before == null || after == null, "sheriff-complaint-groups.before-after-exclusive");
 
         limit = limit != null && limit <= MAX_GROUPS_PER_REQUEST ? limit : MAX_GROUPS_PER_REQUEST;
-        if (limit < 0) {
-            throw new ValidationFailure("limit.invalid");
-        }
+        ValidationUtil.assertion(limit >= 0, "limit.invalid");
 
         SheriffComplaintGroupsSliceInfo sliceInfo;
         if (after == null) {

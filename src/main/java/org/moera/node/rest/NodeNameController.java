@@ -29,7 +29,6 @@ import org.moera.node.model.KeyMnemonicUtil;
 import org.moera.node.model.NodeNameInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
@@ -109,13 +108,12 @@ public class NodeNameController {
             throw new OperationFailure("naming.operation-pending");
         }
         String nodeName = registeredNameSecret.getName() != null ? registeredNameSecret.getName() : options.nodeName();
-        if (ObjectUtils.isEmpty(nodeName)) {
-            throw new ValidationFailure("node-name.name-absent");
-        }
-        if ((registeredNameSecret.getMnemonic() == null || registeredNameSecret.getMnemonic().isEmpty())
-                && ObjectUtils.isEmpty(registeredNameSecret.getSecret())) {
-            throw new ValidationFailure("registeredNameSecret.empty");
-        }
+        ValidationUtil.notBlank(nodeName, "node-name.name-absent");
+        ValidationUtil.assertion(
+            !ObjectUtils.isEmpty(registeredNameSecret.getMnemonic())
+                || !ObjectUtils.isEmpty(registeredNameSecret.getSecret()),
+            "node-name.secret.empty"
+        );
 
         String mnemonic = !ObjectUtils.isEmpty(registeredNameSecret.getSecret())
             ? CryptoUtil.secretToMnemonic(registeredNameSecret.getSecret())

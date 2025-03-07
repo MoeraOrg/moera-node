@@ -14,6 +14,7 @@ import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.ReactionsSliceInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
@@ -34,7 +35,6 @@ import org.moera.node.model.ReactionCreatedUtil;
 import org.moera.node.model.ReactionInfoUtil;
 import org.moera.node.model.ReactionOverrideUtil;
 import org.moera.node.model.ReactionsSliceInfoUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.ReactionOperations;
@@ -107,9 +107,7 @@ public class CommentReactionController {
                 if (!comment.getPosting().getId().equals(postingId)) {
                     throw new ObjectNotFoundFailure("comment.wrong-posting");
                 }
-                if (comment.getCurrentRevision().getSignature() == null) {
-                    throw new ValidationFailure("comment.not-signed");
-                }
+                ValidationUtil.notNull(comment.getCurrentRevision().getSignature(), "comment.not-signed");
                 reactionOperations.validate(reactionDescription, comment);
                 if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("comment.not-found");
@@ -272,9 +270,7 @@ public class CommentReactionController {
         }
         limit = limit != null && limit <= ReactionOperations.MAX_REACTIONS_PER_REQUEST
                 ? limit : ReactionOperations.MAX_REACTIONS_PER_REQUEST;
-        if (limit < 0) {
-            throw new ValidationFailure("limit.invalid");
-        }
+        ValidationUtil.assertion(limit >= 0, "limit.invalid");
         before = before != null ? before : SafeInteger.MAX_VALUE;
         return reactionOperations.getBefore(commentId, negative, emoji, before, limit);
     }

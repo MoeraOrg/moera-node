@@ -44,7 +44,6 @@ import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.DraftInfoUtil;
 import org.moera.node.model.DraftTextUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.TextConverter;
@@ -129,15 +128,11 @@ public class DraftController {
         }
 
         page = page != null ? page : 0;
-        if (page < 0) {
-            throw new ValidationFailure("page.invalid");
-        }
+        ValidationUtil.assertion(page >= 0, "page.invalid");
         limit = limit != null && limit <= PostingOperations.MAX_POSTINGS_PER_REQUEST
             ? limit
             : PostingOperations.MAX_POSTINGS_PER_REQUEST;
-        if (limit < 0) {
-            throw new ValidationFailure("limit.invalid");
-        }
+        ValidationUtil.assertion(limit >= 0, "limit.invalid");
         Pageable pageable = PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         List<Draft> drafts;
@@ -255,9 +250,10 @@ public class DraftController {
     }
 
     private List<MediaFileOwner> validate(DraftText draftText) {
-        if (draftText.getBodySrc() != null && draftText.getBodySrc().getEncoded().length() > getMaxPostingSize()) {
-            throw new ValidationFailure("draft.body-src.wrong-size");
-        }
+        ValidationUtil.assertion(
+            draftText.getBodySrc() == null || draftText.getBodySrc().getEncoded().length() <= getMaxPostingSize(),
+            "draft.body-src.wrong-size"
+        );
 
         if (draftText.getOwnerAvatar() != null && draftText.getOwnerAvatar().getMediaId() != null) {
             MediaFile mediaFile = mediaFileRepository.findById(draftText.getOwnerAvatar().getMediaId()).orElse(null);

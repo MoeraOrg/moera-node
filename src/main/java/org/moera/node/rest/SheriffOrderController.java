@@ -33,7 +33,6 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Util;
@@ -106,15 +105,11 @@ public class SheriffOrderController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
             posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-            if (posting.getCurrentRevision().getSignature() == null) {
-                throw new ValidationFailure("posting.not-signed");
-            }
+            ValidationUtil.notNull(posting.getCurrentRevision().getSignature(), "posting.not-signed");
             List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), posting.getId());
             boolean inFeed = stories.stream()
                 .anyMatch(story -> story.getFeedName().equals(sheriffOrderDetails.getFeedName()));
-            if (!inFeed) {
-                throw new ValidationFailure("sheriff-order.wrong-feed");
-            }
+            ValidationUtil.assertion(inFeed, "sheriff-order.wrong-feed");
             entryDigest = posting.getCurrentRevision().getDigest();
 
             if (sheriffOrderDetails.getCommentId() != null) {

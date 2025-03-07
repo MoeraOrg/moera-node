@@ -19,6 +19,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Contact;
 import org.moera.node.data.QContact;
@@ -26,7 +27,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ContactInfoUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,9 +54,7 @@ public class ContactsController {
     public List<ContactInfo> getAll(@RequestParam(defaultValue = "") String query,
                                     @RequestParam(required = false) Integer limit) {
         limit = limit != null && limit <= MAX_CONTACTS_PER_REQUEST ? limit : MAX_CONTACTS_PER_REQUEST;
-        if (limit < 0) {
-            throw new ValidationFailure("limit.invalid");
-        }
+        ValidationUtil.assertion(limit >= 0, "limit.invalid");
         if (limit == 0) {
             return Collections.emptyList();
         }

@@ -13,6 +13,7 @@ import jakarta.transaction.Transactional;
 
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.PushClient;
@@ -24,7 +25,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.push.PushService;
 import org.moera.node.sse.StreamEmitter;
 import org.moera.node.util.Transaction;
@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -73,20 +72,18 @@ public class PushController {
 
     @GetMapping(value = "/{clientId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Admin(Scope.OTHER)
-    public StreamEmitter get(@PathVariable String clientId,
-                             @RequestParam(name = "after", required = false) Long after,
-                             @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
-            throws IOException {
+    public StreamEmitter get(
+        @PathVariable String clientId,
+        @RequestParam(name = "after", required = false) Long after,
+        @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId
+    ) throws IOException {
+        log.info(
+            "GET /push/{clientId} (clientId = {}, after = {}, Last-Event-ID = {})",
+            LogUtil.format(clientId), LogUtil.format(after), LogUtil.format(lastEventId)
+        );
 
-        log.info("GET /push/{clientId} (clientId = {}, after = {}, Last-Event-ID = {})",
-                LogUtil.format(clientId), LogUtil.format(after), LogUtil.format(lastEventId));
-
-        if (ObjectUtils.isEmpty(clientId)) {
-            throw new ValidationFailure("push.clientId.blank");
-        }
-        if (clientId.length() > 40) {
-            throw new ValidationFailure("push.clientId.wrong-size");
-        }
+        ValidationUtil.notBlank(clientId, "push.clientId.blank");
+        ValidationUtil.maxSize(clientId, 40, "push.clientId.wrong-size");
 
         long lastSeenMoment = after != null ? after : (lastEventId != null ? lastEventId : 0);
 
@@ -140,7 +137,7 @@ public class PushController {
         log.info("DELETE /push/{clientId} (clientId = {})", LogUtil.format(clientId));
 
         PushClient client = pushClientRepository.findByClientId(requestContext.nodeId(), clientId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("push.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("push.not-found"));
         pushService.delete(requestContext.nodeId(), client.getClientId());
         pushClientRepository.delete(client);
 

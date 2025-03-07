@@ -8,6 +8,7 @@ import jakarta.transaction.Transactional;
 
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.EntryAttachment;
@@ -25,7 +26,6 @@ import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfoUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.PostingOperations;
@@ -77,14 +77,10 @@ public class DeletedPostingController {
         log.info("GET /deleted-postings (page = {}, limit = {})", LogUtil.format(page), LogUtil.format(limit));
 
         page = page != null ? page : 0;
-        if (page < 0) {
-            throw new ValidationFailure("page.invalid");
-        }
+        ValidationUtil.assertion(page >= 0, "page.invalid");
         limit = limit != null && limit <= PostingOperations.MAX_POSTINGS_PER_REQUEST
                 ? limit : PostingOperations.MAX_POSTINGS_PER_REQUEST;
-        if (limit < 0) {
-            throw new ValidationFailure("limit.invalid");
-        }
+        ValidationUtil.assertion(limit >= 0, "limit.invalid");
 
         return postingRepository.findDeleted(requestContext.nodeId(),
             PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "deletedAt")))

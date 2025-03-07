@@ -32,6 +32,7 @@ import org.moera.lib.node.types.RemotePostingOrNode;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
@@ -57,7 +58,6 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.RemotePostingOrNodeUtil;
 import org.moera.node.model.StoryInfoUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.EntryOperations;
@@ -230,16 +230,12 @@ public class FeedController {
         if (!Feed.isStandard(feedName) || !Feed.isReadable(feedName, requestContext.isAdmin(Scope.VIEW_FEEDS))) {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
-        if (before != null && after != null) {
-            throw new ValidationFailure("feed.before-after-exclusive");
-        }
+        ValidationUtil.assertion(before == null || after == null, "feed.before-after-exclusive");
 
         limit = limit != null && limit <= PostingOperations.MAX_POSTINGS_PER_REQUEST
             ? limit
             : PostingOperations.MAX_POSTINGS_PER_REQUEST;
-        if (limit < 0) {
-            throw new ValidationFailure("limit.invalid");
-        }
+        ValidationUtil.assertion(limit >= 0, "limit.invalid");
 
         FeedSliceInfo sliceInfo;
         if (after == null) {

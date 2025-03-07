@@ -41,7 +41,6 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.SubscriptionDescriptionUtil;
 import org.moera.node.model.SubscriptionInfoUtil;
 import org.moera.node.model.SubscriptionOverrideUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.SubscriptionOperations;
@@ -215,9 +214,10 @@ public class SubscriptionController {
     public List<SubscriptionInfo> search(@RequestBody SubscriptionFilter filter) {
         log.info("POST /people/subscriptions/search");
 
-        if (ObjectUtils.isEmpty(filter.getFeeds()) && ObjectUtils.isEmpty(filter.getPostings())) {
-            throw new ValidationFailure("subscription.filter.incomplete");
-        }
+        ValidationUtil.assertion(
+            !ObjectUtils.isEmpty(filter.getFeeds()) || !ObjectUtils.isEmpty(filter.getPostings()),
+            "subscription.filter.incomplete"
+        );
 
         QUserSubscription userSubscription = QUserSubscription.userSubscription;
         BooleanBuilder where = new BooleanBuilder();
@@ -227,8 +227,8 @@ public class SubscriptionController {
         }
         if (filter.getFeeds() != null) {
             List<String> remoteFeedNames = filter.getFeeds().stream()
-                    .map(RemoteFeed::getFeedName)
-                    .collect(Collectors.toList());
+                .map(RemoteFeed::getFeedName)
+                .collect(Collectors.toList());
             where.and(userSubscription.remoteFeedName.in(remoteFeedNames));
         }
         if (filter.getPostings() != null) {
@@ -239,10 +239,10 @@ public class SubscriptionController {
         }
 
         return fetchSubscriptions(where).stream()
-                .filter(r -> filter.getFeeds() == null || filter.getFeeds().contains(r.getRemoteFeed()))
-                .filter(r -> filter.getPostings() == null || filter.getPostings().contains(r.getRemotePosting()))
-                .map(sr -> SubscriptionInfoUtil.build(sr, requestContext.getOptions(), requestContext))
-                .collect(Collectors.toList());
+            .filter(r -> filter.getFeeds() == null || filter.getFeeds().contains(r.getRemoteFeed()))
+            .filter(r -> filter.getPostings() == null || filter.getPostings().contains(r.getRemotePosting()))
+            .map(sr -> SubscriptionInfoUtil.build(sr, requestContext.getOptions(), requestContext))
+            .collect(Collectors.toList());
     }
 
     private List<UserSubscription> fetchSubscriptions(Predicate where) {
@@ -250,11 +250,11 @@ public class SubscriptionController {
         QContact contact = QContact.contact;
 
         return new JPAQueryFactory(entityManager)
-                .selectFrom(userSubscription)
-                .leftJoin(userSubscription.contact, contact).fetchJoin()
-                .leftJoin(contact.remoteAvatarMediaFile).fetchJoin()
-                .where(where)
-                .fetch();
+            .selectFrom(userSubscription)
+            .leftJoin(userSubscription.contact, contact).fetchJoin()
+            .leftJoin(contact.remoteAvatarMediaFile).fetchJoin()
+            .where(where)
+            .fetch();
     }
 
     @OptionHook("subscriptions.view")
@@ -263,9 +263,10 @@ public class SubscriptionController {
         Principal theirView = ourView.isAdmin() ? Principal.PRIVATE : ourView;
 
         jobs.run(
-                AllRemoteSubscribersUpdateJob.class,
-                new AllRemoteSubscribersUpdateJob.Parameters(theirView),
-                change.getNodeId());
+            AllRemoteSubscribersUpdateJob.class,
+            new AllRemoteSubscribersUpdateJob.Parameters(theirView),
+            change.getNodeId()
+        );
     }
 
 }

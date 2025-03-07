@@ -21,6 +21,7 @@ import org.moera.lib.node.types.ReactionsFilter;
 import org.moera.lib.node.types.ReactionsSliceInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.UserBlockedException;
@@ -42,7 +43,6 @@ import org.moera.node.model.ReactionCreatedUtil;
 import org.moera.node.model.ReactionInfoUtil;
 import org.moera.node.model.ReactionOverrideUtil;
 import org.moera.node.model.ReactionsSliceInfoUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.ReactionOperations;
@@ -113,9 +113,7 @@ public class PostingReactionController {
             return tx.executeWrite(() -> {
                 Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                         .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-                if (posting.getCurrentRevision().getSignature() == null) {
-                    throw new ValidationFailure("posting.not-signed");
-                }
+                ValidationUtil.notNull(posting.getCurrentRevision().getSignature(), "posting.not-signed");
                 reactionOperations.validate(reactionDescription, posting);
                 if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("posting.not-found");
@@ -268,9 +266,7 @@ public class PostingReactionController {
         }
         limit = limit != null && limit <= ReactionOperations.MAX_REACTIONS_PER_REQUEST
                 ? limit : ReactionOperations.MAX_REACTIONS_PER_REQUEST;
-        if (limit < 0) {
-            throw new ValidationFailure("limit.invalid");
-        }
+        ValidationUtil.assertion(limit >= 0, "limit.invalid");
         before = before != null ? before : SafeInteger.MAX_VALUE;
         return reactionOperations.getBefore(postingId, negative, emoji, before, limit);
     }

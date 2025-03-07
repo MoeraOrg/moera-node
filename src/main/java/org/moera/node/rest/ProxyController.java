@@ -15,6 +15,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.moera.lib.node.types.LinkPreviewInfo;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.validate.ValidationFailure;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.config.Config;
@@ -24,7 +26,6 @@ import org.moera.node.linkpreviewnet.LinkPreviewNetException;
 import org.moera.node.linkpreviewnet.LinkPreviewNetInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
@@ -59,17 +60,17 @@ public class ProxyController {
         log.info("GET /proxy/media, (url = {})", LogUtil.format(url));
 
         HttpClient client = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1)
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(CONNECTION_TIMEOUT)
-                .build();
+            .version(HttpClient.Version.HTTP_1_1)
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .connectTimeout(CONNECTION_TIMEOUT)
+            .build();
         HttpRequest request;
         try {
             request = HttpRequest.newBuilder()
-                    .GET()
-                    .uri(URI.create(url))
-                    .timeout(REQUEST_TIMEOUT)
-                    .build();
+                .GET()
+                .uri(URI.create(url))
+                .timeout(REQUEST_TIMEOUT)
+                .build();
         } catch (IllegalArgumentException e) {
             throw new ValidationFailure("proxy.url.invalid");
         }
@@ -90,9 +91,7 @@ public class ProxyController {
 
         HttpHeaders headers = new HttpHeaders();
         String contentType = response.headers().firstValue("Content-Type").orElse(null);
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new ValidationFailure("proxy.resource-not-media");
-        }
+        ValidationUtil.assertion(contentType != null && contentType.startsWith("image/"), "proxy.resource-not-media");
         headers.setContentType(MediaType.valueOf(contentType));
         response.headers().firstValueAsLong("Content-Length").ifPresent(headers::setContentLength);
         return new ResponseEntity<>(new InputStreamResource(response.body()), headers, HttpStatus.OK);
@@ -128,10 +127,10 @@ public class ProxyController {
         Document document;
         try {
             document = Jsoup.connect(url)
-                    .header("User-Agent", "curl/7.68.0")
-                    .followRedirects(true)
-                    .timeout((int) REQUEST_TIMEOUT.toMillis())
-                    .get();
+                .header("User-Agent", "curl/7.68.0")
+                .followRedirects(true)
+                .timeout((int) REQUEST_TIMEOUT.toMillis())
+                .get();
         } catch (IOException e) {
             throw new ObjectNotFoundFailure("proxy.resource-not-found");
         }

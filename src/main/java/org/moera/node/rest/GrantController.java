@@ -9,6 +9,7 @@ import org.moera.lib.node.types.GrantChange;
 import org.moera.lib.node.types.GrantInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.Admin;
@@ -18,7 +19,6 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.GrantUpdatedLiberin;
 import org.moera.node.model.GrantInfoUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.GrantCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,9 +77,7 @@ public class GrantController {
 
         nodeName = NodeName.expand(nodeName);
 
-        if (namingCache.get(nodeName).getNodeName() == null) {
-            throw new ValidationFailure("grant.name-not-registered");
-        }
+        ValidationUtil.notNull(namingCache.get(nodeName).getNodeName(), "grant.name-not-registered");
 
         long scope;
         if (!change.isRevoke()) {

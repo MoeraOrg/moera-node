@@ -37,6 +37,7 @@ import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
@@ -76,7 +77,6 @@ import org.moera.node.model.CommentTextUtil;
 import org.moera.node.model.CommentTotalInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfoUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.CommentOperations;
 import org.moera.node.operations.ContactOperations;
@@ -191,9 +191,7 @@ public class CommentController {
         if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (posting.getCurrentRevision().getSignature() == null) {
-            throw new ValidationFailure("posting.not-signed");
-        }
+        ValidationUtil.notNull(posting.getCurrentRevision().getSignature(), "posting.not-signed");
         Comment repliedTo = null;
         if (commentText.getRepliedToId() != null) {
             UUID repliedToId = Util.uuid(commentText.getRepliedToId())
@@ -376,15 +374,15 @@ public class CommentController {
                 }
             }
 
-            if (comment == null && commentText.getBodySrc() == null && ObjectUtils.isEmpty(commentText.getMedia())) {
-                throw new ValidationFailure("comment.body-src.blank");
-            }
-            if (
-                commentText.getBodySrc() != null
-                && commentText.getBodySrc().getEncoded().length() > getMaxCommentSize()
-            ) {
-                throw new ValidationFailure("comment.body-src.wrong-size");
-            }
+            ValidationUtil.assertion(
+                comment != null || commentText.getBodySrc() != null || !ObjectUtils.isEmpty(commentText.getMedia()),
+                "comment.body-src.blank"
+            );
+            ValidationUtil.assertion(
+                commentText.getBodySrc() == null
+                    || commentText.getBodySrc().getEncoded().length() <= getMaxCommentSize(),
+                "comment.body-src.wrong-size"
+            );
         } else {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
             byte[] fingerprint = CommentFingerprintBuilder.build(
@@ -399,25 +397,22 @@ public class CommentController {
             }
             digest = CryptoUtil.digest(fingerprint);
 
-            if (commentText.getBody() == null && ObjectUtils.isEmpty(commentText.getMedia())) {
-                throw new ValidationFailure("comment.body.blank");
-            }
-            if (commentText.getBody().getEncoded().length() > getMaxCommentSize()) {
-                throw new ValidationFailure("comment.body.wrong-size");
-            }
-            if (commentText.getBodyFormat() == null) {
-                throw new ValidationFailure("comment.body-format.missing");
-            }
-            if (commentText.getCreatedAt() == null) {
-                throw new ValidationFailure("comment.created-at.missing");
-            }
-            if (
+            ValidationUtil.assertion(
+                commentText.getBody() != null || !ObjectUtils.isEmpty(commentText.getMedia()),
+                "comment.body.blank"
+            );
+            ValidationUtil.assertion(
+                commentText.getBody().getEncoded().length() <= getMaxCommentSize(),
+                "comment.body.wrong-size"
+            );
+            ValidationUtil.notNull(commentText.getBodyFormat(), "comment.body-format.missing");
+            ValidationUtil.notNull(commentText.getCreatedAt(), "comment.created-at.missing");
+            ValidationUtil.assertion(
                 Duration.between(Instant.ofEpochSecond(commentText.getCreatedAt()), Instant.now())
                     .abs()
-                    .compareTo(CREATED_AT_MARGIN) > 0
-            ) {
-                throw new ValidationFailure("comment.created-at.out-of-range");
-            }
+                    .compareTo(CREATED_AT_MARGIN) <= 0,
+                "comment.created-at.out-of-range"
+            );
         }
         OperationsValidator.validateOperations(
             commentText.getOperations(),
@@ -526,16 +521,12 @@ public class CommentController {
             sliceInfo.setComments(Collections.emptyList());
             return sliceInfo;
         }
-        if (before != null && after != null) {
-            throw new ValidationFailure("comments.before-after-exclusive");
-        }
+        ValidationUtil.assertion(before == null || after == null, "comments.before-after-exclusive");
 
         limit = limit != null && limit <= CommentOperations.MAX_COMMENTS_PER_REQUEST
             ? limit
             : CommentOperations.MAX_COMMENTS_PER_REQUEST;
-        if (limit < 0) {
-            throw new ValidationFailure("limit.invalid");
-        }
+        ValidationUtil.assertion(limit >= 0, "limit.invalid");
 
         boolean sheriff = feedOperations.isSheriff(stories);
 
