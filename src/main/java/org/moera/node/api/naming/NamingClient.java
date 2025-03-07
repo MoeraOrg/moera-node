@@ -186,8 +186,9 @@ public class NamingClient {
         options.set("profile.node-name", newRegisteredName);
         if (!Objects.equals(prevRegisteredName, newRegisteredName)) {
             liberinManager.send(
-                    new NodeNameChangedLiberin(newRegisteredName, prevRegisteredName, options, null)
-                            .withNodeId(options.nodeId()));
+                new NodeNameChangedLiberin(newRegisteredName, prevRegisteredName, options, null)
+                    .withNodeId(options.nodeId())
+            );
         }
 
         PrivateKey signingKey = options.getPrivateKey("naming.operation.signing-key");
@@ -238,24 +239,27 @@ public class NamingClient {
         byte[] updatingKeyR = CryptoUtil.rawPublicKey(updatingKey);
         byte[] signingKeyR = CryptoUtil.rawPublicKey(signingKey);
         long validFrom = Instant.now()
-                                .plus(options.getDuration("profile.signing-key.valid-from.layover").getDuration())
-                                .getEpochSecond();
-        log.info("Registering name '{}': node uri = {}, updating key = {}, signing key = {}, valid from = {}",
-                name, nodeUri, Util.dump(updatingKeyR), Util.dump(signingKeyR), Util.formatTimestamp(validFrom));
+            .plus(options.getDuration("profile.signing-key.valid-from.layover").getDuration())
+            .getEpochSecond();
+        log.info(
+            "Registering name '{}': node uri = {}, updating key = {}, signing key = {}, valid from = {}",
+            name, nodeUri, Util.dump(updatingKeyR), Util.dump(signingKeyR), Util.formatTimestamp(validFrom)
+        );
         UUID operationId;
         NodeName registeredName = NodeName.parse(name);
         try {
             RegisteredNameInfo info = namingService.getCurrent(registeredName.getName(), registeredName.getGeneration());
             byte[] previousDigest = info != null ? info.getDigest() : null;
             operationId = namingService.put(
-                    registeredName.getName(),
-                    registeredName.getGeneration(),
-                    updatingKeyR,
-                    nodeUri,
-                    signingKeyR,
-                    validFrom,
-                    previousDigest,
-                    null);
+                registeredName.getName(),
+                registeredName.getGeneration(),
+                updatingKeyR,
+                nodeUri,
+                signingKeyR,
+                validFrom,
+                previousDigest,
+                null
+            );
         } catch (Exception e) {
             throw new NamingNotAvailableException(e);
         }
@@ -297,10 +301,10 @@ public class NamingClient {
         nodeUri = nodeUri != null ? nodeUri : info.getNodeUri();
         byte[] signingKeyR = signingKey != null ? CryptoUtil.rawPublicKey(signingKey) : info.getSigningKey();
         long validFrom = signingKey != null
-                ? Instant.now()
-                    .plus(options.getDuration("profile.signing-key.valid-from.layover").getDuration())
-                    .getEpochSecond()
-                : info.getValidFrom();
+            ? Instant.now()
+                .plus(options.getDuration("profile.signing-key.valid-from.layover").getDuration())
+                .getEpochSecond()
+            : info.getValidFrom();
         byte[] putCall = Fingerprints.putCall(
             info.getName(),
             info.getGeneration(),
@@ -320,14 +324,15 @@ public class NamingClient {
 
         try {
             operationId = namingService.put(
-                    info.getName(),
-                    info.getGeneration(),
-                    null,
-                    nodeUri,
-                    signingKey != null ? signingKeyR : null,
-                    signingKey != null ? validFrom : null,
-                    info.getDigest(),
-                    signature);
+                info.getName(),
+                info.getGeneration(),
+                null,
+                nodeUri,
+                signingKey != null ? signingKeyR : null,
+                signingKey != null ? validFrom : null,
+                info.getDigest(),
+                signature
+            );
         } catch (Exception e) {
             throw new NamingNotAvailableException(e);
         }

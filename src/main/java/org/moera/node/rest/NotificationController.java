@@ -139,7 +139,7 @@ public class NotificationController {
         String namingLocation = domains.getDomainOptions(requestContext.nodeId()).getString("naming.location");
         NodeName registeredName = NodeName.parse(ownerName);
         RegisteredNameInfo nameInfo =
-                namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(), namingLocation);
+            namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(), namingLocation);
         return nameInfo != null ? nameInfo.getSigningKey() : null;
     }
 
