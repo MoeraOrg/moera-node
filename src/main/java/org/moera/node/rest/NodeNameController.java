@@ -81,14 +81,14 @@ public class NodeNameController {
         RegisteredNameSecret secretInfo = new RegisteredNameSecret();
         secretInfo.setName(nameToRegister.getName());
         MnemonicKey mnemonicKey = CryptoUtil.generateMnemonicKey();
-        secretInfo.setSecret(mnemonicKey.getSecret());
-        secretInfo.setMnemonic(Arrays.asList(mnemonicKey.getMnemonic().split(" ")));
+        secretInfo.setSecret(mnemonicKey.secret());
+        secretInfo.setMnemonic(Arrays.asList(mnemonicKey.mnemonic().split(" ")));
         KeyPair signingKeyPair = CryptoUtil.generateKey();
 
         namingClient.register(
             nameToRegister.getName(),
             getNodeUri(request),
-            mnemonicKey.getPublicKey(),
+            mnemonicKey.publicKey(),
             signingKeyPair.getPrivateKey(),
             signingKeyPair.getPublicKey(),
             options
