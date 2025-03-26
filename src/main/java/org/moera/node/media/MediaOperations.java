@@ -152,8 +152,9 @@ public class MediaOperations {
         while (true) {
             Path path;
             do {
-                path = FileSystems.getDefault().getPath(config.getMedia().getPath(), TMP_DIR,
-                        CryptoUtil.token().substring(0, 16));
+                path = FileSystems.getDefault().getPath(
+                    config.getMedia().getPath(), TMP_DIR, CryptoUtil.token().substring(0, 16)
+                );
             } while (Files.exists(path));
             try {
                 return new TemporaryFile(path, Files.newOutputStream(path, CREATE));
@@ -208,8 +209,9 @@ public class MediaOperations {
         }
     }
 
-    public static DigestingOutputStream transfer(InputStream in, OutputStream out, Long contentLength,
-                                                 int maxSize) throws IOException {
+    public static DigestingOutputStream transfer(
+        InputStream in, OutputStream out, Long contentLength, int maxSize
+    ) throws IOException {
         DigestingOutputStream digestingStream = new DigestingOutputStream(out);
 
         out = digestingStream;
@@ -253,8 +255,9 @@ public class MediaOperations {
     }
 
     @Transactional(REQUIRES_NEW)
-    public MediaFile putInPlace(String id, String contentType, Path tmpPath, byte[] digest,
-                                boolean exposed) throws IOException {
+    public MediaFile putInPlace(
+        String id, String contentType, Path tmpPath, byte[] digest, boolean exposed
+    ) throws IOException {
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
         if (mediaFile == null) {
             if (digest == null) {
@@ -265,7 +268,8 @@ public class MediaOperations {
             }
 
             Path mediaPath = FileSystems.getDefault().getPath(
-                    config.getMedia().getPath(), MimeUtils.fileName(id, contentType));
+                config.getMedia().getPath(), MimeUtils.fileName(id, contentType)
+            );
             Files.move(tmpPath, mediaPath, REPLACE_EXISTING);
 
             mediaFile = new MediaFile();
@@ -309,8 +313,11 @@ public class MediaOperations {
     }
 
     public byte[] digest(MediaFile mediaFile) throws IOException {
-        return digest(FileSystems.getDefault().getPath(
-                config.getMedia().getPath(), MimeUtils.fileName(mediaFile.getId(), mediaFile.getMimeType())));
+        return digest(
+            FileSystems.getDefault().getPath(
+                config.getMedia().getPath(), MimeUtils.fileName(mediaFile.getId(), mediaFile.getMimeType())
+            )
+        );
     }
 
     private static byte[] digest(Path mediaPath) throws IOException {
@@ -348,12 +355,13 @@ public class MediaOperations {
             DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
 
             ThumbnailUtil.thumbnailOf(getPath(original).toFile(), original.getMimeType())
-                    .sourceRegion(region)
-                    .size(region.width, region.height)
-                    .toOutputStream(out);
+                .sourceRegion(region)
+                .size(region.width, region.height)
+                .toOutputStream(out);
 
             MediaFile cropped = putInPlace(
-                    out.getHash(), previewFormat.mimeType, tmp.getPath(), out.getDigest(), false);
+                out.getHash(), previewFormat.mimeType, tmp.getPath(), out.getDigest(), false
+            );
             cropped = mediaFileRepository.save(cropped);
 
             return cropped;
@@ -380,14 +388,14 @@ public class MediaOperations {
                 DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
 
                 ThumbnailUtil.thumbnailOf(getPath(cropped).toFile(), cropped.getMimeType())
-                        .width(width)
-                        .outputFormat(previewFormat.format)
-                        .toOutputStream(out);
+                    .width(width)
+                    .outputFormat(previewFormat.format)
+                    .toOutputStream(out);
 
                 long fileSize = Files.size(tmp.getPath());
                 long prevFileSize = largerPreview != null
-                        ? largerPreview.getMediaFile().getFileSize()
-                        : cropped.getFileSize();
+                    ? largerPreview.getMediaFile().getFileSize()
+                    : cropped.getFileSize();
                 long gain = (prevFileSize - fileSize) * 100 / prevFileSize; // negative, if fileSize > prevFileSize
                 if (gain < universalContext.getOptions().getInt("media.preview-gain")) {
                     if (largerPreview != null) {
@@ -396,7 +404,8 @@ public class MediaOperations {
                     // otherwise original will be used in preview
                 } else {
                     previewFile = putInPlace(
-                            out.getHash(), previewFormat.mimeType, tmp.getPath(), out.getDigest(), false);
+                        out.getHash(), previewFormat.mimeType, tmp.getPath(), out.getDigest(), false
+                    );
                     previewFile = mediaFileRepository.save(previewFile);
                 }
             } finally {
@@ -444,7 +453,8 @@ public class MediaOperations {
         Principal view = entry.getViewCompound();
         if (entry.getParent() != null) {
             view = view.intersect(
-                    entry.getParent().getViewCompound().intersect(entry.getParent().getViewCommentsCompound()));
+                entry.getParent().getViewCompound().intersect(entry.getParent().getViewCommentsCompound())
+            );
         }
         return view;
     }
@@ -455,12 +465,12 @@ public class MediaOperations {
         }
 
         Collection<Entry> entries =
-                entryAttachmentRepository.findEntriesByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId());
+            entryAttachmentRepository.findEntriesByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId());
         Principal view = entries.stream()
-                .map(this::entryViewPrincipal)
-                .reduce(Principal.NONE, Principal::union);
+            .map(this::entryViewPrincipal)
+            .reduce(Principal.NONE, Principal::union);
         Collection<Draft> drafts =
-                entryAttachmentRepository.findDraftsByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId());
+            entryAttachmentRepository.findDraftsByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId());
         if (!drafts.isEmpty()) {
             view = view.union(Principal.ADMIN);
         }
@@ -468,53 +478,53 @@ public class MediaOperations {
         mediaFileOwner.setPermissionsUpdatedAt(Util.now());
         for (Posting posting : mediaFileOwner.getPostings()) {
             List<Entry> list = entries.stream()
-                    .filter(e -> Objects.equals(e.getReceiverName(), posting.getReceiverName()))
-                    .toList();
+                .filter(e -> Objects.equals(e.getReceiverName(), posting.getReceiverName()))
+                .toList();
             list.forEach(e -> posting.setAcceptedReactionsPositive(e.getAcceptedReactionsPositive()));
             list.forEach(e -> posting.setAcceptedReactionsNegative(e.getAcceptedReactionsNegative()));
             Principal principal = list.stream()
-                    .map(this::entryViewPrincipal)
-                    .reduce(Principal.NONE, Principal::union);
+                .map(this::entryViewPrincipal)
+                .reduce(Principal.NONE, Principal::union);
             posting.setViewPrincipal(principal);
             principal = list.stream()
-                    .map(Entry::getViewCommentsPrincipal)
-                    .reduce(Principal.NONE, Principal::union);
+                .map(Entry::getViewCommentsPrincipal)
+                .reduce(Principal.NONE, Principal::union);
             posting.setViewCommentsPrincipal(principal);
             principal = list.stream()
-                    .map(Entry::getAddCommentPrincipal)
-                    .reduce(Principal.NONE, Principal::union);
+                .map(Entry::getAddCommentPrincipal)
+                .reduce(Principal.NONE, Principal::union);
             posting.setAddCommentPrincipal(principal);
             principal = list.stream()
-                    .map(Entry::getViewReactionsPrincipal)
-                    .reduce(Principal.NONE, Principal::union);
+                .map(Entry::getViewReactionsPrincipal)
+                .reduce(Principal.NONE, Principal::union);
             posting.setViewReactionsPrincipal(principal);
             principal = list.stream()
-                    .map(Entry::getViewNegativeReactionsPrincipal)
-                    .reduce(Principal.NONE, Principal::union);
+                .map(Entry::getViewNegativeReactionsPrincipal)
+                .reduce(Principal.NONE, Principal::union);
             posting.setViewNegativeReactionsPrincipal(principal);
             principal = list.stream()
-                    .map(Entry::getViewReactionTotalsPrincipal)
-                    .reduce(Principal.NONE, Principal::union);
+                .map(Entry::getViewReactionTotalsPrincipal)
+                .reduce(Principal.NONE, Principal::union);
             posting.setViewReactionTotalsPrincipal(principal);
             principal = list.stream()
-                    .map(Entry::getViewNegativeReactionTotalsPrincipal)
-                    .reduce(Principal.NONE, Principal::union);
+                .map(Entry::getViewNegativeReactionTotalsPrincipal)
+                .reduce(Principal.NONE, Principal::union);
             posting.setViewNegativeReactionTotalsPrincipal(principal);
             principal = list.stream()
-                    .map(Entry::getViewReactionRatiosPrincipal)
-                    .reduce(Principal.NONE, Principal::union);
+                .map(Entry::getViewReactionRatiosPrincipal)
+                .reduce(Principal.NONE, Principal::union);
             posting.setViewReactionRatiosPrincipal(principal);
             principal = list.stream()
-                    .map(Entry::getViewNegativeReactionRatiosPrincipal)
-                    .reduce(Principal.NONE, Principal::union);
+                .map(Entry::getViewNegativeReactionRatiosPrincipal)
+                .reduce(Principal.NONE, Principal::union);
             posting.setViewNegativeReactionTotalsPrincipal(principal);
             principal = list.stream()
-                    .map(Entry::getAddReactionPrincipal)
-                    .reduce(Principal.NONE, Principal::union);
+                .map(Entry::getAddReactionPrincipal)
+                .reduce(Principal.NONE, Principal::union);
             posting.setAddReactionPrincipal(principal);
             principal = list.stream()
-                    .map(Entry::getAddNegativeReactionPrincipal)
-                    .reduce(Principal.NONE, Principal::union);
+                .map(Entry::getAddNegativeReactionPrincipal)
+                .reduce(Principal.NONE, Principal::union);
             posting.setAddNegativeReactionPrincipal(principal);
         }
     }
@@ -644,7 +654,8 @@ public class MediaOperations {
         List<MediaFileOwner> attached = new ArrayList<>();
         Set<UUID> usedIds = new HashSet<>();
         Map<UUID, MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findByIds(universalContext.nodeId(), ids)
-            .stream().collect(Collectors.toMap(MediaFileOwner::getId, Function.identity()));
+            .stream()
+            .collect(Collectors.toMap(MediaFileOwner::getId, Function.identity()));
         for (UUID id : ids) {
             if (usedIds.contains(id)) {
                 continue;
@@ -674,10 +685,10 @@ public class MediaOperations {
     public List<Story> getParentStories(UUID mediaFileOwnerId) {
         Set<Entry> entries = entryRepository.findByMediaId(mediaFileOwnerId);
         return entries.stream()
-                .map(entry -> entry instanceof Comment ? entry.getParent().getId() : entry.getId())
-                .map(id -> storyRepository.findByEntryId(universalContext.nodeId(), id))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
+            .map(entry -> entry instanceof Comment ? entry.getParent().getId() : entry.getId())
+            .map(id -> storyRepository.findByEntryId(universalContext.nodeId(), id))
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
     }
 
     @Scheduled(fixedDelayString = "PT6H")

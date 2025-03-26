@@ -156,11 +156,15 @@ public class MediaController {
         @RequestHeader(value = "Content-Length", required = false) Long contentLength,
         InputStream in
     ) throws IOException {
-        log.info("POST /media/public (Content-Type: {}, Content-Length: {})",
-                LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
+        log.info(
+            "POST /media/public (Content-Type: {}, Content-Length: {})",
+            LogUtil.format(mediaType.toString()), LogUtil.format(contentLength)
+        );
 
-        if (!requestContext.isAdmin(Scope.UPLOAD_PUBLIC_MEDIA)
-                && requestContext.getClientName(Scope.UPLOAD_PUBLIC_MEDIA) == null) {
+        if (
+            !requestContext.isAdmin(Scope.UPLOAD_PUBLIC_MEDIA)
+            && requestContext.getClientName(Scope.UPLOAD_PUBLIC_MEDIA) == null
+        ) {
             throw new AuthenticationException();
         }
         if (isBlocked()) {
@@ -171,7 +175,8 @@ public class MediaController {
         try {
             DigestingOutputStream out = transfer(in, tmp.getOutputStream(), contentLength);
             MediaFile mediaFile = mediaOperations.putInPlace(
-                    out.getHash(), toContentType(mediaType), tmp.getPath(), out.getDigest(), true);
+                out.getHash(), toContentType(mediaType), tmp.getPath(), out.getDigest(), true
+            );
             mediaFile = mediaFileRepository.save(mediaFile);
 
             return PublicMediaFileInfoUtil.build(mediaFile);
@@ -187,9 +192,11 @@ public class MediaController {
     }
 
     private boolean isBlocked() {
-        return (!requestContext.getOptions().getBool("posting.non-admin.allowed")
-                    || blockedUserOperations.isBlocked(BlockedOperation.POSTING))
-                && blockedUserOperations.isBlocked(BlockedOperation.COMMENT);
+        return (
+            !requestContext.getOptions().getBool("posting.non-admin.allowed")
+            || blockedUserOperations.isBlocked(BlockedOperation.POSTING)
+        )
+            && blockedUserOperations.isBlocked(BlockedOperation.COMMENT);
     }
 
     @PostMapping({"/private", "/private/{clientName}"})
@@ -200,16 +207,18 @@ public class MediaController {
         @PathVariable String clientName,
         InputStream in
     ) throws IOException {
-        log.info("POST /media/private (Content-Type: {}, Content-Length: {})",
-                LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
+        log.info(
+            "POST /media/private (Content-Type: {}, Content-Length: {})",
+            LogUtil.format(mediaType.toString()), LogUtil.format(contentLength)
+        );
 
         if (Objects.equals(clientName, requestContext.nodeName())) {
             clientName = null;
         }
 
         boolean mediaUploadScope = clientName == null
-                ? requestContext.isAdmin(Scope.UPLOAD_PRIVATE_MEDIA)
-                : requestContext.isClient(clientName, Scope.UPLOAD_PRIVATE_MEDIA);
+            ? requestContext.isAdmin(Scope.UPLOAD_PRIVATE_MEDIA)
+            : requestContext.isClient(clientName, Scope.UPLOAD_PRIVATE_MEDIA);
         if (!mediaUploadScope) {
             throw new AuthenticationException();
         }
@@ -224,7 +233,8 @@ public class MediaController {
             byte[] digest = out.getDigest();
 
             MediaFile mediaFile = mediaOperations.putInPlace(
-                    id, toContentType(mediaType), tmp.getPath(), digest, false);
+                id, toContentType(mediaType), tmp.getPath(), digest, false
+            );
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
             MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, clientName);
@@ -247,7 +257,7 @@ public class MediaController {
             id = id.substring(0, id.length() - 1);
         }
         MediaFile mediaFile = mediaFileRepository.findById(id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
         if (mediaFile.isExposed()) {
             return mediaFile;
         } else {
@@ -257,10 +267,12 @@ public class MediaController {
 
     private MediaFileOwner getMediaFileOwner(UUID id) {
         MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
         Principal viewPrincipal = mediaFileOwner.getViewE(requestContext.nodeName());
-        if (!requestContext.isPrincipal(viewPrincipal, Scope.VIEW_MEDIA)
-                && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), viewPrincipal)) {
+        if (
+            !requestContext.isPrincipal(viewPrincipal, Scope.VIEW_MEDIA)
+            && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), viewPrincipal)
+        ) {
             throw new ObjectNotFoundFailure("media.not-found");
         }
         return mediaFileOwner;
@@ -284,9 +296,11 @@ public class MediaController {
 
     @GetMapping("/public/{id}/data")
     @Transactional
-    public ResponseEntity<Resource> getDataPublic(@PathVariable String id,
-                                                  @RequestParam(required = false) Integer width,
-                                                  @RequestParam(required = false) Boolean download) {
+    public ResponseEntity<Resource> getDataPublic(
+        @PathVariable String id,
+        @RequestParam(required = false) Integer width,
+        @RequestParam(required = false) Boolean download
+    ) {
         log.info("GET /media/public/{id}/data (id = {})", LogUtil.format(id));
 
         return mediaOperations.serve(getMediaFile(id), width, download);
@@ -294,9 +308,11 @@ public class MediaController {
 
     @GetMapping("/private/{id}/data")
     @Transactional
-    public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id,
-                                                   @RequestParam(required = false) Integer width,
-                                                   @RequestParam(required = false) Boolean download) {
+    public ResponseEntity<Resource> getDataPrivate(
+        @PathVariable UUID id,
+        @RequestParam(required = false) Integer width,
+        @RequestParam(required = false) Boolean download
+    ) {
         log.info("GET /media/private/{id}/data (id = {})", LogUtil.format(id));
 
         return mediaOperations.serve(getMediaFileOwner(id).getMediaFile(), width, download);

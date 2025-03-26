@@ -105,8 +105,9 @@ public class AvatarController {
             ThumbnailUtil.thumbnailOf(mediaOperations.getPath(mediaFile).toFile(), mediaFile.getMimeType())
                 .rotate(avatarAttributes.getRotate())
                 .sourceRegion(
-                        avatarAttributes.getClipX(), avatarAttributes.getClipY(),
-                        avatarAttributes.getClipSize(), avatarAttributes.getClipSize())
+                    avatarAttributes.getClipX(), avatarAttributes.getClipY(),
+                    avatarAttributes.getClipSize(), avatarAttributes.getClipSize()
+                )
                 .size(avatarAttributes.getAvatarSize(), avatarAttributes.getAvatarSize())
                 .toOutputStream(out);
 
@@ -212,8 +213,8 @@ public class AvatarController {
         log.info("GET /avatars");
 
         return avatarRepository.findAllByNodeId(requestContext.nodeId()).stream()
-                .map(AvatarInfoUtil::build)
-                .collect(Collectors.toList());
+            .map(AvatarInfoUtil::build)
+            .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -222,7 +223,7 @@ public class AvatarController {
         log.info("GET /avatars/{id} (id = {})", LogUtil.format(id));
 
         Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
         return AvatarInfoUtil.build(avatar);
     }
 
@@ -233,7 +234,7 @@ public class AvatarController {
         log.info("DELETE /avatars/{id} (id = {})", LogUtil.format(id));
 
         Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
         avatarRepository.delete(avatar);
 
         requestContext.send(new AvatarDeletedLiberin(avatar));
