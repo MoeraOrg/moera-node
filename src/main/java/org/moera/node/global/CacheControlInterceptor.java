@@ -21,20 +21,25 @@ public class CacheControlInterceptor implements HandlerInterceptor {
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }
+
         Class<?> controllerType = ((HandlerMethod) handler).getBeanType();
         Method methodType = ((HandlerMethod) handler).getMethod();
         if (AnnotatedElementUtils.hasAnnotation(controllerType, UiController.class)) {
-            if (AnnotatedElementUtils.hasAnnotation(controllerType, MaxCache.class)
-                    || AnnotatedElementUtils.hasAnnotation(methodType, MaxCache.class)) {
-                response.addHeader(HttpHeaders.CACHE_CONTROL,
-                        CacheControl.maxAge(3650, TimeUnit.DAYS).getHeaderValue());
+            if (
+                AnnotatedElementUtils.hasAnnotation(controllerType, MaxCache.class)
+                || AnnotatedElementUtils.hasAnnotation(methodType, MaxCache.class)
+            ) {
+                response.addHeader(HttpHeaders.CACHE_CONTROL, CacheControl.maxAge(3650, TimeUnit.DAYS).getHeaderValue());
             }
         } else {
-            if (AnnotatedElementUtils.hasAnnotation(controllerType, NoCache.class)
-                || AnnotatedElementUtils.hasAnnotation(methodType, NoCache.class)) {
+            if (
+                AnnotatedElementUtils.hasAnnotation(controllerType, NoCache.class)
+                || AnnotatedElementUtils.hasAnnotation(methodType, NoCache.class)
+            ) {
                 response.addHeader(HttpHeaders.CACHE_CONTROL, CacheControl.noStore().getHeaderValue());
             }
         }
+
         return true;
     }
 
