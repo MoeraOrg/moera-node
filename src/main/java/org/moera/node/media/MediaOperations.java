@@ -352,7 +352,7 @@ public class MediaOperations {
 
         var tmp = tmpFile();
         try {
-            DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
+            DigestingOutputStream out = new DigestingOutputStream(tmp.outputStream());
 
             ThumbnailUtil.thumbnailOf(getPath(original).toFile(), original.getMimeType())
                 .sourceRegion(region)
@@ -360,13 +360,13 @@ public class MediaOperations {
                 .toOutputStream(out);
 
             MediaFile cropped = putInPlace(
-                out.getHash(), previewFormat.mimeType, tmp.getPath(), out.getDigest(), false
+                out.getHash(), previewFormat.mimeType, tmp.path(), out.getDigest(), false
             );
             cropped = mediaFileRepository.save(cropped);
 
             return cropped;
         } finally {
-            Files.deleteIfExists(tmp.getPath());
+            Files.deleteIfExists(tmp.path());
         }
     }
 
@@ -385,14 +385,14 @@ public class MediaOperations {
         if (cropped.getSizeX() > width) {
             var tmp = tmpFile();
             try {
-                DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
+                DigestingOutputStream out = new DigestingOutputStream(tmp.outputStream());
 
                 ThumbnailUtil.thumbnailOf(getPath(cropped).toFile(), cropped.getMimeType())
                     .width(width)
                     .outputFormat(previewFormat.format)
                     .toOutputStream(out);
 
-                long fileSize = Files.size(tmp.getPath());
+                long fileSize = Files.size(tmp.path());
                 long prevFileSize = largerPreview != null
                     ? largerPreview.getMediaFile().getFileSize()
                     : cropped.getFileSize();
@@ -404,12 +404,12 @@ public class MediaOperations {
                     // otherwise original will be used in preview
                 } else {
                     previewFile = putInPlace(
-                        out.getHash(), previewFormat.mimeType, tmp.getPath(), out.getDigest(), false
+                        out.getHash(), previewFormat.mimeType, tmp.path(), out.getDigest(), false
                     );
                     previewFile = mediaFileRepository.save(previewFile);
                 }
             } finally {
-                Files.deleteIfExists(tmp.getPath());
+                Files.deleteIfExists(tmp.path());
             }
         }
 

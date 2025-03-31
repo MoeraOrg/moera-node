@@ -131,9 +131,9 @@ public class MediaController {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            DigestingOutputStream out = transfer(in, tmp.getOutputStream(), contentLength);
+            DigestingOutputStream out = transfer(in, tmp.outputStream(), contentLength);
             MediaFile mediaFile = mediaOperations.putInPlace(
-                out.getHash(), toContentType(mediaType), tmp.getPath(), out.getDigest(), true
+                out.getHash(), toContentType(mediaType), tmp.path(), out.getDigest(), true
             );
             mediaFile = mediaFileRepository.save(mediaFile);
 
@@ -145,7 +145,7 @@ public class MediaController {
         } catch (IOException e) {
             throw new OperationFailure("media.storage-error");
         } finally {
-            Files.deleteIfExists(tmp.getPath());
+            Files.deleteIfExists(tmp.path());
         }
     }
 
@@ -186,12 +186,12 @@ public class MediaController {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            DigestingOutputStream out = transfer(in, tmp.getOutputStream(), contentLength);
+            DigestingOutputStream out = transfer(in, tmp.outputStream(), contentLength);
             String id = out.getHash();
             byte[] digest = out.getDigest();
 
             MediaFile mediaFile = mediaOperations.putInPlace(
-                id, toContentType(mediaType), tmp.getPath(), digest, false
+                id, toContentType(mediaType), tmp.path(), digest, false
             );
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
@@ -206,7 +206,7 @@ public class MediaController {
         } catch (IOException e) {
             throw new OperationFailure("media.storage-error");
         } finally {
-            Files.deleteIfExists(tmp.getPath());
+            Files.deleteIfExists(tmp.path());
         }
     }
 

@@ -135,7 +135,7 @@ public class MediaManager {
         Long contentLength = responseBody.contentLength() >= 0 ? responseBody.contentLength() : null;
         try {
             DigestingOutputStream out = MediaOperations.transfer(
-                responseBody.byteStream(), tmpFile.getOutputStream(), contentLength, maxSize
+                responseBody.byteStream(), tmpFile.outputStream(), contentLength, maxSize
             );
             return new TemporaryMediaFile(out.getHash(), contentType, out.getDigest());
         } catch (ThresholdReachedException e) {
@@ -181,11 +181,11 @@ public class MediaManager {
             var tmp = mediaOperations.tmpFile();
             try {
                 var tmpMedia = getPublicMedia(nodeName, id, tmp, maxSize);
-                if (!tmpMedia.getMediaFileId().equals(id)) {
-                    log.warn("Public media {} has hash {}", id, tmpMedia.getMediaFileId());
+                if (!tmpMedia.mediaFileId().equals(id)) {
+                    log.warn("Public media {} has hash {}", id, tmpMedia.mediaFileId());
                     return null;
                 }
-                mediaFile = mediaOperations.putInPlace(id, tmpMedia.getContentType(), tmp.getPath(), null, true);
+                mediaFile = mediaOperations.putInPlace(id, tmpMedia.contentType(), tmp.path(), null, true);
                 // the entity is detached after putInPlace() transaction closed
                 mediaFile = entityManager.merge(mediaFile);
 
@@ -196,9 +196,9 @@ public class MediaManager {
                 );
             } finally {
                 try {
-                    Files.deleteIfExists(tmp.getPath());
+                    Files.deleteIfExists(tmp.path());
                 } catch (IOException e) {
-                    log.warn("Error removing temporary media file {}: {}", tmp.getPath(), e.getMessage());
+                    log.warn("Error removing temporary media file {}: {}", tmp.path(), e.getMessage());
                 }
             }
         } finally {
@@ -323,18 +323,18 @@ public class MediaManager {
                     var tmp = mediaOperations.tmpFile();
                     try {
                         var tmpMedia = getPrivateMedia(nodeName, carte, id, tmp, maxSize);
-                        if (!tmpMedia.getMediaFileId().equals(mediaFileId)) {
-                            log.warn("Media {} has hash {} instead of {}", id, tmpMedia.getMediaFileId(), mediaFileId);
+                        if (!tmpMedia.mediaFileId().equals(mediaFileId)) {
+                            log.warn("Media {} has hash {} instead of {}", id, tmpMedia.mediaFileId(), mediaFileId);
                             return null;
                         }
                         mediaFile = mediaOperations.putInPlace(
-                            mediaFileId, tmpMedia.getContentType(), tmp.getPath(), null, false
+                            mediaFileId, tmpMedia.contentType(), tmp.path(), null, false
                         );
                     } finally {
                         try {
-                            Files.deleteIfExists(tmp.getPath());
+                            Files.deleteIfExists(tmp.path());
                         } catch (IOException e) {
-                            log.warn("Error removing temporary media file {}: {}", tmp.getPath(), e.getMessage());
+                            log.warn("Error removing temporary media file {}: {}", tmp.path(), e.getMessage());
                         }
                     }
                     cacheRemoteMedia(null, nodeName, id, mediaFile.getDigest(), mediaFile);
@@ -390,15 +390,15 @@ public class MediaManager {
             var tmpMedia = getPrivateMedia(
                 nodeName, carte, id, tmp, universalContext.getOptions().getInt("media.verification.max-size")
             );
-            cacheRemoteMedia(null, nodeName, id, tmpMedia.getDigest(), null);
-            return tmpMedia.getDigest();
+            cacheRemoteMedia(null, nodeName, id, tmpMedia.digest(), null);
+            return tmpMedia.digest();
         } catch (MoeraNodeException e) {
             return null; // TODO need more graceful approach
         } finally {
             try {
-                Files.deleteIfExists(tmp.getPath());
+                Files.deleteIfExists(tmp.path());
             } catch (IOException e) {
-                log.warn("Error removing temporary media file {}: {}", tmp.getPath(), e.getMessage());
+                log.warn("Error removing temporary media file {}: {}", tmp.path(), e.getMessage());
             }
         }
     }

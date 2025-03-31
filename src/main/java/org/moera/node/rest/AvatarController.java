@@ -100,7 +100,7 @@ public class AvatarController {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
+            DigestingOutputStream out = new DigestingOutputStream(tmp.outputStream());
 
             ThumbnailUtil.thumbnailOf(mediaOperations.getPath(mediaFile).toFile(), mediaFile.getMimeType())
                 .rotate(avatarAttributes.getRotate())
@@ -112,7 +112,7 @@ public class AvatarController {
                 .toOutputStream(out);
 
             MediaFile avatarFile = mediaOperations.putInPlace(
-                out.getHash(), thumbnailFormat.mimeType, tmp.getPath(), out.getDigest(), true
+                out.getHash(), thumbnailFormat.mimeType, tmp.path(), out.getDigest(), true
             );
             avatarFile = mediaFileRepository.save(avatarFile);
 
@@ -137,7 +137,7 @@ public class AvatarController {
         } catch (IOException e) {
             throw new OperationFailure("media.storage-error");
         } finally {
-            Files.deleteIfExists(tmp.getPath());
+            Files.deleteIfExists(tmp.path());
         }
     }
 
