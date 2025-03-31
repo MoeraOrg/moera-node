@@ -1,7 +1,11 @@
 package org.moera.node.media;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -9,6 +13,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -22,6 +27,7 @@ import org.moera.lib.node.types.PublicMediaFileInfo;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.api.node.MoeraNodeLocalStorageException;
 import org.moera.node.api.node.NodeApi;
+import org.moera.node.config.Config;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFile;
@@ -43,6 +49,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class MediaManager {
@@ -50,6 +57,9 @@ public class MediaManager {
     private static final Logger log = LoggerFactory.getLogger(MediaManager.class);
 
     private static final int REMOTE_MEDIA_CACHE_TTL = 365; // days
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestCounter requestCounter;
@@ -83,6 +93,37 @@ public class MediaManager {
     private EntityManager entityManager;
 
     private final ParametrizedLock<String> mediaFileLocks = new ParametrizedLock<>();
+
+    @PostConstruct
+    public void init() throws MediaPathNotSetException {
+        if (ObjectUtils.isEmpty(config.getMedia().getPath())) {
+            throw new MediaPathNotSetException("Path not set");
+        }
+        try {
+            Path path = FileSystems.getDefault().getPath(config.getMedia().getPath());
+            if (!Files.exists(path)) {
+                throw new MediaPathNotSetException("Not found");
+            }
+            if (!Files.isDirectory(path)) {
+                throw new MediaPathNotSetException("Not a directory");
+            }
+            if (!Files.isWritable(path)) {
+                throw new MediaPathNotSetException("Not writable");
+            }
+            path = path.resolve(MediaOperations.TMP_DIR);
+            if (!Files.exists(path)) {
+                try {
+                    Files.createDirectory(path);
+                } catch (FileAlreadyExistsException e) {
+                    // ok
+                } catch (Exception e) {
+                    throw new MediaPathNotSetException("Cannot create tmp/ subdirectory: " + e.getMessage());
+                }
+            }
+        } catch (InvalidPathException e) {
+            throw new MediaPathNotSetException("Path is invalid");
+        }
+    }
 
     private TemporaryMediaFile receiveMediaFile(
         String remoteNodeName, String mediaId, ResponseBody responseBody, TemporaryFile tmpFile, int maxSize

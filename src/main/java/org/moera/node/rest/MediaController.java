@@ -3,17 +3,12 @@ package org.moera.node.rest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -29,7 +24,6 @@ import org.moera.lib.node.types.validate.ValidationFailure;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.UserBlockedException;
-import org.moera.node.config.Config;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRepository;
@@ -42,7 +36,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.InvalidImageException;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.media.MediaPathNotSetException;
 import org.moera.node.media.ThresholdReachedException;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -61,7 +54,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -74,9 +66,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class MediaController {
 
     private static final Logger log = LoggerFactory.getLogger(MediaController.class);
-
-    @Inject
-    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -108,37 +97,6 @@ public class MediaController {
     @Inject
     @PersistenceContext
     private EntityManager entityManager;
-
-    @PostConstruct
-    public void init() throws MediaPathNotSetException {
-        if (ObjectUtils.isEmpty(config.getMedia().getPath())) {
-            throw new MediaPathNotSetException("Path not set");
-        }
-        try {
-            Path path = FileSystems.getDefault().getPath(config.getMedia().getPath());
-            if (!Files.exists(path)) {
-                throw new MediaPathNotSetException("Not found");
-            }
-            if (!Files.isDirectory(path)) {
-                throw new MediaPathNotSetException("Not a directory");
-            }
-            if (!Files.isWritable(path)) {
-                throw new MediaPathNotSetException("Not writable");
-            }
-            path = path.resolve(MediaOperations.TMP_DIR);
-            if (!Files.exists(path)) {
-                try {
-                    Files.createDirectory(path);
-                } catch (FileAlreadyExistsException e) {
-                    // ok
-                } catch (Exception e) {
-                    throw new MediaPathNotSetException("Cannot create tmp/ subdirectory: " + e.getMessage());
-                }
-            }
-        } catch (InvalidPathException e) {
-            throw new MediaPathNotSetException("Path is invalid");
-        }
-    }
 
     private String toContentType(MediaType mediaType) {
         return mediaType.getType() + "/" + mediaType.getSubtype();
