@@ -51,8 +51,10 @@ public class ContactsController {
     @GetMapping
     @Admin(Scope.VIEW_PEOPLE)
     @Transactional
-    public List<ContactInfo> getAll(@RequestParam(defaultValue = "") String query,
-                                    @RequestParam(required = false) Integer limit) {
+    public List<ContactInfo> getAll(
+        @RequestParam(defaultValue = "") String query,
+        @RequestParam(required = false) Integer limit
+    ) {
         limit = limit != null && limit <= MAX_CONTACTS_PER_REQUEST ? limit : MAX_CONTACTS_PER_REQUEST;
         ValidationUtil.assertion(limit >= 0, "limit.invalid");
         if (limit == 0) {
@@ -68,21 +70,23 @@ public class ContactsController {
         if (!ObjectUtils.isEmpty(query)) {
             for (String word : words) {
                 String pattern = "%" + Util.le(word) + "%";
-                where.andAnyOf(contact.remoteFullName.likeIgnoreCase(pattern),
-                        contact.remoteNodeName.likeIgnoreCase(pattern));
+                where.andAnyOf(
+                    contact.remoteFullName.likeIgnoreCase(pattern),
+                    contact.remoteNodeName.likeIgnoreCase(pattern)
+                );
             }
         }
 
         var request = new JPAQueryFactory(entityManager)
-                .selectFrom(contact)
-                .leftJoin(contact.remoteAvatarMediaFile).fetchJoin()
-                .where(where)
-                .orderBy(contact.closeness.desc())
-                .limit(limit);
+            .selectFrom(contact)
+            .leftJoin(contact.remoteAvatarMediaFile).fetchJoin()
+            .where(where)
+            .orderBy(contact.closeness.desc())
+            .limit(limit);
 
         List<Pattern> regexes = Arrays.stream(words)
-                .map(word -> Pattern.compile("(?:^|\\s)" + Util.re(word), Pattern.CASE_INSENSITIVE))
-                .collect(Collectors.toList());
+            .map(word -> Pattern.compile("(?:^|\\s)" + Util.re(word), Pattern.CASE_INSENSITIVE))
+            .collect(Collectors.toList());
 
         int offset = 0;
         List<ContactInfo> result = new ArrayList<>();
@@ -92,10 +96,10 @@ public class ContactsController {
                 return result;
             }
             page.stream()
-                    .filter(ct -> contactMatch(ct, regexes))
-                    .limit(limit - result.size())
-                    .map(c -> ContactInfoUtil.build(c, requestContext.getOptions(), requestContext))
-                    .forEach(result::add);
+                .filter(ct -> contactMatch(ct, regexes))
+                .limit(limit - result.size())
+                .map(c -> ContactInfoUtil.build(c, requestContext.getOptions(), requestContext))
+                .forEach(result::add);
             if (result.size() >= limit) {
                 return result;
             }
@@ -105,8 +109,8 @@ public class ContactsController {
 
     private boolean contactMatch(Contact contact, List<Pattern> regexes) {
         String haystack = !ObjectUtils.isEmpty(contact.getRemoteFullName())
-                ? contact.getRemoteFullName() + " " + contact.getRemoteNodeName()
-                : contact.getRemoteNodeName();
+            ? contact.getRemoteFullName() + " " + contact.getRemoteNodeName()
+            : contact.getRemoteNodeName();
         List<Matcher> matchers = regexes.stream().map(regex -> regex.matcher(haystack)).toList();
         boolean allFound = matchers.stream().allMatch(Matcher::find);
         if (!allFound) {
@@ -117,8 +121,8 @@ public class ContactsController {
         }
         matchers.forEach(Matcher::reset);
         List<int[]> matches = matchers.stream()
-                .map(m -> m.results().mapToInt(MatchResult::start).toArray())
-                .collect(Collectors.toList());
+            .map(m -> m.results().mapToInt(MatchResult::start).toArray())
+            .collect(Collectors.toList());
         return hasArrangement(matches);
     }
 

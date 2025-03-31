@@ -57,9 +57,11 @@ public class MediaUiController {
     @MaxCache
     @Transactional
     @ResponseBody
-    public ResponseEntity<Resource> getDataPublic(@PathVariable String id,
-                                                  @RequestParam(required = false) Integer width,
-                                                  @RequestParam(required = false) Boolean download) {
+    public ResponseEntity<Resource> getDataPublic(
+        @PathVariable String id,
+        @RequestParam(required = false) Integer width,
+        @RequestParam(required = false) Boolean download
+    ) {
         log.info("GET MEDIA /media/public/{id}.ext (id = {})", LogUtil.format(id));
 
         if (id.endsWith("=")) { // backward compatibility
@@ -80,20 +82,26 @@ public class MediaUiController {
     @MaxCache
     @Transactional
     @ResponseBody
-    public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id,
-                                                   @RequestParam(required = false) Integer width,
-                                                   @RequestParam(required = false) Boolean download) {
+    public ResponseEntity<Resource> getDataPrivate(
+        @PathVariable UUID id,
+        @RequestParam(required = false) Integer width,
+        @RequestParam(required = false) Boolean download
+    ) {
         log.info("GET MEDIA /media/private/{id}.ext (id = {})", LogUtil.format(id));
 
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
-                .orElseThrow(PageNotFoundException::new);
+            .orElseThrow(PageNotFoundException::new);
         Principal viewPrincipal = mediaFileOwner.getViewE(requestContext.nodeName());
-        if (!requestContext.isPrincipal(viewPrincipal, Scope.VIEW_MEDIA)
-                && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), viewPrincipal)
-                && !(includesAdmin(viewPrincipal)
-                        && requestContext.isClient(requestContext.nodeName(), Scope.VIEW_MEDIA))) {
-                // The exception above is made to allow authentication with a carte as admin to view admin-only
-                // media instead of passing admin tokens in parameters
+        if (
+            !requestContext.isPrincipal(viewPrincipal, Scope.VIEW_MEDIA)
+            && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), viewPrincipal)
+            && !(
+                includesAdmin(viewPrincipal)
+                && requestContext.isClient(requestContext.nodeName(), Scope.VIEW_MEDIA)
+            )
+            // The exception above is made to allow authentication with a carte as admin to view admin-only
+            // media instead of passing admin tokens in parameters
+        ) {
             throw new PageNotFoundException();
         }
         return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, download);
@@ -105,16 +113,20 @@ public class MediaUiController {
         log.info("GET MEDIA /media/private/{id}/caption (id = {})", LogUtil.format(id));
 
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
-                .orElseThrow(PageNotFoundException::new);
+            .orElseThrow(PageNotFoundException::new);
         Posting posting = mediaFileOwner.getPosting(null);
         if (posting == null) {
             throw new PageNotFoundException();
         }
-        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
-                && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), posting.getViewE())
-                && !(includesAdmin(posting.getViewE())
-                        && requestContext.isClient(requestContext.nodeName(), Scope.VIEW_CONTENT))) {
-                // See the comment above
+        if (
+            !requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
+            && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), posting.getViewE())
+            && !(
+                includesAdmin(posting.getViewE())
+                && requestContext.isClient(requestContext.nodeName(), Scope.VIEW_CONTENT)
+            )
+            // See the comment above
+        ) {
             throw new PageNotFoundException();
         }
         String body = posting.getCurrentRevision().getSaneBody();
