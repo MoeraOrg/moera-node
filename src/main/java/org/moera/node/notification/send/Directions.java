@@ -63,4 +63,12 @@ public class Directions {
         return new SubscribersDirection(nodeId, SubscriptionType.USER_LIST, listName, filter);
     }
 
+    public static Direction searchSubscribers(UUID nodeId) {
+        return new SubscribersDirection(nodeId, SubscriptionType.SEARCH);
+    }
+
+    public static Direction searchSubscribers(UUID nodeId, PrincipalFilter filter) {
+        return new SubscribersDirection(nodeId, SubscriptionType.SEARCH, filter);
+    }
+
 }

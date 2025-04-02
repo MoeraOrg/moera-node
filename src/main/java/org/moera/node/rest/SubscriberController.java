@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -39,6 +40,7 @@ import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.liberin.model.SubscriberOperationsUpdatedLiberin;
 import org.moera.node.model.ContactInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.OperationFailure;
 import org.moera.node.model.SubscriberDescriptionUtil;
 import org.moera.node.model.SubscriberInfoUtil;
 import org.moera.node.model.SubscriberOverrideUtil;
@@ -82,12 +84,16 @@ public class SubscriberController {
 
     @GetMapping
     @Transactional
-    public List<SubscriberInfo> getAll(@RequestParam(required = false) String nodeName,
-                                       @RequestParam(required = false) SubscriptionType type,
-                                       @RequestParam(required = false) String feedName,
-                                       @RequestParam(required = false) UUID entryId) {
-        log.info("GET /people/subscribers (nodeName = {}, type = {})",
-                LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
+    public List<SubscriberInfo> getAll(
+        @RequestParam(required = false) String nodeName,
+        @RequestParam(required = false) SubscriptionType type,
+        @RequestParam(required = false) String feedName,
+        @RequestParam(required = false) UUID entryId
+    ) {
+        log.info(
+            "GET /people/subscribers (nodeName = {}, type = {})",
+            LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type))
+        );
 
         if (type == SubscriptionType.FEED) {
             if (!requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)) {
@@ -116,9 +122,9 @@ public class SubscriberController {
         }
 
         return fetchSubscribers(where).stream()
-                .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
-                .map(s -> SubscriberInfoUtil.build(s, requestContext.getOptions(), requestContext))
-                .collect(Collectors.toList());
+            .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
+            .map(s -> SubscriberInfoUtil.build(s, requestContext.getOptions(), requestContext))
+            .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -129,9 +135,11 @@ public class SubscriberController {
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
-            if (!requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
+            if (
+                !requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
                     && !requestContext.isClient(subscriber.getRemoteNodeName(), Scope.VIEW_PEOPLE)
-                    || !requestContext.isPrincipal(subscriber.getViewE(), Scope.VIEW_PEOPLE)) {
+                || !requestContext.isPrincipal(subscriber.getViewE(), Scope.VIEW_PEOPLE)
+            ) {
                 throw new AuthenticationException();
             }
         } else {
@@ -160,42 +168,52 @@ public class SubscriberController {
         if (ObjectUtils.isEmpty(ownerName)) {
             throw new AuthenticationException();
         }
-        validate(subscriberDescription);
+        UUID postingId = null;
+        if (!ObjectUtils.isEmpty(subscriberDescription.getPostingId())) {
+            postingId = Util.uuid(subscriberDescription.getPostingId())
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        }
+        validateOptionalFields(subscriberDescription);
+        validateLimits(subscriberDescription.getType(), ownerName);
 
-        Subscriber subscriber = new Subscriber();
-        subscriber.setId(UUID.randomUUID());
-        subscriber.setNodeId(requestContext.nodeId());
-        subscriber.setRemoteNodeName(ownerName);
-        SubscriberDescriptionUtil.toSubscriber(subscriberDescription, subscriber);
-        if (subscriberDescription.getPostingId() != null) {
-            UUID postingId = Util.uuid(subscriberDescription.getPostingId())
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-            Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-            if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
-                throw new ObjectNotFoundFailure("posting.not-found");
+        Subscriber subscriber = findExistingSubscriber(
+            subscriberDescription.getType(), subscriberDescription.getFeedName(), postingId, ownerName
+        );
+
+        if (subscriber == null) {
+            subscriber = new Subscriber();
+            subscriber.setId(UUID.randomUUID());
+            subscriber.setNodeId(requestContext.nodeId());
+            subscriber.setRemoteNodeName(ownerName);
+            SubscriberDescriptionUtil.toSubscriber(subscriberDescription, subscriber);
+            if (postingId != null) {
+                Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
+                    .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+                if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
+                    throw new ObjectNotFoundFailure("posting.not-found");
+                }
+                subscriber.setEntry(posting);
             }
-            subscriber.setEntry(posting);
-        }
-        subscriber = subscriberRepository.save(subscriber);
+            subscriber = subscriberRepository.save(subscriber);
 
-        Contact contact;
-        if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
-            contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 1);
-            contactOperations.updateFeedSubscriberCount(subscriber.getRemoteNodeName(), 1);
-            contact = contactOperations.updateViewPrincipal(subscriber);
-        } else {
-            contact = contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 0.25f);
-        }
-        contact.fill(subscriber);
+            Contact contact;
+            if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
+                contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 1);
+                contactOperations.updateFeedSubscriberCount(subscriber.getRemoteNodeName(), 1);
+                contact = contactOperations.updateViewPrincipal(subscriber);
+            } else {
+                contact = contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 0.25f);
+            }
+            contact.fill(subscriber);
 
-        requestContext.subscriptionsUpdated();
-        requestContext.send(new SubscriberAddedLiberin(subscriber, subscriberDescription.getLastUpdatedAt()));
+            requestContext.subscriptionsUpdated();
+            requestContext.send(new SubscriberAddedLiberin(subscriber, subscriberDescription.getLastUpdatedAt()));
+        }
 
         return SubscriberInfoUtil.build(subscriber, requestContext.getOptions(), requestContext);
     }
 
-    private void validate(SubscriberDescription description) {
+    private void validateOptionalFields(SubscriberDescription description) {
         switch (description.getType()) {
             case FEED:
                 ValidationUtil.notBlank(description.getFeedName(), "subscriber.feed-name.blank");
@@ -208,6 +226,7 @@ public class SubscriberController {
                 ValidationUtil.notBlank(description.getPostingId(), "subscriber.posting-id.blank");
                 break;
             case PROFILE:
+            case SEARCH:
                 break;
             case USER_LIST:
                 ValidationUtil.notBlank(description.getFeedName(), "subscriber.feed-name.blank");
@@ -223,6 +242,39 @@ public class SubscriberController {
             false,
             "subscriber.operations.wrong-principal"
         );
+    }
+
+    private void validateLimits(SubscriptionType type, String remoteNodeName) {
+        if (type == SubscriptionType.SEARCH) {
+            List<String> knownEngines = Arrays.asList(requestContext.getOptions().getString("search.known").split(","));
+            if (knownEngines.contains(remoteNodeName)) {
+                return;
+            }
+            long unknownCount = subscriberRepository.findAllByType(requestContext.nodeId(), type).stream()
+                .filter(sr -> !knownEngines.contains(sr.getRemoteNodeName()))
+                .count();
+            if (unknownCount >= requestContext.getOptions().getInt("search.max-unknown")) {
+                throw new OperationFailure("subscriber.too-many");
+            }
+        }
+    }
+
+    private Subscriber findExistingSubscriber(
+        SubscriptionType type, String feedName, UUID postingId, String remoteNodeName
+    ) {
+        List<Subscriber> subscribers = switch (type) {
+            case FEED, USER_LIST -> subscriberRepository.findByFeedName(
+                requestContext.nodeId(), type, feedName, remoteNodeName
+            );
+            case POSTING, POSTING_COMMENTS -> subscriberRepository.findByEntryId(
+                requestContext.nodeId(), type, postingId, remoteNodeName
+            );
+            case PROFILE, SEARCH -> subscriberRepository.findByType(
+                requestContext.nodeId(), type, remoteNodeName
+            );
+        };
+
+        return !subscribers.isEmpty() ? subscribers.get(0) : null;
     }
 
     @PutMapping("/{id}")
@@ -277,7 +329,7 @@ public class SubscriberController {
         log.info("DELETE /people/subscribers/{id} (id = {})", LogUtil.format(id));
 
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
         if (!requestContext.isPrincipal(subscriber.getDeleteE(), Scope.SUBSCRIBE)) {
             throw new AuthenticationException();
         }
@@ -298,11 +350,11 @@ public class SubscriberController {
         QContact contact = QContact.contact;
 
         return new JPAQueryFactory(entityManager)
-                .selectFrom(subscriber)
-                .leftJoin(subscriber.contact, contact).fetchJoin()
-                .leftJoin(contact.remoteAvatarMediaFile).fetchJoin()
-                .where(where)
-                .fetch();
+            .selectFrom(subscriber)
+            .leftJoin(subscriber.contact, contact).fetchJoin()
+            .leftJoin(contact.remoteAvatarMediaFile).fetchJoin()
+            .where(where)
+            .fetch();
     }
 
 }

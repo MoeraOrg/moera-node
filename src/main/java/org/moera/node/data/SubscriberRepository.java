@@ -30,4 +30,20 @@ public interface SubscriberRepository extends JpaRepository<Subscriber, UUID>, Q
             + " where s.nodeId = ?1 and s.subscriptionType = ?2 and s.entry.id = ?3")
     List<Subscriber> findAllByEntryId(UUID nodeId, SubscriptionType subscriptionType, UUID entryId);
 
+    @Query("select s from Subscriber s left join fetch s.contact c left join fetch c.remoteAvatarMediaFile"
+        + " where s.nodeId = ?1 and s.subscriptionType = ?2 and s.remoteNodeName = ?3")
+    List<Subscriber> findByType(UUID nodeId, SubscriptionType subscriptionType, String remoteNodeName);
+
+    @Query("select s from Subscriber s left join fetch s.contact c left join fetch c.remoteAvatarMediaFile"
+        + " where s.nodeId = ?1 and s.subscriptionType = ?2 and s.feedName = ?3 and s.remoteNodeName = ?4")
+    List<Subscriber> findByFeedName(
+        UUID nodeId, SubscriptionType subscriptionType, String feedName, String remoteNodeName
+    );
+
+    @Query("select s from Subscriber s left join fetch s.contact c left join fetch c.remoteAvatarMediaFile"
+        + " where s.nodeId = ?1 and s.subscriptionType = ?2 and s.entry.id = ?3 and s.remoteNodeName = ?4")
+    List<Subscriber> findByEntryId(
+        UUID nodeId, SubscriptionType subscriptionType, UUID entryId, String remoteNodeName
+    );
+
 }

@@ -665,3 +665,17 @@
 - name: reminder.last-interaction
   type: Timestamp
   internal: true
+
+- name: search.known
+  type: string
+  defaultValue: "search_0"
+  title: Known search engines that are automatically allowed to receive notifications
+
+- name: search.max-unknown
+  type: int
+  privileged: true
+  defaultValue: 3
+  title: Maximal number of unknown search engines that may receive notifications
+  modifiers:
+    min: 0
+    max: 15

@@ -133,24 +133,29 @@ public class SubscriptionOperations {
         switch (subscription.getSubscriptionType()) {
             case FEED:
                 userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
-                        universalContext.nodeId(), subscription.getSubscriptionType(), subscription.getRemoteNodeName(),
-                        subscription.getRemoteFeedName());
+                    universalContext.nodeId(), subscription.getSubscriptionType(), subscription.getRemoteNodeName(),
+                    subscription.getRemoteFeedName()
+                );
                 contactOperations.updateFeedSubscriptionCount(subscription.getRemoteNodeName(), -1);
                 break;
             case POSTING:
             case POSTING_COMMENTS:
                 userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndEntryId(
-                        universalContext.nodeId(), subscription.getSubscriptionType(), subscription.getRemoteNodeName(),
-                        subscription.getRemoteEntryId());
+                    universalContext.nodeId(), subscription.getSubscriptionType(), subscription.getRemoteNodeName(),
+                    subscription.getRemoteEntryId()
+                );
                 break;
             case PROFILE:
+            case SEARCH:
                 userSubscriptions = userSubscriptionRepository.findAllByType(
-                        universalContext.nodeId(), subscription.getSubscriptionType());
+                    universalContext.nodeId(), subscription.getSubscriptionType()
+                );
                 break;
             case USER_LIST:
                 userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
-                        universalContext.nodeId(), subscription.getSubscriptionType(), subscription.getRemoteNodeName(),
-                        subscription.getRemoteFeedName());
+                    universalContext.nodeId(), subscription.getSubscriptionType(), subscription.getRemoteNodeName(),
+                    subscription.getRemoteFeedName()
+                );
                 break;
         }
         if (userSubscriptions != null) {
