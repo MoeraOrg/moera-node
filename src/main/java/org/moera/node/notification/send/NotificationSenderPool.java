@@ -150,23 +150,29 @@ public class NotificationSenderPool {
             return;
         }
         if (direction instanceof SubscribersDirection sd) {
-            log.info("Sending to '{}' subscribers (feedName = {}, postingId = {}), if {}",
-                    sd.getSubscriptionType().getValue(),
-                    LogUtil.format(sd.getFeedName()),
-                    LogUtil.format(sd.getPostingId()),
-                    direction.getPrincipalFilter());
+            log.info(
+                "Sending to '{}' subscribers (feedName = {}, postingId = {}), if {}",
+                sd.getSubscriptionType().getValue(),
+                LogUtil.format(sd.getFeedName()),
+                LogUtil.format(sd.getPostingId()),
+                direction.getPrincipalFilter()
+            );
 
             List<Subscriber> subscribers = switch (sd.getSubscriptionType()) {
                 case FEED, USER_LIST -> subscriberRepository.findAllByFeedName(
-                        sd.getNodeId(), sd.getSubscriptionType(), sd.getFeedName());
+                    sd.getNodeId(), sd.getSubscriptionType(), sd.getFeedName()
+                );
                 case POSTING, POSTING_COMMENTS -> subscriberRepository.findAllByEntryId(
-                        sd.getNodeId(), sd.getSubscriptionType(), sd.getPostingId());
-                case PROFILE -> subscriberRepository.findAllByType(
-                        sd.getNodeId(), sd.getSubscriptionType());
+                    sd.getNodeId(), sd.getSubscriptionType(), sd.getPostingId()
+                );
+                case PROFILE, SEARCH -> subscriberRepository.findAllByType(
+                    sd.getNodeId(), sd.getSubscriptionType()
+                );
             };
             for (Subscriber subscriber : subscribers) {
-                SingleDirection dir = new SingleDirection(subscriber.getNodeId(), subscriber.getRemoteNodeName(),
-                        direction.getPrincipalFilter());
+                SingleDirection dir = new SingleDirection(
+                    subscriber.getNodeId(), subscriber.getRemoteNodeName(), direction.getPrincipalFilter()
+                );
                 Notification nt = notification.clone();
                 if (nt instanceof SubscriberNotification) {
                     ((SubscriberNotification) nt).setSubscriberId(subscriber.getId().toString());
@@ -177,14 +183,17 @@ public class NotificationSenderPool {
             return;
         }
         if (direction instanceof FriendGroupDirection fd) {
-            log.info("Sending to members of '{}' friend group, if {}",
-                    LogUtil.format(fd.getFriendGroupId()),
-                    direction.getPrincipalFilter());
+            log.info(
+                "Sending to members of '{}' friend group, if {}",
+                LogUtil.format(fd.getFriendGroupId()),
+                direction.getPrincipalFilter()
+            );
 
             List<Friend> friends = friendRepository.findAllByNodeIdAndGroup(fd.getNodeId(), fd.getFriendGroupId());
             for (Friend friend : friends) {
-                SingleDirection dir = new SingleDirection(fd.getNodeId(), friend.getRemoteNodeName(),
-                        direction.getPrincipalFilter());
+                SingleDirection dir = new SingleDirection(
+                    fd.getNodeId(), friend.getRemoteNodeName(), direction.getPrincipalFilter()
+                );
                 sendSingle(dir, notification.clone());
             }
             return;
