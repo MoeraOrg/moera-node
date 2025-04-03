@@ -95,10 +95,12 @@ public class SubscriptionManager {
 
     private void add(Subscription subscription) {
         SubscriptionTask task = null;
-        if (running.containsKey(subscription.getId())
-                || pending.containsKey(subscription.getId())
-                || subscription.getRetryAt() != null
-                    && subscription.getRetryAt().toInstant().isAfter(Instant.now().plus(1, ChronoUnit.HOURS))) {
+        if (
+            running.containsKey(subscription.getId())
+            || pending.containsKey(subscription.getId())
+            || subscription.getRetryAt() != null
+                && subscription.getRetryAt().toInstant().isAfter(Instant.now().plus(1, ChronoUnit.HOURS))
+        ) {
             return;
         }
         if (subscription.getRetryAt() == null || subscription.getRetryAt().toInstant().isBefore(Instant.now())) {
@@ -106,12 +108,12 @@ public class SubscriptionManager {
             running.put(subscription.getId(), task);
         } else {
             pending.put(
+                subscription.getId(),
+                new PendingSubscription(
                     subscription.getId(),
-                    new PendingSubscription(
-                            subscription.getId(),
-                            subscription.getNodeId(),
-                            subscription.getRetryAt().toInstant()
-                    )
+                    subscription.getNodeId(),
+                    subscription.getRetryAt().toInstant()
+                )
             );
         }
         if (task != null) {
@@ -155,8 +157,10 @@ public class SubscriptionManager {
             fatal = delay.compareTo(MAX_RETRY_DELAY) >= 0;
             if (!fatal) {
                 retryAt = retryAt.plus(delay);
-                pending.put(subscription.getId(),
-                        new PendingSubscription(task.getSubscriptionId(), task.getNodeId(), retryAt));
+                pending.put(
+                    subscription.getId(),
+                    new PendingSubscription(task.getSubscriptionId(), task.getNodeId(), retryAt)
+                );
             }
         }
         if (!fatal) {
@@ -198,8 +202,9 @@ public class SubscriptionManager {
     }
 
     private void deletePickedPosting(Subscription subscription) {
-        Posting posting = postingRepository.findByReceiverId(subscription.getNodeId(), subscription.getRemoteNodeName(),
-                subscription.getRemoteEntryId()).orElse(null);
+        Posting posting = postingRepository.findByReceiverId(
+            subscription.getNodeId(), subscription.getRemoteNodeName(), subscription.getRemoteEntryId()
+        ).orElse(null);
         if (posting == null) {
             return;
         }
@@ -225,8 +230,8 @@ public class SubscriptionManager {
     private void retry() {
         synchronized (lock) {
             List<PendingSubscription> pendings = pending.values().stream()
-                    .filter(ps -> ps.getRetryAt().isBefore(Instant.now()))
-                    .toList();
+                .filter(ps -> ps.getRetryAt().isBefore(Instant.now()))
+                .toList();
             for (PendingSubscription ps : pendings) {
                 pending.remove(ps.getId());
                 SubscriptionTask task = new SubscriptionTask(ps.getId());
