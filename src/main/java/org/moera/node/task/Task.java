@@ -99,7 +99,7 @@ public abstract class Task implements Runnable {
                 adminScope.getMask()
             );
         } catch (Exception e) {
-            log.info("Error generating carte by {} {}", nodeId, universalContext.nodeId());
+            log.error("Error generating carte by {} {}", nodeId, universalContext.nodeId());
             throw e;
         }
     }
