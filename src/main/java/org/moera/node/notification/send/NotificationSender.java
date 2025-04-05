@@ -22,6 +22,7 @@ import org.moera.lib.node.types.NotificationPacket;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.notifications.Notification;
 import org.moera.lib.node.types.notifications.SubscriberNotification;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.api.node.MoeraNodeUnknownNameException;
 import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.PendingNotificationRepository;
@@ -138,6 +139,7 @@ public class NotificationSender extends Task {
     private void deliver(Notification notification) {
         do {
             if (delay != null && pausedTill == null) {
+                log.debug("Notification sender paused for {} minutes", delay.toMinutes());
                 if (delay.compareTo(Duration.ofMinutes(2)) <= 0) {
                     try {
                         Thread.sleep(delay.toMillis());
@@ -151,7 +153,12 @@ public class NotificationSender extends Task {
             }
             pausedTill = null;
 
-            log.info("Delivering notification {} to node '{}'", notification.getType().name(), receiverNodeName);
+            log.info(
+                "Delivering notification {} to node '{}' (id = {})",
+                notification.getType().name(),
+                receiverNodeName,
+                LogUtil.format(notification.getPendingNotificationId())
+            );
             var errorType = NotificationSenderError.REGULAR;
 
             try {
@@ -215,6 +222,8 @@ public class NotificationSender extends Task {
     }
 
     private NotificationSenderError error(Throwable e, Notification notification) {
+        log.debug("Node returned error: {}", LogUtil.format(e.toString()));
+
         NotificationSenderError errorType;
 
         if (isUnsubscribeError(e) && notification instanceof SubscriberNotification sn) {
