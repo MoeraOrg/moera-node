@@ -107,33 +107,37 @@ public class NotificationSender extends Task {
         } else {
             log.debug("Sender from node ID = {} to '{}' resumed", nodeId, receiverNodeName);
         }
-        while (!stopped) {
-            if (notification == null) {
-                try {
-                    notification = queue.poll(1, TimeUnit.MINUTES);
-                    delay = getConnectivityStatus() == ConnectivityStatus.FAILING ? FAILING_MIN_DELAY : null;
-                } catch (InterruptedException e) {
-                    continue;
+        try {
+            while (!stopped) {
+                if (notification == null) {
+                    try {
+                        notification = queue.poll(1, TimeUnit.MINUTES);
+                        delay = getConnectivityStatus() == ConnectivityStatus.FAILING ? FAILING_MIN_DELAY : null;
+                    } catch (InterruptedException e) {
+                        continue;
+                    }
                 }
-            }
-            if (notification == null) {
-                stopped = true;
-                if (!queue.isEmpty()) { // queue may receive content before the previous statement
-                    stopped = false;
-                }
-            } else {
-                deliver(notification);
-                if (pausedTill == null) {
-                    notification = null;
+                if (notification == null) {
+                    stopped = true;
+                    if (!queue.isEmpty()) { // queue may receive content before the previous statement
+                        stopped = false;
+                    }
                 } else {
-                    pool.pauseSender(this);
-                    log.debug("Sender from node ID = {} to '{}' paused", nodeId, receiverNodeName);
-                    return;
+                    deliver(notification);
+                    if (pausedTill == null) {
+                        notification = null;
+                    } else {
+                        pool.pauseSender(this);
+                        log.debug("Sender from node ID = {} to '{}' paused", nodeId, receiverNodeName);
+                        return;
+                    }
                 }
             }
+        } finally {
+            stopped = true; // if stopped abnormally by exception
+            pool.deleteSender(nodeId, receiverNodeName);
+            log.debug("Sender from node ID = {} to '{}' stopped", nodeId, receiverNodeName);
         }
-        pool.deleteSender(nodeId, receiverNodeName);
-        log.debug("Sender from node ID = {} to '{}' stopped", nodeId, receiverNodeName);
     }
 
     private void deliver(Notification notification) {
@@ -250,6 +254,10 @@ public class NotificationSender extends Task {
     private boolean isUnsubscribeError(Throwable e) {
         if (e instanceof MoeraNodeApiValidationException ve) {
             String errorCode = ve.getErrorCode();
+            if (errorCode == null) {
+                log.error("Validation from the node error has null error code");
+                return false;
+            }
             return errorCode.equals("subscription.unsubscribe") || errorCode.equals("notification.type.unknown");
         }
         return false;
