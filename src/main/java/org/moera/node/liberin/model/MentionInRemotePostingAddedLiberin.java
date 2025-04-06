@@ -19,9 +19,17 @@ public class MentionInRemotePostingAddedLiberin extends Liberin {
     private List<String> sheriffs;
     private List<SheriffMark> sheriffMarks;
 
-    public MentionInRemotePostingAddedLiberin(String nodeName, String ownerName, String ownerFullName,
-                                              String ownerGender, AvatarImage ownerAvatar, String id, String heading,
-                                              List<String> sheriffs, List<SheriffMark> sheriffMarks) {
+    public MentionInRemotePostingAddedLiberin(
+        String nodeName,
+        String ownerName,
+        String ownerFullName,
+        String ownerGender,
+        AvatarImage ownerAvatar,
+        String id,
+        String heading,
+        List<String> sheriffs,
+        List<SheriffMark> sheriffMarks
+    ) {
         this.nodeName = nodeName;
         this.ownerName = ownerName;
         this.ownerFullName = ownerFullName;

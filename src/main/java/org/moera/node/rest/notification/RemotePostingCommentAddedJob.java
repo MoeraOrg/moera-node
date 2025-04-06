@@ -42,12 +42,26 @@ public class RemotePostingCommentAddedJob
         public Parameters() {
         }
 
-        public Parameters(String senderNodeName, String postingId, String postingOwnerName, String postingOwnerFullName,
-                          String postingOwnerGender, AvatarImage postingOwnerAvatar, String postingHeading,
-                          List<String> postingSheriffs, List<SheriffMark> postingSheriffMarks, String commentId,
-                          String commentOwnerName, String commentOwnerFullName, String commentOwnerGender,
-                          AvatarImage commentOwnerAvatar, String commentHeading, List<SheriffMark> commentSheriffMarks,
-                          String commentRepliedTo, SubscriptionReason reason) {
+        public Parameters(
+            String senderNodeName,
+            String postingId,
+            String postingOwnerName,
+            String postingOwnerFullName,
+            String postingOwnerGender,
+            AvatarImage postingOwnerAvatar,
+            String postingHeading,
+            List<String> postingSheriffs,
+            List<SheriffMark> postingSheriffMarks,
+            String commentId,
+            String commentOwnerName,
+            String commentOwnerFullName,
+            String commentOwnerGender,
+            AvatarImage commentOwnerAvatar,
+            String commentHeading,
+            List<SheriffMark> commentSheriffMarks,
+            String commentRepliedTo,
+            SubscriptionReason reason
+        ) {
             this.senderNodeName = senderNodeName;
             this.postingId = postingId;
             this.postingOwnerName = postingOwnerName;
@@ -267,11 +281,13 @@ public class RemotePostingCommentAddedJob
     protected void execute() throws Exception {
         if (parameters.commentRepliedTo != null && !state.repliedToChecked) {
             int count = tx.executeRead(() ->
-                    ownCommentRepository.countByRemoteCommentId(
-                            universalContext.nodeId(),
-                            parameters.senderNodeName,
-                            parameters.postingId,
-                            parameters.commentRepliedTo));
+                ownCommentRepository.countByRemoteCommentId(
+                    universalContext.nodeId(),
+                    parameters.senderNodeName,
+                    parameters.postingId,
+                    parameters.commentRepliedTo
+                )
+            );
             if (count > 0) {
                 success(); // We should receive another notification about somebody replied to our comment
             }
@@ -280,26 +296,45 @@ public class RemotePostingCommentAddedJob
         }
 
         Contact.toAvatar(
-                contactOperations.find(parameters.postingOwnerName),
-                parameters.postingOwnerAvatar);
+            contactOperations.find(parameters.postingOwnerName),
+            parameters.postingOwnerAvatar
+        );
         if (!state.closenessUpdated) {
             Contact.toAvatar(
-                    contactOperations.updateCloseness(parameters.commentOwnerName, 1),
-                    parameters.commentOwnerAvatar);
+                contactOperations.updateCloseness(parameters.commentOwnerName, 1),
+                parameters.commentOwnerAvatar
+            );
             state.closenessUpdated = true;
             checkpoint();
         }
         tx.executeWriteWithExceptions(() ->
-                mediaManager.downloadAvatars(parameters.senderNodeName,
-                        new AvatarImage[] {parameters.postingOwnerAvatar, parameters.commentOwnerAvatar}));
+            mediaManager.downloadAvatars(
+                parameters.senderNodeName,
+                new AvatarImage[] {parameters.postingOwnerAvatar, parameters.commentOwnerAvatar}
+            )
+        );
 
         universalContext.send(
-                new ForeignCommentAddedLiberin(parameters.senderNodeName, parameters.postingOwnerName,
-                        parameters.postingOwnerFullName, parameters.postingOwnerGender, parameters.postingOwnerAvatar,
-                        parameters.postingId, parameters.postingHeading, parameters.postingSheriffs,
-                        parameters.postingSheriffMarks, parameters.commentOwnerName, parameters.commentOwnerFullName,
-                        parameters.commentOwnerGender, parameters.commentOwnerAvatar, parameters.commentId,
-                        parameters.commentHeading, parameters.commentSheriffMarks, parameters.reason));
+            new ForeignCommentAddedLiberin(
+                parameters.senderNodeName,
+                parameters.postingOwnerName,
+                parameters.postingOwnerFullName,
+                parameters.postingOwnerGender,
+                parameters.postingOwnerAvatar,
+                parameters.postingId,
+                parameters.postingHeading,
+                parameters.postingSheriffs,
+                parameters.postingSheriffMarks,
+                parameters.commentOwnerName,
+                parameters.commentOwnerFullName,
+                parameters.commentOwnerGender,
+                parameters.commentOwnerAvatar,
+                parameters.commentId,
+                parameters.commentHeading,
+                parameters.commentSheriffMarks,
+                parameters.reason
+            )
+        );
     }
 
 }

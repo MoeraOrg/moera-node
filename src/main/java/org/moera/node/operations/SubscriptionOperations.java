@@ -76,12 +76,14 @@ public class SubscriptionOperations {
 
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
             jobs.run(
-                    RemoteFeedFetchJob.class,
-                    new RemoteFeedFetchJob.Parameters(
-                            subscription.getFeedName(),
-                            subscription.getRemoteNodeName(),
-                            subscription.getRemoteFeedName()),
-                    universalContext.nodeId());
+                RemoteFeedFetchJob.class,
+                new RemoteFeedFetchJob.Parameters(
+                    subscription.getFeedName(),
+                    subscription.getRemoteNodeName(),
+                    subscription.getRemoteFeedName()
+                ),
+                universalContext.nodeId()
+            );
         }
 
         return subscription;
@@ -93,7 +95,8 @@ public class SubscriptionOperations {
             return;
         }
         int count = userSubscriptionRepository.countByTypeAndNodeAndFeedName(
-                universalContext.nodeId(), SubscriptionType.FEED, remoteNodeName, Feed.TIMELINE);
+            universalContext.nodeId(), SubscriptionType.FEED, remoteNodeName, Feed.TIMELINE
+        );
         if (count > 0) {
             return;
         }
@@ -108,7 +111,8 @@ public class SubscriptionOperations {
 
     public void subscribeToPostingComments(String nodeName, String entryId, SubscriptionReason reason) {
         int count = userSubscriptionRepository.countByTypeAndNodeAndEntryId(
-                universalContext.nodeId(), SubscriptionType.POSTING_COMMENTS, nodeName, entryId);
+            universalContext.nodeId(), SubscriptionType.POSTING_COMMENTS, nodeName, entryId
+        );
         if (count > 0) {
             return;
         }

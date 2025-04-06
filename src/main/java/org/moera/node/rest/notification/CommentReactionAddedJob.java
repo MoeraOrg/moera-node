@@ -34,10 +34,23 @@ public class CommentReactionAddedJob extends Job<CommentReactionAddedJob.Paramet
         public Parameters() {
         }
 
-        public Parameters(String senderNodeName, String postingId, String postingNodeName, String postingFullName,
-                          String postingGender, AvatarImage postingAvatar, String postingHeading, String commentId,
-                          String commentHeading, String ownerName, String ownerFullName, String ownerGender,
-                          AvatarImage ownerAvatar, boolean negative, int emoji) {
+        public Parameters(
+            String senderNodeName,
+            String postingId,
+            String postingNodeName,
+            String postingFullName,
+            String postingGender,
+            AvatarImage postingAvatar,
+            String postingHeading,
+            String commentId,
+            String commentHeading,
+            String ownerName,
+            String ownerFullName,
+            String ownerGender,
+            AvatarImage ownerAvatar,
+            boolean negative,
+            int emoji
+        ) {
             this.senderNodeName = senderNodeName;
             this.postingId = postingId;
             this.postingNodeName = postingNodeName;
@@ -217,26 +230,43 @@ public class CommentReactionAddedJob extends Job<CommentReactionAddedJob.Paramet
     @Override
     protected void execute() throws Exception {
         Contact.toAvatar(
-                contactOperations.find(parameters.postingNodeName),
-                parameters.postingAvatar);
+            contactOperations.find(parameters.postingNodeName),
+            parameters.postingAvatar
+        );
         if (!state.closenessUpdated) {
             Contact.toAvatar(
-                    contactOperations.updateCloseness(parameters.getOwnerName(), 0.1f),
-                    parameters.ownerAvatar);
+                contactOperations.updateCloseness(parameters.getOwnerName(), 0.1f),
+                parameters.ownerAvatar
+            );
             state.closenessUpdated = true;
             checkpoint();
         }
 
         tx.executeWriteWithExceptions(() ->
             mediaManager.downloadAvatars(
-                    parameters.senderNodeName,
-                    new AvatarImage[] {parameters.postingAvatar, parameters.ownerAvatar}));
+                parameters.senderNodeName,
+                new AvatarImage[] {parameters.postingAvatar, parameters.ownerAvatar}
+            )
+        );
 
-        universalContext.send(new RemoteCommentReactionAddedLiberin(parameters.senderNodeName,
-                parameters.postingNodeName, parameters.postingFullName, parameters.postingGender,
-                parameters.postingAvatar, parameters.postingId, parameters.commentId, parameters.ownerName,
-                parameters.ownerFullName, parameters.ownerGender, parameters.ownerAvatar, parameters.commentHeading,
-                parameters.negative, parameters.emoji));
+        universalContext.send(
+            new RemoteCommentReactionAddedLiberin(
+                parameters.senderNodeName,
+                parameters.postingNodeName,
+                parameters.postingFullName,
+                parameters.postingGender,
+                parameters.postingAvatar,
+                parameters.postingId,
+                parameters.commentId,
+                parameters.ownerName,
+                parameters.ownerFullName,
+                parameters.ownerGender,
+                parameters.ownerAvatar,
+                parameters.commentHeading,
+                parameters.negative,
+                parameters.emoji
+            )
+        );
     }
 
 }

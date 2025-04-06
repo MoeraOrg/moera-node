@@ -32,9 +32,17 @@ public class MentionPostingAddedJob extends Job<MentionPostingAddedJob.Parameter
         public Parameters() {
         }
 
-        public Parameters(String senderNodeName, String postingId, String ownerName, String ownerFullName,
-                          String ownerGender, AvatarImage ownerAvatar, String heading, List<String> sheriffs,
-                          List<SheriffMark> sheriffMarks) {
+        public Parameters(
+            String senderNodeName,
+            String postingId,
+            String ownerName,
+            String ownerFullName,
+            String ownerGender,
+            AvatarImage ownerAvatar,
+            String heading,
+            List<String> sheriffs,
+            List<SheriffMark> sheriffMarks
+        ) {
             this.senderNodeName = senderNodeName;
             this.postingId = postingId;
             this.ownerName = ownerName;
@@ -145,22 +153,35 @@ public class MentionPostingAddedJob extends Job<MentionPostingAddedJob.Parameter
     @Override
     protected void execute() throws Exception {
         Contact.toAvatar(
-                contactOperations.find(parameters.ownerName),
-                parameters.ownerAvatar);
+            contactOperations.find(parameters.ownerName),
+            parameters.ownerAvatar
+        );
 
         tx.executeWriteWithExceptions(() ->
-                mediaManager.downloadAvatar(parameters.senderNodeName, parameters.ownerAvatar));
+            mediaManager.downloadAvatar(parameters.senderNodeName, parameters.ownerAvatar)
+        );
 
         universalContext.send(
-                new MentionInRemotePostingAddedLiberin(parameters.senderNodeName, parameters.ownerName,
-                        parameters.ownerFullName, parameters.ownerGender, parameters.ownerAvatar, parameters.postingId,
-                        parameters.heading, parameters.sheriffs, parameters.sheriffMarks));
+            new MentionInRemotePostingAddedLiberin(
+                parameters.senderNodeName,
+                parameters.ownerName,
+                parameters.ownerFullName,
+                parameters.ownerGender,
+                parameters.ownerAvatar,
+                parameters.postingId,
+                parameters.heading,
+                parameters.sheriffs,
+                parameters.sheriffMarks
+            )
+        );
 
         tx.executeWrite(() ->
-                subscriptionOperations.subscribeToPostingComments(
-                        parameters.senderNodeName,
-                        parameters.postingId,
-                        SubscriptionReason.MENTION));
+            subscriptionOperations.subscribeToPostingComments(
+                parameters.senderNodeName,
+                parameters.postingId,
+                SubscriptionReason.MENTION
+            )
+        );
     }
 
 }
