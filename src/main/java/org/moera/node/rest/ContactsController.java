@@ -20,6 +20,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.validate.ValidationUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Contact;
 import org.moera.node.data.QContact;
@@ -28,6 +29,8 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ContactInfoUtil;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +43,8 @@ public class ContactsController {
 
     public static final int MAX_CONTACTS_PER_REQUEST = 100;
     private static final int ARRANGEMENT_DEPTH = 5;
+
+    private static final Logger log = LoggerFactory.getLogger(ContactsController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -55,6 +60,8 @@ public class ContactsController {
         @RequestParam(defaultValue = "") String query,
         @RequestParam(required = false) Integer limit
     ) {
+        log.info("GET /people/contacts (query = {}, limit = {})", LogUtil.format(query), LogUtil.format(limit));
+
         limit = limit != null && limit <= MAX_CONTACTS_PER_REQUEST ? limit : MAX_CONTACTS_PER_REQUEST;
         ValidationUtil.assertion(limit >= 0, "limit.invalid");
         if (limit == 0) {
