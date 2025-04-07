@@ -21,7 +21,8 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.RemotePostingReactionDeletedLiberin;
 import org.moera.node.model.AsyncOperationCreatedUtil;
-import org.moera.node.operations.ContactOperations;
+import org.moera.node.operations.FavorOperations;
+import org.moera.node.operations.FavorType;
 import org.moera.node.rest.task.RemotePostingReactionPostJob;
 import org.moera.node.rest.task.verification.RemoteReactionVerifyTask;
 import org.moera.node.task.Jobs;
@@ -53,7 +54,7 @@ public class RemotePostingReactionController {
     private OwnReactionRepository ownReactionRepository;
 
     @Inject
-    private ContactOperations contactOperations;
+    private FavorOperations favorOperations;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -106,7 +107,7 @@ public class RemotePostingReactionController {
         ).orElse(null);
         if (ownReaction != null) {
             ownReactionRepository.delete(ownReaction);
-            contactOperations.asyncUpdateCloseness(nodeName, -0.25f);
+            favorOperations.asyncAddFavor(nodeName, FavorType.UNLIKE_POST);
             requestContext.send(new RemotePostingReactionDeletedLiberin(nodeName, postingId));
         }
 

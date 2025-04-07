@@ -555,6 +555,7 @@ public class PostingInfoUtil {
 
     public static void toOwnPosting(PostingInfo info, OwnPosting ownPosting) {
         ownPosting.setRemotePostingId(info.getId());
+        ownPosting.setRemoteParentMediaId(info.getParentMediaId());
         ownPosting.setHeading(info.getHeading());
         ownPosting.setCreatedAt(Util.now());
     }

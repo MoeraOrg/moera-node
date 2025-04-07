@@ -198,11 +198,10 @@ public class SubscriberController {
 
             Contact contact;
             if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
-                contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 1);
                 contactOperations.updateFeedSubscriberCount(subscriber.getRemoteNodeName(), 1);
                 contact = contactOperations.updateViewPrincipal(subscriber);
             } else {
-                contact = contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 0.25f);
+                contact = contactOperations.find(subscriber.getRemoteNodeName());
             }
             contact.fill(subscriber);
 

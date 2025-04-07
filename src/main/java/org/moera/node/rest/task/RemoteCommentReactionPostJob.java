@@ -24,6 +24,8 @@ import org.moera.node.liberin.model.RemoteCommentReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.ReactionDescriptionUtil;
+import org.moera.node.operations.FavorOperations;
+import org.moera.node.operations.FavorType;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +89,7 @@ public class RemoteCommentReactionPostJob
         private PostingInfo postingInfo;
         private PostingRevisionInfo postingRevisionInfo;
         private CommentInfo commentInfo;
+        private ReactionCreated reactionCreated;
 
         public State() {
         }
@@ -115,11 +118,20 @@ public class RemoteCommentReactionPostJob
             this.commentInfo = commentInfo;
         }
 
+        public ReactionCreated getReactionCreated() {
+            return reactionCreated;
+        }
+
+        public void setReactionCreated(ReactionCreated reactionCreated) {
+            this.reactionCreated = reactionCreated;
+        }
+
     }
 
     private static final Logger log = LoggerFactory.getLogger(RemoteCommentReactionPostJob.class);
 
-    private ReactionCreated created;
+    @Inject
+    private FavorOperations favorOperations;
 
     @Inject
     private MediaManager mediaManager;
@@ -173,7 +185,7 @@ public class RemoteCommentReactionPostJob
                 .getPosting(parameters.postingId, false);
             if (state.postingInfo.getOwnerAvatar() != null) {
                 MediaFile mediaFile =
-                        mediaManager.downloadPublicMedia(parameters.targetNodeName, state.postingInfo.getOwnerAvatar());
+                    mediaManager.downloadPublicMedia(parameters.targetNodeName, state.postingInfo.getOwnerAvatar());
                 AvatarImageUtil.setMediaFile(state.postingInfo.getOwnerAvatar(), mediaFile);
             }
             checkpoint();
@@ -189,32 +201,36 @@ public class RemoteCommentReactionPostJob
             checkpoint();
         }
 
-        created = nodeApi
-            .at(parameters.targetNodeName)
-            .createCommentReaction(parameters.postingId, parameters.commentId, buildReaction());
+        if (state.reactionCreated == null) {
+            state.reactionCreated = nodeApi
+                .at(parameters.targetNodeName)
+                .createCommentReaction(parameters.postingId, parameters.commentId, buildReaction());
+        }
+
+        favorOperations.addFavor(state.commentInfo.getOwnerName(), FavorType.LIKE_COMMENT);
     }
 
     private ReactionDescription buildReaction() {
         byte[] parentMediaDigest = state.postingInfo.getParentMediaId() != null
-                ? mediaManager.getPrivateMediaDigest(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                    state.postingInfo.getParentMediaId(),
-                    null
-                )
-                : null;
+            ? mediaManager.getPrivateMediaDigest(
+                parameters.targetNodeName,
+                generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
+                state.postingInfo.getParentMediaId(),
+                null
+            )
+            : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
-                pmf -> mediaManager.getPrivateMediaDigest(
-                    parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA), pmf
-                );
+            pmf -> mediaManager.getPrivateMediaDigest(
+                parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA), pmf
+            );
         byte[] postingFingerprint = state.postingRevisionInfo == null
-                ? PostingFingerprintBuilder.build(
-                      state.postingInfo.getSignatureVersion(), state.postingInfo, parentMediaDigest, mediaDigest
-                )
-                : PostingFingerprintBuilder.build(
-                      state.postingRevisionInfo.getSignatureVersion(), state.postingInfo, state.postingRevisionInfo,
-                      parentMediaDigest, mediaDigest
-                );
+            ? PostingFingerprintBuilder.build(
+                  state.postingInfo.getSignatureVersion(), state.postingInfo, parentMediaDigest, mediaDigest
+            )
+            : PostingFingerprintBuilder.build(
+                  state.postingRevisionInfo.getSignatureVersion(), state.postingInfo, state.postingRevisionInfo,
+                  parentMediaDigest, mediaDigest
+            );
         byte[] commentFingerprint = CommentFingerprintBuilder.build(
             state.commentInfo.getSignatureVersion(), state.commentInfo, mediaDigest, postingFingerprint
         );
@@ -234,7 +250,9 @@ public class RemoteCommentReactionPostJob
         super.succeeded();
         log.info(
             "Succeeded to post a reaction to the comment {} under posting {} at node {}",
-            created.getReaction().getCommentId(), created.getReaction().getPostingId(), parameters.targetNodeName
+            state.reactionCreated.getReaction().getCommentId(),
+            state.reactionCreated.getReaction().getPostingId(),
+            parameters.targetNodeName
         );
     }
 

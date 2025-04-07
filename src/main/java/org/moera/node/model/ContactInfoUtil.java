@@ -25,7 +25,7 @@ public class ContactInfoUtil {
             contactInfo.setAvatar(
                 AvatarImageUtil.build(contact.getRemoteAvatarMediaFile(), contact.getRemoteAvatarShape()));
         }
-        contactInfo.setCloseness(contact.getCloseness());
+        contactInfo.setDistance(contact.getDistance());
         contactInfo.setHasFeedSubscriber(contact.getFeedSubscriberCount() > 0);
         contactInfo.setHasFeedSubscription(contact.getFeedSubscriptionCount() > 0);
         contactInfo.setHasFriend(contact.getFriendCount() > 0);

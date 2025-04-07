@@ -1,28 +1,21 @@
 package org.moera.node.operations;
 
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Collection;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 
-import org.moera.node.auth.AuthenticationManager;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRelated;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.MediaFile;
+import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.task.Jobs;
 import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.Transaction;
-import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
@@ -32,7 +25,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ContactOperations {
 
-    private static final Logger log = LoggerFactory.getLogger(AuthenticationManager.class);
+    private static final Logger log = LoggerFactory.getLogger(ContactOperations.class);
 
     @Inject
     private RequestCounter requestCounter;
@@ -44,10 +37,13 @@ public class ContactOperations {
     private ContactRepository contactRepository;
 
     @Inject
-    private Transaction tx;
+    private FavorOperations favorOperations;
 
     @Inject
-    private Jobs jobs;
+    private Domains domains;
+
+    @Inject
+    private Transaction tx;
 
     private final ParametrizedLock<Pair<UUID, String>> lock = new ParametrizedLock<>();
 
@@ -78,66 +74,67 @@ public class ContactOperations {
     }
 
     public Contact find(String remoteNodeName) {
-        return updateCloseness(remoteNodeName, 0);
+        return find(universalContext.nodeId(), remoteNodeName);
     }
 
     public Contact find(UUID nodeId, String remoteNodeName) {
-        return updateCloseness(nodeId, remoteNodeName, 0);
+        return updateAtomically(nodeId, remoteNodeName, contact -> {});
     }
 
-    public Contact updateCloseness(String remoteNodeName, float delta) {
-        return updateCloseness(universalContext.nodeId(), remoteNodeName, delta);
-    }
-
-    public Contact updateCloseness(UUID nodeId, String remoteNodeName, float delta) {
-        return updateAtomically(nodeId, remoteNodeName, contact -> contact.updateCloseness(delta));
-    }
-
-    public void asyncUpdateCloseness(String remoteNodeName, float delta) {
-        asyncUpdateCloseness(universalContext.nodeId(), remoteNodeName, delta);
-    }
-
-    public void asyncUpdateCloseness(UUID nodeId, String remoteNodeName, float delta) {
-        jobs.runNoPersist(UpdateClosenessJob.class, new UpdateClosenessJob.Parameters(remoteNodeName, delta), nodeId);
-    }
-
-    public Contact assignCloseness(String remoteNodeName, float closeness) {
-        return assignCloseness(universalContext.nodeId(), remoteNodeName, closeness);
-    }
-
-    public Contact assignCloseness(UUID nodeId, String remoteNodeName, float closeness) {
-        return updateAtomically(nodeId, remoteNodeName, contact -> contact.setCloseness(closeness));
+    public Contact assignDistance(String remoteNodeName, float distance) {
+        return updateAtomically(
+            universalContext.nodeId(),
+            remoteNodeName,
+            contact -> contact.setDistance(distance)
+        );
     }
 
     public Contact updateFeedSubscriptionCount(String remoteNodeName, int delta) {
-        return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setFeedSubscriptionCount(Math.max(contact.getFeedSubscriptionCount() + delta, 0)));
+        return updateAtomically(
+            universalContext.nodeId(),
+            remoteNodeName,
+            contact -> contact.setFeedSubscriptionCount(Math.max(contact.getFeedSubscriptionCount() + delta, 0))
+        );
     }
 
     public Contact updateFeedSubscriberCount(String remoteNodeName, int delta) {
-        return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setFeedSubscriberCount(Math.max(contact.getFeedSubscriberCount() + delta, 0)));
+        return updateAtomically(
+            universalContext.nodeId(),
+            remoteNodeName,
+            contact -> contact.setFeedSubscriberCount(Math.max(contact.getFeedSubscriberCount() + delta, 0))
+        );
     }
 
     public Contact updateFriendCount(String remoteNodeName, int delta) {
-        return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setFriendCount(Math.max(contact.getFriendCount() + delta, 0)));
+        return updateAtomically(
+            universalContext.nodeId(),
+            remoteNodeName,
+            contact -> contact.setFriendCount(Math.max(contact.getFriendCount() + delta, 0))
+        );
     }
 
     public Contact updateFriendOfCount(String remoteNodeName, int delta) {
-        return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setFriendOfCount(Math.max(contact.getFriendOfCount() + delta, 0)));
+        return updateAtomically(
+            universalContext.nodeId(),
+            remoteNodeName,
+            contact -> contact.setFriendOfCount(Math.max(contact.getFriendOfCount() + delta, 0))
+        );
     }
 
     public Contact updateBlockedUserCount(String remoteNodeName, int delta) {
-        return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setBlockedUserCount(Math.max(contact.getBlockedUserCount() + delta, 0)));
+        return updateAtomically(
+            universalContext.nodeId(),
+            remoteNodeName,
+            contact -> contact.setBlockedUserCount(Math.max(contact.getBlockedUserCount() + delta, 0))
+        );
     }
 
     public Contact updateBlockedUserPostingCount(String remoteNodeName, int delta) {
-        return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setBlockedUserPostingCount(
-                        Math.max(contact.getBlockedUserPostingCount() + delta, 0)));
+        return updateAtomically(
+            universalContext.nodeId(),
+            remoteNodeName,
+            contact -> contact.setBlockedUserPostingCount(Math.max(contact.getBlockedUserPostingCount() + delta, 0))
+        );
     }
 
     public Contact updateBlockedUserCounts(BlockedUser blockedUser, int delta) {
@@ -149,14 +146,19 @@ public class ContactOperations {
     }
 
     public Contact updateBlockedByUserCount(String remoteNodeName, int delta) {
-        return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setBlockedByUserCount(Math.max(contact.getBlockedByUserCount() + delta, 0)));
+        return updateAtomically(
+            universalContext.nodeId(),
+            remoteNodeName,
+            contact -> contact.setBlockedByUserCount(Math.max(contact.getBlockedByUserCount() + delta, 0))
+        );
     }
 
     public Contact updateBlockedByUserPostingCount(String remoteNodeName, int delta) {
-        return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setBlockedByUserPostingCount(
-                        Math.max(contact.getBlockedByUserPostingCount() + delta, 0)));
+        return updateAtomically(
+            universalContext.nodeId(),
+            remoteNodeName,
+            contact -> contact.setBlockedByUserPostingCount(Math.max(contact.getBlockedByUserPostingCount() + delta, 0))
+        );
     }
 
     public Contact updateBlockedByUserCounts(BlockedByUser blockedByUser, int delta) {
@@ -176,31 +178,40 @@ public class ContactOperations {
     }
 
     public Contact updateDetails(String remoteNodeName, String remoteFullName, String remoteGender, Runnable changed) {
-        return updateAtomically(universalContext.nodeId(), remoteNodeName, contact -> {
-            if (!Objects.equals(contact.getRemoteFullName(), remoteFullName)
-                    || !Objects.equals(contact.getRemoteGender(), remoteGender)) {
-                contact.setRemoteFullName(remoteFullName);
-                contact.setRemoteGender(remoteGender);
-                if (changed != null) {
-                    changed.run();
+        return updateAtomically(
+            universalContext.nodeId(),
+            remoteNodeName,
+            contact -> {
+                if (
+                    !Objects.equals(contact.getRemoteFullName(), remoteFullName)
+                    || !Objects.equals(contact.getRemoteGender(), remoteGender)
+                ) {
+                    contact.setRemoteFullName(remoteFullName);
+                    contact.setRemoteGender(remoteGender);
+                    if (changed != null) {
+                        changed.run();
+                    }
                 }
             }
-        });
+        );
     }
 
     public Contact updateAvatar(String remoteNodeName, MediaFile remoteAvatarMediaFile, String remoteAvatarShape) {
         return updateAvatar(remoteNodeName, remoteAvatarMediaFile, remoteAvatarShape, null);
     }
 
-    public Contact updateAvatar(String remoteNodeName, MediaFile remoteAvatarMediaFile, String remoteAvatarShape,
-                                Runnable changed) {
+    public Contact updateAvatar(
+        String remoteNodeName, MediaFile remoteAvatarMediaFile, String remoteAvatarShape, Runnable changed
+    ) {
         return updateAtomically(universalContext.nodeId(), remoteNodeName, contact -> {
             String oldMediaFileId = contact.getRemoteAvatarMediaFile() != null
-                    ? contact.getRemoteAvatarMediaFile().getId()
-                    : null;
+                ? contact.getRemoteAvatarMediaFile().getId()
+                : null;
             String newMediaFileId = remoteAvatarMediaFile != null ? remoteAvatarMediaFile.getId() : null;
-            if (!Objects.equals(oldMediaFileId, newMediaFileId)
-                    || !Objects.equals(contact.getRemoteAvatarShape(), remoteAvatarShape)) {
+            if (
+                !Objects.equals(oldMediaFileId, newMediaFileId)
+                || !Objects.equals(contact.getRemoteAvatarShape(), remoteAvatarShape)
+            ) {
                 contact.setRemoteAvatarMediaFile(remoteAvatarMediaFile);
                 contact.setRemoteAvatarShape(remoteAvatarShape);
                 if (changed != null) {
@@ -210,18 +221,20 @@ public class ContactOperations {
         });
     }
 
-    @Scheduled(fixedDelayString = "P1D")
-    @Transactional
-    public void closenessMaintenance() {
+    @Scheduled(fixedDelayString = "PT12H")
+    public void distanceMaintenance() {
         try (var ignored = requestCounter.allot()) {
-            log.info("Recalculating closeness of contacts");
+            log.info("Recalculating distance of contacts");
 
-            Collection<Contact> contacts = contactRepository.findAllUpdatedBefore(
-                    Timestamp.from(Instant.now().minus(14, ChronoUnit.DAYS)));
-            for (Contact contact : contacts) {
-                contact.setCloseness(contact.getCloseness() - 0.2f * contact.getClosenessBase());
-                contact.setClosenessBase(contact.getCloseness());
-                contact.setUpdatedAt(Util.now());
+            tx.executeWrite(() -> favorOperations.deleteExpired());
+            for (String domainName : domains.getWarmDomainNames()) {
+                UUID nodeId = domains.getDomainNodeId(domainName);
+                universalContext.associate(nodeId);
+                tx.executeWrite(() ->
+                    contactRepository
+                        .findAllByNodeId(nodeId)
+                        .forEach(contact -> favorOperations.updateDistance(contact))
+                );
             }
         }
     }

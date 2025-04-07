@@ -27,7 +27,8 @@ import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.ReactionDescriptionUtil;
 import org.moera.node.model.ReactionInfoUtil;
-import org.moera.node.operations.ContactOperations;
+import org.moera.node.operations.FavorOperations;
+import org.moera.node.operations.FavorType;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,7 +157,7 @@ public class RemotePostingReactionPostJob
     private MediaFileRepository mediaFileRepository;
 
     @Inject
-    private ContactOperations contactOperations;
+    private FavorOperations favorOperations;
 
     @Inject
     private MediaManager mediaManager;
@@ -294,7 +295,7 @@ public class RemotePostingReactionPostJob
                         ownReaction.setRemoteAvatarShape(state.target.getAvatar().getShape());
                     }
                     ownReaction = ownReactionRepository.save(ownReaction);
-                    contactOperations.updateCloseness(nodeId, parameters.targetNodeName, 0.25f);
+                    favorOperations.addFavor(nodeId, state.postingInfo.getOwnerName(), FavorType.LIKE_POST);
                 }
                 ReactionInfoUtil.toOwnReaction(state.reactionInfo, ownReaction);
                 ownReaction.setPostingHeading(state.postingInfo.getHeading());

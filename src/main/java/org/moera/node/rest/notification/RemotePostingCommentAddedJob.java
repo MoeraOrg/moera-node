@@ -231,7 +231,6 @@ public class RemotePostingCommentAddedJob
     public static class State {
 
         private boolean repliedToChecked;
-        private boolean closenessUpdated;
 
         public State() {
         }
@@ -242,14 +241,6 @@ public class RemotePostingCommentAddedJob
 
         public void setRepliedToChecked(boolean repliedToChecked) {
             this.repliedToChecked = repliedToChecked;
-        }
-
-        public boolean isClosenessUpdated() {
-            return closenessUpdated;
-        }
-
-        public void setClosenessUpdated(boolean closenessUpdated) {
-            this.closenessUpdated = closenessUpdated;
         }
 
     }
@@ -299,14 +290,10 @@ public class RemotePostingCommentAddedJob
             contactOperations.find(parameters.postingOwnerName),
             parameters.postingOwnerAvatar
         );
-        if (!state.closenessUpdated) {
-            Contact.toAvatar(
-                contactOperations.updateCloseness(parameters.commentOwnerName, 1),
-                parameters.commentOwnerAvatar
-            );
-            state.closenessUpdated = true;
-            checkpoint();
-        }
+        Contact.toAvatar(
+            contactOperations.find(parameters.commentOwnerName),
+            parameters.commentOwnerAvatar
+        );
         tx.executeWriteWithExceptions(() ->
             mediaManager.downloadAvatars(
                 parameters.senderNodeName,

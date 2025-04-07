@@ -11,7 +11,7 @@ import org.moera.node.media.MediaManager;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
 
-public class CommentReactionAddedJob extends Job<CommentReactionAddedJob.Parameters, CommentReactionAddedJob.State> {
+public class CommentReactionAddedJob extends Job<CommentReactionAddedJob.Parameters, Object> {
 
     public static class Parameters {
 
@@ -190,23 +190,6 @@ public class CommentReactionAddedJob extends Job<CommentReactionAddedJob.Paramet
 
     }
 
-    public static class State {
-
-        private boolean closenessUpdated;
-
-        public State() {
-        }
-
-        public boolean isClosenessUpdated() {
-            return closenessUpdated;
-        }
-
-        public void setClosenessUpdated(boolean closenessUpdated) {
-            this.closenessUpdated = closenessUpdated;
-        }
-
-    }
-
     @Inject
     private MediaManager mediaManager;
 
@@ -214,7 +197,6 @@ public class CommentReactionAddedJob extends Job<CommentReactionAddedJob.Paramet
     private ContactOperations contactOperations;
 
     public CommentReactionAddedJob() {
-        state = new State();
     }
 
     @Override
@@ -224,7 +206,7 @@ public class CommentReactionAddedJob extends Job<CommentReactionAddedJob.Paramet
 
     @Override
     protected void setState(String state, ObjectMapper objectMapper) throws JsonProcessingException {
-        this.state = objectMapper.readValue(state, State.class);
+        this.state = null;
     }
 
     @Override
@@ -233,15 +215,10 @@ public class CommentReactionAddedJob extends Job<CommentReactionAddedJob.Paramet
             contactOperations.find(parameters.postingNodeName),
             parameters.postingAvatar
         );
-        if (!state.closenessUpdated) {
-            Contact.toAvatar(
-                contactOperations.updateCloseness(parameters.getOwnerName(), 0.1f),
-                parameters.ownerAvatar
-            );
-            state.closenessUpdated = true;
-            checkpoint();
-        }
-
+        Contact.toAvatar(
+            contactOperations.find(parameters.getOwnerName()),
+            parameters.ownerAvatar
+        );
         tx.executeWriteWithExceptions(() ->
             mediaManager.downloadAvatars(
                 parameters.senderNodeName,

@@ -79,8 +79,9 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.CommentOperations;
-import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.EntryOperations;
+import org.moera.node.operations.FavorOperations;
+import org.moera.node.operations.FavorType;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.OperationsValidator;
@@ -148,7 +149,7 @@ public class CommentController {
     private EntryOperations entryOperations;
 
     @Inject
-    private ContactOperations contactOperations;
+    private FavorOperations favorOperations;
 
     @Inject
     private MediaOperations mediaOperations;
@@ -243,9 +244,7 @@ public class CommentController {
 
         if (comment.getCurrentRevision().getSignature() != null) {
             if (comment.getOwnerName().equals(requestContext.nodeName())) {
-                contactOperations.asyncUpdateCloseness(comment.getRepliedToName(), 1);
-            } else {
-                contactOperations.asyncUpdateCloseness(comment.getOwnerName(), 1);
+                favorOperations.asyncAddFavor(comment.getRepliedToName(), FavorType.REPLY_TO_COMMENT);
             }
         }
 
@@ -833,9 +832,7 @@ public class CommentController {
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentOperations.deleteComment(comment);
         if (comment.getOwnerName().equals(requestContext.nodeName())) {
-            contactOperations.asyncUpdateCloseness(comment.getRepliedToName(), -1);
-        } else {
-            contactOperations.asyncUpdateCloseness(comment.getOwnerName(), -1);
+            favorOperations.asyncAddFavor(comment.getRepliedToName(), FavorType.UNREPLY_TO_COMMENT);
         }
 
         requestContext.send(new CommentDeletedLiberin(comment, latest));

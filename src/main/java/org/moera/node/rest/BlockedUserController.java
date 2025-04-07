@@ -101,7 +101,8 @@ public class BlockedUserController {
         blockedUser = blockedUserRepository.save(blockedUser);
 
         if (blockedUser.isGlobal() && blockedUser.getDeadline() == null) {
-            contactOperations.assignCloseness(blockedUser.getRemoteNodeName(), 0);
+            // will get this value anyway after recalculation, but immediate change gives a better user experience
+            contactOperations.assignDistance(blockedUser.getRemoteNodeName(), 4);
         }
         contactOperations.updateBlockedUserCounts(blockedUser, 1);
         contactOperations.updateViewPrincipal(blockedUser).fill(blockedUser);

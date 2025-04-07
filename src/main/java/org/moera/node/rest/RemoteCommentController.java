@@ -24,7 +24,8 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.RemoteCommentUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AsyncOperationCreatedUtil;
-import org.moera.node.operations.ContactOperations;
+import org.moera.node.operations.FavorOperations;
+import org.moera.node.operations.FavorType;
 import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.rest.task.RemoteCommentPostJob;
 import org.moera.node.rest.task.verification.RemoteCommentVerifyTask;
@@ -58,7 +59,7 @@ public class RemoteCommentController {
     private OwnCommentRepository ownCommentRepository;
 
     @Inject
-    private ContactOperations contactOperations;
+    private FavorOperations favorOperations;
 
     @Inject
     private MediaOperations mediaOperations;
@@ -156,8 +157,8 @@ public class RemoteCommentController {
             requestContext.nodeId(), nodeName, postingId, commentId
         ).orElse(null);
         if (ownComment != null) {
-            contactOperations.asyncUpdateCloseness(nodeName, -1);
-            contactOperations.asyncUpdateCloseness(ownComment.getRemoteRepliedToName(), -1);
+            favorOperations.asyncAddFavor(nodeName, FavorType.UNCOMMENT);
+            favorOperations.asyncAddFavor(ownComment.getRemoteRepliedToName(), FavorType.UNREPLY_TO_COMMENT);
             requestContext.send(new RemoteCommentUpdatedLiberin(nodeName, postingId, commentId));
         }
 

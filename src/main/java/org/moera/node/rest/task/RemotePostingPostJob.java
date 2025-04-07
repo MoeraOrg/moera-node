@@ -29,7 +29,8 @@ import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.PostingTextUtil;
-import org.moera.node.operations.ContactOperations;
+import org.moera.node.operations.FavorOperations;
+import org.moera.node.operations.FavorType;
 import org.moera.node.task.Job;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
@@ -163,7 +164,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
     private MediaFileRepository mediaFileRepository;
 
     @Inject
-    private ContactOperations contactOperations;
+    private FavorOperations favorOperations;
 
     @Inject
     private MediaManager mediaManager;
@@ -320,7 +321,9 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
                         ownPosting.setRemoteAvatarShape(state.target.getAvatar().getShape());
                     }
                     ownPosting = ownPostingRepository.save(ownPosting);
-                    contactOperations.updateCloseness(nodeId, parameters.targetNodeName, 1);
+                    if (state.postingInfo.getParentMediaId() == null) {
+                        favorOperations.addFavor(nodeId, parameters.targetNodeName, FavorType.POST);
+                    }
                 }
                 PostingInfoUtil.toOwnPosting(state.postingInfo, ownPosting);
             }

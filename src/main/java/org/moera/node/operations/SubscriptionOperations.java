@@ -35,6 +35,9 @@ public class SubscriptionOperations {
     private ContactOperations contactOperations;
 
     @Inject
+    private FavorOperations favorOperations;
+
+    @Inject
     private Transaction tx;
 
     @Inject
@@ -54,11 +57,10 @@ public class SubscriptionOperations {
 
                 Contact contact;
                 if (userSubscription.getSubscriptionType() == SubscriptionType.FEED) {
-                    contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 800);
                     contactOperations.updateFeedSubscriptionCount(userSubscription.getRemoteNodeName(), 1);
                     contact = contactOperations.updateViewPrincipal(userSubscription);
                 } else {
-                    contact = contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 1);
+                    contact = contactOperations.find(userSubscription.getRemoteNodeName());
                 }
                 contact.fill(userSubscription);
 
@@ -126,7 +128,8 @@ public class SubscriptionOperations {
         subscription.setReason(reason);
         subscription = userSubscriptionRepository.save(subscription);
 
-        contactOperations.updateCloseness(nodeName, 1).fill(subscription);
+        contactOperations.find(nodeName).fill(subscription);
+        favorOperations.addFavor(nodeName, FavorType.SUBSCRIBE_TO_COMMENTS);
 
         universalContext.send(new SubscriptionAddedLiberin(subscription));
         universalContext.subscriptionsUpdated();

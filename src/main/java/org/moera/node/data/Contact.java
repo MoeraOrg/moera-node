@@ -67,10 +67,7 @@ public class Contact {
     private int blockedByUserPostingCount;
 
     @NotNull
-    private float closenessBase;
-
-    @NotNull
-    private float closeness;
+    private float distance;
 
     @NotNull
     private Timestamp createdAt = Util.now();
@@ -207,24 +204,12 @@ public class Contact {
         this.blockedByUserPostingCount = blockedByUserPostingCount;
     }
 
-    public float getClosenessBase() {
-        return closenessBase;
+    public float getDistance() {
+        return distance;
     }
 
-    public void setClosenessBase(float closenessBase) {
-        this.closenessBase = closenessBase;
-    }
-
-    public float getCloseness() {
-        return closeness;
-    }
-
-    public void setCloseness(float closeness) {
-        this.closeness = closeness;
-    }
-
-    public void updateCloseness(float delta) {
-        setCloseness(Math.max(1, getCloseness() + delta));
+    public void setDistance(float distance) {
+        this.distance = distance;
     }
 
     public Timestamp getCreatedAt() {
@@ -302,8 +287,10 @@ public class Contact {
     }
 
     public static void toAvatar(Contact contact, AvatarImage avatarImage) {
-        if (contact != null && contact.getRemoteAvatarMediaFile() != null && avatarImage != null
-                && Objects.equals(contact.getRemoteAvatarMediaFile().getId(), avatarImage.getMediaId())) {
+        if (
+            contact != null && contact.getRemoteAvatarMediaFile() != null && avatarImage != null
+            && Objects.equals(contact.getRemoteAvatarMediaFile().getId(), avatarImage.getMediaId())
+        ) {
             AvatarImageUtil.setMediaFile(avatarImage, contact.getRemoteAvatarMediaFile());
         }
     }

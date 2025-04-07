@@ -9,21 +9,21 @@ import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class UpdateClosenessJob extends Job<UpdateClosenessJob.Parameters, Object> {
+public class AddFavorJob extends Job<AddFavorJob.Parameters, Object> {
 
-    private static final Logger log = LoggerFactory.getLogger(UpdateClosenessJob.class);
+    private static final Logger log = LoggerFactory.getLogger(AddFavorJob.class);
 
     public static class Parameters {
 
         private String remoteNodeName;
-        private float delta;
+        private FavorType favorType;
 
         public Parameters() {
         }
 
-        public Parameters(String remoteNodeName, float delta) {
+        public Parameters(String remoteNodeName, FavorType favorType) {
             this.remoteNodeName = remoteNodeName;
-            this.delta = delta;
+            this.favorType = favorType;
         }
 
         public String getRemoteNodeName() {
@@ -34,20 +34,20 @@ public class UpdateClosenessJob extends Job<UpdateClosenessJob.Parameters, Objec
             this.remoteNodeName = remoteNodeName;
         }
 
-        public float getDelta() {
-            return delta;
+        public FavorType getFavorType() {
+            return favorType;
         }
 
-        public void setDelta(float delta) {
-            this.delta = delta;
+        public void setFavorType(FavorType favorType) {
+            this.favorType = favorType;
         }
 
     }
 
     @Inject
-    private ContactOperations contactOperations;
+    private FavorOperations favorOperations;
 
-    public UpdateClosenessJob() {
+    public AddFavorJob() {
     }
 
     @Override
@@ -63,12 +63,15 @@ public class UpdateClosenessJob extends Job<UpdateClosenessJob.Parameters, Objec
     @Override
     protected void started() {
         super.started();
-        log.debug("Updating closeness of {} ({})", LogUtil.format(parameters.remoteNodeName), parameters.delta);
+        log.debug(
+            "Adding favor {} to node {}",
+            LogUtil.format(parameters.favorType.name()), LogUtil.format(parameters.remoteNodeName)
+        );
     }
 
     @Override
     protected void execute() {
-        contactOperations.updateCloseness(nodeId, parameters.remoteNodeName, parameters.delta);
+        favorOperations.addFavor(nodeId, parameters.remoteNodeName, parameters.favorType);
     }
 
 }

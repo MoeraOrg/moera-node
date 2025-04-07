@@ -23,7 +23,8 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AsyncOperationCreatedUtil;
-import org.moera.node.operations.ContactOperations;
+import org.moera.node.operations.FavorOperations;
+import org.moera.node.operations.FavorType;
 import org.moera.node.rest.task.RemotePostingPostJob;
 import org.moera.node.rest.task.verification.RemotePostingVerifyTask;
 import org.moera.node.task.Jobs;
@@ -59,7 +60,7 @@ public class RemotePostingController {
     private MediaOperations mediaOperations;
 
     @Inject
-    private ContactOperations contactOperations;
+    private FavorOperations favorOperations;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -132,8 +133,8 @@ public class RemotePostingController {
         OwnPosting ownPosting = ownPostingRepository
             .findByRemotePostingId(requestContext.nodeId(), nodeName, postingId)
             .orElse(null);
-        if (ownPosting != null) {
-            contactOperations.asyncUpdateCloseness(nodeName, -1);
+        if (ownPosting != null && ownPosting.getRemoteParentMediaId() == null) {
+            favorOperations.asyncAddFavor(nodeName, FavorType.UNPOST);
             requestContext.send(new RemotePostingUpdatedLiberin(nodeName, postingId));
         }
 

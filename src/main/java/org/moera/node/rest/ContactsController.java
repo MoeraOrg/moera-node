@@ -81,7 +81,7 @@ public class ContactsController {
             .selectFrom(contact)
             .leftJoin(contact.remoteAvatarMediaFile).fetchJoin()
             .where(where)
-            .orderBy(contact.closeness.desc())
+            .orderBy(contact.distance.asc())
             .limit(limit);
 
         List<Pattern> regexes = Arrays.stream(words)

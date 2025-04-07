@@ -35,7 +35,8 @@ import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.CommentTextUtil;
-import org.moera.node.operations.ContactOperations;
+import org.moera.node.operations.FavorOperations;
+import org.moera.node.operations.FavorType;
 import org.moera.node.task.Job;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
@@ -209,7 +210,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
     private MediaFileRepository mediaFileRepository;
 
     @Inject
-    private ContactOperations contactOperations;
+    private FavorOperations favorOperations;
 
     @Inject
     private MediaManager mediaManager;
@@ -438,8 +439,8 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
                         ownComment.setRemoteRepliedToAvatarShape(remoteRepliedToAvatarShape);
                     }
                     ownComment = ownCommentRepository.save(ownComment);
-                    contactOperations.updateCloseness(nodeId, parameters.targetNodeName, 1);
-                    contactOperations.updateCloseness(nodeId, CommentInfoUtil.getRepliedToName(info), 1);
+                    favorOperations.addFavor(nodeId, state.postingInfo.getOwnerName(), FavorType.COMMENT);
+                    favorOperations.addFavor(nodeId, CommentInfoUtil.getRepliedToName(info), FavorType.REPLY_TO_COMMENT);
                 }
                 CommentInfoUtil.toOwnComment(info, ownComment);
                 ownComment.setPostingHeading(state.postingInfo.getHeading());

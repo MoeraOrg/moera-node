@@ -38,6 +38,9 @@ public class OwnPosting {
     @Size(max = 40)
     private String remotePostingId = "";
 
+    @Size(max = 40)
+    private String remoteParentMediaId;
+
     @NotNull
     @Size(max = 255)
     private String heading = "";
@@ -99,6 +102,14 @@ public class OwnPosting {
 
     public void setRemotePostingId(String remotePostingId) {
         this.remotePostingId = remotePostingId;
+    }
+
+    public String getRemoteParentMediaId() {
+        return remoteParentMediaId;
+    }
+
+    public void setRemoteParentMediaId(String remoteParentMediaId) {
+        this.remoteParentMediaId = remoteParentMediaId;
     }
 
     public String getHeading() {
