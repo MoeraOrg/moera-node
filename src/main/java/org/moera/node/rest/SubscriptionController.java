@@ -88,14 +88,21 @@ public class SubscriptionController {
 
     @GetMapping
     @Transactional
-    public List<SubscriptionInfo> getAll(@RequestParam(required = false) String nodeName,
-                                         @RequestParam(required = false) SubscriptionType type) {
-        log.info("GET /people/subscriptions (nodeName = {}, type = {})",
-                LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
+    public List<SubscriptionInfo> getAll(
+        @RequestParam(required = false) String nodeName,
+        @RequestParam(required = false) SubscriptionType type
+    ) {
+        log.info(
+            "GET /people/subscriptions (nodeName = {}, type = {})",
+            LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type))
+        );
 
         if (type == SubscriptionType.FEED) {
-            if (!requestContext.isPrincipal(
-                    UserSubscription.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)) {
+            if (
+                !requestContext.isPrincipal(
+                    UserSubscription.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE
+                )
+            ) {
                 throw new AuthenticationException();
             }
         } else {
@@ -115,9 +122,9 @@ public class SubscriptionController {
         }
 
         return fetchSubscriptions(where).stream()
-                .filter(sr -> requestContext.isPrincipal(sr.getViewE(), Scope.VIEW_PEOPLE))
-                .map(sr -> SubscriptionInfoUtil.build(sr, requestContext.getOptions(), requestContext))
-                .collect(Collectors.toList());
+            .filter(sr -> requestContext.isPrincipal(sr.getViewE(), Scope.VIEW_PEOPLE))
+            .map(sr -> SubscriptionInfoUtil.build(sr, requestContext.getOptions(), requestContext))
+            .collect(Collectors.toList());
     }
 
     @PostMapping
