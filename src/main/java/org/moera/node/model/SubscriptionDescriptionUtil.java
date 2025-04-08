@@ -14,7 +14,9 @@ public class SubscriptionDescriptionUtil {
         subscription.setRemoteNodeName(NodeName.expand(description.getRemoteNodeName()));
         subscription.setRemoteFeedName(description.getRemoteFeedName());
         subscription.setRemoteEntryId(description.getRemotePostingId());
-        subscription.setReason(description.getReason());
+        if (description.getReason() != null) {
+            subscription.setReason(description.getReason());
+        }
         Principal viewPrincipal = SubscriptionOperations.getView(description.getOperations(), null);
         if (viewPrincipal != null) {
             subscription.setViewPrincipal(viewPrincipal);
