@@ -16,7 +16,9 @@ public class BlockingAddedNotificationUtil {
         notification.setBlockedOperation(blockedOperation);
         notification.setPostingId(postingId);
         notification.setPostingHeading(postingHeading);
-        notification.setDeadline(deadline);
+        if (deadline != null) {
+            notification.setDeadline(deadline);
+        }
         notification.setReason(reason);
         return notification;
     }
