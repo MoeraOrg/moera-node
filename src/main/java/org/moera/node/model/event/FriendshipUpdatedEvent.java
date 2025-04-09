@@ -15,8 +15,11 @@ public class FriendshipUpdatedEvent extends Event {
     private FriendInfo friend;
 
     public FriendshipUpdatedEvent(FriendInfo friend) {
-        super(EventType.FRIENDSHIP_UPDATED, Scope.VIEW_PEOPLE,
-                Principal.ADMIN.a().or(Principal.ofNode(friend.getNodeName())));
+        super(
+            EventType.FRIENDSHIP_UPDATED,
+            Scope.VIEW_PEOPLE,
+            Principal.ADMIN.a().or(Principal.ofNode(friend.getNodeName()))
+        );
         this.friend = friend;
     }
 

@@ -1,6 +1,7 @@
 package org.moera.node.liberin.receptor;
 
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.SearchContentUpdateType;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
@@ -12,6 +13,7 @@ import org.moera.node.model.event.BlockedUserAddedEvent;
 import org.moera.node.model.event.BlockedUserDeletedEvent;
 import org.moera.node.model.notification.BlockingAddedNotificationUtil;
 import org.moera.node.model.notification.BlockingDeletedNotificationUtil;
+import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.util.Util;
 
@@ -25,6 +27,16 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
             BlockedUserInfoUtil.build(blockedUser, universalContext.getOptions()),
             BlockedUser.getViewAllE(universalContext.getOptions())
         ));
+        if (blockedUser.getBlockedOperation() != BlockedOperation.INSTANT && blockedUser.getEntryNodeName() == null) {
+            send(
+                Directions.searchSubscribers(
+                    liberin.getNodeId(), BlockedUser.getViewAllE(universalContext.getOptions())
+                ),
+                SearchContentUpdatedNotificationUtil.build(
+                    SearchContentUpdateType.BLOCK, blockedUser.getRemoteNodeName(), blockedUser.getBlockedOperation()
+                )
+            );
+        }
         if (
             blockedUser.getBlockedOperation() != BlockedOperation.VISIBILITY
             && blockedUser.getBlockedOperation() != BlockedOperation.INSTANT
@@ -52,6 +64,16 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void deleted(BlockedUserDeletedLiberin liberin) {
         BlockedUser blockedUser = liberin.getBlockedUser();
+        if (blockedUser.getBlockedOperation() != BlockedOperation.INSTANT && blockedUser.getEntryNodeName() == null) {
+            send(
+                Directions.searchSubscribers(
+                    liberin.getNodeId(), BlockedUser.getViewAllE(universalContext.getOptions())
+                ),
+                SearchContentUpdatedNotificationUtil.build(
+                    SearchContentUpdateType.UNBLOCK, blockedUser.getRemoteNodeName(), blockedUser.getBlockedOperation()
+                )
+            );
+        }
         send(liberin, new BlockedUserDeletedEvent(
             BlockedUserInfoUtil.build(blockedUser, universalContext.getOptions()),
             BlockedUser.getViewAllE(universalContext.getOptions())
