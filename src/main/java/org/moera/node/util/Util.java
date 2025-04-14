@@ -65,7 +65,7 @@ public class Util {
         if (s == null) {
             return new SafeString("");
         }
-        return s instanceof SafeString ? (SafeString) s : new SafeString(HtmlUtils.htmlEscape(s.toString()));
+        return s instanceof SafeString ss ? ss : new SafeString(HtmlUtils.htmlEscape(s.toString()));
     }
 
     public static String le(Object s) {

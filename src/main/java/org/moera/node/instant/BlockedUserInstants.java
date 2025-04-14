@@ -99,7 +99,7 @@ public class BlockedUserInstants extends InstantsCreator {
         String entryHeading
     ) {
         Set<BlockedOperation> operations;
-        if (prevSummary == null) {
+        if (prevSummary == null || prevSummary.getBlocked() == null) {
             operations = Set.of(newOperation);
         } else {
             operations = new HashSet<>(prevSummary.getBlocked().getOperations());

@@ -38,7 +38,7 @@ public class FriendshipReceptor extends LiberinReceptorBase {
             friendGroups != null ? SearchContentUpdateType.FRIEND : SearchContentUpdateType.UNFRIEND;
         send(
             Directions.searchSubscribers(liberin.getNodeId(), Friend.getViewAllE(universalContext.getOptions())),
-            SearchContentUpdatedNotificationUtil.build(searchContentUpdateType, liberin.getFriendNodeName())
+            SearchContentUpdatedNotificationUtil.buildFriendUpdate(searchContentUpdateType, liberin.getFriendNodeName())
         );
 
         FriendInfo friend = FriendInfoUtil.build(

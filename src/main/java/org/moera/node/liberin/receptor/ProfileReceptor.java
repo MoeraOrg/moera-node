@@ -2,7 +2,6 @@ package org.moera.node.liberin.receptor;
 
 import java.util.Objects;
 
-import org.moera.lib.node.types.SearchContentUpdateType;
 import org.moera.lib.node.types.notifications.ProfileUpdatedNotification;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
@@ -29,7 +28,7 @@ public class ProfileReceptor extends LiberinReceptorBase {
         send(Directions.profileSubscribers(liberin.getNodeId()), new ProfileUpdatedNotification());
         send(
             Directions.searchSubscribers(liberin.getNodeId()),
-            SearchContentUpdatedNotificationUtil.build(SearchContentUpdateType.PROFILE)
+            SearchContentUpdatedNotificationUtil.buildProfileUpdate()
         );
         if (!Objects.equals(liberin.getOptions().getString("profile.email"), liberin.getPrevEmail())) {
             send(new EmailConfirmMail());

@@ -39,7 +39,7 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
             send(
                 Directions.searchSubscribers(liberin.getNodeId(), visibilityFilter),
-                SearchContentUpdatedNotificationUtil.build(
+                SearchContentUpdatedNotificationUtil.buildSubscriptionUpdate(
                     SearchContentUpdateType.SUBSCRIBE,
                     subscription.getRemoteNodeName(),
                     subscription.getRemoteFeedName()
@@ -62,7 +62,7 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
             send(
                 Directions.searchSubscribers(liberin.getNodeId(), addedFilter),
-                SearchContentUpdatedNotificationUtil.build(
+                SearchContentUpdatedNotificationUtil.buildSubscriptionUpdate(
                     SearchContentUpdateType.SUBSCRIBE,
                     subscription.getRemoteNodeName(),
                     subscription.getRemoteFeedName()
@@ -86,7 +86,7 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
             send(
                 Directions.searchSubscribers(liberin.getNodeId(), deletedFilter),
-                SearchContentUpdatedNotificationUtil.build(
+                SearchContentUpdatedNotificationUtil.buildSubscriptionUpdate(
                     SearchContentUpdateType.UNSUBSCRIBE,
                     subscription.getRemoteNodeName(),
                     subscription.getRemoteFeedName()
@@ -106,7 +106,7 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
             send(
                 Directions.searchSubscribers(liberin.getNodeId(), visibilityFilter),
-                SearchContentUpdatedNotificationUtil.build(
+                SearchContentUpdatedNotificationUtil.buildSubscriptionUpdate(
                     SearchContentUpdateType.UNSUBSCRIBE,
                     subscription.getRemoteNodeName(),
                     subscription.getRemoteFeedName()

@@ -32,7 +32,7 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
                 Directions.searchSubscribers(
                     liberin.getNodeId(), BlockedUser.getViewAllE(universalContext.getOptions())
                 ),
-                SearchContentUpdatedNotificationUtil.build(
+                SearchContentUpdatedNotificationUtil.buildBlockUpdate(
                     SearchContentUpdateType.BLOCK, blockedUser.getRemoteNodeName(), blockedUser.getBlockedOperation()
                 )
             );
@@ -69,7 +69,7 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
                 Directions.searchSubscribers(
                     liberin.getNodeId(), BlockedUser.getViewAllE(universalContext.getOptions())
                 ),
-                SearchContentUpdatedNotificationUtil.build(
+                SearchContentUpdatedNotificationUtil.buildBlockUpdate(
                     SearchContentUpdateType.UNBLOCK, blockedUser.getRemoteNodeName(), blockedUser.getBlockedOperation()
                 )
             );
