@@ -13,7 +13,7 @@ public class UriUtil {
 
     public static UriComponentsBuilder createBuilderFromRequest(HttpServletRequest request) {
         UriComponentsBuilder builder = UriComponentsBuilder
-            .fromHttpUrl(request.getRequestURL().toString())
+            .fromUriString(request.getRequestURL().toString())
             .query(request.getQueryString());
         String forwardedHost = request.getHeader("X-Forwarded-Host");
         if (!ObjectUtils.isEmpty(forwardedHost)) {
