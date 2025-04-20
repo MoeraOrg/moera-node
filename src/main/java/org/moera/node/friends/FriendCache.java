@@ -47,12 +47,11 @@ public class FriendCache {
         if (groups != null) {
             return groups;
         }
-        nodeGroupsLock.lock(nodeId);
-        try {
-            return nodeGroups.computeIfAbsent(nodeId,
-                    nid -> friendGroupRepository.findAllByNodeId(nid).toArray(FriendGroup[]::new));
-        } finally {
-            nodeGroupsLock.unlock(nodeId);
+        try (var ignored = nodeGroupsLock.lock(nodeId)) {
+            return nodeGroups.computeIfAbsent(
+                nodeId,
+                nid -> friendGroupRepository.findAllByNodeId(nid).toArray(FriendGroup[]::new)
+            );
         }
     }
 
@@ -80,12 +79,9 @@ public class FriendCache {
         Nodes nodeClient = new Nodes(universalContext.nodeId(), clientName);
         Friend[] groups = clientGroups.get(nodeClient);
         if (groups == null) {
-            clientGroupsLock.lock(nodeClient);
-            try {
+            try (var ignored = clientGroupsLock.lock(nodeClient)) {
                 groups = clientGroups.computeIfAbsent(nodeClient,
                         nid -> fetchClientGroups(clientName).toArray(Friend[]::new));
-            } finally {
-                clientGroupsLock.unlock(nodeClient);
             }
         }
         updateUsage(nodeClient);

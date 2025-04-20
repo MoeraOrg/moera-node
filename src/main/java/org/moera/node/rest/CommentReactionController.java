@@ -99,8 +99,7 @@ public class CommentReactionController {
             LogUtil.format(reactionDescription.getEmoji())
         );
 
-        lock.lock(postingId);
-        try {
+        try (var ignored = lock.lock(postingId)) {
             return tx.executeWrite(() -> {
                 Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                     .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
@@ -144,8 +143,6 @@ public class CommentReactionController {
                     )
                     .body(ReactionCreatedUtil.build(reaction, totalsInfo.getClientInfo(), requestContext));
             });
-        } finally {
-            lock.unlock(postingId);
         }
     }
 
@@ -354,8 +351,7 @@ public class CommentReactionController {
                         + " (postingId = {}, commentId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName));
 
-        lock.lock(postingId);
-        try {
+        try (var ignored = lock.lock(postingId)) {
             return tx.executeWrite(() -> {
                 Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                         .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));

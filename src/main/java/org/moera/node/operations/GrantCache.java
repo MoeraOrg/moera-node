@@ -30,8 +30,7 @@ public class GrantCache {
 
     public long grant(UUID nodeId, String nodeName, long scope) {
         Nodes key = new Nodes(nodeId, nodeName);
-        grantsLock.lock(key);
-        try {
+        try (var ignored = grantsLock.lock(key)) {
             Grant grant = null;
             Long currentScope = grants.get(key);
             if (currentScope != null) {
@@ -55,15 +54,12 @@ public class GrantCache {
             grantRepository.save(grant);
 
             return currentScope;
-        } finally {
-            grantsLock.unlock(key);
         }
     }
 
     public long revoke(UUID nodeId, String nodeName, long scope) {
         Nodes key = new Nodes(nodeId, nodeName);
-        grantsLock.lock(key);
-        try {
+        try (var ignored = grantsLock.lock(key)) {
             Long currentScope = grants.get(key);
             if (currentScope == null) {
                 return 0;
@@ -92,8 +88,6 @@ public class GrantCache {
             }
 
             return currentScope;
-        } finally {
-            grantsLock.unlock(key);
         }
     }
 

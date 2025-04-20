@@ -42,13 +42,13 @@ public class SubscribedCache {
         Nodes nodes = new Nodes(nodeId, remoteNodeName);
         Boolean subscribed = cache.get(nodes);
         if (subscribed == null) {
-            lock.lock(nodes);
-            try {
-                subscribed = cache.computeIfAbsent(nodes,
-                        nid -> userSubscriptionRepository.countByTypeAndRemoteNode(
-                                nodeId, SubscriptionType.FEED, remoteNodeName) > 0);
-            } finally {
-                lock.unlock(nodes);
+            try (var ignored = lock.lock(nodes)) {
+                subscribed = cache.computeIfAbsent(
+                    nodes,
+                    nid -> userSubscriptionRepository.countByTypeAndRemoteNode(
+                        nodeId, SubscriptionType.FEED, remoteNodeName
+                    ) > 0
+                );
             }
         }
         updateUsage(nodes);

@@ -52,8 +52,7 @@ public class ContactOperations {
             return null;
         }
 
-        lock.lock(Pair.of(nodeId, remoteNodeName));
-        try {
+        try (var ignored = lock.lock(Pair.of(nodeId, remoteNodeName))) {
             return tx.executeWrite(() -> {
                 Contact contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName).orElse(null);
                 if (contact == null) {
@@ -68,8 +67,6 @@ public class ContactOperations {
             });
         } catch (Throwable e) {
             throw new ContactUpdateException(e);
-        } finally {
-            lock.unlock(Pair.of(nodeId, remoteNodeName));
         }
     }
 

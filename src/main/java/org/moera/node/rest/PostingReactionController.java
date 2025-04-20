@@ -108,11 +108,10 @@ public class PostingReactionController {
             LogUtil.format(reactionDescription.getEmoji())
         );
 
-        lock.lock(postingId);
-        try {
+        try (var ignored = lock.lock(postingId)) {
             return tx.executeWrite(() -> {
                 Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
-                        .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+                    .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
                 ValidationUtil.notNull(posting.getCurrentRevision().getSignature(), "posting.not-signed");
                 reactionOperations.validate(reactionDescription, posting);
                 if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
@@ -133,8 +132,6 @@ public class PostingReactionController {
                     return postToPicked(reactionDescription, posting);
                 }
             });
-        } finally {
-            lock.unlock(postingId);
         }
     }
 
@@ -242,19 +239,20 @@ public class PostingReactionController {
     @NoCache
     @Transactional
     public ReactionsSliceInfo getAll(
-            @PathVariable UUID postingId,
-            @RequestParam(defaultValue = "false") boolean negative,
-            @RequestParam(required = false) Integer emoji,
-            @RequestParam(required = false) Long before,
-            @RequestParam(required = false) Integer limit) {
-
-        log.info("GET /postings/{postingId}/reactions"
-                        + " (postingId = {}, negative = {} emoji = {} before = {}, limit = {})",
-                LogUtil.format(postingId), LogUtil.format(negative), LogUtil.format(emoji), LogUtil.format(before),
-                LogUtil.format(limit));
+        @PathVariable UUID postingId,
+        @RequestParam(defaultValue = "false") boolean negative,
+        @RequestParam(required = false) Integer emoji,
+        @RequestParam(required = false) Long before,
+        @RequestParam(required = false) Integer limit
+    ) {
+        log.info(
+            "GET /postings/{postingId}/reactions (postingId = {}, negative = {} emoji = {} before = {}, limit = {})",
+            LogUtil.format(postingId), LogUtil.format(negative), LogUtil.format(emoji), LogUtil.format(before),
+            LogUtil.format(limit)
+        );
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
@@ -265,7 +263,8 @@ public class PostingReactionController {
             return ReactionsSliceInfoUtil.EMPTY;
         }
         limit = limit != null && limit <= ReactionOperations.MAX_REACTIONS_PER_REQUEST
-                ? limit : ReactionOperations.MAX_REACTIONS_PER_REQUEST;
+            ? limit
+            : ReactionOperations.MAX_REACTIONS_PER_REQUEST;
         ValidationUtil.assertion(limit >= 0, "limit.invalid");
         before = before != null ? before : SafeInteger.MAX_VALUE;
         return reactionOperations.getBefore(postingId, negative, emoji, before, limit);
@@ -274,25 +273,31 @@ public class PostingReactionController {
     @GetMapping("/{postingId}/reactions/{ownerName}")
     @Transactional
     public ReactionInfo get(@PathVariable UUID postingId, @PathVariable String ownerName) {
-        log.info("GET /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
-                LogUtil.format(postingId), LogUtil.format(ownerName));
+        log.info(
+            "GET /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
+            LogUtil.format(postingId), LogUtil.format(ownerName)
+        );
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getViewReactionsE(), Scope.VIEW_CONTENT)
-                && !requestContext.isClient(ownerName, Scope.VIEW_CONTENT)) {
+        if (
+            !requestContext.isPrincipal(posting.getViewReactionsE(), Scope.VIEW_CONTENT)
+            && !requestContext.isClient(ownerName, Scope.VIEW_CONTENT)
+        ) {
             return ReactionInfoUtil.ofPosting(postingId); // FIXME ugly, return 404
         }
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, ownerName);
 
-        if (reaction == null
-                || !requestContext.isPrincipal(reaction.getViewE(), Scope.VIEW_CONTENT)
-                || reaction.isNegative()
-                    && !requestContext.isPrincipal(posting.getViewNegativeReactionsE(), Scope.VIEW_CONTENT)) {
+        if (
+            reaction == null
+            || !requestContext.isPrincipal(reaction.getViewE(), Scope.VIEW_CONTENT)
+            || reaction.isNegative()
+                && !requestContext.isPrincipal(posting.getViewNegativeReactionsE(), Scope.VIEW_CONTENT)
+        ) {
             return ReactionInfoUtil.ofPosting(postingId); // FIXME ugly, return 404
         }
 
@@ -341,9 +346,11 @@ public class PostingReactionController {
         log.info("DELETE /postings/{postingId}/reactions (postingId = {})", LogUtil.format(postingId));
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isAdmin(Scope.DELETE_OTHERS_CONTENT)
-                && !requestContext.isClient(posting.getOwnerName(), Scope.DELETE_OTHERS_CONTENT)) {
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (
+            !requestContext.isAdmin(Scope.DELETE_OTHERS_CONTENT)
+            && !requestContext.isClient(posting.getOwnerName(), Scope.DELETE_OTHERS_CONTENT)
+        ) {
             throw new AuthenticationException();
         }
         if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
@@ -364,13 +371,14 @@ public class PostingReactionController {
     @DeleteMapping("/{postingId}/reactions/{ownerName}")
     @Transactional
     public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable String ownerName) {
-        log.info("DELETE /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
-                LogUtil.format(postingId), LogUtil.format(ownerName));
+        log.info(
+            "DELETE /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
+            LogUtil.format(postingId), LogUtil.format(ownerName)
+        );
 
-        lock.lock(postingId);
-        try {
+        try (var ignored = lock.lock(postingId)) {
             Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
-                    .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
             if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
                 throw new ObjectNotFoundFailure("posting.not-found");
             }
@@ -387,8 +395,6 @@ public class PostingReactionController {
                 }
             });
             return info != null ? info : reactionTotalOperations.getInfo(posting).getClientInfo();
-        } finally {
-            lock.unlock(postingId);
         }
     }
 
@@ -409,8 +415,9 @@ public class PostingReactionController {
             throw new AuthenticationException();
         }
 
-        Optional<OwnReaction> ownReaction = ownReactionRepository.findByRemotePostingId(requestContext.nodeId(),
-                posting.getReceiverName(), posting.getReceiverEntryId());
+        Optional<OwnReaction> ownReaction = ownReactionRepository.findByRemotePostingId(
+            requestContext.nodeId(), posting.getReceiverName(), posting.getReceiverEntryId()
+        );
         ownReaction.ifPresent(r -> reactionTotalOperations.changeEntryTotal(posting, r.isNegative(), r.getEmoji(), -1));
     }
 

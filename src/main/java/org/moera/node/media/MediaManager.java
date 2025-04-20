@@ -170,8 +170,7 @@ public class MediaManager {
             return mediaFile;
         }
 
-        mediaFileLocks.lock(id);
-        try {
+        try (var ignored = mediaFileLocks.lock(id)) {
             // Could appear in the meantime
             mediaFile = mediaFileRepository.findById(id).orElse(null);
             if (mediaFile != null && mediaFile.isExposed()) {
@@ -201,8 +200,6 @@ public class MediaManager {
                     log.warn("Error removing temporary media file {}: {}", tmp.path(), e.getMessage());
                 }
             }
-        } finally {
-            mediaFileLocks.unlock(id);
         }
     }
 
@@ -300,9 +297,8 @@ public class MediaManager {
             return mediaFileOwner;
         }
 
-        mediaFileLocks.lock(mediaFileId);
-        try {
-            // Could appear in meantime
+        try (var ignored = mediaFileLocks.lock(mediaFileId)) {
+            // Could appear in the meantime
             mediaFileOwner = findAttachedMedia(mediaFileId, entryId);
             if (mediaFileOwner != null) {
                 return mediaFileOwner;
@@ -351,8 +347,6 @@ public class MediaManager {
                     "Error storing private media %s: %s".formatted(id, e.getMessage())
                 );
             }
-        } finally {
-            mediaFileLocks.unlock(mediaFileId);
         }
     }
 

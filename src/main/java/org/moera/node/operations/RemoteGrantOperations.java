@@ -30,8 +30,7 @@ public class RemoteGrantOperations {
 
     public void put(String remoteNodeName, long scope) {
         Nodes key = new Nodes(universalContext.nodeId(), remoteNodeName);
-        grantsLock.lock(key);
-        try {
+        try (var ignored = grantsLock.lock(key)) {
             RemoteGrant remoteGrant =
                     remoteGrantRepository.findByNodeName(universalContext.nodeId(), remoteNodeName).orElse(null);
             if (remoteGrant == null) {
@@ -50,8 +49,6 @@ public class RemoteGrantOperations {
             }
             remoteGrant.setAuthScope(scope);
             remoteGrant.setUpdatedAt(Util.now());
-        } finally {
-            grantsLock.unlock(key);
         }
     }
 

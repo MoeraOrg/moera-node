@@ -17,16 +17,33 @@ public class ParametrizedLock<K> {
 
     }
 
+    public final class AutoUnlock implements AutoCloseable {
+
+        private final K key;
+
+        public AutoUnlock(K key) {
+            this.key = key;
+        }
+
+        @Override
+        public void close() {
+            ParametrizedLock.this.unlock(key);
+        }
+
+    }
+
     private final Map<K, CountedLock> locks = new HashMap<>();
     private final Object mapLock = new Object();
 
-    public void lock(K key) {
+    public AutoUnlock lock(K key) {
         CountedLock lock;
         synchronized (mapLock) {
             lock = locks.computeIfAbsent(key, k -> new CountedLock());
             lock.counter++;
         }
         lock.lock.lock();
+
+        return new AutoUnlock(key);
     }
 
     public void unlock(K key) {
@@ -52,13 +69,13 @@ public class ParametrizedLock<K> {
         ParametrizedLock<Integer> locks = new ParametrizedLock<>();
         long startTime = System.currentTimeMillis();
 
-        new Thread(() -> {
-            generate(locks, queue, startTime, 10);
-        }).start();
+        new Thread(() ->
+            generate(locks, queue, startTime, 10)
+        ).start();
 
-        new Thread(() -> {
-            generate(locks, queue, startTime, 20);
-        }).start();
+        new Thread(() ->
+            generate(locks, queue, startTime, 20)
+        ).start();
 
         try {
             int[] current = new int [2];
@@ -70,8 +87,13 @@ public class ParametrizedLock<K> {
                 int resource = code / 100;
                 int thread = code / 10 % 10;
                 int phase = code % 10;
-                System.out.printf("%d: thread %d resource %d %s%n", System.currentTimeMillis() - startTime, thread,
-                        resource, phase == 0 ? "begin" : "end");
+                System.out.printf(
+                    "%d: thread %d resource %d %s%n",
+                    System.currentTimeMillis() - startTime,
+                    thread,
+                    resource,
+                    phase == 0 ? "begin" : "end"
+                );
 
                 if (phase == 0) {
                     if (current[resource] != 0) {
@@ -93,8 +115,9 @@ public class ParametrizedLock<K> {
         }
     }
 
-    private static void generate(ParametrizedLock<Integer> locks, BlockingQueue<Integer> queue, long startTime,
-                                 int code) {
+    private static void generate(
+        ParametrizedLock<Integer> locks, BlockingQueue<Integer> queue, long startTime, int code
+    ) {
         try {
             while (System.currentTimeMillis() - startTime < 600000) {
                 int resource = (int) (Math.random() * 2);
