@@ -5,6 +5,8 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.FeedStatus;
+import org.moera.lib.node.types.SearchContentUpdateType;
+import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.liberin.LiberinMapping;
@@ -17,6 +19,7 @@ import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
+import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.model.notification.StoryAddedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.StoryOperations;
@@ -34,6 +37,14 @@ public class StoryReceptor extends LiberinReceptorBase {
 
         if (!Feed.isAdmin(story.getFeedName())) {
             send(liberin, new StoryAddedEvent(story, false));
+            if (story.getStoryType() == StoryType.POSTING_ADDED) {
+                send(
+                    Directions.searchSubscribers(liberin.getNodeId(), story.getViewPrincipalFilter()),
+                    SearchContentUpdatedNotificationUtil.buildPostingUpdate(
+                        SearchContentUpdateType.POSTING_ADD, universalContext.nodeName(), story
+                    )
+                );
+            }
         }
         send(liberin, new StoryAddedEvent(story, true));
         send(
