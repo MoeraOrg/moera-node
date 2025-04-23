@@ -10,12 +10,14 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.PostingInfo;
+import org.moera.lib.node.types.SearchContentUpdateType;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.data.EntryRevision;
+import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
@@ -42,6 +44,7 @@ import org.moera.node.model.notification.PostingCommentsUpdatedNotificationUtil;
 import org.moera.node.model.notification.PostingDeletedNotificationUtil;
 import org.moera.node.model.notification.PostingImportantUpdateNotificationUtil;
 import org.moera.node.model.notification.PostingUpdatedNotificationUtil;
+import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.model.notification.StoryAddedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.MediaAttachmentsProvider;
@@ -99,14 +102,23 @@ public class PostingReceptor extends LiberinReceptorBase {
         PrincipalExpression addedFilter = posting.getViewE().a()
             .andNot(liberin.getLatestViewPrincipal());
         send(liberin, new PostingAddedEvent(posting, addedFilter));
-        if (isNotifyWhenRevealed(posting)) {
-            List<Story> stories = storyRepository.findByEntryId(posting.getNodeId(), posting.getId());
-            stories.forEach(story ->
+        boolean isNotify = isNotifyWhenRevealed(posting);
+        List<Story> stories = storyRepository.findByEntryId(posting.getNodeId(), posting.getId());
+        for (Story story : stories) {
+            if (!Feed.isAdmin(story.getFeedName())) {
+                if (isNotify) {
+                    send(
+                        Directions.feedSubscribers(posting.getNodeId(), story.getFeedName(), addedFilter),
+                        StoryAddedNotificationUtil.build(story)
+                    );
+                }
                 send(
-                    Directions.feedSubscribers(posting.getNodeId(), story.getFeedName(), addedFilter),
-                    StoryAddedNotificationUtil.build(story)
-                )
-            );
+                    Directions.searchSubscribers(posting.getNodeId(), addedFilter),
+                    SearchContentUpdatedNotificationUtil.buildPostingUpdate(
+                        SearchContentUpdateType.POSTING_ADD, universalContext.nodeName(), story
+                    )
+                );
+            }
         }
 
         PrincipalExpression updatedFilter = posting.getViewE().a()
@@ -115,6 +127,12 @@ public class PostingReceptor extends LiberinReceptorBase {
         send(
             Directions.postingSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
             PostingUpdatedNotificationUtil.build(posting.getId())
+        );
+        send(
+            Directions.searchSubscribers(posting.getNodeId(), updatedFilter),
+            SearchContentUpdatedNotificationUtil.buildPostingUpdate(
+                SearchContentUpdateType.POSTING_UPDATE, universalContext.nodeName(), posting
+            )
         );
         if (posting.getCurrentRevision().isUpdateImportant()) {
             AvatarImage ownerAvatar = AvatarImageUtil.build(
@@ -139,6 +157,12 @@ public class PostingReceptor extends LiberinReceptorBase {
         send(
             Directions.postingSubscribers(posting.getNodeId(), posting.getId(), deletedFilter),
             PostingDeletedNotificationUtil.build(posting.getId())
+        );
+        send(
+            Directions.searchSubscribers(posting.getNodeId(), deletedFilter),
+            SearchContentUpdatedNotificationUtil.buildPostingUpdate(
+                SearchContentUpdateType.POSTING_DELETE, universalContext.nodeName(), posting
+            )
         );
     }
 
@@ -171,6 +195,12 @@ public class PostingReceptor extends LiberinReceptorBase {
         send(
             Directions.postingSubscribers(posting.getNodeId(), posting.getId(), posting.getViewE()),
             PostingDeletedNotificationUtil.build(posting.getId())
+        );
+        send(
+            Directions.searchSubscribers(posting.getNodeId(), posting.getViewE()),
+            SearchContentUpdatedNotificationUtil.buildPostingUpdate(
+                SearchContentUpdateType.POSTING_DELETE, universalContext.nodeName(), posting
+            )
         );
     }
 

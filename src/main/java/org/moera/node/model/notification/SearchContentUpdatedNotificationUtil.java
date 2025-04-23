@@ -7,6 +7,7 @@ import org.moera.lib.node.types.SearchFriendUpdate;
 import org.moera.lib.node.types.SearchPostingUpdate;
 import org.moera.lib.node.types.SearchSubscriptionUpdate;
 import org.moera.lib.node.types.notifications.SearchContentUpdatedNotification;
+import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
 import org.moera.node.util.Util;
 
@@ -68,6 +69,23 @@ public class SearchContentUpdatedNotificationUtil {
         } else {
             details.setNodeName(story.getEntry().getReceiverName());
             details.setPostingId(story.getEntry().getReceiverEntryId());
+        }
+        notification.setPostingUpdate(details);
+        return notification;
+    }
+
+    public static SearchContentUpdatedNotification buildPostingUpdate(
+        SearchContentUpdateType updateType, String nodeName, Posting posting
+    ) {
+        var notification = new SearchContentUpdatedNotification();
+        notification.setUpdateType(updateType);
+        var details = new SearchPostingUpdate();
+        if (posting.isOriginal()) {
+            details.setNodeName(nodeName);
+            details.setPostingId(posting.getId().toString());
+        } else {
+            details.setNodeName(posting.getReceiverName());
+            details.setPostingId(posting.getReceiverEntryId());
         }
         notification.setPostingUpdate(details);
         return notification;
