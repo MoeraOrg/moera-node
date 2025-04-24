@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.12 (Ubuntu 14.12-0ubuntu0.22.04.1)
--- Dumped by pg_dump version 14.12 (Ubuntu 14.12-0ubuntu0.22.04.1)
+-- Dumped from database version 14.17 (Ubuntu 14.17-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.17 (Ubuntu 14.17-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -839,6 +839,20 @@ CREATE TABLE public.contact_upgrades (
 ALTER TABLE public.contact_upgrades OWNER TO moera;
 
 --
+-- Name: contact_upgrades_seq; Type: SEQUENCE; Schema: public; Owner: moera
+--
+
+CREATE SEQUENCE public.contact_upgrades_seq
+    START WITH 1
+    INCREMENT BY 50
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.contact_upgrades_seq OWNER TO moera;
+
+--
 -- Name: contacts; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -847,8 +861,6 @@ CREATE TABLE public.contacts (
     node_id uuid NOT NULL,
     remote_node_name character varying(63) NOT NULL,
     remote_full_name character varying(96),
-    closeness_base real DEFAULT 0 NOT NULL,
-    closeness real DEFAULT 1 NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     remote_avatar_media_file_id character varying(40),
@@ -864,7 +876,8 @@ CREATE TABLE public.contacts (
     blocked_user_count integer DEFAULT 0 NOT NULL,
     blocked_user_posting_count integer DEFAULT 0 NOT NULL,
     blocked_by_user_count integer DEFAULT 0 NOT NULL,
-    blocked_by_user_posting_count integer DEFAULT 0 NOT NULL
+    blocked_by_user_posting_count integer DEFAULT 0 NOT NULL,
+    distance real DEFAULT 3 NOT NULL
 );
 
 
@@ -882,6 +895,20 @@ CREATE TABLE public.domain_upgrades (
 
 
 ALTER TABLE public.domain_upgrades OWNER TO moera;
+
+--
+-- Name: domain_upgrades_seq; Type: SEQUENCE; Schema: public; Owner: moera
+--
+
+CREATE SEQUENCE public.domain_upgrades_seq
+    START WITH 1
+    INCREMENT BY 50
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.domain_upgrades_seq OWNER TO moera;
 
 --
 -- Name: domains; Type: TABLE; Schema: public; Owner: moera
@@ -1050,6 +1077,20 @@ CREATE TABLE public.entry_attachments (
 ALTER TABLE public.entry_attachments OWNER TO moera;
 
 --
+-- Name: entry_revision_seq; Type: SEQUENCE; Schema: public; Owner: moera
+--
+
+CREATE SEQUENCE public.entry_revision_seq
+    START WITH 1
+    INCREMENT BY 50
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.entry_revision_seq OWNER TO moera;
+
+--
 -- Name: entry_revision_upgrades; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -1117,6 +1158,23 @@ CREATE TABLE public.entry_sources (
 ALTER TABLE public.entry_sources OWNER TO moera;
 
 --
+-- Name: favors; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.favors (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    node_name character varying(63) NOT NULL,
+    value real NOT NULL,
+    decay_hours integer NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    deadline timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.favors OWNER TO moera;
+
+--
 -- Name: friend_groups; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -1182,18 +1240,19 @@ CREATE TABLE public.frozen_notifications (
 ALTER TABLE public.frozen_notifications OWNER TO moera;
 
 --
--- Name: hibernate_sequence; Type: SEQUENCE; Schema: public; Owner: moera
+-- Name: grants; Type: TABLE; Schema: public; Owner: moera
 --
 
-CREATE SEQUENCE public.hibernate_sequence
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE TABLE public.grants (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    node_name character varying(63) NOT NULL,
+    auth_scope bigint NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
 
 
-ALTER TABLE public.hibernate_sequence OWNER TO moera;
+ALTER TABLE public.grants OWNER TO moera;
 
 --
 -- Name: media_file_owners; Type: TABLE; Schema: public; Owner: moera
@@ -1319,7 +1378,8 @@ CREATE TABLE public.own_postings (
     heading character varying(255) NOT NULL,
     created_at timestamp without time zone NOT NULL,
     remote_avatar_media_file_id character varying(40),
-    remote_avatar_shape character varying(8)
+    remote_avatar_shape character varying(8),
+    remote_parent_media_id character varying(40)
 );
 
 
@@ -1430,6 +1490,20 @@ CREATE TABLE public.public_pages (
 ALTER TABLE public.public_pages OWNER TO moera;
 
 --
+-- Name: public_pages_seq; Type: SEQUENCE; Schema: public; Owner: moera
+--
+
+CREATE SEQUENCE public.public_pages_seq
+    START WITH 1
+    INCREMENT BY 50
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.public_pages_seq OWNER TO moera;
+
+--
 -- Name: push_clients; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -1507,6 +1581,25 @@ CREATE TABLE public.reactions (
 ALTER TABLE public.reactions OWNER TO moera;
 
 --
+-- Name: reminders; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.reminders (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    story_type smallint NOT NULL,
+    priority integer NOT NULL,
+    published_at timestamp without time zone,
+    story_id uuid,
+    read_at timestamp without time zone,
+    read_count integer DEFAULT 0 NOT NULL,
+    next_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.reminders OWNER TO moera;
+
+--
 -- Name: remote_connectivity; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -1519,6 +1612,21 @@ CREATE TABLE public.remote_connectivity (
 
 
 ALTER TABLE public.remote_connectivity OWNER TO moera;
+
+--
+-- Name: remote_grants; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.remote_grants (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    remote_node_name character varying(63) NOT NULL,
+    auth_scope bigint NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.remote_grants OWNER TO moera;
 
 --
 -- Name: remote_media_cache; Type: TABLE; Schema: public; Owner: moera
@@ -1596,6 +1704,25 @@ CREATE TABLE public.schema_history (
 
 
 ALTER TABLE public.schema_history OWNER TO moera;
+
+--
+-- Name: search_engine_statistics; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.search_engine_statistics (
+    id uuid NOT NULL,
+    engine smallint NOT NULL,
+    owner_name character varying(63) NOT NULL,
+    posting_id character varying(40),
+    comment_id character varying(40),
+    media_id character varying(40),
+    clicked_at timestamp without time zone NOT NULL,
+    node_name character varying(63) DEFAULT ''::character varying NOT NULL,
+    heading character varying(255)
+);
+
+
+ALTER TABLE public.search_engine_statistics OWNER TO moera;
 
 --
 -- Name: sheriff_complaint_groups; Type: TABLE; Schema: public; Owner: moera
@@ -1797,7 +1924,7 @@ CREATE TABLE public.tokens (
     created_at timestamp without time zone NOT NULL,
     deadline timestamp without time zone,
     node_id uuid NOT NULL,
-    auth_category bigint DEFAULT 0 NOT NULL,
+    auth_scope bigint DEFAULT 0 NOT NULL,
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     ip inet,
     plugin_name character varying(48),
@@ -1967,6 +2094,14 @@ ALTER TABLE ONLY public.entry_sources
 
 
 --
+-- Name: favors favors_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.favors
+    ADD CONSTRAINT favors_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: friend_groups friend_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -1996,6 +2131,14 @@ ALTER TABLE ONLY public.friends
 
 ALTER TABLE ONLY public.frozen_notifications
     ADD CONSTRAINT frozen_notifications_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: grants grants_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.grants
+    ADD CONSTRAINT grants_pkey PRIMARY KEY (id);
 
 
 --
@@ -2143,11 +2286,27 @@ ALTER TABLE ONLY public.reactions
 
 
 --
+-- Name: reminders reminders_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.reminders
+    ADD CONSTRAINT reminders_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: remote_connectivity remote_connectivity_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.remote_connectivity
     ADD CONSTRAINT remote_connectivity_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: remote_grants remote_grants_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.remote_grants
+    ADD CONSTRAINT remote_grants_pkey PRIMARY KEY (id);
 
 
 --
@@ -2180,6 +2339,14 @@ ALTER TABLE ONLY public.remote_verifications
 
 ALTER TABLE ONLY public.schema_history
     ADD CONSTRAINT schema_history_pk PRIMARY KEY (installed_rank);
+
+
+--
+-- Name: search_engine_statistics search_engine_statistics_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.search_engine_statistics
+    ADD CONSTRAINT search_engine_statistics_pkey PRIMARY KEY (id);
 
 
 --
@@ -2375,10 +2542,10 @@ CREATE INDEX contact_upgrades_upgrade_type_node_id_idx ON public.contact_upgrade
 
 
 --
--- Name: contacts_node_id_closeness_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: contacts_node_id_distance_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX contacts_node_id_closeness_idx ON public.contacts USING btree (node_id, closeness);
+CREATE INDEX contacts_node_id_distance_idx ON public.contacts USING btree (node_id, distance);
 
 
 --
@@ -2620,6 +2787,20 @@ CREATE INDEX entry_sources_remote_avatar_media_file_id_idx ON public.entry_sourc
 
 
 --
+-- Name: favors_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX favors_deadline_idx ON public.favors USING btree (deadline);
+
+
+--
+-- Name: favors_node_id_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX favors_node_id_name_idx ON public.favors USING btree (node_id, node_name);
+
+
+--
 -- Name: friend_groups_node_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -2673,6 +2854,13 @@ CREATE INDEX frozen_notifications_deadline_idx ON public.frozen_notifications US
 --
 
 CREATE INDEX frozen_notifications_node_id_idx ON public.frozen_notifications USING btree (node_id);
+
+
+--
+-- Name: grants_node_id_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX grants_node_id_name_idx ON public.grants USING btree (node_id, node_name);
 
 
 --
@@ -2788,10 +2976,10 @@ CREATE INDEX own_postings_remote_avatar_media_file_id_idx ON public.own_postings
 
 
 --
--- Name: own_reactions_node_id_remote_node_name_remote_posting_id_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: own_reactions_node_id_remote_posting_id_node_name_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE UNIQUE INDEX own_reactions_node_id_remote_node_name_remote_posting_id_idx ON public.own_reactions USING btree (node_id, remote_node_name, remote_posting_id);
+CREATE UNIQUE INDEX own_reactions_node_id_remote_posting_id_node_name_idx ON public.own_reactions USING btree (node_id, remote_posting_id, remote_node_name);
 
 
 --
@@ -2970,10 +3158,24 @@ CREATE INDEX reactions_owner_avatar_media_file_id_idx ON public.reactions USING 
 
 
 --
+-- Name: reminders_node_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX reminders_node_id_idx ON public.reminders USING btree (node_id);
+
+
+--
 -- Name: remote_connectivity_remote_node_name_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
 CREATE UNIQUE INDEX remote_connectivity_remote_node_name_idx ON public.remote_connectivity USING btree (remote_node_name);
+
+
+--
+-- Name: remote_grants_node_id_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX remote_grants_node_id_name_idx ON public.remote_grants USING btree (node_id, remote_node_name);
 
 
 --
@@ -3044,6 +3246,13 @@ CREATE INDEX remote_verifications_node_id_verification_type_node_name_po_idx ON 
 --
 
 CREATE INDEX schema_history_s_idx ON public.schema_history USING btree (success);
+
+
+--
+-- Name: search_engine_statistics_owner_clicked_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX search_engine_statistics_owner_clicked_idx ON public.search_engine_statistics USING btree (owner_name, clicked_at);
 
 
 --
@@ -3791,6 +4000,14 @@ ALTER TABLE ONLY public.reactions
 
 ALTER TABLE ONLY public.reactions
     ADD CONSTRAINT reactions_owner_avatar_media_file_id_fkey FOREIGN KEY (owner_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: reminders reminders_story_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.reminders
+    ADD CONSTRAINT reminders_story_id_fkey FOREIGN KEY (story_id) REFERENCES public.stories(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
