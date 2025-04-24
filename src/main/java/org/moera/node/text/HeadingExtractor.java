@@ -23,9 +23,10 @@ public class HeadingExtractor {
     private static final int DESCRIPTION_LENGTH = 200;
 
     private static final Pattern URL = Pattern.compile(
-            "https?://[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9]{1,6}"
-                    + "\\b(?:[-a-zA-Z0-9()!@:%_+,.;~#?&/=]*[-a-zA-Z0-9@:%_+~#&/=])?",
-            Pattern.CASE_INSENSITIVE);
+        "https?://[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9]{1,6}"
+            + "\\b(?:[-a-zA-Z0-9()!@:%_+,.;~#?&/=]*[-a-zA-Z0-9@:%_+~#&/=])?",
+        Pattern.CASE_INSENSITIVE
+    );
 
     public static String extractHeading(Body body, boolean hasGallery, boolean collapseQuotations) {
         if (!ObjectUtils.isEmpty(body.getSubject())) {
@@ -100,9 +101,11 @@ public class HeadingExtractor {
                     } else if (element.normalName().equals("blockquote") && collapseQuotations) {
                         text = EMOJI_SCROLL;
                         ignoreContent++;
-                    } else if (element.normalName().equals("iframe")
-                            || element.normalName().equals("object")
-                            || element.normalName().equals("video")) {
+                    } else if (
+                        element.normalName().equals("iframe")
+                        || element.normalName().equals("object")
+                        || element.normalName().equals("video")
+                    ) {
                         text = EMOJI_MOVIE;
                         ignoreContent++;
                     }
@@ -134,16 +137,18 @@ public class HeadingExtractor {
 
         @Override
         public FilterResult tail(Node node, int depth) {
-            if (node instanceof Element) {
-                Element element = (Element) node;
-                if (element.normalName().equals("mr-spoiler")
-                        || element.normalName().equals("mr-spoiler-block")
-                        || element.normalName().equals("blockquote") && collapseQuotations
-                        || element.normalName().equals("iframe")
-                        || element.normalName().equals("object")
-                        || element.normalName().equals("video")) {
-                    ignoreContent--;
-                }
+            if (
+                node instanceof Element element
+                && (
+                    element.normalName().equals("mr-spoiler")
+                    || element.normalName().equals("mr-spoiler-block")
+                    || element.normalName().equals("blockquote") && collapseQuotations
+                    || element.normalName().equals("iframe")
+                    || element.normalName().equals("object")
+                    || element.normalName().equals("video")
+                )
+            ) {
+                ignoreContent--;
             }
             return FilterResult.CONTINUE;
         }
