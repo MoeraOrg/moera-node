@@ -10,6 +10,7 @@ import jakarta.persistence.EntityManager;
 
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PostingInfo;
+import org.moera.lib.node.types.SearchContentUpdateType;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
@@ -42,6 +43,7 @@ import org.moera.node.model.notification.PostingCommentDeletedNotificationUtil;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotificationUtil;
 import org.moera.node.model.notification.ReplyCommentAddedNotificationUtil;
 import org.moera.node.model.notification.ReplyCommentDeletedNotificationUtil;
+import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.UserListOperations;
@@ -91,6 +93,10 @@ public class CommentReceptor extends LiberinReceptorBase {
             Directions.postingSubscribers(posting.getNodeId(), posting.getId(), generalVisibilityFilter(posting)),
             PostingCommentsUpdatedNotificationUtil.build(posting.getId(), posting.getTotalChildren())
         );
+        send(
+            Directions.searchSubscribers(posting.getNodeId(), visibilityFilter(posting, comment)),
+            SearchContentUpdatedNotificationUtil.buildCommentUpdate(SearchContentUpdateType.COMMENT_ADD, comment)
+        );
     }
 
     @LiberinMapping
@@ -109,7 +115,38 @@ public class CommentReceptor extends LiberinReceptorBase {
             liberin.getLatestViewE()
         );
 
-        send(liberin, new CommentUpdatedEvent(comment, visibilityFilter(posting, comment)));
+        // TODO other notifications should also be sent here
+        PrincipalExpression addedFilter = visibilityFilter(posting, comment).a().andNot(liberin.getLatestViewE());
+        send(
+            Directions.searchSubscribers(posting.getNodeId(), addedFilter),
+            SearchContentUpdatedNotificationUtil.buildCommentUpdate(SearchContentUpdateType.COMMENT_ADD, comment)
+        );
+        send(liberin, new CommentAddedEvent(comment, addedFilter));
+
+        PrincipalExpression updatedFilter = visibilityFilter(posting, comment).a().and(liberin.getLatestViewE());
+        send(
+            Directions.searchSubscribers(posting.getNodeId(), updatedFilter),
+            SearchContentUpdatedNotificationUtil.buildCommentUpdate(SearchContentUpdateType.COMMENT_UPDATE, comment)
+        );
+        send(liberin, new CommentUpdatedEvent(comment, updatedFilter));
+
+        PrincipalExpression deletedFilter = visibilityFilter(posting, comment).a().not().and(liberin.getLatestViewE());
+        send(
+            Directions.postingCommentsSubscribers(comment.getNodeId(), posting.getId(), deletedFilter),
+            PostingCommentDeletedNotificationUtil.build(
+                posting.getId(),
+                comment.getId(),
+                comment.getOwnerName(),
+                comment.getOwnerFullName(),
+                comment.getOwnerGender(),
+                AvatarImageUtil.build(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())
+            )
+        );
+        send(
+            Directions.searchSubscribers(posting.getNodeId(), deletedFilter),
+            SearchContentUpdatedNotificationUtil.buildCommentUpdate(SearchContentUpdateType.COMMENT_DELETE, comment)
+        );
+        send(liberin, new CommentDeletedEvent(comment, deletedFilter));
     }
 
     @LiberinMapping
@@ -144,6 +181,10 @@ public class CommentReceptor extends LiberinReceptorBase {
                 comment.getOwnerGender(),
                 AvatarImageUtil.build(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())
             )
+        );
+        send(
+            Directions.searchSubscribers(posting.getNodeId(), visibilityFilter(posting, comment)),
+            SearchContentUpdatedNotificationUtil.buildCommentUpdate(SearchContentUpdateType.COMMENT_DELETE, comment)
         );
 
         send(liberin, new CommentDeletedEvent(comment, visibilityFilter(posting, comment)));

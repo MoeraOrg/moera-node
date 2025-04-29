@@ -2,11 +2,13 @@ package org.moera.node.model.notification;
 
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.SearchBlockUpdate;
+import org.moera.lib.node.types.SearchCommentUpdate;
 import org.moera.lib.node.types.SearchContentUpdateType;
 import org.moera.lib.node.types.SearchFriendUpdate;
 import org.moera.lib.node.types.SearchPostingUpdate;
 import org.moera.lib.node.types.SearchSubscriptionUpdate;
 import org.moera.lib.node.types.notifications.SearchContentUpdatedNotification;
+import org.moera.node.data.Comment;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
 import org.moera.node.util.Util;
@@ -88,6 +90,18 @@ public class SearchContentUpdatedNotificationUtil {
             details.setPostingId(posting.getReceiverEntryId());
         }
         notification.setPostingUpdate(details);
+        return notification;
+    }
+
+    public static SearchContentUpdatedNotification buildCommentUpdate(
+        SearchContentUpdateType updateType, Comment comment
+    ) {
+        var notification = new SearchContentUpdatedNotification();
+        notification.setUpdateType(updateType);
+        var details = new SearchCommentUpdate();
+        details.setPostingId(comment.getPosting().getId().toString());
+        details.setCommentId(comment.getId().toString());
+        notification.setCommentUpdate(details);
         return notification;
     }
 
