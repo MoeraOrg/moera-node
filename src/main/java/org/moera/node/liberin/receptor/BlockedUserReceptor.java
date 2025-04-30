@@ -27,7 +27,11 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
             BlockedUserInfoUtil.build(blockedUser, universalContext.getOptions()),
             BlockedUser.getViewAllE(universalContext.getOptions())
         ));
-        if (blockedUser.getBlockedOperation() != BlockedOperation.INSTANT && blockedUser.getEntryNodeName() == null) {
+        if (
+            blockedUser.getBlockedOperation() != BlockedOperation.INSTANT
+            && blockedUser.getEntryNodeName() == null
+            && blockedUser.getDeadline() == null
+        ) {
             send(
                 Directions.searchSubscribers(
                     liberin.getNodeId(), BlockedUser.getViewAllE(universalContext.getOptions())
@@ -64,7 +68,11 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void deleted(BlockedUserDeletedLiberin liberin) {
         BlockedUser blockedUser = liberin.getBlockedUser();
-        if (blockedUser.getBlockedOperation() != BlockedOperation.INSTANT && blockedUser.getEntryNodeName() == null) {
+        if (
+            blockedUser.getBlockedOperation() != BlockedOperation.INSTANT
+            && blockedUser.getEntryNodeName() == null
+            && blockedUser.getDeadline() == null
+        ) {
             send(
                 Directions.searchSubscribers(
                     liberin.getNodeId(), BlockedUser.getViewAllE(universalContext.getOptions())
