@@ -1,6 +1,7 @@
 package org.moera.node.liberin.receptor;
 
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.SearchContentUpdateType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.lib.node.types.principal.PrincipalFilter;
@@ -20,6 +21,7 @@ import org.moera.node.model.event.CommentReactionsChangedEvent;
 import org.moera.node.model.notification.CommentReactionAddedNotificationUtil;
 import org.moera.node.model.notification.CommentReactionDeletedAllNotificationUtil;
 import org.moera.node.model.notification.CommentReactionDeletedNotificationUtil;
+import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 
 @LiberinReceptor
@@ -53,6 +55,15 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
                     deletedReaction.isNegative()
                 )
             );
+            send(
+                Directions.searchSubscribers(liberin.getNodeId(), visibilityFilter(comment, deletedReaction)),
+                SearchContentUpdatedNotificationUtil.buildReactionUpdate(
+                    SearchContentUpdateType.REACTION_DELETE,
+                    comment.getPosting().getId(),
+                    comment.getId(),
+                    deletedReaction.getOwnerName()
+                )
+            );
         }
 
         if (addedReaction != null && addedReaction.getSignature() != null) {
@@ -82,6 +93,15 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
                     addedReaction.isNegative(), addedReaction.getEmoji()
                 )
             );
+            send(
+                Directions.searchSubscribers(liberin.getNodeId(), visibilityFilter(comment, addedReaction)),
+                SearchContentUpdatedNotificationUtil.buildReactionUpdate(
+                    SearchContentUpdateType.REACTION_ADD,
+                    posting.getId(),
+                    comment.getId(),
+                    addedReaction.getOwnerName()
+                )
+            );
         }
 
         send(liberin, new CommentReactionsChangedEvent(comment, generalVisibilityFilter(comment)));
@@ -94,6 +114,15 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
         send(
             Directions.single(liberin.getNodeId(), comment.getOwnerName(), generalVisibilityFilter(comment)),
             CommentReactionDeletedAllNotificationUtil.build(comment.getPosting().getId(), comment.getId())
+        );
+        send(
+            Directions.searchSubscribers(liberin.getNodeId(), generalVisibilityFilter(comment)),
+            SearchContentUpdatedNotificationUtil.buildReactionUpdate(
+                SearchContentUpdateType.REACTIONS_DELETE_ALL,
+                comment.getPosting().getId(),
+                comment.getId(),
+                null
+            )
         );
         send(liberin, new CommentReactionsChangedEvent(comment, generalVisibilityFilter(comment)));
     }

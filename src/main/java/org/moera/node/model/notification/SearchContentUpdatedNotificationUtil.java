@@ -1,11 +1,14 @@
 package org.moera.node.model.notification;
 
+import java.util.UUID;
+
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.SearchBlockUpdate;
 import org.moera.lib.node.types.SearchCommentUpdate;
 import org.moera.lib.node.types.SearchContentUpdateType;
 import org.moera.lib.node.types.SearchFriendUpdate;
 import org.moera.lib.node.types.SearchPostingUpdate;
+import org.moera.lib.node.types.SearchReactionUpdate;
 import org.moera.lib.node.types.SearchSubscriptionUpdate;
 import org.moera.lib.node.types.notifications.SearchContentUpdatedNotification;
 import org.moera.node.data.Comment;
@@ -102,6 +105,31 @@ public class SearchContentUpdatedNotificationUtil {
         details.setPostingId(comment.getPosting().getId().toString());
         details.setCommentId(comment.getId().toString());
         notification.setCommentUpdate(details);
+        return notification;
+    }
+
+    public static SearchContentUpdatedNotification buildReactionUpdate(
+        SearchContentUpdateType updateType, UUID postingId, String ownerName
+    ) {
+        var notification = new SearchContentUpdatedNotification();
+        notification.setUpdateType(updateType);
+        var details = new SearchReactionUpdate();
+        details.setPostingId(postingId.toString());
+        details.setOwnerName(ownerName);
+        notification.setReactionUpdate(details);
+        return notification;
+    }
+
+    public static SearchContentUpdatedNotification buildReactionUpdate(
+        SearchContentUpdateType updateType, UUID postingId, UUID commentId, String ownerName
+    ) {
+        var notification = new SearchContentUpdatedNotification();
+        notification.setUpdateType(updateType);
+        var details = new SearchReactionUpdate();
+        details.setPostingId(postingId.toString());
+        details.setCommentId(commentId.toString());
+        details.setOwnerName(ownerName);
+        notification.setReactionUpdate(details);
         return notification;
     }
 

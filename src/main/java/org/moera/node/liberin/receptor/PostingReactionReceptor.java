@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.ReactionTotalsInfo;
+import org.moera.lib.node.types.SearchContentUpdateType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.lib.node.types.principal.PrincipalFilter;
@@ -32,6 +33,7 @@ import org.moera.node.model.notification.PostingReactionAddedNotificationUtil;
 import org.moera.node.model.notification.PostingReactionDeletedAllNotificationUtil;
 import org.moera.node.model.notification.PostingReactionDeletedNotificationUtil;
 import org.moera.node.model.notification.PostingReactionsUpdatedNotificationUtil;
+import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.ReactionTotalOperations;
 
@@ -112,6 +114,14 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                         );
                     }
                 }
+                send(
+                    Directions.searchSubscribers(liberin.getNodeId(), visibilityFilter(posting, deletedReaction)),
+                    SearchContentUpdatedNotificationUtil.buildReactionUpdate(
+                        SearchContentUpdateType.REACTION_DELETE,
+                        posting.getId(),
+                        deletedReaction.getOwnerName()
+                    )
+                );
             } else {
                 Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
                 for (Entry entry : entries) {
@@ -191,6 +201,14 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                         );
                     }
                 }
+                send(
+                    Directions.searchSubscribers(liberin.getNodeId(), visibilityFilter(posting, addedReaction)),
+                    SearchContentUpdatedNotificationUtil.buildReactionUpdate(
+                        SearchContentUpdateType.REACTION_ADD,
+                        posting.getId(),
+                        addedReaction.getOwnerName()
+                    )
+                );
             } else {
                 Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
                 for (Entry entry : entries) {
@@ -262,6 +280,14 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                     postingReactionInstants.deletedAll(posting.getId());
                 }
             }
+            send(
+                Directions.searchSubscribers(liberin.getNodeId(), generalVisibilityFilter(posting)),
+                SearchContentUpdatedNotificationUtil.buildReactionUpdate(
+                    SearchContentUpdateType.REACTIONS_DELETE_ALL,
+                    posting.getId(),
+                    null
+                )
+            );
         } else {
             Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
             for (Entry entry : entries) {
