@@ -279,8 +279,8 @@ public class MediaManager {
         String nodeName, String carte, String id, TemporaryFile tmpFile, int maxSize
     ) throws MoeraNodeException {
         var result = new AtomicReference<TemporaryMediaFile>();
-        nodeApi.at(nodeName, carte).getPrivateMedia(id, null, null, responseBody ->
-            result.set(receiveMediaFile(nodeName, id, responseBody, tmpFile, maxSize))
+        nodeApi.at(nodeName, carte).getPrivateMedia(
+            id, null, null, responseBody -> result.set(receiveMediaFile(nodeName, id, responseBody, tmpFile, maxSize))
         );
         return result.get();
     }
