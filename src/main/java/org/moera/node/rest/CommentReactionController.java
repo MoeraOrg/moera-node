@@ -377,8 +377,6 @@ public class CommentReactionController {
 
                 return reactionTotalOperations.getInfo(comment).getClientInfo();
             });
-        } finally {
-            lock.unlock(postingId);
         }
     }
 
