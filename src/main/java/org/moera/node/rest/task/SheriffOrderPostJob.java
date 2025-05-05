@@ -25,6 +25,7 @@ import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.SheriffOrderDetailsUtil;
 import org.moera.node.task.Job;
+import org.moera.node.util.MomentFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,6 +145,8 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
     @Inject
     private MediaManager mediaManager;
 
+    private final MomentFinder momentFinder = new MomentFinder();
+
     public SheriffOrderPostJob() {
         state = new State();
     }
@@ -235,6 +238,12 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
 
                     SheriffOrder order = buildSheriffOrder(complaintGroup);
                     SheriffOrderDetailsUtil.toSheriffOrder(state.sheriffOrderDetails, order);
+                    order.setMoment(
+                        momentFinder.find(
+                            moment -> sheriffOrderRepository.countMoments(getNodeId(), moment) == 0,
+                            order.getCreatedAt()
+                        )
+                    );
                     return sheriffOrderRepository.save(order);
                 }
             );

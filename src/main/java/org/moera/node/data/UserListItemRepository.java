@@ -20,13 +20,18 @@ public interface UserListItemRepository extends JpaRepository<UserListItem, UUID
     @Query("select count(*) from UserListItem i where i.nodeId = ?1 and i.listName = ?2")
     int countByList(UUID nodeId, String listName);
 
-    @Query("select i from UserListItem i"
-            + " where i.nodeId = ?1 and i.listName = ?2 and i.moment > ?3 and i.moment <= ?4")
-    Page<UserListItem> findInRange(UUID nodeId, String listName, long afterMoment, long beforeMoment,
-                                   Pageable pageable);
+    @Query(
+        "select i from UserListItem i"
+        + " where i.nodeId = ?1 and i.listName = ?2 and i.moment > ?3 and i.moment <= ?4"
+    )
+    Page<UserListItem> findInRange(
+        UUID nodeId, String listName, long afterMoment, long beforeMoment, Pageable pageable
+    );
 
-    @Query("select count(*) from UserListItem i"
-            + " where i.nodeId = ?1 and i.listName = ?2 and i.moment > ?3 and i.moment <= ?4")
+    @Query(
+        "select count(*) from UserListItem i"
+        + " where i.nodeId = ?1 and i.listName = ?2 and i.moment > ?3 and i.moment <= ?4"
+    )
     int countInRange(UUID nodeId, String listName, long afterMoment, long beforeMoment);
 
     @Query("select count(*) from UserListItem i where i.nodeId = ?1 and i.moment = ?2")

@@ -90,6 +90,9 @@ public class SheriffOrder {
     private Timestamp createdAt = Util.now();
 
     @NotNull
+    private Long moment;
+
+    @NotNull
     private byte[] signature;
 
     @NotNull
@@ -301,6 +304,14 @@ public class SheriffOrder {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Long getMoment() {
+        return moment;
+    }
+
+    public void setMoment(Long moment) {
+        this.moment = moment;
     }
 
     public byte[] getSignature() {

@@ -30,6 +30,7 @@ public class SheriffOrderInfoUtil {
         info.setReasonCode(sheriffOrder.getReasonCode());
         info.setReasonDetails(sheriffOrder.getReasonDetails());
         info.setCreatedAt(Util.toEpochSecond(sheriffOrder.getCreatedAt()));
+        info.setMoment(sheriffOrder.getMoment());
         info.setSignature(sheriffOrder.getSignature());
         info.setSignatureVersion(sheriffOrder.getSignatureVersion());
         if (sheriffOrder.getComplaintGroup() != null) {

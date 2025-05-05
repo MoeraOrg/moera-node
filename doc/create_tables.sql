@@ -1807,7 +1807,8 @@ CREATE TABLE public.sheriff_orders (
     remote_comment_heading character varying(255),
     remote_comment_revision_id character varying(40),
     remote_node_full_name character varying(96),
-    complaint_group_id uuid
+    complaint_group_id uuid,
+    moment bigint DEFAULT 0 NOT NULL
 );
 
 
@@ -3281,6 +3282,13 @@ CREATE INDEX sheriff_complaints_group_idx ON public.sheriff_complaints USING btr
 --
 
 CREATE INDEX sheriff_orders_complaint_group_idx ON public.sheriff_complaint_groups USING btree (id);
+
+
+--
+-- Name: sheriff_orders_node_id_moment_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX sheriff_orders_node_id_moment_idx ON public.sheriff_orders USING btree (node_id, moment);
 
 
 --

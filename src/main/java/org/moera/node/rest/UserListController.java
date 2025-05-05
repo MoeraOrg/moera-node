@@ -201,9 +201,11 @@ public class UserListController {
         item.setNodeId(requestContext.nodeId());
         item.setListName(listName);
         item.setNodeName(userListItemAttributes.getNodeName());
-        item.setMoment(momentFinder.find(
-            moment -> userListItemRepository.countMoments(requestContext.nodeId(), moment) == 0,
-            Util.now())
+        item.setMoment(
+            momentFinder.find(
+                moment -> userListItemRepository.countMoments(requestContext.nodeId(), moment) == 0,
+                Util.now()
+            )
         );
         item = userListItemRepository.save(item);
 
