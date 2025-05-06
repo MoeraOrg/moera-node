@@ -16,19 +16,17 @@ public class UserListReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void added(UserListItemAddedLiberin liberin) {
         UserListItem item = liberin.getItem();
-        send(
-            Directions.userListSubscribers(liberin.getNodeId(), item.getListName()),
-            UserListItemAddedNotificationUtil.build(item.getListName(), item.getNodeName())
-        );
+        var notification = UserListItemAddedNotificationUtil.build(item.getListName(), item.getNodeName());
+        send(Directions.userListSubscribers(liberin.getNodeId(), item.getListName()), notification);
+        send(Directions.searchSubscribers(liberin.getNodeId()), notification.clone());
     }
 
     @LiberinMapping
     public void deleted(UserListItemDeletedLiberin liberin) {
         UserListItem item = liberin.getItem();
-        send(
-            Directions.userListSubscribers(liberin.getNodeId(), item.getListName()),
-            UserListItemDeletedNotificationUtil.build(item.getListName(), item.getNodeName())
-        );
+        var notification = UserListItemDeletedNotificationUtil.build(item.getListName(), item.getNodeName());
+        send(Directions.userListSubscribers(liberin.getNodeId(), item.getListName()), notification);
+        send(Directions.searchSubscribers(liberin.getNodeId()), notification.clone());
     }
 
 }

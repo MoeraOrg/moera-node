@@ -2,6 +2,7 @@ package org.moera.node.liberin.receptor;
 
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.notifications.Notification;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Posting;
 import org.moera.node.data.SheriffOrder;
@@ -17,6 +18,8 @@ import org.moera.node.model.event.PostingUpdatedEvent;
 import org.moera.node.model.notification.PostingUpdatedNotificationUtil;
 import org.moera.node.model.notification.SheriffOrderForCommentAddedNotificationUtil;
 import org.moera.node.model.notification.SheriffOrderForCommentDeletedNotificationUtil;
+import org.moera.node.model.notification.SheriffOrderForFeedAddedNotificationUtil;
+import org.moera.node.model.notification.SheriffOrderForFeedDeletedNotificationUtil;
 import org.moera.node.model.notification.SheriffOrderForPostingAddedNotificationUtil;
 import org.moera.node.model.notification.SheriffOrderForPostingDeletedNotificationUtil;
 import org.moera.node.notification.send.Directions;
@@ -30,13 +33,22 @@ public class SheriffReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void orderSent(SheriffOrderSentLiberin liberin) {
         SheriffOrder order = liberin.getSheriffOrder();
+        Notification notification;
         if (order.getRemotePostingId() == null) {
-            return;
-        }
-        if (order.getRemoteCommentId() == null) {
-            send(
-                Directions.single(liberin.getNodeId(), order.getRemotePostingOwnerName()),
-                !order.isDelete()
+            notification = !order.isDelete()
+                ? SheriffOrderForFeedAddedNotificationUtil.build(
+                    order.getRemoteNodeName(),
+                    order.getRemoteFeedName(),
+                    order.getId().toString()
+                )
+                : SheriffOrderForFeedDeletedNotificationUtil.build(
+                    order.getRemoteNodeName(),
+                    order.getRemoteFeedName(),
+                    order.getId().toString()
+                );
+        } else {
+            if (order.getRemoteCommentId() == null) {
+                notification = !order.isDelete()
                     ? SheriffOrderForPostingAddedNotificationUtil.build(
                         order.getRemoteNodeName(),
                         order.getRemoteFeedName(),
@@ -50,12 +62,10 @@ public class SheriffReceptor extends LiberinReceptorBase {
                         order.getRemotePostingHeading(),
                         order.getRemotePostingId(),
                         order.getId().toString()
-                    )
-            );
-        } else {
-            send(
-                Directions.single(liberin.getNodeId(), order.getRemoteCommentOwnerName()),
-                !order.isDelete()
+                    );
+                send(Directions.single(liberin.getNodeId(), order.getRemotePostingOwnerName()), notification);
+            } else {
+                notification = !order.isDelete()
                     ? SheriffOrderForCommentAddedNotificationUtil.build(
                         order.getRemoteNodeName(),
                         order.getRemoteFeedName(),
@@ -77,9 +87,11 @@ public class SheriffReceptor extends LiberinReceptorBase {
                         order.getRemoteCommentHeading(),
                         order.getRemoteCommentId(),
                         order.getId().toString()
-                    )
-            );
+                    );
+                send(Directions.single(liberin.getNodeId(), order.getRemoteCommentOwnerName()), notification);
+            }
         }
+        send(Directions.searchSubscribers(liberin.getNodeId()), notification.clone());
     }
 
     @LiberinMapping
