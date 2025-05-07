@@ -23,7 +23,8 @@ public class ContactInfoUtil {
         contactInfo.setGender(contact.getRemoteGender());
         if (contact.getRemoteAvatarMediaFile() != null) {
             contactInfo.setAvatar(
-                AvatarImageUtil.build(contact.getRemoteAvatarMediaFile(), contact.getRemoteAvatarShape()));
+                AvatarImageUtil.build(contact.getRemoteAvatarMediaFile(), contact.getRemoteAvatarShape())
+            );
         }
         contactInfo.setDistance(contact.getDistance());
         contactInfo.setHasFeedSubscriber(contact.getFeedSubscriberCount() > 0);
@@ -73,30 +74,30 @@ public class ContactInfoUtil {
         
         contactInfo.setHasFeedSubscriber(
             contactInfo.getHasFeedSubscriber()
-                && canView(accessChecker, adminOperations.getViewFeedSubscriber(Principal.PUBLIC).withOwner(ownerName))
-                && canView(accessChecker, operations.getViewFeedSubscriber(Principal.PUBLIC).withOwner(ownerName))
+            && canView(accessChecker, adminOperations.getViewFeedSubscriber(Principal.PUBLIC).withOwner(ownerName))
+            && canView(accessChecker, operations.getViewFeedSubscriber(Principal.PUBLIC).withOwner(ownerName))
         );
         contactInfo.setHasFeedSubscription(
             contactInfo.getHasFeedSubscription()
-                && canView(accessChecker, adminOperations.getViewFeedSubscription(Principal.PUBLIC).withOwner(ownerName))
-                && canView(accessChecker, operations.getViewFeedSubscription(Principal.PUBLIC).withOwner(ownerName))
+            && canView(accessChecker, adminOperations.getViewFeedSubscription(Principal.PUBLIC).withOwner(ownerName))
+            && canView(accessChecker, operations.getViewFeedSubscription(Principal.PUBLIC).withOwner(ownerName))
         );
         contactInfo.setHasFriend(
             contactInfo.getHasFriend()
-                && canView(accessChecker, adminOperations.getViewFriend(Principal.PUBLIC).withOwner(ownerName))
-                && canView(accessChecker, operations.getViewFriend(Principal.PUBLIC).withOwner(ownerName))
+            && canView(accessChecker, adminOperations.getViewFriend(Principal.PUBLIC).withOwner(ownerName))
+            && canView(accessChecker, operations.getViewFriend(Principal.PUBLIC).withOwner(ownerName))
         );
         contactInfo.setHasFriendOf(
             contactInfo.getHasFriendOf()
-                && canView(accessChecker, adminOperations.getViewFriendOf(Principal.PUBLIC).withOwner(ownerName))
+            && canView(accessChecker, adminOperations.getViewFriendOf(Principal.PUBLIC).withOwner(ownerName))
         );
         contactInfo.setHasBlock(
             contactInfo.getHasBlock()
-                && canView(accessChecker, adminOperations.getViewBlock(Principal.PUBLIC).withOwner(ownerName))
+            && canView(accessChecker, adminOperations.getViewBlock(Principal.PUBLIC).withOwner(ownerName))
         );
         contactInfo.setHasBlockBy(
             contactInfo.getHasBlockBy()
-                && canView(accessChecker, adminOperations.getViewBlock(Principal.PUBLIC).withOwner(ownerName))
+            && canView(accessChecker, adminOperations.getViewBlock(Principal.PUBLIC).withOwner(ownerName))
         );
     }
 
