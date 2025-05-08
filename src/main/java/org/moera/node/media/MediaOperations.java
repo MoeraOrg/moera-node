@@ -287,6 +287,11 @@ public class MediaOperations {
             if (config.getMedia().isDirectServe() && exposed) {
                 createPublicServingLink(mediaFile);
             }
+        } else if (exposed && !mediaFile.isExposed()) {
+            mediaFile.setExposed(exposed);
+            if (config.getMedia().isDirectServe()) {
+                createPublicServingLink(mediaFile);
+            }
         }
         return mediaFile;
     }
