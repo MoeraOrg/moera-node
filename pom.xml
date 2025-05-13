@@ -5,7 +5,7 @@
 
     <groupId>org.moera</groupId>
     <artifactId>moera-node</artifactId>
-    <version>0.16.5</version>
+    <version>0.16.6</version>
     <name>moera-node</name>
     <description>Moera node</description>
     <packaging>war</packaging>
@@ -213,7 +213,7 @@
         <dependency>
             <groupId>org.moera</groupId>
             <artifactId>moeralib</artifactId>
-            <version>0.16.6-SNAPSHOT</version>
+            <version>0.16.6</version>
         </dependency>
 
         <dependency>
