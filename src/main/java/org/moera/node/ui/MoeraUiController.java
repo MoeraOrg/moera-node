@@ -100,6 +100,12 @@ public class MoeraUiController {
         return openClient("Complaints", model);
     }
 
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/search", produces = "text/html")
+    @VirtualPage
+    public String search(Model model) {
+        return openClient("Search", model);
+    }
+
     private String openClient(String title, Model model) {
         model.addAttribute("pageTitle", titleBuilder.build(title));
 
