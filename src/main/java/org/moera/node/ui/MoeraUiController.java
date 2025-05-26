@@ -33,9 +33,11 @@ public class MoeraUiController {
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/post/{id}")
     @VirtualPage
-    public String post(@PathVariable String id,
-                       @RequestParam(name = "comment", required = false) UUID commentId,
-                       @RequestParam(name = "media", required = false) UUID mediaId) {
+    public String post(
+        @PathVariable String id,
+        @RequestParam(name = "comment", required = false) UUID commentId,
+        @RequestParam(name = "media", required = false) UUID mediaId
+    ) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString("redirect:/post/" + id);
         if (commentId != null) {
             builder = builder.queryParam("comment", commentId);
