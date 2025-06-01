@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
-import org.moera.lib.node.types.FeedInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SheriffComplaintStatus;
@@ -98,7 +97,6 @@ public class SheriffComplaintGroupPrepareJob
 
         private boolean prepared;
         private WhoAmI whoAmI;
-        private boolean feedSheriffChecked;
         private PostingInfo postingInfo;
         private CommentInfo commentInfo;
 
@@ -119,14 +117,6 @@ public class SheriffComplaintGroupPrepareJob
 
         public void setWhoAmI(WhoAmI whoAmI) {
             this.whoAmI = whoAmI;
-        }
-
-        public boolean isFeedSheriffChecked() {
-            return feedSheriffChecked;
-        }
-
-        public void setFeedSheriffChecked(boolean feedSheriffChecked) {
-            this.feedSheriffChecked = feedSheriffChecked;
         }
 
         public PostingInfo getPostingInfo() {
@@ -199,16 +189,6 @@ public class SheriffComplaintGroupPrepareJob
     private void prepare() throws MoeraNodeException {
         if (state.whoAmI == null) {
             state.whoAmI = nodeApi.at(parameters.nodeName).whoAmI();
-            checkpoint();
-        }
-
-        if (!state.feedSheriffChecked) {
-            FeedInfo feedInfo = nodeApi.at(parameters.nodeName).getFeedGeneral(parameters.feedName);
-            if (feedInfo.getSheriffs() == null || !feedInfo.getSheriffs().contains(nodeName())) {
-                updateComplaintGroupStatus(SheriffComplaintStatus.NOT_SHERIFF);
-                return;
-            }
-            state.feedSheriffChecked = true;
             checkpoint();
         }
 

@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.exception.MoeraNodeApiException;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PostingInfo;
@@ -224,7 +225,15 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
             );
             state.sheriffOrderDetails.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
             state.sheriffOrderDetails.setSignatureVersion(SheriffOrderFingerprintBuilder.LATEST_VERSION);
-            nodeApi.at(parameters.remoteNodeName).createSheriffOrder(state.sheriffOrderDetails);
+            try {
+                nodeApi.at(parameters.remoteNodeName).createSheriffOrder(state.sheriffOrderDetails);
+            } catch (MoeraNodeApiException e) {
+                if (e.getErrorCode().equals("sheriff-order.not-sheriff")) {
+                    log.info("Sheriff governance is not allowed by node {}", parameters.remoteNodeName);
+                } else {
+                    throw e;
+                }
+            }
             checkpoint();
         }
 

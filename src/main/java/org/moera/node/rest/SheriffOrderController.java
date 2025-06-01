@@ -15,7 +15,6 @@ import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
-import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
@@ -33,6 +32,7 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.OperationFailure;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Util;
@@ -134,7 +134,7 @@ public class SheriffOrderController {
         requestContext.authenticatedWithSignature(sheriffOrderDetails.getSheriffName());
 
         if (!feedOperations.isFeedSheriff(sheriffOrderDetails.getFeedName())) {
-            throw new AuthenticationException();
+            throw new OperationFailure("sheriff-order.not-sheriff");
         }
 
         boolean delete = Boolean.TRUE.equals(sheriffOrderDetails.getDelete());
