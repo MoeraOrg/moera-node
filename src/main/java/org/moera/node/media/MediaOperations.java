@@ -799,16 +799,19 @@ public class MediaOperations {
                     try {
                         createPrivateServingLink(mediaFileOwner);
                     } catch (IOException e) {
-                        log.error("Could not create a link for {}: {}",
-                                mediaFileOwner.getDirectFileName(), e.getMessage());
+                        log.error(
+                            "Could not create a link for {}: {}",
+                            mediaFileOwner.getDirectFileName(), e.getMessage()
+                        );
                     }
 
                     Collection<MediaFilePreview> previews =
-                            mediaFilePreviewRepository.findByOriginalId(mediaFileOwner.getMediaFile().getId());
+                        mediaFilePreviewRepository.findByOriginalId(mediaFileOwner.getMediaFile().getId());
                     for (MediaFilePreview preview : previews) {
                         if (prevNonce != null) {
                             Path prevPath = getPrivateServingPath().resolve(
-                                    preview.getDirectFileName(mediaFileOwner.getPrevDirectFileName()));
+                                preview.getDirectFileName(mediaFileOwner.getPrevDirectFileName())
+                            );
                             try {
                                 Files.deleteIfExists(prevPath);
                             } catch (IOException e) {
@@ -818,8 +821,10 @@ public class MediaOperations {
                         try {
                             createPrivateServingLink(preview, mediaFileOwner.getDirectFileName());
                         } catch (IOException e) {
-                            log.error("Could not create a link for preview {} {}w: {}",
-                                    mediaFileOwner.getDirectFileName(), preview.getWidth(), e.getMessage());
+                            log.error(
+                                "Could not create a link for preview {} {}w: {}",
+                                mediaFileOwner.getDirectFileName(), preview.getWidth(), e.getMessage()
+                            );
                         }
                     }
                 }

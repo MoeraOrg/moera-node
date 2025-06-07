@@ -80,9 +80,10 @@ public class CarteController {
             CarteSet carteSet = new CarteSet();
             carteSet.setCartesIp(remoteAddress.getHostAddress());
             List<CarteInfo> cartes =
-                    generateCarteList(ownerName, signingKey, remoteAddress, Scope.ALL.getMask(), 0, limit);
+                generateCarteList(ownerName, signingKey, remoteAddress, Scope.ALL.getMask(), 0, limit);
             cartes.addAll(
-                    generateCarteList(ownerName, signingKey, remoteAddress, Scope.VIEW_MEDIA.getMask(), 0, limit));
+                generateCarteList(ownerName, signingKey, remoteAddress, Scope.VIEW_MEDIA.getMask(), 0, limit)
+            );
             carteSet.setCartes(cartes);
             carteSet.setCreatedAt(Instant.now().getEpochSecond());
             return carteSet;
@@ -101,8 +102,8 @@ public class CarteController {
         int limit = attributes.getLimit() != null ? attributes.getLimit() : DEFAULT_SET_SIZE;
         limit = (limit > 0 && limit <= MAX_SET_SIZE) ? limit : MAX_SET_SIZE;
         long scopeMask = ObjectUtils.isEmpty(attributes.getClientScope())
-                ? Scope.ALL.getMask()
-                : Scope.forValues(attributes.getClientScope());
+            ? Scope.ALL.getMask()
+            : Scope.forValues(attributes.getClientScope());
         scopeMask &= requestContext.getAdminScope();
         long adminMask = Scope.forValues(attributes.getAdminScope());
 
