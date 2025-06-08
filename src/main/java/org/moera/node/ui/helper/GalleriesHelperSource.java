@@ -169,6 +169,8 @@ public class GalleriesHelperSource {
         HelperUtil.appendAttr(buf, "sizes", MediaUtil.mediaSizes(mediaFile));
         HelperUtil.appendAttr(buf, "width", imageWidth);
         HelperUtil.appendAttr(buf, "height", imageHeight);
+        String alt = mediaFile.getTextContent() != null ? mediaFile.getTextContent() : "";
+        HelperUtil.appendAttr(buf, "alt", alt);
         buf.append('>');
 
         buf.append("</a>");
