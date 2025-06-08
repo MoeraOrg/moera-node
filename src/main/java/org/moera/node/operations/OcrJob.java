@@ -8,7 +8,9 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.ocrspace.OcrSpace;
 import org.moera.node.ocrspace.OcrSpaceConnectionException;
@@ -47,6 +49,12 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
     private MediaFileRepository mediaFileRepository;
 
     @Inject
+    private MediaFileOwnerRepository mediaFileOwnerRepository;
+
+    @Inject
+    private EntryRevisionRepository entryRevisionRepository;
+
+    @Inject
     private OcrSpace ocrSpace;
 
     public OcrJob() {
@@ -78,6 +86,7 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
             log.warn("Media file {} not found", LogUtil.format(parameters.mediaFileId));
             success();
         }
+
         try {
             String text = ocrSpace.recognize(mediaFile);
             tx.executeWrite(() -> mediaFileRepository.recognized(parameters.mediaFileId, text, Util.now()));
@@ -85,6 +94,11 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
             log.error("Error during OCR of media file {}: {}", LogUtil.format(parameters.mediaFileId), e.getMessage());
             retry();
         }
+
+        tx.executeWrite(() ->
+            mediaFileOwnerRepository.findAllByFile(mediaFile.getId())
+                .forEach(owner -> entryRevisionRepository.clearAttachmentsCache(owner.getId()))
+        );
     }
 
     @Override
