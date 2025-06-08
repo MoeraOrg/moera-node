@@ -91,6 +91,12 @@ public class TextConverter {
                 revision.setSaneBody(null);
             }
         }
+        headingToRevision(body, media, collapseQuotations, revision);
+    }
+
+    public static void headingToRevision(
+        Body body, List<MediaFileOwner> media, boolean collapseQuotations, EntryRevision revision
+    ) {
         if (!revision.getBodyFormat().equals(BodyFormat.APPLICATION.getValue())) {
             String heading = HeadingExtractor.extractHeading(body, media, collapseQuotations);
             revision.setHeading(heading);

@@ -1,6 +1,7 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -58,6 +59,12 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
     @Query("update Entry e set e.totalRevisions = (select count(*) from EntryRevision r where r.entry.id = e.id)"
             + " where e.id = ?1")
     void updateTotalRevisions(UUID entryId);
+
+    @Query("select r from EntryRevision r"
+        + " left join fetch r.entry"
+        + " left join fetch r.attachments ra left join fetch ra.mediaFileOwner mfo"
+        + " where mfo.id = ?1")
+    Collection<EntryRevision> findByMedia(UUID mediaFileOwnerId);
 
     @Modifying
     @Query("update EntryRevision r set r.attachmentsCache = null"
