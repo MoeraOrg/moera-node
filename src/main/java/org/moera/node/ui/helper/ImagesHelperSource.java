@@ -61,13 +61,16 @@ public class ImagesHelperSource {
         return image(src, alt, title, null, null, null, null, null);
     }
 
-    CharSequence image(CharSequence src, CharSequence alt, CharSequence title, CharSequence style,
-                       CharSequence klass) {
+    CharSequence image(
+        CharSequence src, CharSequence alt, CharSequence title, CharSequence style, CharSequence klass
+    ) {
         return image(src, alt, title, style, klass, null, null, null);
     }
 
-    CharSequence image(CharSequence src, CharSequence alt, CharSequence title, CharSequence style,
-                       CharSequence klass, Object dataId, Object dataValue, CharSequence id) {
+    CharSequence image(
+        CharSequence src, CharSequence alt, CharSequence title, CharSequence style, CharSequence klass, Object dataId,
+        Object dataValue, CharSequence id
+    ) {
         StringBuilder buf = new StringBuilder();
         buf.append("<img");
         HelperUtil.appendAttr(buf, "src", src);
@@ -95,7 +98,7 @@ public class ImagesHelperSource {
 
         try {
             BufferedImage image =
-                    ImageIO.read(applicationContext.getResource("classpath:static" + path).getInputStream());
+                ImageIO.read(applicationContext.getResource("classpath:static" + path).getInputStream());
             imageSize = new Dimension(image.getWidth(), image.getHeight());
             imageSizeCache.put(path, imageSize);
             return imageSize;
