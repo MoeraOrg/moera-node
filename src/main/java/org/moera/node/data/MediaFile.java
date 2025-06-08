@@ -47,6 +47,12 @@ public class MediaFile {
     @NotNull
     private Timestamp createdAt = Util.now();
 
+    private String recognizedText;
+
+    private Timestamp recognizeAt;
+
+    private Timestamp recognizedAt;
+
     @NotNull
     @Column(insertable = false, updatable = false)
     private int usageCount;
@@ -148,6 +154,30 @@ public class MediaFile {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getRecognizedText() {
+        return recognizedText;
+    }
+
+    public void setRecognizedText(String recognizedText) {
+        this.recognizedText = recognizedText;
+    }
+
+    public Timestamp getRecognizeAt() {
+        return recognizeAt;
+    }
+
+    public void setRecognizeAt(Timestamp recognizeAt) {
+        this.recognizeAt = recognizeAt;
+    }
+
+    public Timestamp getRecognizedAt() {
+        return recognizedAt;
+    }
+
+    public void setRecognizedAt(Timestamp recognizedAt) {
+        this.recognizedAt = recognizedAt;
     }
 
     public int getUsageCount() {

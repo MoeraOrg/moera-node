@@ -77,6 +77,7 @@ import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingFeaturesUtil;
+import org.moera.node.operations.OcrJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.task.JobsManagerInitializedEvent;
 import org.moera.node.util.DigestingOutputStream;
@@ -829,6 +830,23 @@ public class MediaOperations {
                     }
                 }
             } while (!page.isEmpty());
+        }
+    }
+
+    @Scheduled(fixedDelayString = "PT20M")
+    public void startRecognition() {
+        if (!Objects.equals(config.getMedia().getOcrService(), "ocrspace")) {
+            return;
+        }
+
+        try (var ignored = requestCounter.allot()) {
+            log.info("Starting OCR jobs");
+
+            List<String> ids = tx.executeRead(() -> mediaFileRepository.findToRecognize(Util.now()));
+            for (String id : ids) {
+                jobs.run(OcrJob.class, new OcrJob.Parameters(id));
+                tx.executeWrite(() -> mediaFileRepository.assignRecognizeAt(id, null));
+            }
         }
     }
 

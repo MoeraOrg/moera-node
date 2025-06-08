@@ -35,4 +35,15 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, String> {
     @Query("select mf from MediaFile mf where mf.exposed = true")
     Page<MediaFile> findAllExposed(Pageable pageable);
 
+    @Query("select mf.id from MediaFile mf where mf.recognizeAt <= ?1 and mf.recognizedAt is null")
+    List<String> findToRecognize(Timestamp now);
+
+    @Query("update MediaFile mf set mf.recognizeAt = ?2 where mf.id = ?1")
+    @Modifying
+    void assignRecognizeAt(String id, Timestamp recognizeAt);
+
+    @Query("update MediaFile mf set mf.recognizedText = ?2, mf.recognizedAt = ?3 where mf.id = ?1")
+    @Modifying
+    void recognized(String id, String recognizedText, Timestamp recognizedAt);
+
 }

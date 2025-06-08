@@ -11,8 +11,6 @@ import org.slf4j.LoggerFactory;
 
 public class AddFavorJob extends Job<AddFavorJob.Parameters, Object> {
 
-    private static final Logger log = LoggerFactory.getLogger(AddFavorJob.class);
-
     public static class Parameters {
 
         private String remoteNodeName;
@@ -43,6 +41,8 @@ public class AddFavorJob extends Job<AddFavorJob.Parameters, Object> {
         }
 
     }
+
+    private static final Logger log = LoggerFactory.getLogger(AddFavorJob.class);
 
     @Inject
     private FavorOperations favorOperations;
