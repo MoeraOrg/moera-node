@@ -1,6 +1,8 @@
 package org.moera.node.text;
 
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,12 +24,25 @@ public class MediaExtractor {
         return ids;
     }
 
+    public static Set<String> extractMediaFileIds(List<LinkPreview> previews) {
+        if (previews == null || previews.isEmpty()) {
+            return Collections.emptySet();
+        }
+        Set<String> ids = new HashSet<>();
+        previews.stream()
+            .map(LinkPreview::getImageHash)
+            .filter(h -> !ObjectUtils.isEmpty(h))
+            .forEach(ids::add);
+        return ids;
+    }
+
     public static Set<String> extractMediaFileIds(Body body) {
         Set<String> ids = extractMediaFileIds(body.getText());
+        ids.addAll(extractMediaFileIds(body.getLinkPreviews()));
         body.getLinkPreviews().stream()
-                .map(LinkPreview::getImageHash)
-                .filter(h -> !ObjectUtils.isEmpty(h))
-                .forEach(ids::add);
+            .map(LinkPreview::getImageHash)
+            .filter(h -> !ObjectUtils.isEmpty(h))
+            .forEach(ids::add);
         return ids;
     }
 

@@ -541,7 +541,9 @@ public class PostingInfoUtil {
         entryRevision.setBody(info.getBody().getEncoded());
         entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(info.getBody(), false, media));
         entryRevision.setHeading(info.getHeading());
-        entryRevision.setDescription(HeadingExtractor.extractDescription(info.getBody(), false, info.getHeading()));
+        entryRevision.setDescription(
+            HeadingExtractor.extractDescription(info.getBody(), media, false, info.getHeading())
+        );
         if (info.getDeletedAt() != null) {
             entryRevision.setDeletedAt(Util.now());
         }

@@ -1,5 +1,7 @@
 package org.moera.node.text;
 
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
@@ -9,6 +11,8 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeFilter;
 import org.moera.lib.node.types.body.Body;
+import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 
@@ -28,26 +32,38 @@ public class HeadingExtractor {
         Pattern.CASE_INSENSITIVE
     );
 
-    public static String extractHeading(Body body, boolean hasGallery, boolean collapseQuotations) {
+    public static String extractHeading(Body body, List<MediaFileOwner> media, boolean collapseQuotations) {
         if (!ObjectUtils.isEmpty(body.getSubject())) {
             return Util.ellipsize(body.getSubject(), HEADING_LENGTH);
         }
         String text = URL.matcher(body.getAllText()).replaceAll(EMOJI_CHAIN);
         String heading = extract(text, HEADING_LENGTH, collapseQuotations);
-        if (heading.length() < HEADING_LENGTH && hasGallery) {
-            heading += EMOJI_PICTURE;
+        if (heading.length() < HEADING_LENGTH) {
+            String galleryText = extractGalleryTexts(body, media, HEADING_LENGTH - heading.length() - 1);
+            if (!ObjectUtils.isEmpty(galleryText)) {
+                heading += ' ' + galleryText;
+            }
         }
         return heading;
     }
 
-    public static String extractDescription(Body body, boolean collapseQuotations, String heading) {
+    public static String extractDescription(
+        Body body, List<MediaFileOwner> media, boolean collapseQuotations, String heading
+    ) {
         String text = body.getAllText();
         if (ObjectUtils.isEmpty(text)) {
             return "";
         }
         text = URL.matcher(text).replaceAll(EMOJI_CHAIN);
         int beginningLength = getDescriptionBeginningLength(body, heading);
-        String description = extract(text, DESCRIPTION_LENGTH + beginningLength, collapseQuotations);
+        int descriptionLength = DESCRIPTION_LENGTH + beginningLength;
+        String description = extract(text, descriptionLength, collapseQuotations);
+        if (description.length() < descriptionLength) {
+            String galleryText = extractGalleryTexts(body, media, descriptionLength - description.length() - 1);
+            if (!ObjectUtils.isEmpty(galleryText)) {
+                description += ' ' + galleryText;
+            }
+        }
         description = beginningLength < description.length() - 1 ? description.substring(beginningLength) : "";
         if (beginningLength != 0 && !ObjectUtils.isEmpty(description)) {
             description = '\u2026' + description;
@@ -153,6 +169,38 @@ public class HeadingExtractor {
             return FilterResult.CONTINUE;
         }
 
+    }
+
+    private static String extractGalleryTexts(Body body, List<MediaFileOwner> media, int len) {
+        if (ObjectUtils.isEmpty(media)) {
+            return "";
+        }
+
+        StringBuilder heading = new StringBuilder();
+        boolean hasGallery = false;
+        Set<String> linkIds = MediaExtractor.extractMediaFileIds(body.getLinkPreviews());
+        for (MediaFileOwner mediaFileOwner : media) {
+            MediaFile mediaFile = mediaFileOwner.getMediaFile();
+            if (mediaFile == null || linkIds.contains(mediaFile.getId())) {
+                continue;
+            }
+            if (mediaFile.getRecognizedText() == null) {
+                hasGallery = true;
+                continue;
+            }
+            if (!heading.isEmpty()) {
+                heading.append(' ');
+            }
+            heading.append(mediaFile.getRecognizedText().replaceAll("\\s+", " "));
+            if (heading.length() >= len) {
+                Util.ellipsize(heading, len);
+                break;
+            }
+        }
+        if (heading.length() < len && hasGallery) {
+            heading.append(EMOJI_PICTURE);
+        }
+        return heading.toString();
     }
 
 }

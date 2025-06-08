@@ -24,6 +24,7 @@ public class PrivateMediaFileInfoUtil {
         info.setHeight(mediaFileOwner.getMediaFile().getSizeY());
         info.setOrientation(mediaFileOwner.getMediaFile().getOrientation());
         info.setSize(mediaFileOwner.getMediaFile().getFileSize());
+        info.setTextContent(mediaFileOwner.getMediaFile().getRecognizedText());
         
         Posting posting = mediaFileOwner.getPosting(receiverName);
         info.setPostingId(posting != null ? posting.getId().toString() : null);

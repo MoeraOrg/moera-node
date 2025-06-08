@@ -92,9 +92,9 @@ public class TextConverter {
             }
         }
         if (!revision.getBodyFormat().equals(BodyFormat.APPLICATION.getValue())) {
-            String heading = HeadingExtractor.extractHeading(body, hasAttachedGallery(body, media), collapseQuotations);
+            String heading = HeadingExtractor.extractHeading(body, media, collapseQuotations);
             revision.setHeading(heading);
-            revision.setDescription(HeadingExtractor.extractDescription(body, collapseQuotations, heading));
+            revision.setDescription(HeadingExtractor.extractDescription(body, media, collapseQuotations, heading));
         }
     }
 

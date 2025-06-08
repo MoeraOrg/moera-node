@@ -58,9 +58,14 @@ public class DraftTextUtil {
                 Body body = textConverter.toHtml(draft.getBodySrcFormat(), draftText.getBodySrc());
                 draft.setBody(body.getEncoded());
                 draft.setBodyFormat(BodyFormat.MESSAGE.getValue());
-                draft.setHeading(
-                    HeadingExtractor.extractHeading(body, hasAttachedGallery(body, draftText.getMedia()), true)
-                );
+                String heading = HeadingExtractor.extractHeading(body, null, true);
+                if (ObjectUtils.isEmpty(heading)) {
+                    boolean hasGallery = hasAttachedGallery(body, draftText.getMedia());
+                    if (hasGallery) {
+                        heading = HeadingExtractor.EMOJI_PICTURE;
+                    }
+                }
+                draft.setHeading(heading);
             } else {
                 draft.setBodySrc(Body.EMPTY);
                 draft.setBody(draftText.getBodySrc().getEncoded());

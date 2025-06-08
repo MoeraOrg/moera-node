@@ -24,6 +24,8 @@ import org.springframework.util.ObjectUtils;
 @Service
 public class OcrSpace {
 
+    public static final long MAX_FILE_SIZE = 1024 * 1024;
+
     private static final Logger log = LoggerFactory.getLogger(OcrSpace.class);
 
     private static final String API_ENDPOINT = "https://api.ocr.space/parse/image";

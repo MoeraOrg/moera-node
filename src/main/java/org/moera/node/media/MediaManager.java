@@ -286,7 +286,7 @@ public class MediaManager {
     }
 
     public MediaFileOwner downloadPrivateMedia(
-        String nodeName, String carte, String id, String mediaFileId, int maxSize, UUID entryId
+        String nodeName, String carte, String id, String mediaFileId, String textContent, int maxSize, UUID entryId
     ) throws MoeraNodeException {
         if (id == null) {
             return null;
@@ -326,6 +326,7 @@ public class MediaManager {
                         mediaFile = mediaOperations.putInPlace(
                             mediaFileId, tmpMedia.contentType(), tmp.path(), null, false
                         );
+                        mediaFile.setRecognizedText(textContent);
                     } finally {
                         try {
                             Files.deleteIfExists(tmp.path());
@@ -354,7 +355,9 @@ public class MediaManager {
         String nodeName, String carte, PrivateMediaFileInfo info, UUID entryId
     ) throws MoeraNodeException {
         int maxSize = PostingFeaturesUtil.build(universalContext.getOptions(), AccessCheckers.ADMIN).getMediaMaxSize();
-        return downloadPrivateMedia(nodeName, carte, info.getId(), info.getHash(), maxSize, entryId);
+        return downloadPrivateMedia(
+            nodeName, carte, info.getId(), info.getHash(), info.getTextContent(), maxSize, entryId
+        );
     }
 
     public byte[] getPrivateMediaDigest(String nodeName, String carte, PrivateMediaFileInfo info) {

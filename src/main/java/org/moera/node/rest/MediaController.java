@@ -44,11 +44,13 @@ import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.PrivateMediaFileInfoUtil;
 import org.moera.node.model.PublicMediaFileInfoUtil;
+import org.moera.node.ocrspace.OcrSpace;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.util.DigestingOutputStream;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -197,6 +199,9 @@ public class MediaController {
             mediaFile = entityManager.merge(mediaFile);
             MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, clientName);
             mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
+            if (mediaFile.getFileSize() < OcrSpace.MAX_FILE_SIZE) {
+                mediaFile.setRecognizeAt(Util.now());
+            }
 
             return PrivateMediaFileInfoUtil.build(mediaFileOwner, null);
         } catch (InvalidImageException e) {
