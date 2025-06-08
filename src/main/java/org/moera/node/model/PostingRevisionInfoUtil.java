@@ -32,6 +32,7 @@ public class PostingRevisionInfoUtil {
         info.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
         info.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, receiverName));
         info.setHeading(revision.getHeading());
+        info.setDescription(revision.getDescription());
         if (!UpdateInfoUtil.isEmpty(revision)) {
             info.setUpdateInfo(UpdateInfoUtil.build(revision));
         }

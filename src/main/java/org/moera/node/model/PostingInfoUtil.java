@@ -29,7 +29,6 @@ import org.moera.node.data.Story;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.option.Options;
-import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Util;
@@ -173,6 +172,7 @@ public class PostingInfoUtil {
         info.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
         info.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, posting.getReceiverName()));
         info.setHeading(revision.getHeading());
+        info.setDescription(revision.getDescription());
         if (!UpdateInfoUtil.isEmpty(revision)) {
             info.setUpdateInfo(UpdateInfoUtil.build(revision));
         }
@@ -541,9 +541,7 @@ public class PostingInfoUtil {
         entryRevision.setBody(info.getBody().getEncoded());
         entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(info.getBody(), false, media));
         entryRevision.setHeading(info.getHeading());
-        entryRevision.setDescription(
-            HeadingExtractor.extractDescription(info.getBody(), media, false, info.getHeading())
-        );
+        entryRevision.setDescription(info.getDescription());
         if (info.getDeletedAt() != null) {
             entryRevision.setDeletedAt(Util.now());
         }

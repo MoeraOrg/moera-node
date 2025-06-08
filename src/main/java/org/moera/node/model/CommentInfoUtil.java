@@ -88,6 +88,7 @@ public class CommentInfoUtil {
         commentInfo.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
         commentInfo.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, null));
         commentInfo.setHeading(revision.getHeading());
+        commentInfo.setDescription(revision.getDescription());
         if (comment.getRepliedTo() != null) {
             commentInfo.setRepliedTo(RepliedToUtil.build(comment));
         }

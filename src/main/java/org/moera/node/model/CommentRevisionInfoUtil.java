@@ -24,6 +24,7 @@ public class CommentRevisionInfoUtil {
         info.setBody(new Body(revision.getBody()));
         info.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
         info.setHeading(revision.getHeading());
+        info.setDescription(revision.getDescription());
         info.setCreatedAt(Util.toEpochSecond(revision.getCreatedAt()));
         info.setDeletedAt(Util.toEpochSecond(revision.getDeletedAt()));
         info.setDeadline(Util.toEpochSecond(revision.getDeadline()));
