@@ -70,6 +70,10 @@ public class Jobs {
         applicationEventPublisher.publishEvent(new JobsManagerInitializedEvent(this));
     }
 
+    public boolean isReady() {
+        return initialized;
+    }
+
     public <P, T extends Job<P, ?>> void run(Class<T> klass, P parameters) {
         run(klass, parameters, null, true);
     }
