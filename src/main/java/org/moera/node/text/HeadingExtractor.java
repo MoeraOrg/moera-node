@@ -191,7 +191,7 @@ public class HeadingExtractor {
             if (!heading.isEmpty()) {
                 heading.append(' ');
             }
-            heading.append(mediaFile.getRecognizedText().replaceAll("\\s+", " "));
+            heading.append(mediaFile.getRecognizedText());
             if (heading.length() >= len) {
                 Util.ellipsize(heading, len);
                 break;

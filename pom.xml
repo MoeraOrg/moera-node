@@ -209,6 +209,26 @@
             <artifactId>janino</artifactId>
             <version>3.1.12</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.pemistahl</groupId>
+            <artifactId>lingua</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.languagetool</groupId>
+            <artifactId>language-en</artifactId>
+            <version>6.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.languagetool</groupId>
+            <artifactId>language-ru</artifactId>
+            <version>6.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.languagetool</groupId>
+            <artifactId>language-uk</artifactId>
+            <version>6.6</version>
+        </dependency>
 
         <dependency>
             <groupId>org.moera</groupId>

@@ -2,10 +2,17 @@ package org.moera.node.ocrspace;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.pemistahl.lingua.api.Language;
+import com.github.pemistahl.lingua.api.LanguageDetector;
+import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
+import com.ibm.icu.text.UnicodeSet;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -13,6 +20,9 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.languagetool.JLanguageTool;
+import org.languagetool.rules.Rule;
+import org.languagetool.rules.RuleMatch;
 import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
 import org.moera.node.media.MediaOperations;
@@ -29,8 +39,13 @@ public class OcrSpace {
     private static final Logger log = LoggerFactory.getLogger(OcrSpace.class);
 
     private static final String API_ENDPOINT = "https://api.ocr.space/parse/image";
+    private static final Language[] SUPPORTED_LANGUAGES = { Language.ENGLISH, Language.RUSSIAN, Language.UKRAINIAN };
+    private static final UnicodeSet EMOJIS = new UnicodeSet("[[:Emoji:]]").freeze();
 
     private final OkHttpClient client = new OkHttpClient();
+
+    private final LanguageDetector detector;
+    private final Map<Language, JLanguageTool> languageTools;
 
     @Inject
     private Config config;
@@ -40,6 +55,24 @@ public class OcrSpace {
 
     @Inject
     private ObjectMapper objectMapper;
+
+    public OcrSpace() {
+        detector = LanguageDetectorBuilder.fromLanguages(SUPPORTED_LANGUAGES).build();
+        languageTools = Map.of(
+            Language.ENGLISH, createLanguageTool("en-US"),
+            Language.RUSSIAN, createLanguageTool("ru-RU"),
+            Language.UKRAINIAN, createLanguageTool("uk-UA")
+        );
+    }
+
+    private static JLanguageTool createLanguageTool(String lang) {
+        JLanguageTool langTool = new JLanguageTool(org.languagetool.Languages.getLanguageForShortCode(lang));
+        langTool.getAllRules().stream()
+            .filter(rule -> !rule.isDictionaryBasedSpellingRule())
+            .map(Rule::getId)
+            .forEach(langTool::disableRule);
+        return langTool;
+    }
 
     public String recognize(MediaFile mediaFile) {
         if (
@@ -79,9 +112,11 @@ public class OcrSpace {
                         }
                         ParsedResult parsedResult = result.getParsedResults().get(0);
                         if (parsedResult.getFileParseExitCode() == 1) {
-                            return !ObjectUtils.isEmpty(parsedResult.getParsedText())
-                                ? parsedResult.getParsedText()
-                                : null;
+                            String text = parsedResult.getParsedText();
+                            if (ObjectUtils.isEmpty(text)) {
+                                return null;
+                            }
+                            return filterGibberish(text);
                         }
                     }
                     throw new OcrSpaceRecognitionException(result);
@@ -90,8 +125,78 @@ public class OcrSpace {
                 }
             }
         } catch (IOException e) {
+            log.debug("OCR service connection error", e);
             throw new OcrSpaceConnectionException(e);
         }
+    }
+
+    private String filterGibberish(String text) throws IOException{
+        text = text.trim().replaceAll("\\s+", " ");
+        log.debug("Recognized text: {}", text);
+
+        if (!isGoodScript(text)) {
+            log.debug("Bad script, skipping");
+            return null;
+        }
+
+        Language language = detector.detectLanguageOf(text);
+        if (!Arrays.asList(SUPPORTED_LANGUAGES).contains(language)) {
+            log.debug("Unknown language, skipping");
+            return null;
+        }
+
+        List<RuleMatch> matches = languageTools.get(language).check(text);
+        int count = 0;
+        if (!matches.isEmpty()) {
+            for (RuleMatch match : matches) {
+                count += match.getToPos() - match.getFromPos();
+            }
+        }
+        double ratio = (double) count / text.length();
+        log.debug("Error ratio = {}, the text is {}", ratio, ratio >= 0.2 ? "gibberish" : "normal");
+
+        return ratio < 0.2 ? text : null;
+    }
+
+    private boolean isGoodScript(String text) {
+        for (int i = 0; i < text.length();) {
+            final int cp = text.codePointAt(i);
+            i += Character.charCount(cp);
+
+            if (Character.isDigit(cp)) {
+                continue;
+            }
+
+            Character.UnicodeScript script = Character.UnicodeScript.of(cp);
+            if (script == Character.UnicodeScript.LATIN || script == Character.UnicodeScript.CYRILLIC) {
+                continue;
+            }
+
+            switch (Character.getType(cp)) {
+                case Character.CONNECTOR_PUNCTUATION:
+                case Character.DASH_PUNCTUATION:
+                case Character.START_PUNCTUATION:
+                case Character.END_PUNCTUATION:
+                case Character.INITIAL_QUOTE_PUNCTUATION:
+                case Character.FINAL_QUOTE_PUNCTUATION:
+                case Character.OTHER_PUNCTUATION:
+                case Character.MATH_SYMBOL:
+                case Character.OTHER_NUMBER:
+                    continue;
+            }
+
+            if (Character.isWhitespace(cp)) {
+                continue;
+            }
+
+            if (EMOJIS.contains(cp)) {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
     }
 
 }
