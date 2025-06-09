@@ -34,29 +34,35 @@ public interface MediaFileOwnerRepository extends JpaRepository<MediaFileOwner, 
     @Modifying
     void deleteUnused(Timestamp deadline);
 
-    @Query("select mo from MediaFileOwner mo where mo.nodeId = ?1 and mo.ownerName is null"
-            + " and not exists (select p from Posting p where p.parentMedia = mo)")
+    @Query(
+        "select mo from MediaFileOwner mo where mo.nodeId = ?1 and mo.ownerName is null"
+        + " and not exists (select p from Posting p where p.parentMedia = mo)"
+    )
     List<MediaFileOwner> findWithoutPosting(UUID nodeId);
 
     @Query("select mo from MediaFileOwner mo where mo.usageUpdatedAt > mo.permissionsUpdatedAt")
     Collection<MediaFileOwner> findOutdatedPermissions();
 
-    @Query("update MediaFileOwner mo"
-            + " set mo.usageUpdatedAt = ?3"
-            + " where mo.id in ("
-            + "select ca.mediaFileOwner.id"
-            + " from Comment c full join c.revisions cr full join cr.attachments ca"
-            + " where c.nodeId = ?1 and c.parent.id = ?2 and cr.deletedAt is null and c.deletedAt is null"
-            + ")")
+    @Query(
+        "update MediaFileOwner mo"
+        + " set mo.usageUpdatedAt = ?3"
+        + " where mo.id in ("
+        + "select ca.mediaFileOwner.id"
+        + " from Comment c full join c.revisions cr full join cr.attachments ca"
+        + " where c.nodeId = ?1 and c.parent.id = ?2 and cr.deletedAt is null and c.deletedAt is null"
+        + ")"
+    )
     @Modifying
     void updateUsageOfCommentAttachments(UUID nodeId, UUID postingId, Timestamp now);
 
     @Query("select mo from MediaFileOwner mo where mo.nonce is null")
     Page<MediaFileOwner> findAllWithoutNonce(Pageable pageable);
 
-    @Query("update MediaFileOwner mo"
-            + " set mo.prevNonce = mo.nonce, mo.nonce = ?2, mo.nonceDeadline = ?3"
-            + " where mo.id = ?1")
+    @Query(
+        "update MediaFileOwner mo"
+        + " set mo.prevNonce = mo.nonce, mo.nonce = ?2, mo.nonceDeadline = ?3"
+        + " where mo.id = ?1"
+    )
     @Modifying
     void replaceNonce(UUID id, String nonce, Timestamp nonceDeadline);
 

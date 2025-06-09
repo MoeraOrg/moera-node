@@ -16,8 +16,15 @@ public class AskedToFriendLiberin extends Liberin {
     private String friendGroupTitle;
     private String message;
 
-    public AskedToFriendLiberin(String remoteNodeName, String remoteFullName, String remoteGender,
-                                AvatarImage remoteAvatar, UUID friendGroupId, String friendGroupTitle, String message) {
+    public AskedToFriendLiberin(
+        String remoteNodeName,
+        String remoteFullName,
+        String remoteGender,
+        AvatarImage remoteAvatar,
+        UUID friendGroupId,
+        String friendGroupTitle,
+        String message
+    ) {
         this.remoteNodeName = remoteNodeName;
         this.remoteFullName = remoteFullName;
         this.remoteGender = remoteGender;

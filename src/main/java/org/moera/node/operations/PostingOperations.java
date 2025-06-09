@@ -154,11 +154,15 @@ public class PostingOperations {
         return posting;
     }
 
-    public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, List<MediaFileOwner> media,
-                                         List<StoryAttributes> publications,
-                                         Predicate<EntryRevision> isNothingChanged,
-                                         Consumer<EntryRevision> revisionUpdater,
-                                         Consumer<Entry> mediaEntryUpdater) {
+    public Posting createOrUpdatePosting(
+        Posting posting,
+        EntryRevision revision,
+        List<MediaFileOwner> media,
+        List<StoryAttributes> publications,
+        Predicate<EntryRevision> isNothingChanged,
+        Consumer<EntryRevision> revisionUpdater,
+        Consumer<Entry> mediaEntryUpdater
+    ) {
         EntryRevision latest = posting.getCurrentRevision();
         if (latest != null) {
             if (isNothingChanged != null && isNothingChanged.test(latest)) {
@@ -313,12 +317,12 @@ public class PostingOperations {
                 Options options = domains.getDomainOptions(domainName);
                 List<Liberin> liberinList = new ArrayList<>();
                 tx.executeWrite(() ->
-                        postingRepository.findUnlinked(options.nodeId()).forEach(posting -> {
-                            log.info("Deleting unlinked posting {}", posting.getId());
-                            EntryRevision latest = posting.getCurrentRevision();
-                            deletePosting(posting, options);
-                            liberinList.add(new PostingDeletedLiberin(posting, latest).withNodeId(options.nodeId()));
-                        })
+                    postingRepository.findUnlinked(options.nodeId()).forEach(posting -> {
+                        log.info("Deleting unlinked posting {}", posting.getId());
+                        EntryRevision latest = posting.getCurrentRevision();
+                        deletePosting(posting, options);
+                        liberinList.add(new PostingDeletedLiberin(posting, latest).withNodeId(options.nodeId()));
+                    })
                 );
                 liberinList.forEach(liberinManager::send);
             }
@@ -345,16 +349,17 @@ public class PostingOperations {
                         liberins.add(new PostingDeletedLiberin(posting, latest).withNodeId(posting.getNodeId()));
                     } else {
                         EntryRevision revision = posting.getRevisions().stream()
-                                .min(Comparator.comparing(EntryRevision::getCreatedAt))
-                                .orElse(null);
+                            .min(Comparator.comparing(EntryRevision::getCreatedAt))
+                            .orElse(null);
                         if (revision != null) { // always
                             revision.setDeletedAt(null);
                             entryRevisionRepository.delete(posting.getCurrentRevision());
                             posting.setCurrentRevision(revision);
                             posting.setTotalRevisions(posting.getTotalRevisions() - 1);
 
-                            liberins.add(new PostingUpdatedLiberin(posting, latest, posting.getViewE())
-                                    .withNodeId(posting.getNodeId()));
+                            liberins
+                                .add(new PostingUpdatedLiberin(posting, latest, posting.getViewE())
+                                .withNodeId(posting.getNodeId()));
                         }
                     }
                 }
