@@ -40,6 +40,8 @@ import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
+import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
+import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.PostingTextUtil;
@@ -306,6 +308,32 @@ public class PostingOperations {
 
             universalContext.send(new PostingDeletedLiberin(posting, latest));
         }
+    }
+
+    public void updatePickedMediaText(UUID postingId, String remoteMediaId, String text) {
+        MediaFileOwner mediaFileOwner = postingRepository
+            .findAttachedMediaByRemoteId(universalContext.nodeId(), postingId, remoteMediaId)
+            .orElse(null);
+        if (mediaFileOwner == null) {
+            return;
+        }
+        mediaFileOwner.getMediaFile().setRecognizedText(text);
+        mediaFileOwner.getMediaFile().setRecognizeAt(Util.now());
+        universalContext.send(new PostingMediaTextUpdatedLiberin(postingId, mediaFileOwner.getId(), text));
+    }
+
+    public void updatePickedHeading(UUID postingId, String receiverRevisionId, String heading, String description) {
+        EntryRevision revision = entryRevisionRepository
+            .findByEntryIdAndReceiverId(universalContext.nodeId(), postingId, receiverRevisionId)
+            .orElse(null);
+        if (revision == null) {
+            return;
+        }
+        revision.setHeading(heading);
+        revision.setDescription(description);
+        universalContext.send(
+            new PostingHeadingUpdatedLiberin(postingId, revision.getId(), heading, description)
+        );
     }
 
     @Scheduled(fixedDelayString = "PT1H")

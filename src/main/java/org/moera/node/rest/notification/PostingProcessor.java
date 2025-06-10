@@ -9,6 +9,8 @@ import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.notifications.NotificationType;
 import org.moera.lib.node.types.notifications.PostingCommentsUpdatedNotification;
 import org.moera.lib.node.types.notifications.PostingDeletedNotification;
+import org.moera.lib.node.types.notifications.PostingHeadingUpdatedNotification;
+import org.moera.lib.node.types.notifications.PostingMediaTextUpdatedNotification;
 import org.moera.lib.node.types.notifications.PostingReactionsUpdatedNotification;
 import org.moera.lib.node.types.notifications.PostingSubscriberNotification;
 import org.moera.lib.node.types.notifications.PostingUpdatedNotification;
@@ -165,9 +167,29 @@ public class PostingProcessor {
                 );
                 posting.setTotalChildren(notification.getTotal());
             }
-            // The number may be the same, but events were not sent yet, because comments weren't signed
+            // The number may be the same, but events were not sent yet because comments weren't signed
             universalContext.send(new PostingCommentTotalsUpdatedLiberin(posting, notification.getTotal()));
         });
+    }
+
+    @NotificationMapping(NotificationType.POSTING_MEDIA_TEXT_UPDATED)
+    @Transactional
+    public void mediaTextUpdated(PostingMediaTextUpdatedNotification notification) {
+        withValidPostingSubscription(notification, (subscription, posting) ->
+            postingOperations.updatePickedMediaText(
+                posting.getId(), notification.getMediaId(), notification.getTextContent()
+            )
+        );
+    }
+
+    @NotificationMapping(NotificationType.POSTING_HEADING_UPDATED)
+    @Transactional
+    public void headingUpdated(PostingHeadingUpdatedNotification notification) {
+        withValidPostingSubscription(notification, (subscription, posting) ->
+            postingOperations.updatePickedHeading(
+                posting.getId(), notification.getRevisionId(), notification.getHeading(), notification.getDescription()
+            )
+        );
     }
 
 }

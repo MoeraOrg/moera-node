@@ -19,6 +19,7 @@ import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
+import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.friends.FriendCache;
@@ -26,9 +27,11 @@ import org.moera.node.friends.SubscribedCache;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
+import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.liberin.model.PostingAddedLiberin;
 import org.moera.node.liberin.model.PostingCommentTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
+import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.AvatarImageUtil;
@@ -42,7 +45,9 @@ import org.moera.node.model.notification.MentionPostingAddedNotificationUtil;
 import org.moera.node.model.notification.MentionPostingDeletedNotificationUtil;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotificationUtil;
 import org.moera.node.model.notification.PostingDeletedNotificationUtil;
+import org.moera.node.model.notification.PostingHeadingUpdatedNotificationUtil;
 import org.moera.node.model.notification.PostingImportantUpdateNotificationUtil;
+import org.moera.node.model.notification.PostingMediaTextUpdatedNotificationUtil;
 import org.moera.node.model.notification.PostingUpdatedNotificationUtil;
 import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.model.notification.StoryAddedNotificationUtil;
@@ -54,6 +59,9 @@ import org.moera.node.util.ExtendedDuration;
 
 @LiberinReceptor
 public class PostingReceptor extends LiberinReceptorBase {
+
+    @Inject
+    private PostingRepository postingRepository;
 
     @Inject
     private StoryRepository storyRepository;
@@ -293,6 +301,36 @@ public class PostingReceptor extends LiberinReceptorBase {
         send(
             Directions.postingSubscribers(posting.getNodeId(), posting.getId(), viewFilter),
             PostingCommentsUpdatedNotificationUtil.build(posting.getId(), liberin.getTotal())
+        );
+    }
+
+    @LiberinMapping
+    public void headingUpdated(PostingHeadingUpdatedLiberin liberin) {
+        Posting posting = postingRepository.findById(liberin.getPostingId()).orElse(null);
+        if (posting == null) {
+            return;
+        }
+        send(liberin, new PostingUpdatedEvent(posting, posting.getViewE()));
+        send(
+            Directions.postingSubscribers(posting.getNodeId(), posting.getId(), posting.getViewE()),
+            PostingHeadingUpdatedNotificationUtil.build(
+                posting.getId(), liberin.getRevisionId(), liberin.getHeading(), liberin.getDescription()
+            )
+        );
+    }
+
+    @LiberinMapping
+    public void mediaTextUpdated(PostingMediaTextUpdatedLiberin liberin) {
+        Posting posting = postingRepository.findById(liberin.getPostingId()).orElse(null);
+        if (posting == null) {
+            return;
+        }
+        send(liberin, new PostingUpdatedEvent(posting, posting.getViewE()));
+        send(
+            Directions.postingSubscribers(posting.getNodeId(), posting.getId(), posting.getViewE()),
+            PostingMediaTextUpdatedNotificationUtil.build(
+                posting.getId(), liberin.getMediaId(), liberin.getTextContent()
+            )
         );
     }
 

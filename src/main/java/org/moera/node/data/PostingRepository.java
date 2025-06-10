@@ -54,6 +54,14 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     Optional<Posting> findByReceiverId(UUID nodeId, String receiverName, String receiverEntryId);
 
     @Query(
+        "select mfo from Posting p"
+        + " left join p.currentRevision cr left join cr.attachments cra"
+        + " left join cra.mediaFileOwner mfo left join fetch mfo.mediaFile"
+        + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null and cra.remoteMediaId = ?3"
+    )
+    Optional<MediaFileOwner> findAttachedMediaByRemoteId(UUID nodeId, UUID id, String remoteMediaId);
+
+    @Query(
         "select p from Posting p left join p.stories s"
         + " where p.nodeId = ?1 and p.ownerName = ?2 and p.deletedAt is null and s.feedName = ?3"
     )

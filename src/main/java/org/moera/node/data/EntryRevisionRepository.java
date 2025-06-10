@@ -29,6 +29,12 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
 
     @Query(
         "select r from EntryRevision r"
+        + " where r.entry.nodeId = ?1 and r.entry.id = ?2 and r.entry.deletedAt is null and r.receiverRevisionId = ?3"
+    )
+    Optional<EntryRevision> findByEntryIdAndReceiverId(UUID nodeId, UUID entryId, String receiverId);
+
+    @Query(
+        "select r from EntryRevision r"
         + " left join fetch r.attachments ra left join fetch ra.mediaFileOwner mfo"
         + " left join fetch mfo.mediaFile mf left join fetch mf.previews"
         + " where r.entry.nodeId = ?1 and r.entry.id = ?2 and r.entry.deletedAt is null and r.id = ?3"

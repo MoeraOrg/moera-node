@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntryType;
@@ -18,6 +20,8 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
+import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
 import org.moera.node.ocrspace.OcrSpace;
 import org.moera.node.ocrspace.OcrSpaceConnectionException;
 import org.moera.node.ocrspace.OcrSpaceInvalidResponseException;
@@ -98,26 +102,43 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
             String text = ocrSpace.recognize(mediaFile);
             tx.executeWrite(() -> mediaFileRepository.recognized(parameters.mediaFileId, text, Util.now()));
             if (text != null) {
-                tx.executeWrite(() -> {
-                    var owners = mediaFileOwnerRepository.findAllByFile(mediaFile.getId());
-                    for (var owner : owners) {
-                         var revisions = entryRevisionRepository.findByMedia(owner.getId());
-                         for (var revision : revisions) {
-                             revision.setAttachmentsCache(null);
-                             boolean collapseQuotations = revision.getEntry().getEntryType() == EntryType.COMMENT;
-                             List<MediaFileOwner> media = revision.getAttachments().stream()
-                                 .map(EntryAttachment::getMediaFileOwner)
-                                 .collect(Collectors.toList());
-                             TextConverter.headingToRevision(
-                                 new Body(revision.getBody()), media, collapseQuotations, revision
-                             );
-                         }
-                    }
-                });
+                tx.executeWrite(() -> updateText(mediaFile, text));
             }
         } catch (OcrSpaceConnectionException | OcrSpaceInvalidResponseException e) {
             log.error("Error during OCR of media file {}: {}", LogUtil.format(parameters.mediaFileId), e.getMessage());
             retry();
+        }
+    }
+
+    private void updateText(MediaFile mediaFile, String text) {
+        var owners = mediaFileOwnerRepository.findAllByFile(mediaFile.getId());
+        for (var owner : owners) {
+            universalContext.associate(owner.getNodeId());
+            var revisions = entryRevisionRepository.findByMedia(owner.getId());
+            for (var revision : revisions) {
+                revision.setAttachmentsCache(null);
+                Entry entry = revision.getEntry();
+                boolean collapseQuotations = entry.getEntryType() == EntryType.COMMENT;
+                List<MediaFileOwner> media = revision.getAttachments().stream()
+                    .map(EntryAttachment::getMediaFileOwner)
+                    .collect(Collectors.toList());
+                String oldHeading = revision.getHeading();
+                String oldDescription = revision.getDescription();
+                TextConverter.headingToRevision(new Body(revision.getBody()), media, collapseQuotations, revision);
+                if (entry.getEntryType() == EntryType.POSTING) {
+                    send(new PostingMediaTextUpdatedLiberin(entry.getId(), owner.getId(), text));
+                    if (
+                        !Objects.equals(oldHeading, revision.getHeading())
+                        || !Objects.equals(oldDescription, revision.getDescription())
+                    ) {
+                        send(
+                            new PostingHeadingUpdatedLiberin(
+                                entry.getId(), revision.getId(), revision.getHeading(), revision.getDescription()
+                            )
+                        );
+                    }
+                }
+            }
         }
     }
 
