@@ -4,9 +4,13 @@ import java.util.UUID;
 
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.SearchBlockUpdate;
+import org.moera.lib.node.types.SearchCommentHeadingUpdate;
+import org.moera.lib.node.types.SearchCommentMediaTextUpdate;
 import org.moera.lib.node.types.SearchCommentUpdate;
 import org.moera.lib.node.types.SearchContentUpdateType;
 import org.moera.lib.node.types.SearchFriendUpdate;
+import org.moera.lib.node.types.SearchPostingHeadingUpdate;
+import org.moera.lib.node.types.SearchPostingMediaTextUpdate;
 import org.moera.lib.node.types.SearchPostingUpdate;
 import org.moera.lib.node.types.SearchReactionUpdate;
 import org.moera.lib.node.types.SearchSubscriptionUpdate;
@@ -130,6 +134,56 @@ public class SearchContentUpdatedNotificationUtil {
         details.setCommentId(commentId.toString());
         details.setOwnerName(ownerName);
         notification.setReactionUpdate(details);
+        return notification;
+    }
+
+    public static SearchContentUpdatedNotification buildPostingHeadingUpdate(UUID postingId, String heading) {
+        var notification = new SearchContentUpdatedNotification();
+        notification.setUpdateType(SearchContentUpdateType.POSTING_UPDATE_HEADING);
+        var details = new SearchPostingHeadingUpdate();
+        details.setPostingId(postingId.toString());
+        details.setHeading(heading);
+        notification.setPostingHeadingUpdate(details);
+        return notification;
+    }
+
+    public static SearchContentUpdatedNotification buildCommentHeadingUpdate(
+        UUID postingId, UUID commentId, String heading
+    ) {
+        var notification = new SearchContentUpdatedNotification();
+        notification.setUpdateType(SearchContentUpdateType.COMMENT_UPDATE_HEADING);
+        var details = new SearchCommentHeadingUpdate();
+        details.setPostingId(postingId.toString());
+        details.setCommentId(commentId.toString());
+        details.setHeading(heading);
+        notification.setCommentHeadingUpdate(details);
+        return notification;
+    }
+
+    public static SearchContentUpdatedNotification buildPostingMediaTextUpdate(
+        UUID postingId, UUID mediaId, String textContent
+    ) {
+        var notification = new SearchContentUpdatedNotification();
+        notification.setUpdateType(SearchContentUpdateType.POSTING_UPDATE_MEDIA_TEXT);
+        var details = new SearchPostingMediaTextUpdate();
+        details.setPostingId(postingId.toString());
+        details.setMediaId(mediaId.toString());
+        details.setTextContent(textContent);
+        notification.setPostingMediaTextUpdate(details);
+        return notification;
+    }
+
+    public static SearchContentUpdatedNotification buildCommentMediaTextUpdate(
+        UUID postingId, UUID commentId, UUID mediaId, String textContent
+    ) {
+        var notification = new SearchContentUpdatedNotification();
+        notification.setUpdateType(SearchContentUpdateType.COMMENT_UPDATE_MEDIA_TEXT);
+        var details = new SearchCommentMediaTextUpdate();
+        details.setPostingId(postingId.toString());
+        details.setCommentId(commentId.toString());
+        details.setMediaId(mediaId.toString());
+        details.setTextContent(textContent);
+        notification.setCommentMediaTextUpdate(details);
         return notification;
     }
 

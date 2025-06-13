@@ -306,7 +306,7 @@ public class PostingReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void headingUpdated(PostingHeadingUpdatedLiberin liberin) {
-        Posting posting = postingRepository.findById(liberin.getPostingId()).orElse(null);
+        Posting posting = postingRepository.findByNodeIdAndId(liberin.getNodeId(), liberin.getPostingId()).orElse(null);
         if (posting == null) {
             return;
         }
@@ -317,11 +317,17 @@ public class PostingReceptor extends LiberinReceptorBase {
                 posting.getId(), liberin.getRevisionId(), liberin.getHeading(), liberin.getDescription()
             )
         );
+        if (posting.isOriginal() && posting.getCurrentRevision().getId().equals(liberin.getRevisionId())) {
+            send(
+                Directions.searchSubscribers(liberin.getNodeId(), posting.getViewE()),
+                SearchContentUpdatedNotificationUtil.buildPostingHeadingUpdate(posting.getId(), liberin.getHeading())
+            );
+        }
     }
 
     @LiberinMapping
     public void mediaTextUpdated(PostingMediaTextUpdatedLiberin liberin) {
-        Posting posting = postingRepository.findById(liberin.getPostingId()).orElse(null);
+        Posting posting = postingRepository.findByNodeIdAndId(liberin.getNodeId(), liberin.getPostingId()).orElse(null);
         if (posting == null) {
             return;
         }
@@ -332,6 +338,14 @@ public class PostingReceptor extends LiberinReceptorBase {
                 posting.getId(), liberin.getMediaId(), liberin.getTextContent()
             )
         );
+        if (posting.isOriginal()) {
+            send(
+                Directions.searchSubscribers(liberin.getNodeId(), posting.getViewE()),
+                SearchContentUpdatedNotificationUtil.buildPostingMediaTextUpdate(
+                    posting.getId(), liberin.getMediaId(), liberin.getTextContent()
+                )
+            );
+        }
     }
 
 }

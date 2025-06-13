@@ -17,6 +17,7 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
+import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
@@ -28,6 +29,8 @@ import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.CommentAddedLiberin;
 import org.moera.node.liberin.model.CommentDeletedLiberin;
+import org.moera.node.liberin.model.CommentHeadingUpdatedLiberin;
+import org.moera.node.liberin.model.CommentMediaTextUpdatedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfoUtil;
@@ -52,6 +55,9 @@ import org.moera.node.util.Transaction;
 
 @LiberinReceptor
 public class CommentReceptor extends LiberinReceptorBase {
+
+    @Inject
+    private CommentRepository commentRepository;
 
     @Inject
     private CommentInstants commentInstants;
@@ -389,6 +395,36 @@ public class CommentReceptor extends LiberinReceptorBase {
 
     private PrincipalFilter visibilityFilter(Entry posting, Comment comment) {
         return generalVisibilityFilter(posting).and(comment.getViewE());
+    }
+
+    @LiberinMapping
+    public void headingUpdated(CommentHeadingUpdatedLiberin liberin) {
+        Comment comment = commentRepository.findByNodeIdAndId(liberin.getNodeId(), liberin.getCommentId()).orElse(null);
+        if (comment == null) {
+            return;
+        }
+        if (comment.getCurrentRevision().getId().equals(liberin.getRevisionId())) {
+            send(
+                Directions.searchSubscribers(liberin.getNodeId(), visibilityFilter(comment.getPosting(), comment)),
+                SearchContentUpdatedNotificationUtil.buildCommentHeadingUpdate(
+                    comment.getPosting().getId(), comment.getId(), liberin.getHeading()
+                )
+            );
+        }
+    }
+
+    @LiberinMapping
+    public void mediaTextUpdated(CommentMediaTextUpdatedLiberin liberin) {
+        Comment comment = commentRepository.findByNodeIdAndId(liberin.getNodeId(), liberin.getCommentId()).orElse(null);
+        if (comment == null) {
+            return;
+        }
+        send(
+            Directions.searchSubscribers(liberin.getNodeId(), visibilityFilter(comment.getPosting(), comment)),
+            SearchContentUpdatedNotificationUtil.buildCommentMediaTextUpdate(
+                comment.getPosting().getId(), comment.getId(), liberin.getMediaId(), liberin.getTextContent()
+            )
+        );
     }
 
 }

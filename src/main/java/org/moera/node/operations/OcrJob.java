@@ -20,8 +20,10 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
-import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
+import org.moera.node.liberin.model.CommentHeadingUpdatedLiberin;
+import org.moera.node.liberin.model.CommentMediaTextUpdatedLiberin;
 import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
+import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.ocrspace.OcrSpace;
 import org.moera.node.ocrspace.OcrSpaceConnectionException;
 import org.moera.node.ocrspace.OcrSpaceInvalidResponseException;
@@ -125,17 +127,31 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
                 String oldHeading = revision.getHeading();
                 String oldDescription = revision.getDescription();
                 TextConverter.headingToRevision(new Body(revision.getBody()), media, collapseQuotations, revision);
-                if (entry.getEntryType() == EntryType.POSTING) {
-                    send(new PostingMediaTextUpdatedLiberin(entry.getId(), owner.getId(), text));
-                    if (
-                        !Objects.equals(oldHeading, revision.getHeading())
-                        || !Objects.equals(oldDescription, revision.getDescription())
-                    ) {
-                        send(
-                            new PostingHeadingUpdatedLiberin(
-                                entry.getId(), revision.getId(), revision.getHeading(), revision.getDescription()
-                            )
-                        );
+                switch (entry.getEntryType()) {
+                    case POSTING:
+                        send(new PostingMediaTextUpdatedLiberin(entry.getId(), owner.getId(), text));
+                        break;
+                    case COMMENT:
+                        send(new CommentMediaTextUpdatedLiberin(entry.getId(), owner.getId(), text));
+                        break;
+                }
+                if (
+                    !Objects.equals(oldHeading, revision.getHeading())
+                    || !Objects.equals(oldDescription, revision.getDescription())
+                ) {
+                    switch (entry.getEntryType()) {
+                        case POSTING:
+                            send(
+                                new PostingHeadingUpdatedLiberin(
+                                    entry.getId(), revision.getId(), revision.getHeading(), revision.getDescription()
+                                )
+                            );
+                            break;
+                        case COMMENT:
+                            send(
+                                new CommentHeadingUpdatedLiberin(entry.getId(), revision.getId(), revision.getHeading())
+                            );
+                            break;
                     }
                 }
             }
