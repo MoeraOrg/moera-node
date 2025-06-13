@@ -205,11 +205,13 @@ public class NotificationSenderPool {
         String nodeName = domains.getDomainOptions(direction.getNodeId()).nodeName();
         long adminScope = grantCache.get(direction.getNodeId(), nodeName);
         boolean adminViewContent = Scope.VIEW_CONTENT.included(adminScope);
-        if (!direction.isPermitted(
+        if (
+            !direction.isPermitted(
                 Objects.equals(nodeName, direction.getNodeName()) || adminViewContent,
                 direction.getNodeName(),
                 subscribedCache.isSubscribed(direction.getNodeId(), direction.getNodeName()),
-                friendCache.getClientGroupIds(direction.getNodeName()))
+                friendCache.getClientGroupIds(direction.getNodeName())
+            )
         ) {
             return;
         }
