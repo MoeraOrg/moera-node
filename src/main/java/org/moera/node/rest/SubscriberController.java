@@ -189,7 +189,7 @@ public class SubscriberController {
             if (postingId != null) {
                 Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                     .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-                if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
+                if (!requestContext.isPrincipal(posting.getViewE(), Scope.SUBSCRIBE)) {
                     throw new ObjectNotFoundFailure("posting.not-found");
                 }
                 subscriber.setEntry(posting);
