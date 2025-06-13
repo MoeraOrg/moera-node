@@ -41,7 +41,11 @@ public class HeadingExtractor {
         if (heading.length() < HEADING_LENGTH) {
             String galleryText = extractGalleryTexts(body, media, HEADING_LENGTH - heading.length() - 1);
             if (!ObjectUtils.isEmpty(galleryText)) {
-                heading += ' ' + galleryText;
+                if (ObjectUtils.isEmpty(heading)) {
+                    heading = galleryText;
+                } else {
+                    heading += ' ' + galleryText;
+                }
             }
         }
         return heading;
@@ -61,7 +65,11 @@ public class HeadingExtractor {
         if (description.length() < descriptionLength) {
             String galleryText = extractGalleryTexts(body, media, descriptionLength - description.length() - 1);
             if (!ObjectUtils.isEmpty(galleryText)) {
-                description += ' ' + galleryText;
+                if (ObjectUtils.isEmpty(description)) {
+                    description = galleryText;
+                } else {
+                    description += ' ' + galleryText;
+                }
             }
         }
         description = beginningLength < description.length() - 1 ? description.substring(beginningLength) : "";
