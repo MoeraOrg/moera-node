@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.data.DraftRepository;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevisionRepository;
@@ -22,6 +23,7 @@ import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.liberin.model.CommentHeadingUpdatedLiberin;
 import org.moera.node.liberin.model.CommentMediaTextUpdatedLiberin;
+import org.moera.node.liberin.model.DraftUpdatedLiberin;
 import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
 import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.ocrspace.OcrSpace;
@@ -66,6 +68,9 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
 
     @Inject
     private EntryRevisionRepository entryRevisionRepository;
+
+    @Inject
+    private DraftRepository draftRepository;
 
     @Inject
     private OcrSpace ocrSpace;
@@ -116,6 +121,7 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
         var owners = mediaFileOwnerRepository.findAllByFile(mediaFile.getId());
         for (var owner : owners) {
             universalContext.associate(owner.getNodeId());
+
             var revisions = entryRevisionRepository.findByMedia(owner.getId());
             for (var revision : revisions) {
                 revision.setAttachmentsCache(null);
@@ -155,6 +161,8 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
                     }
                 }
             }
+
+            draftRepository.findByMedia(owner.getId()).forEach(draft -> send(new DraftUpdatedLiberin(draft)));
         }
     }
 
