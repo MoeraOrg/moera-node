@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.17 (Ubuntu 14.17-0ubuntu0.22.04.1)
--- Dumped by pg_dump version 14.17 (Ubuntu 14.17-0ubuntu0.22.04.1)
+-- Dumped from database version 14.18 (Ubuntu 14.18-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.18 (Ubuntu 14.18-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1306,7 +1306,10 @@ CREATE TABLE public.media_files (
     usage_count integer DEFAULT 0 NOT NULL,
     deadline timestamp without time zone,
     digest bytea,
-    orientation smallint DEFAULT 1 NOT NULL
+    orientation smallint DEFAULT 1 NOT NULL,
+    recognize_at timestamp without time zone,
+    recognized_text text,
+    recognized_at timestamp without time zone
 );
 
 
@@ -1723,6 +1726,21 @@ CREATE TABLE public.search_engine_statistics (
 
 
 ALTER TABLE public.search_engine_statistics OWNER TO moera;
+
+--
+-- Name: search_history; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.search_history (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    query character varying(1024) NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    deadline timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.search_history OWNER TO moera;
 
 --
 -- Name: sheriff_complaint_groups; Type: TABLE; Schema: public; Owner: moera
@@ -2351,6 +2369,14 @@ ALTER TABLE ONLY public.search_engine_statistics
 
 
 --
+-- Name: search_history search_history_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.search_history
+    ADD CONSTRAINT search_history_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: sheriff_complaint_groups sheriff_complaint_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -2921,6 +2947,13 @@ CREATE INDEX media_files_deadline_idx ON public.media_files USING btree (deadlin
 
 
 --
+-- Name: media_files_recognize_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_files_recognize_idx ON public.media_files USING btree (recognized_at, recognize_at);
+
+
+--
 -- Name: option_defaults_name_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -3254,6 +3287,27 @@ CREATE INDEX schema_history_s_idx ON public.schema_history USING btree (success)
 --
 
 CREATE INDEX search_engine_statistics_owner_clicked_idx ON public.search_engine_statistics USING btree (owner_name, clicked_at);
+
+
+--
+-- Name: search_history_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX search_history_deadline_idx ON public.search_history USING btree (deadline);
+
+
+--
+-- Name: search_history_node_id_created_at_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX search_history_node_id_created_at_idx ON public.search_history USING btree (node_id, created_at);
+
+
+--
+-- Name: search_history_node_id_query_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX search_history_node_id_query_idx ON public.search_history USING btree (node_id, query);
 
 
 --
