@@ -33,6 +33,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
 @Component
 public class AuthenticationInterceptor implements HandlerInterceptor {
@@ -74,8 +75,13 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-            throws IOException {
+    public boolean preHandle(
+        HttpServletRequest request, HttpServletResponse response, Object handler
+    ) throws IOException {
+        if (handler instanceof ResourceHttpRequestHandler) {
+            return true;
+        }
+
         try {
             processAuthParameters(request);
 
@@ -165,8 +171,9 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         logAuthStatus();
         if (!ObjectUtils.isEmpty(requestContext.getClientName(Scope.SHERIFF))) {
             requestContext.setPossibleSheriff(
-                    feedOperations.getAllPossibleSheriffs().stream()
-                            .anyMatch(nodeName -> requestContext.isClient(nodeName, Scope.SHERIFF)));
+                feedOperations.getAllPossibleSheriffs().stream()
+                    .anyMatch(nodeName -> requestContext.isClient(nodeName, Scope.SHERIFF))
+            );
         }
     }
 

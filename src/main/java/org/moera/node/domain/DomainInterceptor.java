@@ -35,9 +35,9 @@ public class DomainInterceptor implements HandlerInterceptor {
     @Inject
     private RequestContext requestContext;
 
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-            throws IOException {
-
+    public boolean preHandle(
+        HttpServletRequest request, HttpServletResponse response, Object handler
+    ) throws IOException {
         if (handler instanceof ResourceHttpRequestHandler) {
             return true;
         }
