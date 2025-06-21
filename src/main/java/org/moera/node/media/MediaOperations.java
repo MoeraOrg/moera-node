@@ -833,7 +833,7 @@ public class MediaOperations {
         }
     }
 
-    @Scheduled(fixedDelayString = "PT20M")
+    @Scheduled(fixedDelayString = "PT5M")
     public void startRecognition() {
         if (!jobs.isReady() || !Objects.equals(config.getMedia().getOcrService(), "ocrspace")) {
             return;
