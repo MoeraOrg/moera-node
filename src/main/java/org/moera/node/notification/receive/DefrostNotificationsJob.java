@@ -21,16 +21,16 @@ import org.springframework.web.method.HandlerMethod;
 
 public class DefrostNotificationsJob extends Job<DefrostNotificationsJob.Parameters, Object> {
 
-    private static final Logger log = LoggerFactory.getLogger(DefrostNotificationsJob.class);
-
-    private static final int PAGE_SIZE = 50;
-
     public static class Parameters {
 
         public Parameters() {
         }
 
     }
+
+    private static final Logger log = LoggerFactory.getLogger(DefrostNotificationsJob.class);
+
+    private static final int PAGE_SIZE = 50;
 
     @Inject
     private FrozenNotificationRepository frozenNotificationRepository;
@@ -59,7 +59,8 @@ public class DefrostNotificationsJob extends Job<DefrostNotificationsJob.Paramet
         Pageable pageable = PageRequest.of(0, PAGE_SIZE, Sort.Direction.ASC, "receivedAt");
         while (true) {
             List<FrozenNotification> list = tx.executeRead(() ->
-                    frozenNotificationRepository.findAllByNodeId(nodeId, pageable));
+                frozenNotificationRepository.findAllByNodeId(nodeId, pageable)
+            );
             if (list.isEmpty()) {
                 break;
             }
@@ -68,11 +69,16 @@ public class DefrostNotificationsJob extends Job<DefrostNotificationsJob.Paramet
                 try {
                     defrost(frozen);
                 } catch (Exception e) {
-                    log.error("Error defrosting notification packet {}: {}",
-                            LogUtil.format(frozen.getPacket()), e.getMessage());
+                    log.error(
+                        "Error defrosting notification packet {}: {}",
+                        LogUtil.format(frozen.getPacket()), e.getMessage()
+                    );
                 } catch (Throwable e) {
-                    log.error("Error defrosting notification packet {}",
-                            LogUtil.format(frozen.getPacket()), e);
+                    log.error(
+                        "Error defrosting notification packet {}",
+                        LogUtil.format(frozen.getPacket()),
+                        e
+                    );
                 } finally {
                     tx.executeWrite(() -> frozenNotificationRepository.deleteById(frozen.getId()));
                 }

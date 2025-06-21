@@ -72,23 +72,26 @@ public class StoryOperations {
 
     public void updateMoment(Story story, UUID nodeId) {
         story.setMoment(momentFinder.find(
-                moment -> storyRepository.countMoments(nodeId, story.getFeedName(), moment) == 0,
-                !story.isPinned() ? story.getPublishedAt() : PINNED_TIME));
+            moment -> storyRepository.countMoments(nodeId, story.getFeedName(), moment) == 0,
+            !story.isPinned() ? story.getPublishedAt() : PINNED_TIME
+        ));
     }
 
     public void updateMoment(Story story, UUID nodeId, long momentBase, long momentLimit) {
         story.setMoment(momentFinder.find(
-                moment -> storyRepository.countMoments(nodeId, story.getFeedName(), moment) == 0,
-                momentBase,
-                momentLimit));
+            moment -> storyRepository.countMoments(nodeId, story.getFeedName(), moment) == 0,
+            momentBase,
+            momentLimit
+        ));
     }
 
     public void publish(Entry posting, List<StoryAttributes> publications) {
         publish(posting, publications, universalContext.nodeId(), universalContext::send);
     }
 
-    public void publish(Entry posting, List<StoryAttributes> publications, UUID nodeId,
-                        Consumer<Liberin> liberinSender) {
+    public void publish(
+        Entry posting, List<StoryAttributes> publications, UUID nodeId, Consumer<Liberin> liberinSender
+    ) {
         if (publications == null) {
             return;
         }
@@ -139,9 +142,9 @@ public class StoryOperations {
 
     public void unpublish(UUID entryId, UUID nodeId, Consumer<Liberin> liberinSender) {
         storyRepository.findByEntryId(nodeId, entryId).stream()
-                .filter(story -> story.getFeedName() != null)
-                .peek(story -> liberinSender.accept(new StoryDeletedLiberin(story).withNodeId(nodeId)))
-                .forEach(storyRepository::delete);
+            .filter(story -> story.getFeedName() != null)
+            .peek(story -> liberinSender.accept(new StoryDeletedLiberin(story).withNodeId(nodeId)))
+            .forEach(storyRepository::delete);
     }
 
     @Scheduled(fixedDelayString = "P1D")
@@ -153,14 +156,17 @@ public class StoryOperations {
                 UUID nodeId = domains.getDomainNodeId(domainName);
                 purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.lifetime", false, true);
                 purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.viewed.lifetime", true, true);
-                purgeExpired(nodeId, domainName, Feed.NEWS, "news.lifetime", false,
-                        domains.getDomainOptions(nodeId).getBool("news.purge-pinned"));
+                purgeExpired(
+                    nodeId, domainName, Feed.NEWS, "news.lifetime", false,
+                    domains.getDomainOptions(nodeId).getBool("news.purge-pinned")
+                );
             }
         }
     }
 
-    private void purgeExpired(UUID nodeId, String domainName, String feedName, String optionName,
-                              boolean viewed, boolean purgePinned) {
+    private void purgeExpired(
+        UUID nodeId, String domainName, String feedName, String optionName, boolean viewed, boolean purgePinned
+    ) {
         Duration lifetime = domains.getDomainOptions(domainName).getDuration(optionName).getDuration();
         Timestamp createdBefore = Timestamp.from(Instant.now().minus(lifetime));
         List<Liberin> liberins = new ArrayList<>();

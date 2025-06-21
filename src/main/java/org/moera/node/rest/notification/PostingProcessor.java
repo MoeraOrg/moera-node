@@ -90,8 +90,10 @@ public class PostingProcessor {
         }
 
         List<UserSubscription> userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
-                universalContext.nodeId(), SubscriptionType.FEED, notification.getSenderNodeName(),
-                subscription.getRemoteFeedName()
+            universalContext.nodeId(),
+            SubscriptionType.FEED,
+            notification.getSenderNodeName(),
+            subscription.getRemoteFeedName()
         );
 
         for (UserSubscription userSubscription : userSubscriptions) {

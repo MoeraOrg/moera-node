@@ -33,8 +33,9 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
         public Parameters() {
         }
 
-        public Parameters(String listNodeName, String listName, List<String> sheriffFeedNames, String nodeName,
-                          boolean delete) {
+        public Parameters(
+            String listNodeName, String listName, List<String> sheriffFeedNames, String nodeName, boolean delete
+        ) {
             this.listNodeName = listNodeName;
             this.listName = listName;
             this.sheriffFeedNames = sheriffFeedNames;
@@ -139,11 +140,15 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
             }
         } else {
             if (!parameters.delete) {
-                log.info("Adding item {} to user list {} from node {}",
-                        parameters.nodeName, parameters.listName, parameters.listNodeName);
+                log.info(
+                    "Adding item {} to user list {} from node {}",
+                    parameters.nodeName, parameters.listName, parameters.listNodeName
+                );
             } else {
-                log.info("Deleting item {} from user list {} from node {}",
-                        parameters.nodeName, parameters.listName, parameters.listNodeName);
+                log.info(
+                    "Deleting item {} from user list {} from node {}",
+                    parameters.nodeName, parameters.listName, parameters.listNodeName
+                );
             }
         }
     }
@@ -179,10 +184,12 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
             var items = slice.getItems();
             tx.executeWrite(() ->
                 items.forEach(item ->
-                        userListOperations.addToList(
-                                parameters.listNodeName,
-                                parameters.listName,
-                                item.getNodeName()))
+                    userListOperations.addToList(
+                        parameters.listNodeName,
+                        parameters.listName,
+                        item.getNodeName()
+                    )
+                )
             );
             state.before = slice.getAfter();
             checkpoint();
@@ -196,13 +203,16 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
                 Pageable pageable = PageRequest.of(0, LIST_PAGE_SIZE, Sort.Direction.ASC, "cachedAt");
                 do {
                     page = remoteUserListItemRepository.findNotAbsentByList(
-                            universalContext.nodeId(), parameters.listNodeName, parameters.listName, pageable);
+                        universalContext.nodeId(), parameters.listNodeName, parameters.listName, pageable
+                    );
                     page.forEach(item ->
-                            userListOperations.deleteFromList(
-                                    parameters.listNodeName,
-                                    parameters.listName,
-                                    parameters.sheriffFeedNames,
-                                    item.getNodeName()));
+                        userListOperations.deleteFromList(
+                            parameters.listNodeName,
+                            parameters.listName,
+                            parameters.sheriffFeedNames,
+                            item.getNodeName()
+                        )
+                    );
                     pageable = pageable.next();
                 } while (page.hasNext());
             }
@@ -218,10 +228,11 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
     private void deleteListItem() {
         tx.executeWrite(
             () -> userListOperations.deleteFromList(
-                    parameters.listNodeName,
-                    parameters.listName,
-                    parameters.sheriffFeedNames,
-                    parameters.nodeName)
+                parameters.listNodeName,
+                parameters.listName,
+                parameters.sheriffFeedNames,
+                parameters.nodeName
+            )
         );
     }
 
