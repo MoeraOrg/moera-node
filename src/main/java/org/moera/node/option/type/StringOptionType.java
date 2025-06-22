@@ -11,6 +11,9 @@ public class StringOptionType extends OptionTypeBase {
         if (modifiers.getMultiline() != null) {
             stringMods.setMultiline(modifiers.getMultiline());
         }
+        if (modifiers.getItems() != null) {
+            stringMods.setItems(modifiers.getItems());
+        }
         return stringMods;
     }
 

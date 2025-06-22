@@ -63,9 +63,9 @@ public class FetchRecommendationJob extends Job<FetchRecommendationJob.Parameter
             pick.setRecommended(true);
             pickerPool.pick(pick);
 
-            if (safe) {
-                log.info("Sheriff name: {}", sheriffName);
-            }
+            nodeApi
+                .at(sourceNode, generateCarte(sourceNode, Scope.UPDATE_FEEDS))
+                .acceptRecommendedPosting(recommendation.getNodeName(), recommendation.getPostingId());
         } else {
             log.info("No recommendations received");
         }

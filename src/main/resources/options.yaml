@@ -694,3 +694,23 @@
   type: string
   defaultValue: "google-play-sheriff_0"
   title: Sheriff supervising the recommendations for safety
+
+- name: recommendations.frequency
+  type: string
+  defaultValue: "normal"
+  title: Number of recommendations
+  modifiers:
+    format: select
+    items:
+      - title: Off
+        value: none
+      - title: Much less
+        value: much-less
+      - title: Less
+        value: less
+      - title: Moderate
+        value: normal
+      - title: More
+        value: more
+      - title: Much more
+        value: much-more

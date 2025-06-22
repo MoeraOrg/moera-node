@@ -10,6 +10,7 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.option.type.enums.RecommendationFrequency;
 import org.moera.node.rest.task.FetchRecommendationJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.Transaction;
@@ -52,6 +53,12 @@ public class RecommendationOperations {
 
             for (String domainName : domains.getWarmDomainNames()) {
                 universalContext.associate(domains.getDomainNodeId(domainName));
+                var freq = RecommendationFrequency.forValue(
+                    universalContext.getOptions().getString("recommendations.frequency")
+                );
+                if (freq == null || freq == RecommendationFrequency.NONE) {
+                    continue;
+                }
                 int lastDay = tx.executeRead(() ->
                     storyRepository.countLastNotRecommendedPostings(
                         universalContext.nodeId(),
@@ -68,6 +75,7 @@ public class RecommendationOperations {
                     if (wantedInterval < MIN_INTERVAL) {
                         wantedInterval = MIN_INTERVAL;
                     }
+                    wantedInterval = Math.round(wantedInterval / freq.getFactor());
                     int last6Hours = tx.executeRead(() ->
                         storyRepository.countLastPostings(
                             universalContext.nodeId(),
@@ -92,7 +100,7 @@ public class RecommendationOperations {
                     }
                 } else {
                     // Introduction mode: add several recommendations per day to find new connections
-                    wantedInterval = INTRODUCTION_INTERVAL;
+                    wantedInterval = Math.round(INTRODUCTION_INTERVAL / freq.getFactor());
                     Timestamp last = tx.executeRead(() ->
                         storyRepository.findLastRecommendedPostingCreatedAt(universalContext.nodeId(), Feed.NEWS)
                     );

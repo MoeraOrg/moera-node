@@ -209,7 +209,7 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     int countLastPostings(UUID nodeId, String feedName, Timestamp createdAfter);
 
     @Query(
-        "select count(*) from Story s left join fetch s.entry e"
+        "select count(*) from Story s left join s.entry e"
         + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = org.moera.lib.node.types.StoryType.POSTING_ADDED"
         + " and e.recommended = false and s.createdAt > ?3"
     )
@@ -222,7 +222,7 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     Timestamp findLastPostingCreatedAt(UUID nodeId, String feedName);
 
     @Query(
-        "select max(s.createdAt) from Story s left join fetch s.entry e"
+        "select max(s.createdAt) from Story s left join s.entry e"
         + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = org.moera.lib.node.types.StoryType.POSTING_ADDED"
         + " and e.recommended = true"
     )
