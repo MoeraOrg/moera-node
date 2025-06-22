@@ -154,7 +154,12 @@ public class Picker extends Task {
         List<Pick> picks = new ArrayList<>();
         Posting posting = tx.executeWriteWithExceptions(() -> {
             Posting p = downloadPosting(
-                pick.getRemotePostingId(), pick.getFeedName(), pick.getMediaFileOwner(), liberins, picks
+                pick.getRemotePostingId(),
+                pick.getFeedName(),
+                pick.getMediaFileOwner(),
+                pick.isRecommended(),
+                liberins,
+                picks
             );
             saveSources(p, pick);
             return p;
@@ -166,7 +171,12 @@ public class Picker extends Task {
     }
 
     private Posting downloadPosting(
-        String remotePostingId, String feedName, MediaFileOwner parentMedia, List<Liberin> liberins, List<Pick> picks
+        String remotePostingId,
+        String feedName,
+        MediaFileOwner parentMedia,
+        boolean recommended,
+        List<Liberin> liberins,
+        List<Pick> picks
     ) throws MoeraNodeException {
         PostingInfo postingInfo = nodeApi
             .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
@@ -203,6 +213,7 @@ public class Picker extends Task {
             posting.setReceiverAvatarShape(receiverAvatarShape);
             posting.setReceiverGender(receiverGender);
             posting.setOwnerAvatarMediaFile(ownerAvatar);
+            posting.setRecommended(recommended);
             posting = postingRepository.save(posting);
             PostingInfoUtil.toPickedPosting(postingInfo, posting);
             createRevision(posting, postingInfo);

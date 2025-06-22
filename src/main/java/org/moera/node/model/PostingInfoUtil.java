@@ -302,6 +302,7 @@ public class PostingInfoUtil {
         info.setTotalComments(
             accessChecker.isPrincipal(viewComments, Scope.VIEW_CONTENT) ? posting.getTotalChildren() : 0
         );
+        info.setRecommended(posting.isRecommended());
     }
 
     private static void fillSheriffs(PostingInfo info, Entry posting, Options options) {

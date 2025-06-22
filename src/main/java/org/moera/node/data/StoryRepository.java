@@ -201,4 +201,31 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.viewed = true and s.createdAt < ?3")
     List<Story> findExpiredViewed(UUID nodeId, String feedName, Timestamp createdBefore);
 
+    @Query(
+        "select count(*) from Story s"
+        + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = org.moera.lib.node.types.StoryType.POSTING_ADDED"
+        + " and s.createdAt > ?3"
+    )
+    int countLastPostings(UUID nodeId, String feedName, Timestamp createdAfter);
+
+    @Query(
+        "select count(*) from Story s left join fetch s.entry e"
+        + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = org.moera.lib.node.types.StoryType.POSTING_ADDED"
+        + " and e.recommended = false and s.createdAt > ?3"
+    )
+    int countLastNotRecommendedPostings(UUID nodeId, String feedName, Timestamp createdAfter);
+
+    @Query(
+        "select max(s.createdAt) from Story s"
+        + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = org.moera.lib.node.types.StoryType.POSTING_ADDED"
+    )
+    Timestamp findLastPostingCreatedAt(UUID nodeId, String feedName);
+
+    @Query(
+        "select max(s.createdAt) from Story s left join fetch s.entry e"
+        + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = org.moera.lib.node.types.StoryType.POSTING_ADDED"
+        + " and e.recommended = true"
+    )
+    Timestamp findLastRecommendedPostingCreatedAt(UUID nodeId, String feedName);
+
 }

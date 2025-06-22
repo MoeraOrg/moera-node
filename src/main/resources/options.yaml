@@ -679,3 +679,18 @@
   modifiers:
     min: 0
     max: 15
+
+- name: recommendations.source
+  type: string
+  defaultValue: "search_0"
+  title: Recommendation service to use
+
+- name: recommendations.safe
+  type: bool
+  defaultValue: true
+  title: Safe recommendations
+
+- name: recommendations.sheriff
+  type: string
+  defaultValue: "google-play-sheriff_0"
+  title: Sheriff supervising the recommendations for safety

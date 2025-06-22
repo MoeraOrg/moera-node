@@ -39,6 +39,8 @@ public class Pick {
     @ManyToOne
     private MediaFileOwner mediaFileOwner;
 
+    private boolean recommended;
+
     @NotNull
     private Timestamp createdAt = Util.now();
 
@@ -101,6 +103,14 @@ public class Pick {
 
     public void setMediaFileOwner(MediaFileOwner mediaFileOwner) {
         this.mediaFileOwner = mediaFileOwner;
+    }
+
+    public boolean isRecommended() {
+        return recommended;
+    }
+
+    public void setRecommended(boolean recommended) {
+        this.recommended = recommended;
     }
 
     public Timestamp getCreatedAt() {

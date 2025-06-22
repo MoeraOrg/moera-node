@@ -247,6 +247,8 @@ public class Entry {
 
     private boolean sheriffUserListReferred;
 
+    private boolean recommended;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
 
@@ -1228,6 +1230,14 @@ public class Entry {
 
     public void setSheriffUserListReferred(boolean sheriffUserListReferred) {
         this.sheriffUserListReferred = sheriffUserListReferred;
+    }
+
+    public boolean isRecommended() {
+        return recommended;
+    }
+
+    public void setRecommended(boolean recommended) {
+        this.recommended = recommended;
     }
 
     public Set<Story> getStories() {
