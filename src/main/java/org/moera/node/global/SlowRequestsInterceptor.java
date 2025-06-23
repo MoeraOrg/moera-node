@@ -37,8 +37,9 @@ public class SlowRequestsInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
-                                Exception ex) {
+    public void afterCompletion(
+        HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex
+    ) {
         Instant now = Instant.now();
         Instant receivedAt = requestContext.getTimes(Times.RECEIVED);
         Instant startedAt = requestContext.getTimes(Times.STARTED);
@@ -67,8 +68,10 @@ public class SlowRequestsInterceptor implements HandlerInterceptor {
         long initDuration = receivedAt.until(startedAt, ChronoUnit.MILLIS);
         long runDuration = startedAt.until(finishedAt, ChronoUnit.MILLIS);
 
-        log.warn("Slow request: {}ms ({}ms..{}ms) {} {}",
-                fullDuration, initDuration, runDuration, request.getMethod().toUpperCase(), requestContext.getUrl());
+        log.warn(
+            "Slow request: {}ms ({}ms..{}ms) {} {}",
+            fullDuration, initDuration, runDuration, request.getMethod().toUpperCase(), requestContext.getUrl()
+        );
     }
 
     private String getHandlerName(Object handler) {
