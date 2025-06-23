@@ -67,6 +67,7 @@ public class RecommendationOperations {
                     )
                 );
                 int wantedInterval = lastDay > 0 ? 24 * 60 / lastDay / 2 : MAX_INTERVAL;
+                log.debug("{} normal posts last day, wanted interval is {} mins", lastDay, wantedInterval);
                 if (wantedInterval > MIN_INTERVAL / 2) {
                     // Filling mode: add more recommendations to fill the feed
                     if (wantedInterval > MAX_INTERVAL) {
@@ -76,6 +77,7 @@ public class RecommendationOperations {
                         wantedInterval = MIN_INTERVAL;
                     }
                     wantedInterval = Math.round(wantedInterval / freq.getFactor());
+                    log.debug("Filling mode with wanted interval {} mins", wantedInterval);
                     int last6Hours = tx.executeRead(() ->
                         storyRepository.countLastPostings(
                             universalContext.nodeId(),
@@ -85,6 +87,7 @@ public class RecommendationOperations {
                     );
                     if (last6Hours > 0) {
                         int lastInterval = 6 * 60 / last6Hours;
+                        log.debug("{} total posts last 6 hours, actual interval is {} mins", last6Hours, lastInterval);
                         if (lastInterval <= wantedInterval) {
                             continue;
                         }
@@ -96,11 +99,13 @@ public class RecommendationOperations {
                         last != null
                         && last.after(Timestamp.from(Instant.now().minus(wantedInterval, ChronoUnit.MINUTES)))
                     ) {
+                        log.debug("Last posting was published recently, skipping this time");
                         continue;
                     }
                 } else {
                     // Introduction mode: add several recommendations per day to find new connections
                     wantedInterval = Math.round(INTRODUCTION_INTERVAL / freq.getFactor());
+                    log.debug("Introduction mode with wanted interval {} mins", wantedInterval);
                     Timestamp last = tx.executeRead(() ->
                         storyRepository.findLastRecommendedPostingCreatedAt(universalContext.nodeId(), Feed.NEWS)
                     );
@@ -108,6 +113,7 @@ public class RecommendationOperations {
                         last != null
                         && last.after(Timestamp.from(Instant.now().minus(wantedInterval, ChronoUnit.MINUTES)))
                     ) {
+                        log.debug("Recommendation interval is not reached yet, skipping this time");
                         continue;
                     }
                 }

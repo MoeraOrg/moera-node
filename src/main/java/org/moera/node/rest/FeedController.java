@@ -29,8 +29,10 @@ import org.moera.lib.node.types.FeedStatus;
 import org.moera.lib.node.types.FeedStatusChange;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.RemotePostingOrNode;
+import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryInfo;
+import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
@@ -52,6 +54,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
 import org.moera.node.liberin.model.FeedStoriesReadLiberin;
+import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.FeedInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -71,6 +74,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -84,6 +88,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class FeedController {
 
     private static final Logger log = LoggerFactory.getLogger(FeedController.class);
+
+    private static final int DELETE_BATCH_SIZE = 500;
 
     @Inject
     private RequestContext requestContext;
@@ -527,6 +533,62 @@ public class FeedController {
             org.moera.lib.node.types.PostingOperations.getView(postingInfo.getOperations(), Principal.PUBLIC);
         // FIXME other types of stories may be invisible by default and require VIEW_FEEDS
         return requestContext.isPrincipal(viewPrincipal.withOwner(postingInfo.getOwnerName()), Scope.VIEW_CONTENT);
+    }
+
+    @DeleteMapping("/{feedName}/stories")
+    @Admin(Scope.UPDATE_FEEDS)
+    @Transactional
+    public Result deleteStories(
+        @PathVariable String feedName,
+        @RequestParam(required = false) StoryType type,
+        @RequestParam(required = false) String receiver,
+        @RequestParam(required = false) Boolean recommended
+    ) {
+        log.info(
+            "DELETE /feeds/{feedName}/stories (feedName = {}, type = {}, receiver = {}, recommended = {})",
+            LogUtil.format(feedName), LogUtil.format(Objects.toString(type, null)), LogUtil.format(receiver),
+            LogUtil.format(recommended)
+        );
+
+        if (!Feed.isStandard(feedName)) {
+            throw new ObjectNotFoundFailure("feed.not-found");
+        }
+
+        while (true) {
+            List<Story> stories = findStoriesToDelete(feedName, type, receiver, recommended);
+            if (stories.isEmpty()) {
+                break;
+            }
+            for (Story story : stories) {
+                storyRepository.delete(story);
+                requestContext.send(new StoryDeletedLiberin(story));
+            }
+        }
+
+        return Result.OK;
+    }
+
+    private List<Story> findStoriesToDelete(String feedName, StoryType type, String receiver, Boolean recommended) {
+        QStory story = QStory.story;
+        QEntry entry = QEntry.entry;
+        var query = new JPAQueryFactory(entityManager).selectFrom(story);
+        if (!ObjectUtils.isEmpty(receiver) || recommended != null) {
+            query = query.leftJoin(story.entry, entry);
+        }
+        BooleanBuilder where = new BooleanBuilder();
+        where
+            .and(story.nodeId.eq(requestContext.nodeId()))
+            .and(story.feedName.eq(feedName));
+        if (type != null) {
+            where.and(story.storyType.eq(type));
+        }
+        if (!ObjectUtils.isEmpty(receiver)) {
+            where.and(entry.receiverName.eq(receiver));
+        }
+        if (recommended != null) {
+            where.and(entry.recommended.eq(recommended));
+        }
+        return query.where(where).limit(DELETE_BATCH_SIZE).fetch();
     }
 
 }
