@@ -119,7 +119,7 @@ public class RecommendationOperations {
                 }
                 jobs.run(
                     FetchRecommendationJob.class,
-                    new FetchRecommendationJob.Parameters(),
+                    new FetchRecommendationJob.Parameters(1),
                     universalContext.nodeId()
                 );
             }

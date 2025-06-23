@@ -35,7 +35,7 @@ import org.moera.node.liberin.model.TokenUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.TokenInfoUtil;
-import org.moera.node.notification.receive.DefrostNotificationsJob;
+import org.moera.node.notification.receive.DefrostNodeJob;
 import org.moera.node.option.Options;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.Util;
@@ -108,7 +108,7 @@ public class TokenController {
 
         if (requestContext.getOptions().isFrozen()) {
             requestContext.getOptions().set("frozen", false);
-            jobs.run(DefrostNotificationsJob.class, new DefrostNotificationsJob.Parameters(), options.nodeId());
+            jobs.run(DefrostNodeJob.class, new DefrostNodeJob.Parameters(), options.nodeId());
             requestContext.send(new DefrostLiberin());
         }
 

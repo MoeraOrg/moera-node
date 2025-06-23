@@ -6,11 +6,15 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.NotificationPacket;
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.notifications.Notification;
 import org.moera.lib.node.types.notifications.NotificationType;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.FrozenNotification;
 import org.moera.node.data.FrozenNotificationRepository;
+import org.moera.node.data.UserSubscriptionRepository;
+import org.moera.node.option.type.enums.RecommendationFrequency;
+import org.moera.node.rest.task.FetchRecommendationJob;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.method.HandlerMethod;
 
-public class DefrostNotificationsJob extends Job<DefrostNotificationsJob.Parameters, Object> {
+public class DefrostNodeJob extends Job<DefrostNodeJob.Parameters, Object> {
 
     public static class Parameters {
 
@@ -28,12 +32,17 @@ public class DefrostNotificationsJob extends Job<DefrostNotificationsJob.Paramet
 
     }
 
-    private static final Logger log = LoggerFactory.getLogger(DefrostNotificationsJob.class);
+    private static final Logger log = LoggerFactory.getLogger(DefrostNodeJob.class);
 
     private static final int PAGE_SIZE = 50;
+    private static final int DECENT_SUBSCRIPTIONS_NUMBER = 5;
+    private static final int RECOMMENDATIONS_NUMBER = 20;
 
     @Inject
     private FrozenNotificationRepository frozenNotificationRepository;
+
+    @Inject
+    private UserSubscriptionRepository userSubscriptionRepository;
 
     @Inject
     private NotificationRouter notificationRouter;
@@ -41,7 +50,7 @@ public class DefrostNotificationsJob extends Job<DefrostNotificationsJob.Paramet
     @Inject
     private ObjectMapper objectMapper;
 
-    public DefrostNotificationsJob() {
+    public DefrostNodeJob() {
     }
 
     @Override
@@ -83,6 +92,8 @@ public class DefrostNotificationsJob extends Job<DefrostNotificationsJob.Paramet
                     tx.executeWrite(() -> frozenNotificationRepository.deleteById(frozen.getId()));
                 }
             }
+
+            populateNewsfeed();
         }
     }
 
@@ -107,6 +118,21 @@ public class DefrostNotificationsJob extends Job<DefrostNotificationsJob.Paramet
             return;
         }
         handler.getMethod().invoke(handler.getBean(), notification);
+    }
+
+    private void populateNewsfeed() {
+        var freq = RecommendationFrequency.forValue(
+            universalContext.getOptions().getString("recommendations.frequency")
+        );
+        if (freq != RecommendationFrequency.NONE) {
+            int subscriptionsTotal = userSubscriptionRepository.countByType(nodeId, SubscriptionType.FEED);
+            if (subscriptionsTotal < DECENT_SUBSCRIPTIONS_NUMBER) {
+                jobs.run(
+                    FetchRecommendationJob.class,
+                    new FetchRecommendationJob.Parameters(RECOMMENDATIONS_NUMBER)
+                );
+            }
+        }
     }
 
 }

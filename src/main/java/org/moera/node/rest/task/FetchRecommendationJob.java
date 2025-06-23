@@ -18,6 +18,24 @@ import org.springframework.util.ObjectUtils;
 public class FetchRecommendationJob extends Job<FetchRecommendationJob.Parameters, Object> {
 
     public static class Parameters {
+
+        private int limit;
+
+        public Parameters() {
+        }
+
+        public Parameters(int limit) {
+            this.limit = limit;
+        }
+
+        public int getLimit() {
+            return limit;
+        }
+
+        public void setLimit(int limit) {
+            this.limit = limit;
+        }
+
     }
 
     private static final Logger log = LoggerFactory.getLogger(FetchRecommendationJob.class);
@@ -46,10 +64,14 @@ public class FetchRecommendationJob extends Job<FetchRecommendationJob.Parameter
         String sheriffName = safe ? universalContext.getOptions().getString("recommendations.sheriff") : null;
         RecommendedPostingInfo[] recommendations = nodeApi
             .at(sourceNode, generateCarte(sourceNode, Scope.IDENTIFY))
-            .getRecommendedPostings(sheriffName, 1);
-        if (!ObjectUtils.isEmpty(recommendations)) {
-            RecommendedPostingInfo recommendation = recommendations[0];
+            .getRecommendedPostings(sheriffName, parameters.limit);
 
+        if (ObjectUtils.isEmpty(recommendations)) {
+            log.info("No recommendations received");
+            return;
+        }
+
+        for (RecommendedPostingInfo recommendation : recommendations) {
             log.info(
                 "Recommended posting {} at node {}",
                 recommendation.getPostingId(), recommendation.getNodeName()
@@ -66,8 +88,6 @@ public class FetchRecommendationJob extends Job<FetchRecommendationJob.Parameter
             nodeApi
                 .at(sourceNode, generateCarte(sourceNode, Scope.UPDATE_FEEDS))
                 .acceptRecommendedPosting(recommendation.getNodeName(), recommendation.getPostingId());
-        } else {
-            log.info("No recommendations received");
         }
     }
 
