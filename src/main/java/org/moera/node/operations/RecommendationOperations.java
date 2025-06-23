@@ -66,7 +66,7 @@ public class RecommendationOperations {
                         Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS))
                     )
                 );
-                int wantedInterval = lastDay > 0 ? 24 * 60 / lastDay / 2 : MAX_INTERVAL;
+                int wantedInterval = lastDay > 0 ? 24 * 60 / lastDay * 2 / 3 : MAX_INTERVAL;
                 log.debug("{} normal posts last day, wanted interval is {} mins", lastDay, wantedInterval);
                 if (wantedInterval > MIN_INTERVAL / 2) {
                     // Filling mode: add more recommendations to fill the feed
