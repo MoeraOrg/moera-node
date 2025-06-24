@@ -1,5 +1,6 @@
 package org.moera.node.liberin.receptor;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 import jakarta.inject.Inject;
@@ -24,6 +25,7 @@ import org.moera.node.model.notification.StoryAddedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.push.PushContentBuilder;
+import org.moera.node.util.ExtendedDuration;
 
 @LiberinReceptor
 public class StoryReceptor extends LiberinReceptorBase {
@@ -47,12 +49,25 @@ public class StoryReceptor extends LiberinReceptorBase {
             }
         }
         send(liberin, new StoryAddedEvent(story, true));
-        send(
-            Directions.feedSubscribers(liberin.getNodeId(), story.getFeedName(), story.getViewPrincipalFilter()),
-            StoryAddedNotificationUtil.build(story)
-        );
+        if (isNotifyWhenPublished(story)) {
+            send(
+                Directions.feedSubscribers(liberin.getNodeId(), story.getFeedName(), story.getViewPrincipalFilter()),
+                StoryAddedNotificationUtil.build(story)
+            );
+        }
         push(story);
         feedStatusUpdated(story.getFeedName());
+    }
+
+    private boolean isNotifyWhenPublished(Story story) {
+        ExtendedDuration duration = universalContext.getOptions().getDuration("posting.published.notification.age");
+        if (duration.isAlways()) {
+            return true;
+        }
+        if (duration.isNever()) {
+            return false;
+        }
+        return story.getPublishedAt().toInstant().plus(duration.getDuration()).isAfter(Instant.now());
     }
 
     @LiberinMapping
