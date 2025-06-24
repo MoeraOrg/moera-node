@@ -45,8 +45,12 @@ public class Options {
     private final OptionHookManager optionHookManager;
     private boolean loading;
 
-    public Options(UUID nodeId, OptionsMetadata optionsMetadata, OptionRepository optionRepository,
-                   OptionHookManager optionHookManager) {
+    public Options(
+        UUID nodeId,
+        OptionsMetadata optionsMetadata,
+        OptionRepository optionRepository,
+        OptionHookManager optionHookManager
+    ) {
         this.nodeId = nodeId;
         this.optionsMetadata = optionsMetadata;
         this.optionRepository = optionRepository;
@@ -59,8 +63,8 @@ public class Options {
         loading = true;
         try {
             optionsMetadata.getDescriptorsForNode(nodeId).stream()
-                    .filter(desc -> desc.getDefaultValue() != null)
-                    .forEach(desc -> loadValue(desc.getName(), desc.getDefaultValue()));
+                .filter(desc -> desc.getDefaultValue() != null)
+                .forEach(desc -> loadValue(desc.getName(), desc.getDefaultValue()));
             optionRepository.findAllByNodeId(nodeId).forEach(option -> loadValue(option.getName(), option.getValue()));
         } finally {
             loading = false;
@@ -125,7 +129,8 @@ public class Options {
 
         List<OptionValueChange> changes = transaction.get().entrySet().stream()
                 .map(update ->
-                        new OptionValueChange(nodeId, update.getKey(), values.get(update.getKey()), update.getValue()))
+                    new OptionValueChange(nodeId, update.getKey(), values.get(update.getKey()), update.getValue())
+                )
                 .filter(OptionValueChange::isTangible)
                 .toList();
 
