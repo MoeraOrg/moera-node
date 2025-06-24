@@ -56,7 +56,7 @@ public class MediaManager {
 
     private static final Logger log = LoggerFactory.getLogger(MediaManager.class);
 
-    private static final int REMOTE_MEDIA_CACHE_TTL = 365; // days
+    private static final int REMOTE_MEDIA_CACHE_TTL = 60; // days
 
     @Inject
     private Config config;
