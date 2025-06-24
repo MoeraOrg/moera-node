@@ -1,6 +1,9 @@
 package org.moera.node.option;
 
 import java.io.IOException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -24,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.moera.lib.node.types.PluginDescription;
 import org.moera.lib.node.types.SettingDescriptor;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.data.OptionDefault;
@@ -32,6 +36,7 @@ import org.moera.node.option.exception.UnknownOptionTypeException;
 import org.moera.node.option.type.OptionType;
 import org.moera.node.option.type.OptionTypeBase;
 import org.moera.node.plugin.Plugins;
+import org.moera.node.util.ExtendedDuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -184,6 +189,58 @@ public class OptionsMetadata {
     public OptionTypeBase getOptionType(String name) {
         SettingDescriptor descriptor = getDescriptor(name);
         return descriptor != null ? getType(descriptor.getType()) : null;
+    }
+
+    private <T> T forName(String name, OptionMapper<T> mapper) {
+        SettingDescriptor descriptor = getDescriptor(name);
+        return descriptor != null ? mapper.map(descriptor.getDefaultValue(), getType(descriptor.getType())) : null;
+    }
+
+    private Object getDefault(String name) {
+        return forName(name, (value, optionType) -> value);
+    }
+
+    public String getDefaultString(String name) {
+        return forName(name, (value, optionType) -> optionType.getString(value));
+    }
+
+    public Boolean getDefaultBool(String name) {
+        return forName(name, (value, optionType) -> optionType.getBool(value));
+    }
+
+    public Integer getDefaultInt(String name) {
+        return forName(
+            name,
+            (value, optionType) -> optionType.getInt(value, getOptionTypeModifiers(name))
+        );
+    }
+
+    public Long getDefaultLong(String name) {
+        return forName(name, (value, optionType) -> optionType.getLong(value));
+    }
+
+    public PrivateKey getDefaultPrivateKey(String name) {
+        return forName(name, (value, optionType) -> optionType.getPrivateKey(value));
+    }
+
+    public PublicKey getDefaultPublicKey(String name) {
+        return forName(name, (value, optionType) -> optionType.getPublicKey(value));
+    }
+
+    public ExtendedDuration getDefaultDuration(String name) {
+        return forName(name, (value, optionType) -> optionType.getDuration(value));
+    }
+
+    public UUID getDefaultUuid(String name) {
+        return forName(name, (value, optionType) -> optionType.getUuid(value));
+    }
+
+    public Timestamp getDefaultTimestamp(String name) {
+        return forName(name, (value, optionType) -> optionType.getTimestamp(value));
+    }
+
+    public Principal getDefaultPrincipal(String name) {
+        return forName(name, (value, optionType) -> optionType.getPrincipal(value));
     }
 
     public boolean isInternal(String name) {

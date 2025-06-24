@@ -18,6 +18,7 @@ import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
 import org.moera.node.data.OptionRepository;
 import org.moera.node.model.DomainInfoUtil;
+import org.moera.node.operations.InitialRecommendationOperations;
 import org.moera.node.operations.ReminderOperations;
 import org.moera.node.option.OptionHookManager;
 import org.moera.node.option.Options;
@@ -64,6 +65,10 @@ public class Domains {
     @Lazy
     @Inject
     private ReminderOperations reminderOperations;
+
+    @Lazy
+    @Inject
+    private InitialRecommendationOperations initialRecommendationOperations;
 
     @EventListener(OptionsMetadataConfiguredEvent.class)
     public void load() {
@@ -205,6 +210,7 @@ public class Domains {
         log.info("Created domain {} with id = {}", domain.getName(), domain.getNodeId());
         initializeDomain(nodeId);
         configureDomain(domain);
+        populateDomain(nodeId);
         return domain;
     }
 
@@ -219,6 +225,10 @@ public class Domains {
             friendGroupRepository.save(friendGroup);
         }
         reminderOperations.initializeNode(nodeId);
+    }
+
+    private void populateDomain(UUID nodeId) {
+        initialRecommendationOperations.populateNewsfeed(nodeId);
     }
 
     public void deleteDomain(String name) {

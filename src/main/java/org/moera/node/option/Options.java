@@ -289,8 +289,10 @@ public class Options {
     }
 
     public Integer getInt(String name) {
-        return forName(name,
-                (value, optionType) -> optionType.getInt(value, optionsMetadata.getOptionTypeModifiers(name)));
+        return forName(
+            name,
+            (value, optionType) -> optionType.getInt(value, optionsMetadata.getOptionTypeModifiers(name))
+        );
     }
 
     public Long getLong(String name) {

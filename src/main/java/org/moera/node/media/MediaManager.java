@@ -285,6 +285,59 @@ public class MediaManager {
         return result.get();
     }
 
+    private MediaFile getCachedPrivateMedia(
+        String nodeName, String carte, String id, String mediaFileId, String textContent, int maxSize
+    ) throws MoeraNodeException, IOException {
+        MediaFile mediaFile = remoteMediaCacheRepository
+            .findDownloadedMedia(nodeName, id)
+            .stream()
+            .findFirst()
+            .orElse(null);
+        if (mediaFile != null) {
+            if (!mediaFile.getId().equals(mediaFileId)) {
+                log.warn("Media {} has hash {} instead of {}", id, mediaFile.getId(), mediaFileId);
+                return null;
+            }
+        } else {
+            var tmp = mediaOperations.tmpFile();
+            try {
+                var tmpMedia = getPrivateMedia(nodeName, carte, id, tmp, maxSize);
+                if (!tmpMedia.mediaFileId().equals(mediaFileId)) {
+                    log.warn("Media {} has hash {} instead of {}", id, tmpMedia.mediaFileId(), mediaFileId);
+                    return null;
+                }
+                mediaFile = mediaOperations.putInPlace(mediaFileId, tmpMedia.contentType(), tmp.path(), null, false);
+                mediaFile.setRecognizedText(textContent);
+            } finally {
+                try {
+                    Files.deleteIfExists(tmp.path());
+                } catch (IOException e) {
+                    log.warn("Error removing temporary media file {}: {}", tmp.path(), e.getMessage());
+                }
+            }
+            cacheRemoteMedia(null, nodeName, id, mediaFile.getDigest(), mediaFile);
+        }
+        return mediaFile;
+    }
+
+    public MediaFile downloadPrivateMediaForCaching(
+        String nodeName, String carte, String id, String mediaFileId, String textContent, int maxSize
+    ) throws MoeraNodeException {
+        if (id == null) {
+            return null;
+        }
+
+        try (var ignored = mediaFileLocks.lock(mediaFileId)) {
+            try {
+                return getCachedPrivateMedia(nodeName, carte, id, mediaFileId, textContent, maxSize);
+            } catch (IOException e) {
+                throw new MoeraNodeLocalStorageException(
+                    "Error storing private media %s: %s".formatted(id, e.getMessage())
+                );
+            }
+        }
+    }
+
     public MediaFileOwner downloadPrivateMedia(
         String nodeName, String carte, String id, String mediaFileId, String textContent, int maxSize, UUID entryId
     ) throws MoeraNodeException {
@@ -305,36 +358,9 @@ public class MediaManager {
             }
 
             try {
-                MediaFile mediaFile = remoteMediaCacheRepository
-                    .findDownloadedMedia(nodeName, id)
-                    .stream()
-                    .findFirst()
-                    .orElse(null);
-                if (mediaFile != null) {
-                    if (!mediaFile.getId().equals(mediaFileId)) {
-                        log.warn("Media {} has hash {} instead of {}", id, mediaFile.getId(), mediaFileId);
-                        return null;
-                    }
-                } else {
-                    var tmp = mediaOperations.tmpFile();
-                    try {
-                        var tmpMedia = getPrivateMedia(nodeName, carte, id, tmp, maxSize);
-                        if (!tmpMedia.mediaFileId().equals(mediaFileId)) {
-                            log.warn("Media {} has hash {} instead of {}", id, tmpMedia.mediaFileId(), mediaFileId);
-                            return null;
-                        }
-                        mediaFile = mediaOperations.putInPlace(
-                            mediaFileId, tmpMedia.contentType(), tmp.path(), null, false
-                        );
-                        mediaFile.setRecognizedText(textContent);
-                    } finally {
-                        try {
-                            Files.deleteIfExists(tmp.path());
-                        } catch (IOException e) {
-                            log.warn("Error removing temporary media file {}: {}", tmp.path(), e.getMessage());
-                        }
-                    }
-                    cacheRemoteMedia(null, nodeName, id, mediaFile.getDigest(), mediaFile);
+                MediaFile mediaFile = getCachedPrivateMedia(nodeName, carte, id, mediaFileId, textContent, maxSize);
+                if (mediaFile == null) {
+                    return null;
                 }
                 // Now we are sure that the remote node owns the file with mediaFileId hash, so we can use it
                 // for MediaFileOwner

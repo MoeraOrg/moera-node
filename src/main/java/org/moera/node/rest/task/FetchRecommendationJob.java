@@ -49,7 +49,7 @@ public class FetchRecommendationJob extends Job<FetchRecommendationJob.Parameter
 
     @Override
     protected void setParameters(String parameters, ObjectMapper objectMapper) throws JsonProcessingException {
-        this.parameters = objectMapper.readValue(parameters, FetchRecommendationJob.Parameters.class);
+        this.parameters = objectMapper.readValue(parameters, Parameters.class);
     }
 
     @Override
