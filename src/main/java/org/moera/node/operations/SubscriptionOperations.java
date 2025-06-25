@@ -76,7 +76,11 @@ public class SubscriptionOperations {
         }
         universalContext.send(new SubscriptionAddedLiberin(subscription));
 
-        if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
+        if (
+            subscription.getSubscriptionType() == SubscriptionType.FEED
+            && !subscription.getRemoteNodeName()
+                    .equals(universalContext.getOptions().getString("subscription.auto.node"))
+        ) {
             jobs.run(
                 RemoteFeedFetchJob.class,
                 new RemoteFeedFetchJob.Parameters(
