@@ -29,8 +29,10 @@ public class NodeApi {
 
     public MoeraNode at(String remoteNodeName, String carte) throws MoeraNodeUnknownNameException {
         MoeraNode node = at(remoteNodeName);
-        node.carte(carte);
-        node.auth();
+        if (carte != null) {
+            node.carte(carte);
+            node.auth();
+        }
         return node;
     }
 
