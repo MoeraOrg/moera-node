@@ -193,7 +193,11 @@ public class OptionsMetadata {
 
     private <T> T forName(String name, OptionMapper<T> mapper) {
         SettingDescriptor descriptor = getDescriptor(name);
-        return descriptor != null ? mapper.map(descriptor.getDefaultValue(), getType(descriptor.getType())) : null;
+        if (descriptor == null) {
+            return null;
+        }
+        OptionTypeBase optionType = getType(descriptor.getType());
+        return mapper.map(optionType.deserializeValue(descriptor.getDefaultValue()), optionType);
     }
 
     private Object getDefault(String name) {

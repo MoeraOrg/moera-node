@@ -15,6 +15,8 @@ import org.moera.lib.naming.NodeName;
 import org.moera.lib.naming.types.RegisteredNameInfo;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.option.Options;
+import org.moera.node.option.OptionsMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -87,8 +89,15 @@ public class NamingCache {
     @Inject
     private UniversalContext universalContext;
 
+    @Inject
+    private OptionsMetadata optionsMetadata;
+
     private Key getKey(String name) {
-        return new Key(universalContext.getOptions().getString("naming.location"), name);
+        Options options = universalContext.getOptions();
+        String namingLocation = options != null
+            ? options.getString("naming.location")
+            : optionsMetadata.getDefaultString("naming.location");
+        return new Key(namingLocation, name);
     }
 
     public RegisteredNameDetails getFast(String name) {

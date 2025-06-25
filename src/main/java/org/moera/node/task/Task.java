@@ -143,6 +143,7 @@ public abstract class Task implements Runnable {
             log.error("Cannot find a node {}", ex.getNodeName());
         } else {
             log.error("Error executing task {}: {}", this.getClass().getSimpleName(), e.getMessage());
+            log.debug("Error executing task {}", this.getClass().getSimpleName(), e);
         }
         failed();
     }

@@ -36,6 +36,10 @@ public class InitialRecommendationOperations {
 
     @Scheduled(fixedDelayString = "P1D")
     public void refresh() {
+        if (!jobs.isReady()) {
+            return;
+        }
+
         try (var ignored = requestCounter.allot()) {
             log.info("Refreshing initial recommendations");
             tx.executeWrite(() -> initialRecommendationRepository.deleteExpired(Util.now()));

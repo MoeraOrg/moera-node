@@ -64,6 +64,7 @@ public class FetchInitialRecommendationsJob
     private MediaManager mediaManager;
 
     public FetchInitialRecommendationsJob() {
+        state = new State();
     }
 
     @Override
