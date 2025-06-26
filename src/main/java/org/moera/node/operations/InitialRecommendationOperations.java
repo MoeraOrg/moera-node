@@ -1,5 +1,8 @@
 package org.moera.node.operations;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
@@ -34,7 +37,7 @@ public class InitialRecommendationOperations {
         jobs.run(PopulateNewsfeedJob.class, new PopulateNewsfeedJob.Parameters(), nodeId);
     }
 
-    @Scheduled(fixedDelayString = "P1D")
+    @Scheduled(fixedDelayString = "PT1H")
     public void refresh() {
         if (!jobs.isReady()) {
             return;
@@ -43,6 +46,11 @@ public class InitialRecommendationOperations {
         try (var ignored = requestCounter.allot()) {
             log.info("Refreshing initial recommendations");
             tx.executeWrite(() -> initialRecommendationRepository.deleteExpired(Util.now()));
+            Timestamp lastAt = tx.executeRead(() -> initialRecommendationRepository.findLastCreatedAt());
+            if (lastAt != null && lastAt.toInstant().isAfter(Instant.now().minus(1, ChronoUnit.DAYS))) {
+                log.info("Initial recommendations are fresh, skipping this time");
+                return;
+            }
             jobs.run(FetchInitialRecommendationsJob.class, new FetchInitialRecommendationsJob.Parameters());
         }
     }

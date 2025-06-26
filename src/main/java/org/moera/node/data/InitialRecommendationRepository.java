@@ -13,6 +13,9 @@ public interface InitialRecommendationRepository extends JpaRepository<InitialRe
     @Query("select ir from InitialRecommendation ir where ir.nodeName = ?1 and ir.postingId = ?2")
     Optional<InitialRecommendation> findByNodeNameAndPostingId(String nodeName, String postingId);
 
+    @Query("select max(ir.createdAt) from InitialRecommendation ir")
+    Timestamp findLastCreatedAt();
+
     @Query("delete from InitialRecommendation ir where ir.deadline < ?1")
     @Modifying
     void deleteExpired(Timestamp now);

@@ -1,0 +1,1 @@
+CREATE INDEX initial_recommendations_created_at_idx ON initial_recommendations(created_at);
