@@ -5,15 +5,15 @@
 
     <groupId>org.moera</groupId>
     <artifactId>moera-node</artifactId>
-    <version>0.16.16-SNAPSHOT</version>
+    <version>0.17.0</version>
     <name>moera-node</name>
     <description>Moera node</description>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.2</version>
+        <version>3.4.4</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -233,7 +233,7 @@
         <dependency>
             <groupId>org.moera</groupId>
             <artifactId>moeralib</artifactId>
-            <version>0.16.14</version>
+            <version>0.17.0</version>
         </dependency>
 
         <dependency>
