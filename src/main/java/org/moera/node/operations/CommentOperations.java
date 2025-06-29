@@ -127,28 +127,36 @@ public class CommentOperations {
         comment.setParentDeletePrincipal(orUnset(posting.getChildOperations().getDelete()));
         comment.setParentViewReactionsPrincipal(orUnset(posting.getChildOperations().getViewReactions()));
         comment.setParentViewNegativeReactionsPrincipal(
-                orUnset(posting.getChildOperations().getViewNegativeReactions()));
+            orUnset(posting.getChildOperations().getViewNegativeReactions())
+        );
         comment.setParentViewReactionTotalsPrincipal(orUnset(posting.getChildOperations().getViewReactionTotals()));
         comment.setParentViewNegativeReactionTotalsPrincipal(
-                orUnset(posting.getChildOperations().getViewNegativeReactionTotals()));
+            orUnset(posting.getChildOperations().getViewNegativeReactionTotals())
+        );
         comment.setParentViewReactionRatiosPrincipal(orUnset(posting.getChildOperations().getViewReactionRatios()));
         comment.setParentViewNegativeReactionRatiosPrincipal(
-                orUnset(posting.getChildOperations().getViewNegativeReactionRatios()));
+            orUnset(posting.getChildOperations().getViewNegativeReactionRatios())
+        );
         comment.setParentAddReactionPrincipal(orUnset(posting.getChildOperations().getAddReaction()));
         comment.setParentAddNegativeReactionPrincipal(orUnset(posting.getChildOperations().getAddNegativeReaction()));
         comment.setParentOverrideReactionPrincipal(orUnset(posting.getChildOperations().getOverrideReaction()));
 
         CommentTextUtil.toEntry(commentText, comment);
-        comment.setMoment(momentFinder.find(
+        comment.setMoment(
+            momentFinder.find(
                 moment -> commentRepository.countMoments(posting.getId(), moment) == 0,
-                Util.now()));
+                Util.now()
+            )
+        );
 
         userListOperations.sheriffListReference(comment);
 
-        log.debug("Total comments for posting {} = {} + 1: new comment {}",
-                LogUtil.format(posting.getId()),
-                LogUtil.format(posting.getTotalChildren()),
-                LogUtil.format(comment.getId()));
+        log.debug(
+            "Total comments for posting {} = {} + 1: new comment {}",
+            LogUtil.format(posting.getId()),
+            LogUtil.format(posting.getTotalChildren()),
+            LogUtil.format(comment.getId())
+        );
         posting.setTotalChildren(posting.getTotalChildren() + 1);
 
         return commentRepository.save(comment);
@@ -158,10 +166,15 @@ public class CommentOperations {
         return principal != null ? principal : Principal.UNSET;
     }
 
-    public Comment createOrUpdateComment(Entry posting, Comment comment, EntryRevision revision,
-                                         List<MediaFileOwner> media, Predicate<EntryRevision> isNothingChanged,
-                                         Consumer<EntryRevision> revisionUpdater,
-                                         Consumer<Entry> mediaEntryUpdater) {
+    public Comment createOrUpdateComment(
+        Entry posting,
+        Comment comment,
+        EntryRevision revision,
+        List<MediaFileOwner> media,
+        Predicate<EntryRevision> isNothingChanged,
+        Consumer<EntryRevision> revisionUpdater,
+        Consumer<Entry> mediaEntryUpdater
+    ) {
         EntryRevision latest = comment.getCurrentRevision();
         if (latest != null) {
             if (isNothingChanged != null && isNothingChanged.test(latest)) {
@@ -266,9 +279,11 @@ public class CommentOperations {
     private void updateRelatedObjects(Comment comment) {
         mediaOperations.updatePermissions(comment);
 
-        if (comment.getPosting().getViewCompound().isPublic()
-                && comment.getPosting().getViewCommentsCompound().isPublic()
-                && comment.getViewCompound().isPublic()) {
+        if (
+            comment.getPosting().getViewCompound().isPublic()
+            && comment.getPosting().getViewCommentsCompound().isPublic()
+            && comment.getViewCompound().isPublic()
+        ) {
             commentPublicPageOperations.updatePublicPages(comment.getPosting().getId(), comment.getMoment());
         }
     }
@@ -285,15 +300,19 @@ public class CommentOperations {
         }
         comment.getCurrentRevision().setDeletedAt(Util.now());
         if (comment.getPosting().getTotalChildren() > 0) {
-            log.debug("Total comments for posting {} = {} - 1: deleted comment {}",
-                    LogUtil.format(comment.getPosting().getId()),
-                    LogUtil.format(comment.getPosting().getTotalChildren()),
-                    LogUtil.format(comment.getId()));
+            log.debug(
+                "Total comments for posting {} = {} - 1: deleted comment {}",
+                LogUtil.format(comment.getPosting().getId()),
+                LogUtil.format(comment.getPosting().getTotalChildren()),
+                LogUtil.format(comment.getId())
+            );
             comment.getPosting().setTotalChildren(comment.getPosting().getTotalChildren() - 1);
         } else {
-            log.debug("Total comments for posting {} = 0 before deleting comment {}",
-                    LogUtil.format(comment.getPosting().getId()),
-                    LogUtil.format(comment.getId()));
+            log.debug(
+                "Total comments for posting {} = 0 before deleting comment {}",
+                LogUtil.format(comment.getPosting().getId()),
+                LogUtil.format(comment.getId())
+            );
         }
     }
 
@@ -313,10 +332,12 @@ public class CommentOperations {
                         Entry posting = comment.getPosting();
                         if (comment.getDeletedAt() != null || comment.getTotalRevisions() <= 1) {
                             if (comment.getDeletedAt() == null) {
-                                log.debug("Total comments for posting {} = {} - 1: purging expired unsigned comment {}",
-                                        LogUtil.format(posting.getId()),
-                                        LogUtil.format(posting.getTotalChildren()),
-                                        LogUtil.format(comment.getId()));
+                                log.debug(
+                                    "Total comments for posting {} = {} - 1: purging expired unsigned comment {}",
+                                    LogUtil.format(posting.getId()),
+                                    LogUtil.format(posting.getTotalChildren()),
+                                    LogUtil.format(comment.getId())
+                                );
                                 posting.setTotalChildren(posting.getTotalChildren() - 1);
                             }
                             commentRepository.delete(comment);
@@ -324,16 +345,18 @@ public class CommentOperations {
                             liberins.add(new CommentDeletedLiberin(comment, latest).withNodeId(posting.getNodeId()));
                         } else {
                             EntryRevision revision = comment.getRevisions().stream()
-                                    .min(Comparator.comparing(EntryRevision::getCreatedAt))
-                                    .orElse(null);
+                                .min(Comparator.comparing(EntryRevision::getCreatedAt))
+                                .orElse(null);
                             if (revision != null) { // always
                                 revision.setDeletedAt(null);
                                 entryRevisionRepository.delete(comment.getCurrentRevision());
                                 comment.setCurrentRevision(revision);
                                 comment.setTotalRevisions(comment.getTotalRevisions() - 1);
 
-                                liberins.add(new CommentUpdatedLiberin(comment, latest, comment.getViewE())
-                                        .withNodeId(posting.getNodeId()));
+                                liberins.add(
+                                    new CommentUpdatedLiberin(comment, latest, comment.getViewE())
+                                        .withNodeId(posting.getNodeId())
+                                );
                             }
                         }
                     }
