@@ -40,12 +40,20 @@ public class DraftTextUtil {
             }
         }
 
-        if (draftText.getAcceptedReactions() != null) {
-            if (draftText.getAcceptedReactions().getPositive() != null) {
-                draft.setAcceptedReactionsPositive(draftText.getAcceptedReactions().getPositive());
+        if (draftText.getRejectedReactions() != null) {
+            if (draftText.getRejectedReactions().getPositive() != null) {
+                draft.setRejectedReactionsPositive(draftText.getRejectedReactions().getPositive());
             }
-            if (draftText.getAcceptedReactions().getNegative() != null) {
-                draft.setAcceptedReactionsNegative(draftText.getAcceptedReactions().getNegative());
+            if (draftText.getRejectedReactions().getNegative() != null) {
+                draft.setRejectedReactionsNegative(draftText.getRejectedReactions().getNegative());
+            }
+        }
+        if (draftText.getCommentRejectedReactions() != null) {
+            if (draftText.getCommentRejectedReactions().getPositive() != null) {
+                draft.setChildRejectedReactionsPositive(draftText.getCommentRejectedReactions().getPositive());
+            }
+            if (draftText.getCommentRejectedReactions().getNegative() != null) {
+                draft.setChildRejectedReactionsNegative(draftText.getCommentRejectedReactions().getNegative());
             }
         }
         if (draftText.getBodySrcFormat() != null) {

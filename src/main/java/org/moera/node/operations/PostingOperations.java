@@ -119,8 +119,6 @@ public class PostingOperations {
     }
 
     public Posting newPosting(PostingText postingText) {
-        PostingTextUtil.initAcceptedReactionsDefaults(postingText);
-
         Posting posting = newPosting("");
         PostingTextUtil.toEntry(postingText, posting);
 

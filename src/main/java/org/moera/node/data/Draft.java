@@ -65,11 +65,19 @@ public class Draft {
 
     @NotNull
     @Size(max = 255)
-    private String acceptedReactionsPositive = "";
+    private String rejectedReactionsPositive = "";
 
     @NotNull
     @Size(max = 255)
-    private String acceptedReactionsNegative = "";
+    private String rejectedReactionsNegative = "*";
+
+    @NotNull
+    @Size(max = 255)
+    private String childRejectedReactionsPositive = "";
+
+    @NotNull
+    @Size(max = 255)
+    private String childRejectedReactionsNegative = "";
 
     @NotNull
     private String bodySrc = "";
@@ -209,20 +217,36 @@ public class Draft {
         this.ownerAvatarShape = ownerAvatarShape;
     }
 
-    public String getAcceptedReactionsPositive() {
-        return acceptedReactionsPositive;
+    public String getRejectedReactionsPositive() {
+        return rejectedReactionsPositive;
     }
 
-    public void setAcceptedReactionsPositive(String acceptedReactionsPositive) {
-        this.acceptedReactionsPositive = acceptedReactionsPositive;
+    public void setRejectedReactionsPositive(String rejectedReactionsPositive) {
+        this.rejectedReactionsPositive = rejectedReactionsPositive;
     }
 
-    public String getAcceptedReactionsNegative() {
-        return acceptedReactionsNegative;
+    public String getRejectedReactionsNegative() {
+        return rejectedReactionsNegative;
     }
 
-    public void setAcceptedReactionsNegative(String acceptedReactionsNegative) {
-        this.acceptedReactionsNegative = acceptedReactionsNegative;
+    public void setRejectedReactionsNegative(String rejectedReactionsNegative) {
+        this.rejectedReactionsNegative = rejectedReactionsNegative;
+    }
+
+    public String getChildRejectedReactionsPositive() {
+        return childRejectedReactionsPositive;
+    }
+
+    public void setChildRejectedReactionsPositive(String childRejectedReactionsPositive) {
+        this.childRejectedReactionsPositive = childRejectedReactionsPositive;
+    }
+
+    public String getChildRejectedReactionsNegative() {
+        return childRejectedReactionsNegative;
+    }
+
+    public void setChildRejectedReactionsNegative(String childRejectedReactionsNegative) {
+        this.childRejectedReactionsNegative = childRejectedReactionsNegative;
     }
 
     public String getBodySrc() {

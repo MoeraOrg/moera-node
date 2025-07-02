@@ -367,7 +367,7 @@ public class CommentController {
                 }
             }
             if (!valid) {
-                // posting owner may change seniorOperations
+                // posting owner may change seniorOperations or senior rejected reactions
                 if (comment == null || !isSenior) {
                     throw new AuthenticationException();
                 }
@@ -418,8 +418,19 @@ public class CommentController {
             false,
             "comment.operations.wrong-principal"
         );
-        if (commentText.getSeniorOperations() != null && !commentText.getSeniorOperations().isEmpty() && !isSenior) {
-            throw new AuthenticationException();
+        if (!isSenior) {
+            if (commentText.getSeniorOperations() != null && !commentText.getSeniorOperations().isEmpty()) {
+                throw new AuthenticationException();
+            }
+            if (
+                commentText.getSeniorRejectedReactions() != null
+                && (
+                    !ObjectUtils.isEmpty(commentText.getSeniorRejectedReactions().getPositive())
+                    || !ObjectUtils.isEmpty(commentText.getSeniorRejectedReactions().getNegative())
+                )
+            ) {
+                throw new AuthenticationException();
+            }
         }
         OperationsValidator.validateOperations(
             commentText.getSeniorOperations(),

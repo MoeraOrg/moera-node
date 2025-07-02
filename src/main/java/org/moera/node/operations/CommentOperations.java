@@ -90,8 +90,6 @@ public class CommentOperations {
     private final MomentFinder momentFinder = new MomentFinder();
 
     public Comment newComment(Posting posting, CommentText commentText, Comment repliedTo) {
-        CommentTextUtil.initAcceptedReactionsDefaults(commentText);
-
         Comment comment = new Comment();
         comment.setId(UUID.randomUUID());
         comment.setNodeId(requestContext.nodeId());
@@ -140,6 +138,9 @@ public class CommentOperations {
         comment.setParentAddReactionPrincipal(orUnset(posting.getChildOperations().getAddReaction()));
         comment.setParentAddNegativeReactionPrincipal(orUnset(posting.getChildOperations().getAddNegativeReaction()));
         comment.setParentOverrideReactionPrincipal(orUnset(posting.getChildOperations().getOverrideReaction()));
+
+        comment.setParentRejectedReactionsPositive(posting.getRejectedReactionsPositive());
+        comment.setParentRejectedReactionsNegative(posting.getRejectedReactionsNegative());
 
         CommentTextUtil.toEntry(commentText, comment);
         comment.setMoment(

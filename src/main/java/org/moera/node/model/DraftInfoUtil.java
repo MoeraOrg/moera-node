@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.moera.lib.node.types.AcceptedReactions;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.CommentOperations;
 import org.moera.lib.node.types.DraftInfo;
@@ -41,10 +40,15 @@ public class DraftInfoUtil {
             );
         }
 
-        AcceptedReactions acceptedReactions = new AcceptedReactions();
-        acceptedReactions.setPositive(draft.getAcceptedReactionsPositive());
-        acceptedReactions.setNegative(draft.getAcceptedReactionsNegative());
-        draftInfo.setAcceptedReactions(acceptedReactions);
+        draftInfo.setRejectedReactions(
+            RejectedReactionsUtil.build(draft.getRejectedReactionsPositive(), draft.getRejectedReactionsNegative())
+        );
+        draftInfo.setCommentRejectedReactions(
+            RejectedReactionsUtil.build(
+                draft.getChildRejectedReactionsPositive(),
+                draft.getChildRejectedReactionsNegative()
+            )
+        );
 
         draftInfo.setBodySrc(new Body(draft.getBodySrc()));
         draftInfo.setBodySrcFormat(draft.getBodySrcFormat());

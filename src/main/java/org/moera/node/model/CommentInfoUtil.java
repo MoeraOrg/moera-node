@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.moera.lib.crypto.CryptoUtil;
-import org.moera.lib.node.types.AcceptedReactions;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentOperations;
+import org.moera.lib.node.types.EmojiList;
 import org.moera.lib.node.types.ReactionOperations;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.body.Body;
@@ -164,10 +164,21 @@ public class CommentInfoUtil {
         commentInfo.setSheriffMarks(SheriffUtil.deserializeSheriffMarks(comment.getSheriffMarks()).orElse(null));
         setSheriffUserListReferred(commentInfo, comment.isSheriffUserListReferred());
 
-        AcceptedReactions acceptedReactions = new AcceptedReactions();
-        acceptedReactions.setPositive(comment.getAcceptedReactionsPositive());
-        acceptedReactions.setNegative(comment.getAcceptedReactionsNegative());
-        commentInfo.setAcceptedReactions(acceptedReactions);
+        commentInfo.setOwnerRejectedReactions(
+            RejectedReactionsUtil.build(comment.getRejectedReactionsPositive(), comment.getRejectedReactionsNegative())
+        );
+        commentInfo.setSeniorRejectedReactions(
+            RejectedReactionsUtil.build(
+                comment.getParentRejectedReactionsPositive(),
+                comment.getParentRejectedReactionsNegative()
+            )
+        );
+        commentInfo.setRejectedReactions(
+            RejectedReactionsUtil.build(
+                EmojiList.combine(comment.getParentRejectedReactionsPositive(), comment.getRejectedReactionsPositive()),
+                EmojiList.combine(comment.getParentRejectedReactionsNegative(), comment.getRejectedReactionsNegative())
+            )
+        );
 
         commentInfo.setReactions(ReactionTotalsInfoUtil.build(comment.getReactionTotals(), comment, accessChecker));
     }

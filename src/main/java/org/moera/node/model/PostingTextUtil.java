@@ -6,7 +6,6 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.moera.lib.node.types.AcceptedReactions;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.MediaWithDigest;
 import org.moera.lib.node.types.PostingSourceText;
@@ -54,8 +53,9 @@ public class PostingTextUtil {
         );
             
         postingText.setCreatedAt(Util.toEpochSecond(Util.now()));
-        postingText.setAcceptedReactions(sourceText.getAcceptedReactions());
-        
+        postingText.setRejectedReactions(sourceText.getRejectedReactions());
+        postingText.setCommentRejectedReactions(sourceText.getCommentRejectedReactions());
+
         if (postingText.getBodySrcFormat() != SourceFormat.APPLICATION) {
             Body decodedBody = textConverter.toHtml(postingText.getBodySrcFormat(), postingText.getBodySrc());
             postingText.setBody(decodedBody);
@@ -78,30 +78,26 @@ public class PostingTextUtil {
         return postingText;
     }
 
-    public static void initAcceptedReactionsDefaults(PostingText postingText) {
-        if (postingText.getAcceptedReactions() == null) {
-            postingText.setAcceptedReactions(new AcceptedReactions());
-        }
-        if (postingText.getAcceptedReactions().getPositive() == null) {
-            postingText.getAcceptedReactions().setPositive("");
-        }
-        if (postingText.getAcceptedReactions().getNegative() == null) {
-            postingText.getAcceptedReactions().setNegative("");
-        }
-    }
-
     public static void toEntry(PostingText postingText, Entry entry) {
         if (sameAsEntry(postingText, entry)) {
             return;
         }
 
         entry.setEditedAt(Util.now());
-        if (postingText.getAcceptedReactions() != null) {
-            if (postingText.getAcceptedReactions().getPositive() != null) {
-                entry.setAcceptedReactionsPositive(postingText.getAcceptedReactions().getPositive());
+        if (postingText.getRejectedReactions() != null) {
+            if (postingText.getRejectedReactions().getPositive() != null) {
+                entry.setRejectedReactionsPositive(postingText.getRejectedReactions().getPositive());
             }
-            if (postingText.getAcceptedReactions().getNegative() != null) {
-                entry.setAcceptedReactionsNegative(postingText.getAcceptedReactions().getNegative());
+            if (postingText.getRejectedReactions().getNegative() != null) {
+                entry.setRejectedReactionsNegative(postingText.getRejectedReactions().getNegative());
+            }
+        }
+        if (postingText.getCommentRejectedReactions() != null) {
+            if (postingText.getCommentRejectedReactions().getPositive() != null) {
+                entry.setChildRejectedReactionsPositive(postingText.getCommentRejectedReactions().getPositive());
+            }
+            if (postingText.getCommentRejectedReactions().getNegative() != null) {
+                entry.setChildRejectedReactionsNegative(postingText.getCommentRejectedReactions().getNegative());
             }
         }
         if (postingText.getOwnerName() != null) {
@@ -198,14 +194,29 @@ public class PostingTextUtil {
     public static boolean sameAsEntry(PostingText postingText, Entry entry) {
         return
             (
-                postingText.getAcceptedReactions() == null
+                postingText.getRejectedReactions() == null
                 || (
-                    postingText.getAcceptedReactions().getPositive() == null
-                    || postingText.getAcceptedReactions().getPositive().equals(entry.getAcceptedReactionsPositive())
+                    postingText.getRejectedReactions().getPositive() == null
+                    || postingText.getRejectedReactions().getPositive().equals(entry.getRejectedReactionsPositive())
                 )
                 && (
-                    postingText.getAcceptedReactions().getNegative() == null
-                    || postingText.getAcceptedReactions().getNegative().equals(entry.getAcceptedReactionsNegative())
+                    postingText.getRejectedReactions().getNegative() == null
+                    || postingText.getRejectedReactions().getNegative().equals(entry.getRejectedReactionsNegative())
+                )
+            )
+            && (
+                postingText.getCommentRejectedReactions() == null
+                || (
+                    postingText.getCommentRejectedReactions().getPositive() == null
+                    || postingText.getCommentRejectedReactions().getPositive().equals(
+                        entry.getChildRejectedReactionsPositive()
+                    )
+                )
+                && (
+                    postingText.getCommentRejectedReactions().getNegative() == null
+                    || postingText.getCommentRejectedReactions().getNegative().equals(
+                        entry.getChildRejectedReactionsNegative()
+                    )
                 )
             )
             && (postingText.getOwnerName() == null || postingText.getOwnerName().equals(entry.getOwnerName()))

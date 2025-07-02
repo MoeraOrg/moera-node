@@ -486,8 +486,12 @@ public class MediaOperations {
             List<Entry> list = entries.stream()
                 .filter(e -> Objects.equals(e.getReceiverName(), posting.getReceiverName()))
                 .toList();
-            list.forEach(e -> posting.setAcceptedReactionsPositive(e.getAcceptedReactionsPositive()));
-            list.forEach(e -> posting.setAcceptedReactionsNegative(e.getAcceptedReactionsNegative()));
+            list.forEach(e -> {
+                posting.setRejectedReactionsPositive(e.getRejectedReactionsPositive());
+                posting.setRejectedReactionsNegative(e.getRejectedReactionsNegative());
+                posting.setChildRejectedReactionsPositive(e.getChildRejectedReactionsPositive());
+                posting.setChildRejectedReactionsNegative(e.getChildRejectedReactionsNegative());
+            });
             Principal principal = list.stream()
                 .map(this::entryViewPrincipal)
                 .reduce(Principal.NONE, Principal::union);

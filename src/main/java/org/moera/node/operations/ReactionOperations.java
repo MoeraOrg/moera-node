@@ -144,12 +144,15 @@ public class ReactionOperations {
             }
         }
 
-        EmojiList accepted = new EmojiList(
+        EmojiList emojiList = new EmojiList(
             !reactionDescription.isNegative()
-                ? entry.getAcceptedReactionsPositive()
-                : entry.getAcceptedReactionsNegative()
+                ? entry.getRejectedReactionsPositive()
+                : entry.getRejectedReactionsNegative()
         );
-        ValidationUtil.assertion(accepted.isAccepted(reactionDescription.getEmoji()), "reaction.not-accepted");
+        ValidationUtil.assertion(
+            emojiList.isAccepted(reactionDescription.getEmoji(), reactionDescription.isNegative()),
+            "reaction.not-accepted"
+        );
     }
 
     public Reaction post(ReactionDescription reactionDescription, Entry entry, Consumer<Reaction> reactionDeleted,

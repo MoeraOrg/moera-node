@@ -11,6 +11,15 @@ import org.moera.node.data.Entry;
 public class CommentMassAttributesUtil {
 
     public static void toEntry(CommentMassAttributes attributes, Entry entry) {
+        if (attributes.getSeniorRejectedReactions() != null) {
+            if (attributes.getSeniorRejectedReactions().getPositive() != null) {
+                entry.setParentRejectedReactionsPositive(attributes.getSeniorRejectedReactions().getPositive());
+            }
+            if (attributes.getSeniorRejectedReactions().getNegative() != null) {
+                entry.setParentRejectedReactionsNegative(attributes.getSeniorRejectedReactions().getNegative());
+            }
+        }
+
         CommentOperations operations = attributes.getSeniorOperations();
         if (operations == null) {
             return;

@@ -6,7 +6,6 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.moera.lib.node.types.AcceptedReactions;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.CommentSourceText;
 import org.moera.lib.node.types.CommentText;
@@ -56,7 +55,8 @@ public class CommentTextUtil {
         }
         
         commentText.setCreatedAt(Util.toEpochSecond(Util.now()));
-        commentText.setAcceptedReactions(sourceText.getAcceptedReactions());
+        commentText.setRejectedReactions(sourceText.getRejectedReactions());
+        commentText.setSeniorRejectedReactions(sourceText.getSeniorRejectedReactions());
         commentText.setRepliedToId(sourceText.getRepliedToId());
         
         if (commentText.getBodySrcFormat() != SourceFormat.APPLICATION) {
@@ -81,30 +81,18 @@ public class CommentTextUtil {
         return commentText;
     }
 
-    public static void initAcceptedReactionsDefaults(CommentText commentText) {
-        if (commentText.getAcceptedReactions() == null) {
-            commentText.setAcceptedReactions(new AcceptedReactions());
-        }
-        if (commentText.getAcceptedReactions().getPositive() == null) {
-            commentText.getAcceptedReactions().setPositive("");
-        }
-        if (commentText.getAcceptedReactions().getNegative() == null) {
-            commentText.getAcceptedReactions().setNegative("");
-        }
-    }
-
     public static void toEntry(CommentText commentText, Entry entry) {
         if (sameAsEntry(commentText, entry)) {
             return;
         }
 
         entry.setEditedAt(Util.now());
-        if (commentText.getAcceptedReactions() != null) {
-            if (commentText.getAcceptedReactions().getPositive() != null) {
-                entry.setAcceptedReactionsPositive(commentText.getAcceptedReactions().getPositive());
+        if (commentText.getRejectedReactions() != null) {
+            if (commentText.getRejectedReactions().getPositive() != null) {
+                entry.setRejectedReactionsPositive(commentText.getRejectedReactions().getPositive());
             }
-            if (commentText.getAcceptedReactions().getNegative() != null) {
-                entry.setAcceptedReactionsNegative(commentText.getAcceptedReactions().getNegative());
+            if (commentText.getRejectedReactions().getNegative() != null) {
+                entry.setRejectedReactionsNegative(commentText.getRejectedReactions().getNegative());
             }
         }
         if (commentText.getOwnerFullName() != null) {
@@ -154,6 +142,15 @@ public class CommentTextUtil {
     }
 
     public static void toEntrySenior(CommentText commentText, Entry entry) {
+        if (commentText.getSeniorRejectedReactions() != null) {
+            if (commentText.getSeniorRejectedReactions().getPositive() != null) {
+                entry.setParentRejectedReactionsPositive(commentText.getSeniorRejectedReactions().getPositive());
+            }
+            if (commentText.getSeniorRejectedReactions().getNegative() != null) {
+                entry.setParentRejectedReactionsNegative(commentText.getSeniorRejectedReactions().getNegative());
+            }
+        }
+
         if (commentText.getSeniorOperations() == null) {
             return;
         }
@@ -196,14 +193,29 @@ public class CommentTextUtil {
     public static boolean sameAsEntry(CommentText commentText, Entry entry) {
         return
             (
-                commentText.getAcceptedReactions() == null
+                commentText.getRejectedReactions() == null
                 || (
-                    commentText.getAcceptedReactions().getPositive() == null
-                    || commentText.getAcceptedReactions().getPositive().equals(entry.getAcceptedReactionsPositive())
+                    commentText.getRejectedReactions().getPositive() == null
+                    || commentText.getRejectedReactions().getPositive().equals(entry.getRejectedReactionsPositive())
                 )
                 && (
-                    commentText.getAcceptedReactions().getNegative() == null
-                    || commentText.getAcceptedReactions().getNegative().equals(entry.getAcceptedReactionsNegative())
+                    commentText.getRejectedReactions().getNegative() == null
+                    || commentText.getRejectedReactions().getNegative().equals(entry.getRejectedReactionsNegative())
+                )
+            )
+            && (
+                commentText.getSeniorRejectedReactions() == null
+                || (
+                    commentText.getSeniorRejectedReactions().getPositive() == null
+                    || commentText.getSeniorRejectedReactions().getPositive().equals(
+                        entry.getParentRejectedReactionsPositive()
+                    )
+                )
+                && (
+                    commentText.getSeniorRejectedReactions().getNegative() == null
+                    || commentText.getSeniorRejectedReactions().getNegative().equals(
+                        entry.getParentRejectedReactionsNegative()
+                    )
                 )
             )
             && (
@@ -214,38 +226,41 @@ public class CommentTextUtil {
             && (
                 AvatarDescriptionUtil.getMediaFile(commentText.getOwnerAvatar()) == null
                 || entry.getOwnerAvatarMediaFile() != null
-                && AvatarDescriptionUtil.getMediaFile(commentText.getOwnerAvatar()).getId()
-                    .equals(entry.getOwnerAvatarMediaFile().getId())
+                    && AvatarDescriptionUtil.getMediaFile(commentText.getOwnerAvatar()).getId()
+                        .equals(entry.getOwnerAvatarMediaFile().getId())
             )
             && (
                 commentText.getOperations() == null
                 || samePrincipalAs(commentText.getOperations().getView(), entry.getViewPrincipal())
-                && samePrincipalAs(commentText.getOperations().getViewReactions(), entry.getViewReactionsPrincipal())
-                && samePrincipalAs(
-                    commentText.getOperations().getViewNegativeReactions(),
-                    entry.getViewNegativeReactionsPrincipal()
-                )
-                && samePrincipalAs(
-                    commentText.getOperations().getViewReactionTotals(),
-                    entry.getViewReactionTotalsPrincipal()
-                )
-                && samePrincipalAs(
-                    commentText.getOperations().getViewNegativeReactionTotals(),
-                    entry.getViewNegativeReactionTotalsPrincipal()
-                )
-                && samePrincipalAs(
-                    commentText.getOperations().getViewReactionRatios(),
-                    entry.getViewReactionRatiosPrincipal()
-                )
-                && samePrincipalAs(
-                    commentText.getOperations().getViewNegativeReactionRatios(),
-                    entry.getViewNegativeReactionRatiosPrincipal()
-                )
-                && samePrincipalAs(commentText.getOperations().getAddReaction(), entry.getAddReactionPrincipal())
-                && samePrincipalAs(
-                    commentText.getOperations().getAddNegativeReaction(),
-                    entry.getAddNegativeReactionPrincipal()
-                )
+                    && samePrincipalAs(
+                        commentText.getOperations().getViewReactions(),
+                        entry.getViewReactionsPrincipal()
+                    )
+                    && samePrincipalAs(
+                        commentText.getOperations().getViewNegativeReactions(),
+                        entry.getViewNegativeReactionsPrincipal()
+                    )
+                    && samePrincipalAs(
+                        commentText.getOperations().getViewReactionTotals(),
+                        entry.getViewReactionTotalsPrincipal()
+                    )
+                    && samePrincipalAs(
+                        commentText.getOperations().getViewNegativeReactionTotals(),
+                        entry.getViewNegativeReactionTotalsPrincipal()
+                    )
+                    && samePrincipalAs(
+                        commentText.getOperations().getViewReactionRatios(),
+                        entry.getViewReactionRatiosPrincipal()
+                    )
+                    && samePrincipalAs(
+                        commentText.getOperations().getViewNegativeReactionRatios(),
+                        entry.getViewNegativeReactionRatiosPrincipal()
+                    )
+                    && samePrincipalAs(commentText.getOperations().getAddReaction(), entry.getAddReactionPrincipal())
+                    && samePrincipalAs(
+                        commentText.getOperations().getAddNegativeReaction(),
+                        entry.getAddNegativeReactionPrincipal()
+                    )
             )
             && (
                 commentText.getReactionOperations() == null
@@ -253,46 +268,46 @@ public class CommentTextUtil {
                     commentText.getReactionOperations().getView(),
                     entry.getReactionOperations().getView()
                 )
-                && samePrincipalAs(
-                    commentText.getReactionOperations().getDelete(),
-                    entry.getReactionOperations().getDelete()
-                )
+                    && samePrincipalAs(
+                        commentText.getReactionOperations().getDelete(),
+                        entry.getReactionOperations().getDelete()
+                    )
             )
             && (
                 commentText.getSeniorOperations() == null
                 || samePrincipalAs(commentText.getSeniorOperations().getView(), entry.getParentViewPrincipal())
-                && samePrincipalAs(
-                    commentText.getSeniorOperations().getViewReactions(),
-                    entry.getParentViewReactionsPrincipal()
-                )
-                && samePrincipalAs(
-                    commentText.getSeniorOperations().getViewNegativeReactions(),
-                    entry.getParentViewNegativeReactionsPrincipal()
-                )
-                && samePrincipalAs(
-                    commentText.getSeniorOperations().getViewReactionTotals(),
-                    entry.getParentViewReactionTotalsPrincipal()
-                )
-                && samePrincipalAs(
-                    commentText.getSeniorOperations().getViewNegativeReactionTotals(),
-                    entry.getParentViewNegativeReactionTotalsPrincipal()
-                )
-                && samePrincipalAs(
-                    commentText.getSeniorOperations().getViewReactionRatios(),
-                    entry.getParentViewReactionRatiosPrincipal()
-                )
-                && samePrincipalAs(
-                    commentText.getSeniorOperations().getViewNegativeReactionRatios(),
-                    entry.getParentViewNegativeReactionRatiosPrincipal()
-                )
-                && samePrincipalAs(
-                    commentText.getSeniorOperations().getAddReaction(),
-                    entry.getParentAddReactionPrincipal()
-                )
-                && samePrincipalAs(
-                    commentText.getSeniorOperations().getAddNegativeReaction(),
-                    entry.getParentAddNegativeReactionPrincipal()
-                )
+                    && samePrincipalAs(
+                        commentText.getSeniorOperations().getViewReactions(),
+                        entry.getParentViewReactionsPrincipal()
+                    )
+                    && samePrincipalAs(
+                        commentText.getSeniorOperations().getViewNegativeReactions(),
+                        entry.getParentViewNegativeReactionsPrincipal()
+                    )
+                    && samePrincipalAs(
+                        commentText.getSeniorOperations().getViewReactionTotals(),
+                        entry.getParentViewReactionTotalsPrincipal()
+                    )
+                    && samePrincipalAs(
+                        commentText.getSeniorOperations().getViewNegativeReactionTotals(),
+                        entry.getParentViewNegativeReactionTotalsPrincipal()
+                    )
+                    && samePrincipalAs(
+                        commentText.getSeniorOperations().getViewReactionRatios(),
+                        entry.getParentViewReactionRatiosPrincipal()
+                    )
+                    && samePrincipalAs(
+                        commentText.getSeniorOperations().getViewNegativeReactionRatios(),
+                        entry.getParentViewNegativeReactionRatiosPrincipal()
+                    )
+                    && samePrincipalAs(
+                        commentText.getSeniorOperations().getAddReaction(),
+                        entry.getParentAddReactionPrincipal()
+                    )
+                    && samePrincipalAs(
+                        commentText.getSeniorOperations().getAddNegativeReaction(),
+                        entry.getParentAddNegativeReactionPrincipal()
+                    )
             );
     }
 

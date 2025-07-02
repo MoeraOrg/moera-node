@@ -1,0 +1,14 @@
+ALTER TABLE entries ADD COLUMN rejected_reactions_positive varchar(255) NOT NULL DEFAULT '';
+ALTER TABLE entries ADD COLUMN rejected_reactions_negative varchar(255) NOT NULL DEFAULT '*';
+ALTER TABLE entries ADD COLUMN parent_rejected_reactions_positive varchar(255) NOT NULL DEFAULT '';
+ALTER TABLE entries ADD COLUMN parent_rejected_reactions_negative varchar(255) NOT NULL DEFAULT '';
+ALTER TABLE entries ADD COLUMN child_rejected_reactions_positive varchar(255) NOT NULL DEFAULT '';
+ALTER TABLE entries ADD COLUMN child_rejected_reactions_negative varchar(255) NOT NULL DEFAULT '';
+ALTER TABLE entries DROP COLUMN accepted_reactions_positive;
+ALTER TABLE entries DROP COLUMN accepted_reactions_negative;
+ALTER TABLE drafts ADD COLUMN rejected_reactions_positive varchar(255) NOT NULL DEFAULT '';
+ALTER TABLE drafts ADD COLUMN rejected_reactions_negative varchar(255) NOT NULL DEFAULT '*';
+ALTER TABLE drafts ADD COLUMN child_rejected_reactions_positive varchar(255) NOT NULL DEFAULT '';
+ALTER TABLE drafts ADD COLUMN child_rejected_reactions_negative varchar(255) NOT NULL DEFAULT '';
+ALTER TABLE drafts DROP COLUMN accepted_reactions_positive;
+ALTER TABLE drafts DROP COLUMN accepted_reactions_negative;

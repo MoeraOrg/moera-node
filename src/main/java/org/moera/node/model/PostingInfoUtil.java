@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.moera.lib.crypto.CryptoUtil;
-import org.moera.lib.node.types.AcceptedReactions;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.CommentOperations;
@@ -287,10 +286,15 @@ public class PostingInfoUtil {
         fillSheriffs(info, posting, options);
         setSheriffUserListReferred(info, posting.isSheriffUserListReferred());
 
-        AcceptedReactions acceptedReactions = new AcceptedReactions();
-        acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
-        acceptedReactions.setNegative(posting.getAcceptedReactionsNegative());
-        info.setAcceptedReactions(acceptedReactions);
+        info.setRejectedReactions(
+            RejectedReactionsUtil.build(posting.getRejectedReactionsPositive(), posting.getRejectedReactionsNegative())
+        );
+        info.setCommentRejectedReactions(
+            RejectedReactionsUtil.build(
+                posting.getChildRejectedReactionsPositive(),
+                posting.getChildRejectedReactionsNegative()
+            )
+        );
 
         info.setReactions(ReactionTotalsInfoUtil.build(posting.getReactionTotals(), posting, accessChecker));
         info.setSources(posting.getSources() != null
@@ -466,9 +470,9 @@ public class PostingInfoUtil {
             Util.toTimestamp(isOriginal(info) ? info.getEditedAt() : info.getReceiverEditedAt())
         );
         posting.setReceiverDeletedAt(null);
-        if (info.getAcceptedReactions() != null) {
-            posting.setAcceptedReactionsPositive(info.getAcceptedReactions().getPositive());
-            posting.setAcceptedReactionsNegative(info.getAcceptedReactions().getNegative());
+        if (info.getRejectedReactions() != null) {
+            posting.setRejectedReactionsPositive(info.getRejectedReactions().getPositive());
+            posting.setRejectedReactionsNegative(info.getRejectedReactions().getNegative());
         }
         posting.setTotalChildren(info.getTotalComments());
         // TODO visibility to a particular group of friends should be converted to something here
