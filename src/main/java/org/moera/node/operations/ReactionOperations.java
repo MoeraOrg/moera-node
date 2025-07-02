@@ -164,11 +164,13 @@ public class ReactionOperations {
         } else {
             log.debug("Previous reaction not found");
         }
-        if (reaction == null || reaction.getDeadline() == null
-                || reaction.isNegative() != reactionDescription.isNegative()
-                || reaction.getEmoji() != reactionDescription.getEmoji()
-                || reaction.getSignature() == null && reactionDescription.getSignature() != null) {
-
+        if (
+            reaction == null
+            || reaction.getDeadline() == null
+            || reaction.isNegative() != reactionDescription.isNegative()
+            || reaction.getEmoji() != reactionDescription.getEmoji()
+            || reaction.getSignature() == null && reactionDescription.getSignature() != null
+        ) {
             if (reaction != null) {
                 log.debug("Deleting reaction {}", LogUtil.format(reaction.getId()));
                 reactionTotalOperations.changeTotals(entry, reaction, -1);
@@ -176,8 +178,7 @@ public class ReactionOperations {
                 if (reaction.getDeadline() == null) { // it's a real reaction, not a temporary one
                     reaction.setReplaced(true);
                 }
-                ExtendedDuration reactionTtl =
-                        requestContext.getOptions().getDuration("reaction.deleted.lifetime");
+                ExtendedDuration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
                 if (!reactionTtl.isNever()) {
                     reaction.setDeadline(Timestamp.from(Instant.now().plus(reactionTtl.getDuration())));
                 }
@@ -205,12 +206,17 @@ public class ReactionOperations {
             if (reactionDescription.getSignature() == null) {
                 reaction.setDeadline(Timestamp.from(Instant.now().plus(ReactionOperations.UNSIGNED_TTL)));
             }
-            reaction.setMoment(momentFinder.find(
+            reaction.setMoment(
+                momentFinder.find(
                     moment -> reactionRepository.countMoments(entry.getId(), moment) == 0,
-                    Util.now()));
+                    Util.now()
+                )
+            );
             reaction = reactionRepository.save(reaction);
-            log.debug("Created reaction {}, deadline {}",
-                    LogUtil.format(reaction.getId()), LogUtil.format(reaction.getDeadline()));
+            log.debug(
+                "Created reaction {}, deadline {}",
+                LogUtil.format(reaction.getId()), LogUtil.format(reaction.getDeadline())
+            );
             entry.getCurrentRevision().addReaction(reaction);
 
             reactionTotalOperations.changeTotals(entry, reaction, 1);
@@ -232,10 +238,12 @@ public class ReactionOperations {
     public ReactionsSliceInfo getBefore(UUID entryId, boolean negative, Integer emoji, long before, int limit) {
         Pageable pageable = PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment");
         Page<Reaction> page = emoji == null
-                ? reactionRepository.findSlice(entryId, negative,
-                                                SafeInteger.MIN_VALUE, before, pageable)
-                : reactionRepository.findSliceWithEmoji(entryId, negative, emoji,
-                                                SafeInteger.MIN_VALUE, before, pageable);
+                ? reactionRepository.findSlice(
+                    entryId, negative, SafeInteger.MIN_VALUE, before, pageable
+                )
+                : reactionRepository.findSliceWithEmoji(
+                    entryId, negative, emoji, SafeInteger.MIN_VALUE, before, pageable
+                );
         ReactionsSliceInfo sliceInfo = new ReactionsSliceInfo();
         sliceInfo.setBefore(before);
         if (page.getNumberOfElements() < limit + 1) {
@@ -244,18 +252,20 @@ public class ReactionOperations {
             sliceInfo.setAfter(page.getContent().get(limit).getMoment());
         }
         sliceInfo.setTotal(getTotal(entryId, negative, emoji));
-        sliceInfo.setReactions(page.stream()
+        sliceInfo.setReactions(
+            page.stream()
                 .filter(r -> requestContext.isPrincipal(r.getViewE(), Scope.VIEW_CONTENT))
                 .map(r -> ReactionInfoUtil.build(r, requestContext))
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList())
+        );
         return sliceInfo;
     }
 
     private int getTotal(UUID entryId, boolean negative, Integer emoji) {
         if (emoji == null) {
             return reactionTotalRepository.findAllByEntryId(entryId).stream()
-                    .map(ReactionTotal::getTotal)
-                    .reduce(0, Integer::sum);
+                .map(ReactionTotal::getTotal)
+                .reduce(0, Integer::sum);
         } else {
             ReactionTotal total = reactionTotalRepository.findByEntryId(entryId, negative, emoji);
             return total != null ? total.getTotal() : 0;
@@ -265,12 +275,16 @@ public class ReactionOperations {
     public void delete(String ownerName, Entry entry, Consumer<Reaction> reactionDeleted) {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(entry.getId(), ownerName);
         if (reaction != null) {
-            if (requestContext.isClient(reaction.getOwnerName(), Scope.IDENTIFY)
-                    && !requestContext.isPrincipal(reaction.getDeleteE(), Scope.DELETE_OWN_CONTENT)) {
+            if (
+                requestContext.isClient(reaction.getOwnerName(), Scope.IDENTIFY)
+                && !requestContext.isPrincipal(reaction.getDeleteE(), Scope.DELETE_OWN_CONTENT)
+            ) {
                 throw new AuthenticationException();
             }
-            if (!requestContext.isClient(reaction.getOwnerName(), Scope.IDENTIFY)
-                    && !requestContext.isPrincipal(reaction.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)) {
+            if (
+                !requestContext.isClient(reaction.getOwnerName(), Scope.IDENTIFY)
+                && !requestContext.isPrincipal(reaction.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)
+            ) {
                 throw new AuthenticationException();
             }
 
@@ -295,32 +309,37 @@ public class ReactionOperations {
 
             Set<Entry> changed = new HashSet<>();
             tx.executeWrite(() ->
-                    reactionRepository.findExpired(Util.now()).forEach(reaction -> {
-                        log.debug("Purging reaction {}, deletedAt = {}",
-                                LogUtil.format(reaction.getId()), LogUtil.format(reaction.getDeletedAt()));
-                        Entry entry = reaction.getEntryRevision().getEntry();
-                        if (reaction.getDeletedAt() == null) {
-                            // it's the current active reaction of the user to the entry
-                            List<Reaction> replaced = reactionRepository.findReplacedByEntryIdAndOwner(
-                                    entry.getId(),
-                                    reaction.getOwnerName(),
-                                    PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt")));
-                            if (!replaced.isEmpty()) {
-                                Reaction next = replaced.get(0);
-                                next.setDeletedAt(null);
-                                next.setReplaced(false);
-                                if (next.getSignature() != null) {
-                                    next.setDeadline(null);
-                                }
-                                log.debug("Restored reaction {}, deadline {}",
-                                        LogUtil.format(next.getId()), LogUtil.format(next.getDeadline()));
-                                reactionTotalOperations.changeTotals(entry, next, 1);
+                reactionRepository.findExpired(Util.now()).forEach(reaction -> {
+                    log.debug(
+                        "Purging reaction {}, deletedAt = {}",
+                        LogUtil.format(reaction.getId()), LogUtil.format(reaction.getDeletedAt())
+                    );
+                    Entry entry = reaction.getEntryRevision().getEntry();
+                    if (reaction.getDeletedAt() == null) {
+                        // it's the current active reaction of the user to the entry
+                        List<Reaction> replaced = reactionRepository.findReplacedByEntryIdAndOwner(
+                            entry.getId(),
+                            reaction.getOwnerName(),
+                            PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt"))
+                        );
+                        if (!replaced.isEmpty()) {
+                            Reaction next = replaced.get(0);
+                            next.setDeletedAt(null);
+                            next.setReplaced(false);
+                            if (next.getSignature() != null) {
+                                next.setDeadline(null);
                             }
-                            reactionTotalOperations.changeTotals(entry, reaction, -1);
-                            changed.add(entry);
+                            log.debug(
+                                "Restored reaction {}, deadline {}",
+                                LogUtil.format(next.getId()), LogUtil.format(next.getDeadline())
+                            );
+                            reactionTotalOperations.changeTotals(entry, next, 1);
                         }
-                        reactionRepository.delete(reaction);
-                    })
+                        reactionTotalOperations.changeTotals(entry, reaction, -1);
+                        changed.add(entry);
+                    }
+                    reactionRepository.delete(reaction);
+                })
             );
             for (Entry entry : changed) {
                 switch (entry.getEntryType()) {
@@ -328,15 +347,17 @@ public class ReactionOperations {
                         Posting posting = (Posting) entry;
                         var totalsInfo = reactionTotalOperations.getInfo(posting);
                         liberinManager.send(
-                                new PostingReactionTotalsUpdatedLiberin(posting, totalsInfo.getPublicInfo())
-                                        .withNodeId(posting.getNodeId()));
+                            new PostingReactionTotalsUpdatedLiberin(posting, totalsInfo.getPublicInfo())
+                                .withNodeId(posting.getNodeId())
+                        );
                         break;
                     }
 
                     case COMMENT: {
                         Comment comment = (Comment) entry;
                         liberinManager.send(
-                                new CommentReactionTotalsUpdatedLiberin(comment).withNodeId(comment.getNodeId()));
+                            new CommentReactionTotalsUpdatedLiberin(comment).withNodeId(comment.getNodeId())
+                        );
                         break;
                     }
                 }
