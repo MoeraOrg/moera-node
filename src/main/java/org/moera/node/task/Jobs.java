@@ -125,7 +125,8 @@ public class Jobs {
         try {
             taskExecutor.execute(job);
         } catch (RejectedExecutionException e) {
-            // ignore, the job was persisted
+            // No space in the executor, wait a bit
+            pending.add(job);
         }
     }
 
@@ -252,7 +253,10 @@ public class Jobs {
     void retrying(Job<?, ?> job) {
         if (job.getId() == null || job.getWaitUntil().isBefore(Instant.now().plus(1, ChronoUnit.HOURS))) {
             pending.add(job);
-        } // otherwise, it will be destroyed and reconstructed from the database when retry time arrives
+        } else {
+            // otherwise, it will be destroyed and reconstructed from the database when retry time arrives
+            all.remove(job.getId());
+        }
         update(job);
     }
 
