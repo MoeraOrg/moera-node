@@ -940,8 +940,6 @@ CREATE TABLE public.drafts (
     owner_full_name character varying(96),
     owner_avatar_media_file_id character varying(40),
     owner_avatar_shape character varying(8),
-    accepted_reactions_positive character varying(255) NOT NULL,
-    accepted_reactions_negative character varying(255) NOT NULL,
     body_src text NOT NULL,
     body_src_format smallint DEFAULT 0 NOT NULL,
     body text NOT NULL,
@@ -952,7 +950,11 @@ CREATE TABLE public.drafts (
     publish_at timestamp without time zone,
     replied_to_id character varying(40),
     operations text DEFAULT '{}'::text NOT NULL,
-    child_operations text DEFAULT '{}'::text NOT NULL
+    child_operations text DEFAULT '{}'::text NOT NULL,
+    rejected_reactions_positive character varying(255) DEFAULT ''::character varying NOT NULL,
+    rejected_reactions_negative character varying(255) DEFAULT '*'::character varying NOT NULL,
+    child_rejected_reactions_positive character varying(255) DEFAULT ''::character varying NOT NULL,
+    child_rejected_reactions_negative character varying(255) DEFAULT ''::character varying NOT NULL
 );
 
 
@@ -972,8 +974,6 @@ CREATE TABLE public.entries (
     deleted_at timestamp without time zone,
     total_revisions integer NOT NULL,
     receiver_name character varying(63),
-    accepted_reactions_positive character varying(255) NOT NULL,
-    accepted_reactions_negative character varying(255) NOT NULL,
     deadline timestamp without time zone,
     receiver_created_at timestamp without time zone,
     current_receiver_revision_id character varying(40),
@@ -1051,7 +1051,14 @@ CREATE TABLE public.entries (
     sheriff_marks text DEFAULT ''::text NOT NULL,
     receiver_sheriff_marks text,
     receiver_sheriffs text,
-    sheriff_user_list_referred boolean DEFAULT false NOT NULL
+    sheriff_user_list_referred boolean DEFAULT false NOT NULL,
+    recommended boolean DEFAULT false NOT NULL,
+    rejected_reactions_positive character varying(255) DEFAULT ''::character varying NOT NULL,
+    rejected_reactions_negative character varying(255) DEFAULT '*'::character varying NOT NULL,
+    parent_rejected_reactions_positive character varying(255) DEFAULT ''::character varying NOT NULL,
+    parent_rejected_reactions_negative character varying(255) DEFAULT ''::character varying NOT NULL,
+    child_rejected_reactions_positive character varying(255) DEFAULT ''::character varying NOT NULL,
+    child_rejected_reactions_negative character varying(255) DEFAULT ''::character varying NOT NULL
 );
 
 
@@ -1253,6 +1260,21 @@ CREATE TABLE public.grants (
 
 
 ALTER TABLE public.grants OWNER TO moera;
+
+--
+-- Name: initial_recommendations; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.initial_recommendations (
+    id uuid NOT NULL,
+    node_name character varying(63) NOT NULL,
+    posting_id character varying(40) NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    deadline timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.initial_recommendations OWNER TO moera;
 
 --
 -- Name: media_file_owners; Type: TABLE; Schema: public; Owner: moera
@@ -1471,7 +1493,8 @@ CREATE TABLE public.picks (
     remote_posting_id character varying(40) NOT NULL,
     created_at timestamp without time zone NOT NULL,
     retry_at timestamp without time zone,
-    media_file_owner_id uuid
+    media_file_owner_id uuid,
+    recommended boolean DEFAULT false NOT NULL
 );
 
 
@@ -2158,6 +2181,14 @@ ALTER TABLE ONLY public.frozen_notifications
 
 ALTER TABLE ONLY public.grants
     ADD CONSTRAINT grants_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: initial_recommendations initial_recommendations_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.initial_recommendations
+    ADD CONSTRAINT initial_recommendations_pkey PRIMARY KEY (id);
 
 
 --
@@ -2891,6 +2922,27 @@ CREATE UNIQUE INDEX grants_node_id_name_idx ON public.grants USING btree (node_i
 
 
 --
+-- Name: initial_recommendations_created_at_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX initial_recommendations_created_at_idx ON public.initial_recommendations USING btree (created_at);
+
+
+--
+-- Name: initial_recommendations_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX initial_recommendations_deadline_idx ON public.initial_recommendations USING btree (deadline);
+
+
+--
+-- Name: initial_recommendations_name_posting_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX initial_recommendations_name_posting_idx ON public.initial_recommendations USING btree (node_name, posting_id);
+
+
+--
 -- Name: media_file_owners_deadline_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -3577,6 +3629,13 @@ CREATE TRIGGER update_media_file_id AFTER INSERT OR DELETE OR UPDATE OF media_fi
 
 
 --
+-- Name: remote_media_cache update_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_media_file_id AFTER INSERT OR DELETE OR UPDATE OF media_file_id ON public.remote_media_cache FOR EACH ROW EXECUTE FUNCTION public.update_entity_media_file_id();
+
+
+--
 -- Name: entry_attachments update_media_file_owner_id; Type: TRIGGER; Schema: public; Owner: moera
 --
 
@@ -4077,7 +4136,7 @@ ALTER TABLE ONLY public.reminders
 --
 
 ALTER TABLE ONLY public.remote_media_cache
-    ADD CONSTRAINT remote_media_cache_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+    ADD CONSTRAINT remote_media_cache_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
