@@ -471,8 +471,12 @@ public class PostingInfoUtil {
         );
         posting.setReceiverDeletedAt(null);
         if (info.getRejectedReactions() != null) {
-            posting.setRejectedReactionsPositive(info.getRejectedReactions().getPositive());
-            posting.setRejectedReactionsNegative(info.getRejectedReactions().getNegative());
+            if (info.getRejectedReactions().getPositive() != null) {
+                posting.setRejectedReactionsPositive(info.getRejectedReactions().getPositive());
+            }
+            if (info.getRejectedReactions().getNegative() != null) {
+                posting.setRejectedReactionsNegative(info.getRejectedReactions().getNegative());
+            }
         }
         posting.setTotalChildren(info.getTotalComments());
         // TODO visibility to a particular group of friends should be converted to something here
