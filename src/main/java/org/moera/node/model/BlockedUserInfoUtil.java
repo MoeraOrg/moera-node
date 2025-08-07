@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import org.moera.lib.node.types.BlockedUserInfo;
+import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.Principal;
@@ -11,13 +12,18 @@ import org.moera.node.util.Util;
 public class BlockedUserInfoUtil {
 
     public static BlockedUserInfo build(BlockedUser blockedUser, Options options) {
+        ContactInfo contactInfo = blockedUser.getContact() != null
+            ? ContactInfoUtil.build(blockedUser.getContact(), options)
+            : null;
+        return build(blockedUser, contactInfo);
+    }
+
+    public static BlockedUserInfo build(BlockedUser blockedUser, ContactInfo contactInfo) {
         BlockedUserInfo info = new BlockedUserInfo();
         info.setId(blockedUser.getId().toString());
         info.setBlockedOperation(blockedUser.getBlockedOperation());
         info.setNodeName(blockedUser.getRemoteNodeName());
-        if (blockedUser.getContact() != null) {
-            info.setContact(ContactInfoUtil.build(blockedUser.getContact(), options));
-        }
+        info.setContact(contactInfo);
         if (blockedUser.getEntry() != null) {
             info.setEntryId(blockedUser.getEntry().getId().toString());
         }
@@ -37,8 +43,16 @@ public class BlockedUserInfoUtil {
         return info;
     }
 
+    public static BlockedUserInfo build(BlockedUser blockedUser, ContactInfo contactInfo, AccessChecker accessChecker) {
+        BlockedUserInfo info = build(blockedUser, contactInfo);
+        protect(info, accessChecker);
+        return info;
+    }
+
     public static void protect(BlockedUserInfo blockedUser, AccessChecker accessChecker) {
-        ContactInfoUtil.protect(blockedUser.getContact(), accessChecker);
+        if (blockedUser.getContact() != null) {
+            ContactInfoUtil.protect(blockedUser.getContact(), accessChecker);
+        }
         if (!accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_PEOPLE)) {
             blockedUser.setReasonSrc(null);
             blockedUser.setReasonSrcFormat(null);

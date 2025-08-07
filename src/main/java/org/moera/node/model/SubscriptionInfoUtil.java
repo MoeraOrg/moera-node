@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.SubscriptionInfo;
 import org.moera.lib.node.types.SubscriptionOperations;
 import org.moera.lib.node.types.principal.AccessChecker;
@@ -11,14 +12,19 @@ import org.moera.node.util.Util;
 public class SubscriptionInfoUtil {
 
     public static SubscriptionInfo build(UserSubscription subscription, Options options) {
+        ContactInfo contactInfo = subscription.getContact() != null
+            ? ContactInfoUtil.build(subscription.getContact(), options)
+            : null;
+        return build(subscription, contactInfo, options);
+    }
+
+    public static SubscriptionInfo build(UserSubscription subscription, ContactInfo contactInfo, Options options) {
         SubscriptionInfo subscriptionInfo = new SubscriptionInfo();
         subscriptionInfo.setId(subscription.getId().toString());
         subscriptionInfo.setType(subscription.getSubscriptionType());
         subscriptionInfo.setFeedName(subscription.getFeedName());
         subscriptionInfo.setRemoteNodeName(subscription.getRemoteNodeName());
-        if (subscription.getContact() != null) {
-            subscriptionInfo.setContact(ContactInfoUtil.build(subscription.getContact(), options));
-        }
+        subscriptionInfo.setContact(contactInfo);
         subscriptionInfo.setRemoteFeedName(subscription.getRemoteFeedName());
         subscriptionInfo.setRemotePostingId(subscription.getRemoteEntryId());
         subscriptionInfo.setCreatedAt(Util.toEpochSecond(subscription.getCreatedAt()));
@@ -34,6 +40,14 @@ public class SubscriptionInfoUtil {
 
     public static SubscriptionInfo build(UserSubscription subscription, Options options, AccessChecker accessChecker) {
         SubscriptionInfo subscriptionInfo = build(subscription, options);
+        protect(subscriptionInfo, accessChecker);
+        return subscriptionInfo;
+    }
+
+    public static SubscriptionInfo build(
+        UserSubscription subscription, ContactInfo contactInfo, Options options, AccessChecker accessChecker
+    ) {
+        SubscriptionInfo subscriptionInfo = build(subscription, contactInfo, options);
         protect(subscriptionInfo, accessChecker);
         return subscriptionInfo;
     }

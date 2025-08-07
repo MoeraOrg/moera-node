@@ -1,6 +1,7 @@
 package org.moera.node.data;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,16 +15,29 @@ public interface BlockedByUserRepository
     @Query("select count(distinct bbu.remoteNodeName) from BlockedByUser bbu where bbu.nodeId = ?1")
     int countByNodeId(UUID nodeId);
 
-    @Query("select bbu from BlockedByUser bbu left join fetch bbu.contact c left join fetch c.remoteAvatarMediaFile"
-            + " where bbu.nodeId = ?1 and bbu.id = ?2")
+    @Query(
+        "select bbu from BlockedByUser bbu left join fetch bbu.contact c left join fetch c.remoteAvatarMediaFile"
+        + " where bbu.nodeId = ?1 and bbu.id = ?2"
+    )
     Optional<BlockedByUser> findByNodeIdAndId(UUID nodeId, UUID id);
 
-    @Query("select bbu from BlockedByUser bbu left join fetch bbu.contact c left join fetch c.remoteAvatarMediaFile"
-            + " where bbu.nodeId = ?1 and bbu.remoteNodeName = ?2 and bbu.remotePostingId is null")
+    @Query(
+        "select bbu from BlockedByUser bbu left join fetch bbu.contact c left join fetch c.remoteAvatarMediaFile"
+        + " where bbu.nodeId = ?1 and bbu.remoteNodeName = ?2 and bbu.remotePostingId is null"
+    )
     Collection<BlockedByUser> findByRemoteNode(UUID nodeId, String remoteNodeName);
 
-    @Query("select bbu from BlockedByUser bbu left join fetch bbu.contact c left join fetch c.remoteAvatarMediaFile"
-            + " where bbu.nodeId = ?1 and bbu.remoteNodeName = ?2 and bbu.remotePostingId = ?3")
+    @Query(
+        "select bbu from BlockedByUser bbu"
+        + " where bbu.nodeId = ?1 and bbu.remoteNodeName in ?2 and bbu.remotePostingId is null"
+        + " order by bbu.remoteNodeName"
+    )
+    List<BlockedByUser> findByRemoteNodes(UUID nodeId, Collection<String> remoteNodeNames);
+
+    @Query(
+        "select bbu from BlockedByUser bbu left join fetch bbu.contact c left join fetch c.remoteAvatarMediaFile"
+        + " where bbu.nodeId = ?1 and bbu.remoteNodeName = ?2 and bbu.remotePostingId = ?3"
+    )
     Collection<BlockedByUser> findByRemotePosting(UUID nodeId, String remoteNodeName, String remotePostingId);
 
 }

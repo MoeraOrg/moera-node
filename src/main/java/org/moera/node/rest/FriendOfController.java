@@ -76,8 +76,10 @@ public class FriendOfController {
     public FriendOfInfo get(@PathVariable("name") String nodeName) {
         log.info("GET /people/friend-ofs/{name} (name = {})", LogUtil.format(nodeName));
 
-        if (!requestContext.isPrincipal(FriendOf.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
-                && !requestContext.isClient(nodeName, Scope.VIEW_PEOPLE)) {
+        if (
+            !requestContext.isPrincipal(FriendOf.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
+            && !requestContext.isClient(nodeName, Scope.VIEW_PEOPLE)
+        ) {
             throw new AuthenticationException();
         }
 
@@ -87,8 +89,8 @@ public class FriendOfController {
         }
 
         List<FriendGroupDetails> groups = friendOfs.stream()
-                .map(FriendGroupDetailsUtil::build)
-                .collect(Collectors.toList());
+            .map(FriendGroupDetailsUtil::build)
+            .collect(Collectors.toList());
 
         ContactInfo contactInfo = ContactInfoUtil.build(
             friendOfs.get(0).getContact(), requestContext.getOptions(), requestContext

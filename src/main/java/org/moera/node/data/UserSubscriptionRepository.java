@@ -1,5 +1,6 @@
 package org.moera.node.data;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,6 +39,14 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
     )
     List<UserSubscription> findAllByTypeAndNodeAndFeedName(
         UUID nodeId, SubscriptionType subscriptionType, String remoteNodeName, String remoteFeedName
+    );
+
+    @Query(
+        "select s from UserSubscription s"
+        + " where s.nodeId = ?1 and s.subscriptionType = ?2 and s.remoteNodeName in ?3 and s.remoteFeedName = ?4"
+    )
+    Collection<UserSubscription> findByNodes(
+        UUID nodeId, SubscriptionType subscriptionType, Collection<String> remoteNodeNames, String remoteFeedName
     );
 
     @Query("select count(*) from UserSubscription s where s.nodeId = ?1 and s.subscriptionType = ?2")

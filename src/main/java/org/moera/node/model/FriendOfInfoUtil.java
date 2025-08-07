@@ -44,7 +44,9 @@ public class FriendOfInfoUtil {
     }
 
     public static void protect(FriendOfInfo friendOf, AccessChecker accessChecker) {
-        ContactInfoUtil.protect(friendOf.getContact(), accessChecker);
+        if (friendOf.getContact() != null) {
+            ContactInfoUtil.protect(friendOf.getContact(), accessChecker);
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SubscriberInfo;
 import org.moera.lib.node.types.SubscriberOperations;
@@ -12,6 +13,13 @@ import org.moera.node.util.Util;
 public class SubscriberInfoUtil {
 
     public static SubscriberInfo build(Subscriber subscriber, Options options, AccessChecker accessChecker) {
+        ContactInfo contactInfo = subscriber.getContact() != null
+            ? ContactInfoUtil.build(subscriber.getContact(), options, accessChecker)
+            : null;
+        return build(subscriber, contactInfo, accessChecker);
+    }
+
+    public static SubscriberInfo build(Subscriber subscriber, ContactInfo contactInfo, AccessChecker accessChecker) {
         SubscriberInfo subscriberInfo = new SubscriberInfo();
 
         subscriberInfo.setId(subscriber.getId().toString());
@@ -19,9 +27,7 @@ public class SubscriberInfoUtil {
         subscriberInfo.setFeedName(subscriber.getFeedName());
         subscriberInfo.setPostingId(subscriber.getEntry() != null ? subscriber.getEntry().getId().toString() : null);
         subscriberInfo.setNodeName(subscriber.getRemoteNodeName());
-        if (subscriber.getContact() != null) {
-            subscriberInfo.setContact(ContactInfoUtil.build(subscriber.getContact(), options, accessChecker));
-        }
+        subscriberInfo.setContact(contactInfo);
         subscriberInfo.setCreatedAt(Util.toEpochSecond(subscriber.getCreatedAt()));
 
         SubscriberOperations baseOperations = new SubscriberOperations();

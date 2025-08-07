@@ -2,6 +2,7 @@ package org.moera.node.data;
 
 import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,18 +17,32 @@ public interface BlockedUserRepository
     @Query("select count(distinct bu.remoteNodeName) from BlockedUser bu where bu.nodeId = ?1")
     int countByNodeId(UUID nodeId);
 
-    @Query("select bu from BlockedUser bu left join fetch bu.contact c left join fetch c.remoteAvatarMediaFile"
-            + " left join fetch bu.entry e left join fetch e.currentRevision"
-            + " where bu.nodeId = ?1 and bu.id = ?2")
+    @Query(
+        "select bu from BlockedUser bu left join fetch bu.contact c left join fetch c.remoteAvatarMediaFile"
+        + " left join fetch bu.entry e left join fetch e.currentRevision"
+        + " where bu.nodeId = ?1 and bu.id = ?2"
+    )
     Optional<BlockedUser> findByNodeIdAndId(UUID nodeId, UUID id);
 
-    @Query("select bu.id from BlockedUser bu"
-            + " where bu.nodeId = ?1 and bu.blockedOperation = ?2 and bu.entry is null"
-            + " and bu.entryNodeName is null and bu.entryPostingId is null")
+    @Query(
+        "select bu.id from BlockedUser bu"
+        + " where bu.nodeId = ?1 and bu.blockedOperation = ?2 and bu.entry is null"
+        + " and bu.entryNodeName is null and bu.entryPostingId is null"
+    )
     Collection<UUID> findIdsByGlobalOperation(UUID nodeId, BlockedOperation blockedOperation);
 
-    @Query("select bu from BlockedUser bu left join fetch bu.entry e left join fetch e.currentRevision"
-            + " where bu.deadline < ?1")
+    @Query(
+        "select bu from BlockedUser bu"
+        + " where bu.nodeId = ?1 and bu.remoteNodeName in ?2 and bu.entry is null"
+        + " and bu.entryNodeName is null and bu.entryPostingId is null"
+        + " order by bu.remoteNodeName"
+    )
+    List<BlockedUser> findByRemoteNodes(UUID nodeId, Collection<String> remoteNodeNames);
+
+    @Query(
+        "select bu from BlockedUser bu left join fetch bu.entry e left join fetch e.currentRevision"
+        + " where bu.deadline < ?1"
+    )
     Collection<BlockedUser> findExpired(Timestamp deadline);
 
 }
