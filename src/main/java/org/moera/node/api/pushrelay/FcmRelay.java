@@ -18,6 +18,7 @@ import org.moera.lib.pushrelay.PushRelayApiException;
 import org.moera.lib.pushrelay.PushRelayError;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
+import org.moera.node.data.Feed;
 import org.moera.node.domain.Domains;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -121,8 +122,11 @@ public class FcmRelay {
     }
 
     public void send(UUID nodeId, PushContent pushContent) {
-        if (pushContent.getType() == PushContentType.FEED_UPDATED
-                && !Objects.equals(pushContent.getFeedStatus().getFeedName(), "news")) {
+        if (
+            pushContent.getType() == PushContentType.FEED_UPDATED
+            && !Objects.equals(pushContent.getFeedStatus().getFeedName(), Feed.NEWS)
+            && !Objects.equals(pushContent.getFeedStatus().getFeedName(), Feed.EXPLORE)
+        ) {
             return;
         }
 

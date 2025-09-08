@@ -78,6 +78,12 @@ public class MoeraUiController {
         return openClient("News", model);
     }
 
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/explore", produces = "text/html")
+    @VirtualPage
+    public String explore(Model model) {
+        return openClient("Explore", model);
+    }
+
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people")
     @VirtualPage
     public String people() {

@@ -237,6 +237,13 @@ public class Picker extends Task {
                 publish(feedName, posting, liberins);
                 liberins.add(new PostingRestoredLiberin(posting));
             }
+        } else {
+            boolean published = storyRepository.countByFeedAndTypeAndEntryId(
+                nodeId, feedName, StoryType.POSTING_ADDED, posting.getId()
+            ) > 0;
+            if (!published) {
+                publish(feedName, posting, liberins);
+            }
         }
         posting = postingRepository.saveAndFlush(posting);
         mediaOperations.updatePermissions(posting);

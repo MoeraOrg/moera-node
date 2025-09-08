@@ -417,6 +417,14 @@
   defaultValue: false
   title: Purge pinned news
 
+- name: explore.lifetime
+  type: Duration
+  defaultValue: 14d
+  title: Purge Explore feed after
+  modifiers:
+    min: 1d
+    max: 180d
+
 - name: comment.max-size
   type: int
   privileged: true

@@ -89,7 +89,7 @@ public class FetchInitialRecommendationsJob
 
         state.recommendations = nodeApi
             .at(sourceNode)
-            .getRecommendedPostings(sheriffName, BATCH_SIZE);
+            .getRecommendedPostings(null, sheriffName, BATCH_SIZE);
 
         if (ObjectUtils.isEmpty(state.recommendations)) {
             log.info("No recommendations received");

@@ -19,13 +19,23 @@ public class FetchRecommendationJob extends Job<FetchRecommendationJob.Parameter
 
     public static class Parameters {
 
+        private String feedName;
         private int limit;
 
         public Parameters() {
         }
 
-        public Parameters(int limit) {
+        public Parameters(String feedName, int limit) {
+            this.feedName = feedName;
             this.limit = limit;
+        }
+
+        public String getFeedName() {
+            return feedName;
+        }
+
+        public void setFeedName(String feedName) {
+            this.feedName = feedName;
         }
 
         public int getLimit() {
@@ -64,7 +74,7 @@ public class FetchRecommendationJob extends Job<FetchRecommendationJob.Parameter
         String sheriffName = safe ? universalContext.getOptions().getString("recommendations.sheriff") : null;
         RecommendedPostingInfo[] recommendations = nodeApi
             .at(sourceNode, generateCarte(sourceNode, Scope.IDENTIFY))
-            .getRecommendedPostings(sheriffName, parameters.limit);
+            .getRecommendedPostings(parameters.feedName, sheriffName, parameters.limit);
 
         if (ObjectUtils.isEmpty(recommendations)) {
             log.info("No recommendations received");
@@ -81,13 +91,15 @@ public class FetchRecommendationJob extends Job<FetchRecommendationJob.Parameter
             pick.setRemoteNodeName(recommendation.getNodeName());
             pick.setRemoteFeedName(Feed.TIMELINE);
             pick.setRemotePostingId(recommendation.getPostingId());
-            pick.setFeedName(Feed.NEWS);
+            pick.setFeedName(parameters.feedName);
             pick.setRecommended(true);
             pickerPool.pick(pick);
 
             nodeApi
                 .at(sourceNode, generateCarte(sourceNode, Scope.UPDATE_FEEDS))
-                .acceptRecommendedPosting(recommendation.getNodeName(), recommendation.getPostingId());
+                .acceptRecommendedPosting(
+                    recommendation.getNodeName(), recommendation.getPostingId(), parameters.feedName
+                );
         }
     }
 

@@ -5,7 +5,7 @@
 
     <groupId>org.moera</groupId>
     <artifactId>moera-node</artifactId>
-    <version>0.17.2</version>
+    <version>0.17.6-SNAPSHOT</version>
     <name>moera-node</name>
     <description>Moera node</description>
     <packaging>jar</packaging>
@@ -233,7 +233,7 @@
         <dependency>
             <groupId>org.moera</groupId>
             <artifactId>moeralib</artifactId>
-            <version>0.17.2</version>
+            <version>0.17.6-SNAPSHOT</version>
         </dependency>
 
         <dependency>

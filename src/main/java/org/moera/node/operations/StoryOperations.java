@@ -160,6 +160,7 @@ public class StoryOperations {
                     nodeId, domainName, Feed.NEWS, "news.lifetime", false,
                     domains.getDomainOptions(nodeId).getBool("news.purge-pinned")
                 );
+                purgeExpired(nodeId, domainName, Feed.EXPLORE, "explore.lifetime", false, true);
             }
         }
     }

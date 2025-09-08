@@ -56,6 +56,7 @@ public class IndexUiController {
                 + "Disallow: /registrar\n"
                 + "Disallow: /moera/gotoname\n"
                 + "Disallow: /moera/news\n"
+                + "Disallow: /moera/explore\n"
                 + "\n"
                 + "Sitemap: %s/sitemaps\n",
                 requestContext.getSiteUrl()

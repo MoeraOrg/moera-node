@@ -10,6 +10,7 @@ import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.notifications.Notification;
 import org.moera.lib.node.types.notifications.NotificationType;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.data.Feed;
 import org.moera.node.data.FrozenNotification;
 import org.moera.node.data.FrozenNotificationRepository;
 import org.moera.node.data.UserSubscriptionRepository;
@@ -129,7 +130,7 @@ public class DefrostNodeJob extends Job<DefrostNodeJob.Parameters, Object> {
             if (subscriptionsTotal < DECENT_SUBSCRIPTIONS_NUMBER) {
                 jobs.run(
                     FetchRecommendationJob.class,
-                    new FetchRecommendationJob.Parameters(RECOMMENDATIONS_NUMBER)
+                    new FetchRecommendationJob.Parameters(Feed.NEWS, RECOMMENDATIONS_NUMBER)
                 );
             }
         }

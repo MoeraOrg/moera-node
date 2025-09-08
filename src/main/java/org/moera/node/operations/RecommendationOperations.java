@@ -119,7 +119,22 @@ public class RecommendationOperations {
                 }
                 jobs.run(
                     FetchRecommendationJob.class,
-                    new FetchRecommendationJob.Parameters(1),
+                    new FetchRecommendationJob.Parameters(Feed.NEWS, 1),
+                    universalContext.nodeId()
+                );
+            }
+        }
+    }
+
+    @Scheduled(fixedDelayString = "PT2H")
+    public void populateExplore() {
+        try (var ignored = requestCounter.allot()) {
+            log.info("Fetching recommendations for 'explore' feed");
+            for (String domainName : domains.getWarmDomainNames()) {
+                universalContext.associate(domains.getDomainNodeId(domainName));
+                jobs.run(
+                    FetchRecommendationJob.class,
+                    new FetchRecommendationJob.Parameters(Feed.EXPLORE, 1),
                     universalContext.nodeId()
                 );
             }

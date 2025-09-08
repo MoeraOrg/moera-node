@@ -64,14 +64,19 @@ public class PopulateNewsfeedJob extends Job<PopulateNewsfeedJob.Parameters, Obj
 
         List<InitialRecommendation> all = tx.executeRead(() -> initialRecommendationRepository.findAll());
         for (InitialRecommendation recommendation : all) {
-            Pick pick = new Pick();
-            pick.setRemoteNodeName(recommendation.getNodeName());
-            pick.setRemoteFeedName(Feed.TIMELINE);
-            pick.setRemotePostingId(recommendation.getPostingId());
-            pick.setFeedName(Feed.NEWS);
-            pick.setRecommended(true);
-            pickerPool.pick(pick);
+            pickerPool.pick(createPick(recommendation, Feed.NEWS));
+            pickerPool.pick(createPick(recommendation, Feed.EXPLORE));
         }
+    }
+
+    private static Pick createPick(InitialRecommendation recommendation, String feedName) {
+        Pick pick = new Pick();
+        pick.setRemoteNodeName(recommendation.getNodeName());
+        pick.setRemoteFeedName(Feed.TIMELINE);
+        pick.setRemotePostingId(recommendation.getPostingId());
+        pick.setFeedName(feedName);
+        pick.setRecommended(true);
+        return pick;
     }
 
 }
