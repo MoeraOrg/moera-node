@@ -41,6 +41,8 @@ public class Pick {
 
     private boolean recommended;
 
+    private boolean viewed;
+
     @NotNull
     private Timestamp createdAt = Util.now();
 
@@ -111,6 +113,14 @@ public class Pick {
 
     public void setRecommended(boolean recommended) {
         this.recommended = recommended;
+    }
+
+    public boolean isViewed() {
+        return viewed;
+    }
+
+    public void setViewed(boolean viewed) {
+        this.viewed = viewed;
     }
 
     public Timestamp getCreatedAt() {

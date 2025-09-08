@@ -158,6 +158,7 @@ public class Picker extends Task {
                 pick.getFeedName(),
                 pick.getMediaFileOwner(),
                 pick.isRecommended(),
+                pick.isViewed(),
                 liberins,
                 picks
             );
@@ -175,6 +176,7 @@ public class Picker extends Task {
         String feedName,
         MediaFileOwner parentMedia,
         boolean recommended,
+        boolean viewed,
         List<Liberin> liberins,
         List<Pick> picks
     ) throws MoeraNodeException {
@@ -221,7 +223,7 @@ public class Picker extends Task {
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
             universalContext.subscriptionsUpdated();
             liberins.add(new PostingAddedLiberin(posting));
-            publish(feedName, posting, liberins);
+            publish(feedName, posting, viewed, liberins);
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
             Principal latestView = posting.getViewE();
             posting.setOwnerAvatarMediaFile(ownerAvatar);
@@ -234,7 +236,7 @@ public class Picker extends Task {
                 liberins.add(new PostingUpdatedLiberin(posting, latest, latestView));
             } else {
                 posting.setDeletedAt(null);
-                publish(feedName, posting, liberins);
+                publish(feedName, posting, viewed, liberins);
                 liberins.add(new PostingRestoredLiberin(posting));
             }
         } else {
@@ -242,7 +244,7 @@ public class Picker extends Task {
                 nodeId, feedName, StoryType.POSTING_ADDED, posting.getId()
             ) > 0;
             if (!published) {
-                publish(feedName, posting, liberins);
+                publish(feedName, posting, viewed, liberins);
             }
         }
         posting = postingRepository.saveAndFlush(posting);
@@ -315,7 +317,7 @@ public class Picker extends Task {
         return pick;
     }
 
-    private void publish(String feedName, Posting posting, List<Liberin> liberins) {
+    private void publish(String feedName, Posting posting, boolean viewed, List<Liberin> liberins) {
         if (feedName == null) {
             return;
         }
@@ -327,6 +329,7 @@ public class Picker extends Task {
         }
         StoryAttributes publication = new StoryAttributes();
         publication.setFeedName(feedName);
+        publication.setViewed(viewed);
         storyOperations.publish(posting, Collections.singletonList(publication), nodeId, liberins::add);
     }
 

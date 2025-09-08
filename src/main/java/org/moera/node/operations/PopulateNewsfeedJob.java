@@ -76,6 +76,7 @@ public class PopulateNewsfeedJob extends Job<PopulateNewsfeedJob.Parameters, Obj
         pick.setRemotePostingId(recommendation.getPostingId());
         pick.setFeedName(feedName);
         pick.setRecommended(true);
+        pick.setViewed(true);
         return pick;
     }
 
