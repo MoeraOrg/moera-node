@@ -26,11 +26,11 @@ public class Feed {
         feedInfo = FeedInfoUtil.build(INSTANT, Principal.NONE);
         STANDARD.put(INSTANT, feedInfo);
 
-        feedInfo = FeedInfoUtil.build(NEWS, Principal.ADMIN);
+        feedInfo = FeedInfoUtil.build(NEWS, Principal.NONE);
         feedInfo.setTitle("News");
         STANDARD.put(NEWS, feedInfo);
 
-        feedInfo = FeedInfoUtil.build(EXPLORE, Principal.ADMIN);
+        feedInfo = FeedInfoUtil.build(EXPLORE, Principal.NONE);
         feedInfo.setTitle("Explore");
         STANDARD.put(EXPLORE, feedInfo);
     }
@@ -52,7 +52,7 @@ public class Feed {
     }
 
     public static boolean isAdmin(String feedName) {
-        return feedName.equals(INSTANT);
+        return !feedName.equals(TIMELINE);
     }
 
     public static boolean isReadable(String feedName, boolean isAdmin) {
