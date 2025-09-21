@@ -328,6 +328,7 @@ public class FeedController {
             .where(storyFilter(requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore()))
             .fetch()
             .stream()
+            .filter(this::isStoryValid)
             .map(this::buildStoryInfo)
             // This should be unnecessary, but let it be for reliability
             .filter(this::isStoryVisible)
@@ -512,6 +513,16 @@ public class FeedController {
                 }
             }
         }
+    }
+
+    private boolean isStoryValid(Story story) {
+        if (
+            story.getStoryType() == StoryType.POSTING_ADDED
+                && (story.getEntry() == null || story.getEntry().getCurrentRevision() == null)
+        ) {
+            return false;
+        }
+        return true;
     }
 
     private StoryInfo buildStoryInfo(Story story) {
