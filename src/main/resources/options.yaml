@@ -473,11 +473,15 @@
 
 - name: credentials-reset.token.lifetime
   type: Duration
-  defaultValue: 6h
+  defaultValue: 15m
   title: Invalidate code for resetting a password after
   modifiers:
-    min: 15m
-    max: 30d
+    min: 1m
+    max: 1h
+
+- name: credentials-reset.token.last-check
+  type: Timestamp
+  internal: true
 
 - name: push.notification.lifetime
   type: Duration

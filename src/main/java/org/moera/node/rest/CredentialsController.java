@@ -151,10 +151,15 @@ public class CredentialsController {
 
         PasswordResetToken token = new PasswordResetToken();
         token.setNodeId(requestContext.nodeId());
-        token.setToken(CryptoUtil.token().substring(0, 10));
+        token.setToken(CryptoUtil.humanFriendlyToken(6));
         token.setCreatedAt(Util.now());
-        token.setDeadline(Timestamp.from(Instant.now().plus(
-                requestContext.getOptions().getDuration("credentials-reset.token.lifetime").getDuration())));
+        token.setDeadline(
+            Timestamp.from(
+                Instant
+                    .now()
+                    .plus(requestContext.getOptions().getDuration("credentials-reset.token.lifetime").getDuration())
+            )
+        );
         passwordResetTokenRepository.save(token);
 
         requestContext.send(new PasswordResetLiberin(token.getToken()));
