@@ -11,8 +11,10 @@ import org.moera.lib.crypto.Password;
 import org.moera.lib.node.types.Credentials;
 import org.moera.lib.node.types.CredentialsChange;
 import org.moera.lib.node.types.CredentialsCreated;
+import org.moera.lib.node.types.CredentialsResetToken;
 import org.moera.lib.node.types.EmailHint;
 import org.moera.lib.node.types.Result;
+import org.moera.lib.node.types.VerificationInfo;
 import org.moera.lib.node.types.validate.ValidationFailure;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
@@ -27,10 +29,12 @@ import org.moera.node.liberin.model.PasswordResetLiberin;
 import org.moera.node.model.CredentialsCreatedUtil;
 import org.moera.node.model.EmailHintUtil;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.model.VerificationInfoUtil;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.ObjectUtils;
@@ -56,6 +60,9 @@ public class CredentialsController {
 
     @Inject
     private PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Inject
+    private MessageSource messageSource;
 
     @GetMapping
     @Transactional
@@ -165,6 +172,24 @@ public class CredentialsController {
         requestContext.send(new PasswordResetLiberin(token.getToken()));
 
         return EmailHintUtil.build(email);
+    }
+
+    @PostMapping("/reset/verify")
+    @Transactional
+    public VerificationInfo verifyResetToken(@RequestBody CredentialsResetToken resetToken) {
+        log.info("POST /credentials/reset/verify");
+
+        resetToken.validate();
+
+        PasswordResetToken token = passwordResetTokenRepository.findById(resetToken.getToken()).orElse(null);
+        if (token == null || !token.getNodeId().equals(requestContext.nodeId())) {
+            return VerificationInfoUtil.incorrect("credentials.wrong-reset-token", messageSource);
+        }
+        if (!token.getDeadline().after(Util.now())) {
+            return VerificationInfoUtil.incorrect("credentials.reset-token-expired", messageSource);
+        }
+
+        return VerificationInfoUtil.correct();
     }
 
     @Scheduled(fixedDelayString = "PT1H")
