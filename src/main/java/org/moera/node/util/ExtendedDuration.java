@@ -11,8 +11,8 @@ public class ExtendedDuration {
     public static final ExtendedDuration NEVER = new ExtendedDuration(null, Zone.NEVER);
     public static final ExtendedDuration ALWAYS = new ExtendedDuration(null, Zone.ALWAYS);
 
-    private Duration duration;
-    private Zone zone;
+    private final Duration duration;
+    private final Zone zone;
 
     protected ExtendedDuration() {
         this(null, Zone.NEVER);

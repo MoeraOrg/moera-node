@@ -14,6 +14,7 @@ import org.moera.node.global.CacheControlInterceptor;
 import org.moera.node.global.ClientIdInterceptor;
 import org.moera.node.global.EntitledInterceptor;
 import org.moera.node.global.NetworkLatencyInterceptor;
+import org.moera.node.global.RateLimitInterceptor;
 import org.moera.node.global.RequestRateInterceptor;
 import org.moera.node.global.SlowRequestsInnerInterceptor;
 import org.moera.node.global.SlowRequestsInterceptor;
@@ -86,6 +87,9 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     private RequestRateInterceptor requestRateInterceptor;
 
     @Inject
+    private RateLimitInterceptor rateLimitInterceptor;
+
+    @Inject
     private ApplicationContext applicationContext;
 
     @Bean
@@ -102,14 +106,15 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(requestRateInterceptor).order(-4);
+        registry.addInterceptor(requestRateInterceptor).order(-5);
         if (config.getDebug().isLogSlowRequests()) {
-            registry.addInterceptor(slowRequestsInterceptor).order(-3);
+            registry.addInterceptor(slowRequestsInterceptor).order(-4);
         }
-        registry.addInterceptor(domainInterceptor).order(-2);
-        registry.addInterceptor(userAgentInterceptor).order(-2);
-        registry.addInterceptor(searchEngineInterceptor).order(-1);
-        registry.addInterceptor(authenticationInterceptor).order(-1);
+        registry.addInterceptor(domainInterceptor).order(-3);
+        registry.addInterceptor(userAgentInterceptor).order(-3);
+        registry.addInterceptor(searchEngineInterceptor).order(-2);
+        registry.addInterceptor(authenticationInterceptor).order(-2);
+        registry.addInterceptor(rateLimitInterceptor).order(-1);
         registry.addInterceptor(virtualPageInterceptor);
         registry.addInterceptor(networkLatencyInterceptor);
         registry.addInterceptor(cacheControlInterceptor);

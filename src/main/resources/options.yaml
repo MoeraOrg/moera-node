@@ -479,10 +479,6 @@
     min: 1m
     max: 1h
 
-- name: credentials-reset.token.last-check
-  type: Timestamp
-  internal: true
-
 - name: push.notification.lifetime
   type: Duration
   defaultValue: 10d

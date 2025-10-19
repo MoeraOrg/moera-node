@@ -16,6 +16,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.model.TooManyRequestsFailure;
 import org.moera.node.option.exception.OptionValueException;
 import org.moera.node.plugin.PluginInvocationException;
 import org.slf4j.Logger;
@@ -117,6 +118,16 @@ public class ExceptionsControllerAdvice {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Result pageNotFound(PageNotFoundException e) {
         return new Result("not-found", "Page not found");
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    public Result tooManyRequests(TooManyRequestsFailure e, HttpServletResponse response) {
+        response.setHeader(HttpHeaders.RETRY_AFTER, Long.toString(e.getRetryAfter()));
+        response.setHeader("RateLimit-Policy", String.format("%d;w=%d", e.getLimit(), e.getPeriod()));
+        String errorCode = "too-many-requests";
+        String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
+        return new Result(errorCode, message);
     }
 
     @ExceptionHandler

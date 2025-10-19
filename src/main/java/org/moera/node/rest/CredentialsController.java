@@ -23,6 +23,7 @@ import org.moera.node.data.PasswordResetToken;
 import org.moera.node.data.PasswordResetTokenRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
+import org.moera.node.global.RateLimit;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.model.PasswordResetLiberin;
@@ -77,6 +78,7 @@ public class CredentialsController {
     }
 
     @PostMapping
+    @RateLimit(limit = 5, period = 600)
     @Transactional
     public ResponseEntity<Result> post(@RequestBody Credentials credentials) {
         log.info("POST /credentials (login = {})", LogUtil.format(credentials.getLogin()));
@@ -147,6 +149,7 @@ public class CredentialsController {
     }
 
     @PostMapping("/reset")
+    @RateLimit(limit = 1, period = 60)
     @Transactional
     public EmailHint reset() {
         log.info("POST /credentials/reset");
@@ -175,6 +178,7 @@ public class CredentialsController {
     }
 
     @PostMapping("/reset/verify")
+    @RateLimit(limit = 1, period = 1)
     @Transactional
     public VerificationInfo verifyResetToken(@RequestBody CredentialsResetToken resetToken) {
         log.info("POST /credentials/reset/verify");
