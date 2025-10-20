@@ -78,7 +78,6 @@ public class CredentialsController {
     }
 
     @PostMapping
-    @RateLimit(limit = 5, period = 600)
     @Transactional
     public ResponseEntity<Result> post(@RequestBody Credentials credentials) {
         log.info("POST /credentials (login = {})", LogUtil.format(credentials.getLogin()));

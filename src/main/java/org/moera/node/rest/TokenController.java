@@ -26,6 +26,7 @@ import org.moera.node.data.TokenRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
+import org.moera.node.global.RateLimit;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.model.DefrostLiberin;
@@ -75,6 +76,7 @@ public class TokenController {
     private Jobs jobs;
 
     @PostMapping
+    @RateLimit(limit = 5, period = 600)
     @Transactional
     public ResponseEntity<TokenInfo> post(@RequestBody TokenAttributes attributes) {
         log.info("POST /tokens (login = '{}')", attributes.getLogin());
