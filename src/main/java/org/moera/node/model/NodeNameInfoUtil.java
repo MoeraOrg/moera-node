@@ -23,7 +23,9 @@ public class NodeNameInfoUtil {
         
         if (requestContext.isAdmin(Scope.NAME)) {
             String operationStatus = options.getString("naming.operation.status");
-            nodeNameInfo.setOperationStatus(org.moera.lib.node.types.OperationStatus.parse(operationStatus));
+            nodeNameInfo.setOperationStatus(
+                operationStatus != null ? org.moera.lib.node.types.OperationStatus.parse(operationStatus) : null
+            );
             
             OperationStatus status = OperationStatus.forValue(operationStatus);
             if (status != null) {
