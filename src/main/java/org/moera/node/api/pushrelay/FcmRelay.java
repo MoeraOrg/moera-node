@@ -56,8 +56,10 @@ public class FcmRelay {
                 UUID nodeId = packet.getFirst();
                 String nodeName = domains.getDomainOptions(nodeId).nodeName();
                 PushContent content = packet.getSecond();
-                log.info("Sending {} to the FCM relay to the clients of node {} ({})",
-                        LogUtil.format(content.getType().getValue()), LogUtil.format(nodeId), LogUtil.format(nodeName));
+                log.info(
+                    "Sending {} to the FCM relay to the clients of node {} ({})",
+                    LogUtil.format(content.getType().getValue()), LogUtil.format(nodeId), LogUtil.format(nodeName)
+                );
                 int retry = 0;
                 do {
                     long now = Instant.now().getEpochSecond();
@@ -67,12 +69,13 @@ public class FcmRelay {
                         switch (content.getType()) {
                             case FEED_UPDATED ->
                                 service.feedStatus(
-                                        content.getFeedStatus().getFeedName(),
-                                        content.getFeedStatus().getNotViewed(),
-                                        content.getFeedStatus().getNotViewedMoment(),
-                                        nodeName,
-                                        now,
-                                        signature);
+                                    content.getFeedStatus().getFeedName(),
+                                    content.getFeedStatus().getNotViewed(),
+                                    content.getFeedStatus().getNotViewedMoment(),
+                                    nodeName,
+                                    now,
+                                    signature
+                                );
                             case STORY_ADDED ->
                                 service.storyAdded(content.getStory(), nodeName, now, signature);
                             case STORY_DELETED ->
@@ -111,8 +114,7 @@ public class FcmRelay {
     }
 
     private byte[] getSignature(UUID nodeId, long signedAt) {
-        ECPrivateKey signingKey =
-                (ECPrivateKey) domains.getDomainOptions(nodeId).getPrivateKey("profile.signing-key");
+        ECPrivateKey signingKey = (ECPrivateKey) domains.getDomainOptions(nodeId).getPrivateKey("profile.signing-key");
         byte[] fingerprint = Fingerprints.pushRelayMessage(Util.toTimestamp(signedAt));
         return CryptoUtil.sign(fingerprint, signingKey);
     }
