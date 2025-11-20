@@ -238,7 +238,7 @@
         <dependency>
             <groupId>org.moera</groupId>
             <artifactId>moeralib</artifactId>
-            <version>0.17.11-SNAPSHOT</version>
+            <version>0.17.11.1</version>
         </dependency>
 
         <dependency>
