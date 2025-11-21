@@ -124,7 +124,7 @@ public class ExceptionsControllerAdvice {
     @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
     public Result tooManyRequests(TooManyRequestsFailure e, HttpServletResponse response) {
         response.setHeader(HttpHeaders.RETRY_AFTER, Long.toString(e.getRetryAfter()));
-        response.setHeader("RateLimit-Policy", String.format("%d;w=%d", e.getLimit(), e.getPeriod()));
+        response.setHeader("RateLimit-Policy", String.format("q=%d;w=%d", e.getLimit(), e.getPeriod()));
         String errorCode = "too-many-requests";
         String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
         return new Result(errorCode, message);
