@@ -52,19 +52,35 @@ public class IndexUiController {
     public String robots() {
         if (requestContext.getOptions().getBool("webui.allow-indexing")) {
             return String.format(
-                "User-agent: *\n"
-                + "Disallow: /registrar\n"
-                + "Disallow: /moera/gotoname\n"
-                + "Disallow: /moera/news\n"
-                + "Disallow: /moera/explore\n"
-                + "\n"
-                + "Sitemap: %s/sitemaps\n",
+                """
+                User-agent: *
+                Disallow: /registrar
+                Disallow: /moera/api-docs
+                Disallow: /moera/api-ui.html
+                Disallow: /moera/complaints
+                Disallow: /moera/compose
+                Disallow: /moera/connect
+                Disallow: /moera/explore
+                Disallow: /moera/gotoname
+                Disallow: /moera/grant
+                Disallow: /moera/instants
+                Disallow: /moera/mnemonic
+                Disallow: /moera/news
+                Disallow: /moera/search
+                Disallow: /moera/settings
+                Disallow: /moera/signup
+                Disallow: /moera/start-reading
+                
+                Sitemap: %s/sitemaps
+                """,
                 requestContext.getSiteUrl()
             );
         } else {
             return
-                "User-agent: *\n"
-                + "Disallow: /\n";
+                """
+                User-agent: *
+                Disallow: /
+                """;
         }
     }
 

@@ -25,10 +25,79 @@ public class MoeraUiController {
         return "redirect:/";
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/timeline")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complaints", produces = "text/html")
     @VirtualPage
-    public String timeline(@RequestParam(required = false) Long before) {
-        return before == null ? "redirect:/timeline" : "redirect:/timeline?before=%d".formatted(before);
+    public String complaints(Model model) {
+        return openClient("Complaints", model);
+    }
+
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complaints/{id}", produces = "text/html")
+    @VirtualPage
+    public String complaintsGroup(@PathVariable String id, Model model) {
+        return openClient("Complaints", model);
+    }
+
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/compose", produces = "text/html")
+    @VirtualPage
+    public String compose(Model model) {
+        return openClient("New Post", model);
+    }
+
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/connect", produces = "text/html")
+    @VirtualPage
+    public String connect(Model model) {
+        return openClient("Sign In", model);
+    }
+
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/explore", produces = "text/html")
+    @VirtualPage
+    public String explore(Model model) {
+        return openClient("Recommendations", model);
+    }
+
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/explore/people", produces = "text/html")
+    @VirtualPage
+    public String explorePeople(Model model) {
+        return openClient("Top 50", model);
+    }
+
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/grant", produces = "text/html")
+    @VirtualPage
+    public String grant(Model model) {
+        return openClient("Grant", model);
+    }
+
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/instants", produces = "text/html")
+    @VirtualPage
+    public String instants(Model model) {
+        return openClient("Notifications", model);
+    }
+
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/mnemonic", produces = "text/html")
+    @VirtualPage
+    public String mnemonic(Model model) {
+        return openClient("Secret words", model);
+    }
+
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/news", produces = "text/html")
+    @VirtualPage
+    public String news(Model model) {
+        return openClient("News", model);
+    }
+
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people")
+    @VirtualPage
+    public String people() {
+        return "redirect:/people/subscribers";
+    }
+
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people/{tab}")
+    @VirtualPage
+    public String peopleTab(@PathVariable String tab, Model model) {
+        if (!"subscribers".equals(tab) && !"subscriptions".equals(tab)) {
+            return openClient("People", model);
+        }
+        return "redirect:/people/" + tab;
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/post/{id}")
@@ -48,16 +117,16 @@ public class MoeraUiController {
         return builder.build().toUriString();
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/compose", produces = "text/html")
-    @VirtualPage
-    public String compose(Model model) {
-        return openClient("New Post", model);
-    }
-
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/profile")
     @VirtualPage
     public String profile() {
         return "redirect:/profile";
+    }
+
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/search", produces = "text/html")
+    @VirtualPage
+    public String search(Model model) {
+        return openClient("Search", model);
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/settings", produces = "text/html")
@@ -72,46 +141,22 @@ public class MoeraUiController {
         return openClient("Settings", model);
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/news", produces = "text/html")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/signup", produces = "text/html")
     @VirtualPage
-    public String news(Model model) {
-        return openClient("News", model);
+    public String signUp(Model model) {
+        return openClient("Sign Up", model);
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/explore", produces = "text/html")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/start-reading", produces = "text/html")
     @VirtualPage
-    public String explore(Model model) {
-        return openClient("Explore", model);
+    public String startReading(Model model) {
+        return openClient("Start Reading", model);
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/timeline")
     @VirtualPage
-    public String people() {
-        return "redirect:/people/subscribers";
-    }
-
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people/{tab}")
-    @VirtualPage
-    public String peopleTab(@PathVariable String tab) {
-        return "redirect:/people/" + tab;
-    }
-
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complaints", produces = "text/html")
-    @VirtualPage
-    public String complaints(Model model) {
-        return openClient("Complaints", model);
-    }
-
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complaints/{id}", produces = "text/html")
-    @VirtualPage
-    public String complaintsGroup(@PathVariable String id, Model model) {
-        return openClient("Complaints", model);
-    }
-
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/search", produces = "text/html")
-    @VirtualPage
-    public String search(Model model) {
-        return openClient("Search", model);
+    public String timeline(@RequestParam(required = false) Long before) {
+        return before == null ? "redirect:/timeline" : "redirect:/timeline?before=%d".formatted(before);
     }
 
     private String openClient(String title, Model model) {
