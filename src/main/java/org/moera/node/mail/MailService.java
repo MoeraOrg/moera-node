@@ -1,6 +1,7 @@
 package org.moera.node.mail;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayDeque;
@@ -25,6 +26,7 @@ import org.moera.node.xml.XmlConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -37,6 +39,7 @@ public class MailService {
 
     private static final String MAILROBOT_PREFIX = "mailrobot@";
     private static final String TEMPLATES_DIRECTORY = "mail/";
+    private static final String SUBJECT_PREFIX = "[Moera] ";
 
     private static final Logger log = LoggerFactory.getLogger(MailService.class);
 
@@ -52,6 +55,9 @@ public class MailService {
     @Inject
     @Lazy
     private HandlebarsViewResolver handlebarsViewResolver;
+
+    @Inject
+    private ApplicationContext applicationContext;
 
     private final BlockingQueue<MimeMessagePreparator> mailQueue = new LinkedBlockingQueue<>();
 
@@ -101,27 +107,34 @@ public class MailService {
 
         try {
             mailQueue.put(mimeMessage -> {
-                String document = getDocument(mail.getTemplateName(), mail.getModel());
-                MailXmlToText handler = new MailXmlToText();
-                XmlConverter.convert(document, handler);
-
-                MimeMessageHelper message = new MimeMessageHelper(mimeMessage, "UTF-8");
+                MimeMessageHelper message = new MimeMessageHelper(mimeMessage, true, StandardCharsets.UTF_8.name());
                 message.setTo(mail.getEmail());
                 message.setFrom(MAILROBOT_PREFIX + mail.getDomainName());
                 String replyTo = config.getMail().getReplyToAddress();
                 if (!ObjectUtils.isEmpty(replyTo)) {
                     message.setReplyTo(replyTo);
                 }
-                message.setSubject(handler.getResult().getSubject().toString());
-                message.setText(handler.getResult().getBody().toString());
+
+                String document = getDocument(mail.getTemplateName(), false, mail.getModel());
+                MailXmlToText handler = new MailXmlToText();
+                XmlConverter.convert(document, handler);
+                var plainText = handler.getResult();
+
+                var html = getDocument(mail.getTemplateName(), true, mail.getModel());
+
+                message.setSubject(SUBJECT_PREFIX + plainText.getSubject().toString());
+                message.setText(plainText.getBody().toString(), html);
+                message.addInline("logo.png", applicationContext.getResource("classpath:templates/mail/part/logo.png"));
             });
         } catch (InterruptedException e) {
             throw new SendMailInterruptedException();
         }
     }
 
-    private String getDocument(String templateName, Map<String, Object> model) throws MailServiceException {
-        Template template = getTemplate(templateName);
+    private String getDocument(
+        String templateName, boolean html, Map<String, Object> model
+    ) throws MailServiceException {
+        Template template = getTemplate(templateName, html);
         try {
             return template.apply(model);
         } catch (IOException e) {
@@ -130,7 +143,10 @@ public class MailService {
         }
     }
 
-    private Template getTemplate(String templateName) throws MailServiceException {
+    private Template getTemplate(String templateName, boolean html) throws MailServiceException {
+        if (html) {
+            templateName += ".html";
+        }
         Template template = compiledTemplates.get(templateName);
         if (template == null) {
             try {

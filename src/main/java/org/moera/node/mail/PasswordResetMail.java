@@ -4,7 +4,7 @@ import java.util.Map;
 
 public class PasswordResetMail extends Mail {
 
-    private String token;
+    private final String token;
 
     public PasswordResetMail(String token) {
         this.token = token;
@@ -18,8 +18,9 @@ public class PasswordResetMail extends Mail {
     @Override
     Map<String, Object> getModel() {
         return Map.of(
-                "domainName", getDomainName(),
-                "token", token);
+            "domainName", getDomainName(),
+            "token", token
+        );
     }
 
 }
