@@ -2,6 +2,8 @@ package org.moera.node.mail;
 
 import java.util.Map;
 
+import org.moera.lib.naming.NodeName;
+
 public class DomainCreatedMail extends Mail {
 
     private String nodeName;
@@ -26,8 +28,8 @@ public class DomainCreatedMail extends Mail {
     @Override
     Map<String, Object> getModel() {
         return Map.of(
-                "domainName", getDomainName(),
-                "nodeName", getNodeName()
+            "domainName", getDomainName(),
+            "nodeName", NodeName.shorten(getNodeName())
         );
     }
 

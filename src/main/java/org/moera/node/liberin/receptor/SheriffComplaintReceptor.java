@@ -46,7 +46,9 @@ public class SheriffComplaintReceptor extends LiberinReceptorBase {
                 case PREPARED:
                     sheriffInstants.complaintAdded(
                         universalContext.nodeName(),
-                        AvatarImageUtil.build(universalContext.getAvatar()),
+                        universalContext.getAvatar() != null
+                            ? AvatarImageUtil.build(universalContext.getAvatar())
+                            : null,
                         liberin.getGroup().getId().toString()
                     );
                     send(new ComplaintAddedMail(liberin.getGroup().getId()));

@@ -3,6 +3,8 @@ package org.moera.node.mail;
 import java.util.Map;
 import java.util.Objects;
 
+import org.moera.lib.naming.NodeName;
+
 public class DeleteNodeMail extends Mail {
 
     private String nodeName;
@@ -37,10 +39,10 @@ public class DeleteNodeMail extends Mail {
     @Override
     Map<String, Object> getModel() {
         return Map.of(
-                "nodeName", getNodeName(),
-                "domainName", getDomainName(),
-                "email", getEmail(),
-                "adminMessage", Objects.toString(getMessage(), "")
+            "nodeName", NodeName.shorten(getNodeName()),
+            "domainName", getDomainName(),
+            "email", getEmail(),
+            "adminMessage", Objects.toString(getMessage(), "")
         );
     }
 

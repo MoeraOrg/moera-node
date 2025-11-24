@@ -27,8 +27,8 @@ public class ComplaintAddedMail extends Mail {
     @Override
     Map<String, Object> getModel() {
         return Map.of(
-                "domainName", getDomainName(),
-                "id", id.toString()
+            "domainName", getDomainName(),
+            "id", id.toString()
         );
     }
 

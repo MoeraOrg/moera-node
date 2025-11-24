@@ -2,6 +2,8 @@ package org.moera.node.mail;
 
 import java.util.Map;
 
+import org.moera.lib.naming.NodeName;
+
 public class DeleteNodeCancelledMail extends Mail {
 
     private String nodeName;
@@ -26,8 +28,8 @@ public class DeleteNodeCancelledMail extends Mail {
     @Override
     Map<String, Object> getModel() {
         return Map.of(
-                "nodeName", getNodeName(),
-                "domainName", getDomainName()
+            "nodeName", NodeName.shorten(getNodeName()),
+            "domainName", getDomainName()
         );
     }
 
