@@ -89,6 +89,11 @@
       - admin
   internal: true
 
+- name: profile.email.verified
+  type: bool
+  defaultValue: false
+  internal: true
+
 - name: profile.title
   type: string
   internal: true

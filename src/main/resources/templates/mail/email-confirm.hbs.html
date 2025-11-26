@@ -1,26 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mail>
     <headers>
-        <subject>Confirmation E-mail</subject>
+        <subject>Confirm your e-mail address</subject>
     </headers>
     <content>
         <p>
-            This mail is just a confirmation that this e-mail address was set by owner of Moera node
+            You are receiving this e-mail because {{email}} was set as the primary e-mail address for your Moera blog
+            '{{nodeName}}'.
+            Please click the link below to confirm your e-mail address:
         </p>
         <p>
-            {{domainName}}
+            https://{{domainName}}/moera/profile/verify-email?token={{token}}
         </p>
         <p>
-            as their primary e-mail address. Reply to this mail, if you have no relation to the Moera node mentioned
-            above. Otherwise, no action is needed.
+            If you did not request this change, you can safely ignore this message and no changes will be made
+            to your blog.
         </p>
         <p>
-            This e-mail address may be used to restore your password in case you've forgotten it. Note that 24 keywords
-            that are used to manage your Moera name cannot be restored this way.
+            Once confirmed, this e-mail address may be used to help reset your password if you forget it.
+            Please note that the 24 keywords used to manage your Moera name cannot be recovered or reset via e-mail.
         </p>
         <p>
-            Automatically yours,<br/>
-            Moera node mailing service
+            Best regards,<br/>
+            Moera Blog Notification Service<br/>
+            (This is an automated message, please do not reply.)
         </p>
     </content>
 </mail>

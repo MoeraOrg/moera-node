@@ -26,7 +26,10 @@ public class ProfileInfoUtil {
         if (requestContext.isPrincipal(viewEmail, Scope.VIEW_PROFILE)) {
             profileInfo.setEmail(options.getString("profile.email"));
         }
-        
+        if (requestContext.isAdmin(Scope.VIEW_PROFILE)) {
+            profileInfo.setEmailVerified(options.getBool("profile.email.verified"));
+        }
+
         profileInfo.setTitle(options.getString("profile.title"));
         
         if (includeSource) {
@@ -54,6 +57,7 @@ public class ProfileInfoUtil {
         
         Principal viewEmail = options.getPrincipal("profile.email.view");
         profileInfo.setEmail(options.getString("profile.email"));
+        profileInfo.setEmailVerified(options.getBool("profile.email.verified"));
         profileInfo.setTitle(options.getString("profile.title"));
         profileInfo.setBioSrc(options.getString("profile.bio.src"));
         profileInfo.setBioSrcFormat(SourceFormat.forValue(options.getString("profile.bio.src.format")));

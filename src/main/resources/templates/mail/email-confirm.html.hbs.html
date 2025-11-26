@@ -1,0 +1,18 @@
+{{> mail/part/top}}
+<p>
+    You are receiving this e-mail because <b>{{email}}</b> was set as the primary e-mail address for your Moera blog
+    <a href="https://moera.page/@{{nodeName}}/{{domainName}}/"><b>{{nodeName}}</b></a>.
+    Please click the button below to confirm your e-mail address:
+</p>
+<p>
+    <a href="https://{{domainName}}/moera/profile/verify-email?token={{token}}" class="confirm">Confirm E-mail</a>
+</p>
+<p>
+    If you did not request this change, you can safely ignore this message and no changes will be made
+    to your blog.
+</p>
+<p>
+    Once confirmed, this e-mail address may be used to help reset your password if you forget it.
+    Please note that the 24 keywords used to manage your Moera name cannot be recovered or reset via e-mail.
+</p>
+{{> mail/part/bottom}}

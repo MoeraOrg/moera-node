@@ -60,6 +60,7 @@ public class IndexUiController {
                 Disallow: /moera/complaints
                 Disallow: /moera/compose
                 Disallow: /moera/connect
+                Disallow: /moera/email-verified
                 Disallow: /moera/explore
                 Disallow: /moera/gotoname
                 Disallow: /moera/grant
@@ -70,6 +71,7 @@ public class IndexUiController {
                 Disallow: /moera/settings
                 Disallow: /moera/signup
                 Disallow: /moera/start-reading
+                Disallow: /moera/verify-email
                 
                 Sitemap: %s/sitemaps
                 """,

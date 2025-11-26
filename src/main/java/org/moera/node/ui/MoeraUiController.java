@@ -3,9 +3,13 @@ package org.moera.node.ui;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.UniversalLocation;
+import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
+import org.moera.node.operations.EmailVerificationOperations;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -15,6 +19,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 @UiController
 @RequestMapping("/moera")
 public class MoeraUiController {
+
+    @Inject
+    private RequestContext requestContext;
+
+    @Inject
+    private EmailVerificationOperations emailVerificationOperations;
 
     @Inject
     private TitleBuilder titleBuilder;
@@ -121,6 +131,15 @@ public class MoeraUiController {
     @VirtualPage
     public String profile() {
         return "redirect:/profile";
+    }
+
+    @GetMapping("/profile/verify-email")
+    @VirtualPage
+    public String profile(@RequestParam String token) {
+        boolean ok = requestContext.getOptions().getBool("profile.email.verified")
+            || emailVerificationOperations.verified(token);
+        return "redirect:"
+            + UniversalLocation.redirectTo(requestContext.nodeName(), null, "/profile/email-verified", null, null);
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/search", produces = "text/html")

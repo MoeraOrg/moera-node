@@ -1,11 +1,10 @@
 package org.moera.node.liberin.receptor;
 
-import java.util.Objects;
-
 import org.moera.lib.node.types.notifications.ProfileUpdatedNotification;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
+import org.moera.node.liberin.model.EmailVerificationLiberin;
 import org.moera.node.liberin.model.NodeNameChangedLiberin;
 import org.moera.node.liberin.model.ProfileUpdatedLiberin;
 import org.moera.node.liberin.model.RegisteredNameOperationStatusLiberin;
@@ -30,9 +29,6 @@ public class ProfileReceptor extends LiberinReceptorBase {
             Directions.searchSubscribers(liberin.getNodeId()),
             SearchContentUpdatedNotificationUtil.buildProfileUpdate()
         );
-        if (!Objects.equals(liberin.getOptions().getString("profile.email"), liberin.getPrevEmail())) {
-            send(new EmailConfirmMail());
-        }
     }
 
     @LiberinMapping
@@ -46,6 +42,11 @@ public class ProfileReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void registeredNameOperationStatus(RegisteredNameOperationStatusLiberin liberin) {
         send(liberin, new RegisteredNameOperationStatusEvent());
+    }
+
+    @LiberinMapping
+    public void emailVerification(EmailVerificationLiberin liberin) {
+        send(new EmailConfirmMail(liberin.getNodeName(), liberin.getToken()));
     }
 
 }
