@@ -9,6 +9,7 @@ import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
 import org.moera.node.operations.EmailVerificationOperations;
 import org.springframework.ui.Model;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -135,7 +136,11 @@ public class MoeraUiController {
 
     @GetMapping("/profile/verify-email")
     @VirtualPage
-    public String profile(@RequestParam String token) {
+    public String verifyEmail(@RequestParam(required = false) String token, Model model) {
+        if (ObjectUtils.isEmpty(token)) {
+            return openClient("Confirm your e-mail address", model);
+        }
+
         boolean ok = requestContext.getOptions().getBool("profile.email.verified")
             || emailVerificationOperations.verified(token);
         return "redirect:"
