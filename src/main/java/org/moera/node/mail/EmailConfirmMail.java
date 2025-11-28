@@ -20,6 +20,11 @@ public class EmailConfirmMail extends Mail {
     }
 
     @Override
+    boolean verifiedAddressOnly() {
+        return false;
+    }
+
+    @Override
     Map<String, Object> getModel() {
         return Map.of(
             "nodeName", NodeName.shorten(nodeName),

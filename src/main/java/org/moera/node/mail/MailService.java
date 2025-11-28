@@ -18,6 +18,7 @@ import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
 import com.github.jknack.handlebars.springmvc.HandlebarsViewResolver;
 import org.moera.node.config.Config;
+import org.moera.node.data.VerifiedEmailRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.mail.exception.MailServiceException;
 import org.moera.node.mail.exception.SendMailInterruptedException;
@@ -48,6 +49,9 @@ public class MailService {
 
     @Inject
     private Domains domains;
+
+    @Inject
+    private VerifiedEmailRepository verifiedEmailRepository;
 
     @Inject
     private JavaMailSender mailSender;
@@ -88,10 +92,19 @@ public class MailService {
 
         String mailDomain = domainName.equals(Domains.DEFAULT_DOMAIN) ? config.getDomain() : domainName;
         mail.setDomainName(mailDomain);
-        String email = !toRoot
-                ? domains.getDomainOptions(nodeId).getString("profile.email")
-                : config.getMail().getRootAddress();
-        mail.setEmail(email);
+        if (toRoot) {
+            mail.setEmail(config.getMail().getRootAddress());
+        } else {
+            String email = domains.getDomainOptions(nodeId).getString("profile.email");
+            if (mail.verifiedAddressOnly()) {
+                boolean verified = verifiedEmailRepository.countByNodeIdAndEmail(nodeId, email) > 0;
+                if (!verified) {
+                    log.warn("E-mail address {} is not verified, have no right to send", mail.getEmail());
+                    return;
+                }
+            }
+            mail.setEmail(email);
+        }
         try {
             send(mail);
         } catch (MailServiceException e) {
@@ -100,8 +113,11 @@ public class MailService {
     }
 
     private void send(Mail mail) throws MailServiceException {
-        if (ObjectUtils.isEmpty(mail.getDomainName()) || mail.getDomainName().equals(Domains.DEFAULT_DOMAIN)
-                || ObjectUtils.isEmpty(mail.getEmail())) {
+        if (
+            ObjectUtils.isEmpty(mail.getDomainName())
+            || mail.getDomainName().equals(Domains.DEFAULT_DOMAIN)
+            || ObjectUtils.isEmpty(mail.getEmail())
+        ) {
             return;
         }
 
@@ -166,8 +182,12 @@ public class MailService {
         while (true) {
             try {
                 while (sent.size() >= config.getMail().getSendLimit()) {
-                    while (sent.peekFirst() != null && sent.peekFirst()
-                            .isBefore(Instant.now().minus(config.getMail().getSendPeriod(), ChronoUnit.MINUTES))) {
+                    while (
+                        sent.peekFirst() != null
+                        && sent.peekFirst().isBefore(
+                            Instant.now().minus(config.getMail().getSendPeriod(), ChronoUnit.MINUTES)
+                        )
+                    ) {
                         sent.pollFirst();
                     }
                     if (sent.size() < config.getMail().getSendLimit()) {

@@ -26,6 +26,10 @@ public abstract class Mail {
 
     abstract String getTemplateName();
 
+    boolean verifiedAddressOnly() {
+        return true;
+    }
+
     Map<String, Object> getModel() {
         return Collections.emptyMap();
     }
