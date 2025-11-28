@@ -4,7 +4,18 @@
         <style>
             .container {
                 background-color: #f4f4f5;
-                padding: 3rem 0;
+            }
+
+            @media only screen and (min-width: 992px) {
+                .container {
+                    padding: 3rem;
+                }
+            }
+
+            @media only screen and (max-width: 991px) {
+                .container {
+                    padding: 1rem;
+                }
             }
 
             .content {
