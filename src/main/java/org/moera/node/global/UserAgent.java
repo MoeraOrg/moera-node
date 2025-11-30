@@ -16,7 +16,8 @@ public enum UserAgent {
     IE("IE"),
     EDGE("Edge"),
     SAFARI("Safari"),
-    BINGBOT("bingbot");
+    BINGBOT("bingbot"),
+    YANDEXBOT("YandexBot");
 
     private final String title;
 

@@ -32,6 +32,8 @@ public class UserAgentInterceptor implements HandlerInterceptor {
             requestContext.setUserAgent(UserAgent.GOOGLEBOT);
         } else if (userAgent.contains("bingbot")) {
             requestContext.setUserAgent(UserAgent.BINGBOT);
+        } else if (userAgent.contains("yandex.com/bots")) {
+            requestContext.setUserAgent(UserAgent.YANDEXBOT);
         } else if (userAgent.contains("PetalBot")) {
             requestContext.setUserAgent(UserAgent.PETALBOT);
         } else if (userAgent.contains("SemrushBot")) {
