@@ -15,7 +15,8 @@ public enum UserAgent {
     SEMRUSHBOT("SemrushBot"),
     IE("IE"),
     EDGE("Edge"),
-    SAFARI("Safari");
+    SAFARI("Safari"),
+    BINGBOT("bingbot");
 
     private final String title;
 
