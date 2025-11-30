@@ -15,8 +15,10 @@ public class SearchEngineClicks {
     public SearchEngineClicks() {
     }
 
-    public SearchEngineClicks(String nodeName, String postingId, String commentId, String mediaId, String heading,
-                              long clicks, Date lastClickedAt) {
+    public SearchEngineClicks(
+        String nodeName, String postingId, String commentId, String mediaId, String heading, long clicks,
+        Date lastClickedAt
+    ) {
         this.nodeName = nodeName;
         this.postingId = postingId;
         this.commentId = commentId;

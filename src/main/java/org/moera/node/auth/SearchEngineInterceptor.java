@@ -37,7 +37,8 @@ public class SearchEngineInterceptor implements HandlerInterceptor {
     }
 
     private static final SearchEngineReferer[] SEARCH_ENGINE_REFERERS = {
-        new SearchEngineReferer("^https?://[a-z]+\\.google\\.com", UserAgent.GOOGLEBOT, SearchEngine.GOOGLE)
+        new SearchEngineReferer("^https?://[a-z]+\\.google\\.com", UserAgent.GOOGLEBOT, SearchEngine.GOOGLE),
+        new SearchEngineReferer("^https?://[a-z]+\\.bing\\.com", UserAgent.BINGBOT, SearchEngine.BING)
     };
 
     @Inject
