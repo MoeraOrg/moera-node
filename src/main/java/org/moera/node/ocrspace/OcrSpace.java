@@ -95,6 +95,7 @@ public class OcrSpace {
         Request request = new Request.Builder()
             .method("POST", multipartBody)
             .addHeader("Accept", "application/json")
+            .addHeader("User-Agent", config.getUserAgent())
             .url(API_ENDPOINT)
             .build();
 

@@ -67,6 +67,7 @@ public class ProxyController {
         HttpRequest request;
         try {
             request = HttpRequest.newBuilder()
+                .header("User-Agent", config.getUserAgent())
                 .GET()
                 .uri(URI.create(url))
                 .timeout(REQUEST_TIMEOUT)
@@ -123,11 +124,11 @@ public class ProxyController {
         return queryDirectly(url);
     }
 
-    private static LinkPreviewInfo queryDirectly(String url) {
+    private LinkPreviewInfo queryDirectly(String url) {
         Document document;
         try {
             document = Jsoup.connect(url)
-                .header("User-Agent", "curl/7.68.0")
+                .header("User-Agent", config.getUserAgent("link preview"))
                 .followRedirects(true)
                 .timeout((int) REQUEST_TIMEOUT.toMillis())
                 .get();

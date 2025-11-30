@@ -8,6 +8,7 @@ import org.springframework.util.ObjectUtils;
 @ConfigurationProperties("node")
 public class Config {
 
+    private String version;
     private String rootSecret;
     private String encryptionKey;
     private String address;
@@ -21,6 +22,22 @@ public class Config {
     private String fcmRelay;
     private LinkPreviewConfig linkPreview = new LinkPreviewConfig();
     private DebugConfig debug = new DebugConfig();
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getUserAgent() {
+        return String.format("Moera node/%s", version);
+    }
+
+    public String getUserAgent(String subsystem) {
+        return String.format("Moera node %s/%s", subsystem, version);
+    }
 
     public String getRootSecret() {
         return rootSecret;

@@ -49,6 +49,7 @@ springdoc:
     path: /moera/api-ui.html
 
 node:
+  version: ^project.version^
   root-secret:
   multi: none
   fcm-relay: https://fcm.moera.org/moera-push-relay

@@ -24,6 +24,7 @@ import org.moera.lib.node.types.validate.ValidationFailure;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.config.Config;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.domain.Domains;
@@ -77,6 +78,9 @@ public class PluginController {
     private static final Pattern PLUGIN_PATH = Pattern.compile("^.*/api/plugins/[^/]+/(.*)$");
     private static final Duration PLUGIN_CONNECTION_TIMEOUT = Duration.ofSeconds(20);
     private static final Duration PLUGIN_REQUEST_TIMEOUT = Duration.ofMinutes(1);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -212,7 +216,7 @@ public class PluginController {
 
     private URI getPluginUri(PluginDescriptor descriptor, HttpServletRequest request) {
         UriComponentsBuilder uriBuilder = UriUtil.createBuilderFromRequest(request);
-        UriComponents location = UriComponentsBuilder.fromHttpUrl(descriptor.getLocation()).build();
+        UriComponents location = UriComponentsBuilder.fromUriString(descriptor.getLocation()).build();
         uriBuilder.scheme(location.getScheme());
         uriBuilder.host(location.getHost());
         uriBuilder.port(location.getPort());
@@ -238,6 +242,7 @@ public class PluginController {
         var requestBuilder = HttpRequest.newBuilder()
             .uri(getPluginUri(descriptor, request))
             .timeout(PLUGIN_REQUEST_TIMEOUT)
+            .header("User-Agent", config.getUserAgent())
             .method(method.name(), bodyPublisher);
         request.getHeaderNames().asIterator().forEachRemaining(name -> {
             if (!name.equalsIgnoreCase(HttpHeaders.HOST) && !name.equalsIgnoreCase(HttpHeaders.AUTHORIZATION)) {

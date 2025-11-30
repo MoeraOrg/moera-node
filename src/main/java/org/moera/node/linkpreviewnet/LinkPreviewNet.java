@@ -45,6 +45,7 @@ public class LinkPreviewNet {
                 .timeout(CALL_API_REQUEST_TIMEOUT)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                 .header("X-Linkpreview-Api-Key", config.getLinkPreview().getServiceKey())
+                .header("User-Agent", config.getUserAgent())
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
     }
