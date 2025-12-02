@@ -132,13 +132,64 @@ public class Domains {
         }
     }
 
+    public DomainInfo getDomain(UUID nodeId) {
+        lockRead();
+        try {
+            return domains.get(nodeId);
+        } finally {
+            unlockRead();
+        }
+    }
+
+    public DomainInfo getDomain(String name) {
+        UUID nodeId = getDomainNodeId(name);
+        return nodeId != null ? getDomain(nodeId) : null;
+    }
+
+    /**
+     * Retrieves the domain name associated with the specified node ID.
+     *
+     * @param nodeId the unique identifier of the node whose domain name is to be retrieved
+     * @return the domain name associated with the given node ID, or {@code null} if no matching domain is found
+     */
+    public String getDomainName(UUID nodeId) {
+        DomainInfo domainInfo = getDomain(nodeId);
+        return domainInfo != null ? domainInfo.getName() : null;
+    }
+
+    /**
+     * Retrieves the effective domain name for the specified domain name, falling back to the default domain
+     * if not defined.
+     *
+     * @param name the domain name to retrieve the effective name for
+     * @return the effective domain name, or {@code DEFAULT_DOMAIN} if no matching domain is found
+     */
     public String getDomainEffectiveName(String name) {
         return isDomainDefined(name) ? name : DEFAULT_DOMAIN;
     }
 
+    /**
+     * Retrieves the effective domain name for the specified domain name, falling back to the default domain
+     * if not defined.
+     *
+     * @param nodeId the unique identifier of the node whose domain name is to be retrieved
+     * @return the effective domain name, or {@code DEFAULT_DOMAIN} if no matching domain is found
+     */
     public String getDomainEffectiveName(UUID nodeId) {
         String name = getDomainName(nodeId);
         return name != null ? name : DEFAULT_DOMAIN;
+    }
+
+    /**
+     * Retrieves the DNS name of the domain associated with the given node ID.
+     *
+     * @param nodeId the unique identifier of the node whose domain DNS name is to be retrieved
+     * @return the domain DNS name associated with the given node ID, or the default domain name if no specific domain
+     * is defined
+     */
+    public String getDomainDnsName(UUID nodeId) {
+        String name = getDomainEffectiveName(nodeId);
+        return name.equals(DEFAULT_DOMAIN) ? config.getDomain() : name;
     }
 
     public UUID getDomainNodeId(String name) {
@@ -185,25 +236,6 @@ public class Domains {
         } finally {
             unlockRead();
         }
-    }
-
-    public DomainInfo getDomain(UUID nodeId) {
-        lockRead();
-        try {
-            return domains.get(nodeId);
-        } finally {
-            unlockRead();
-        }
-    }
-
-    public DomainInfo getDomain(String name) {
-        UUID nodeId = getDomainNodeId(name);
-        return nodeId != null ? getDomain(nodeId) : null;
-    }
-
-    public String getDomainName(UUID nodeId) {
-        DomainInfo domainInfo = getDomain(nodeId);
-        return domainInfo != null ? domainInfo.getName() : null;
     }
 
     // WARNING: information on the server may differ from the information in the naming system if the node

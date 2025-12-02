@@ -116,7 +116,7 @@ public class DomainsController {
             if (domains.getDomainNodeId(name) != null) {
                 throw new OperationFailure("domain.already-exists");
             }
-            if (domains.getDomainName(nodeId) != null) {
+            if (domains.getDomain(nodeId) != null) {
                 throw new OperationFailure("domain.node-id-used");
             }
             domain = domains.createDomain(name, nodeId);

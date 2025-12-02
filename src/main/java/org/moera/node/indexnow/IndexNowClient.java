@@ -111,7 +111,7 @@ public class IndexNowClient {
             for (Entry entry : entries) {
                 if (nodeId == null || !nodeId.equals(entry.getNodeId())) {
                     if (!entryList.isEmpty()) {
-                        String domainName = domains.getDomain(nodeId).getName();
+                        String domainName = domains.getDomainDnsName(nodeId);
                         sendRequest(domainName, entryList.stream().map(e -> getEntryUrl(e, domainName)).toList());
                         tx.executeWriteQuietly(() -> entryRepository.indexedNow(ids, Util.now()));
                     }

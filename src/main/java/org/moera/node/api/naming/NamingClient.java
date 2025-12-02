@@ -75,7 +75,7 @@ public class NamingClient {
     }
 
     private void monitorOperation(Options options) {
-        MDC.put("domain", domains.getDomainName(options.nodeId()));
+        MDC.put("domain", domains.getDomainEffectiveName(options.nodeId()));
         UUID operationId = options.getUuid("naming.operation.id");
         if (operationId == null) {
             log.debug("No pending naming operation");

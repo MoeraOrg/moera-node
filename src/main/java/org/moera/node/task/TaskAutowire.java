@@ -39,15 +39,17 @@ public class TaskAutowire {
     public void autowire(Task task) {
         autowireCapableBeanFactory.autowireBean(task);
         task.setNodeId(universalContext.nodeId());
-        task.setLocalAddr(universalContext.isBackground()
-                ? getLocalAddr(domains.getDomainName(universalContext.nodeId()))
-                : getLocalAddr());
+        task.setLocalAddr(
+            universalContext.isBackground()
+                ? getLocalAddr(domains.getDomainDnsName(universalContext.nodeId()))
+                : getLocalAddr()
+        );
     }
 
     public void autowireWithoutRequest(Task task, UUID nodeId) {
         autowireCapableBeanFactory.autowireBean(task);
         task.setNodeId(nodeId);
-        task.setLocalAddr(getLocalAddr(domains.getDomainName(nodeId)));
+        task.setLocalAddr(getLocalAddr(domains.getDomainDnsName(nodeId)));
     }
 
     public void autowireWithoutRequestAndDomain(Task task) {

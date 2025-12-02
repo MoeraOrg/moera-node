@@ -87,11 +87,9 @@ public class MailService {
     }
 
     public void send(UUID nodeId, Mail mail, boolean toRoot) {
-        String domainName = domains.getDomainName(nodeId);
-        MDC.put("domain", domainName);
+        MDC.put("domain", domains.getDomainEffectiveName(nodeId));
 
-        String mailDomain = domainName.equals(Domains.DEFAULT_DOMAIN) ? config.getDomain() : domainName;
-        mail.setDomainName(mailDomain);
+        mail.setDomainName(domains.getDomainDnsName(nodeId));
         if (toRoot) {
             mail.setEmail(config.getMail().getRootAddress());
         } else {

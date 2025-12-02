@@ -109,7 +109,7 @@ public class UniversalContext {
 
     public void associate(UUID nodeId) {
         setNodeId(nodeId);
-        MDC.put("domain", domains.getDomainName(nodeId()));
+        MDC.put("domain", domains.getDomainEffectiveName(nodeId()));
     }
 
     public void associate(Task task) {

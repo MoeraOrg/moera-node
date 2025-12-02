@@ -211,7 +211,7 @@ public class EventManager {
     private void initLoggingDomain(String sessionId) {
         EventSubscriber subscriber = subscribers.get(sessionId);
         if (subscriber != null) {
-            MDC.put("domain", domains.getDomainName(subscriber.getNodeId()));
+            MDC.put("domain", domains.getDomainEffectiveName(subscriber.getNodeId()));
         }
     }
 
@@ -244,7 +244,7 @@ public class EventManager {
     }
 
     public void send(UUID nodeId, String clientId, Event event) {
-        MDC.put("domain", domains.getDomainName(nodeId));
+        MDC.put("domain", domains.getDomainEffectiveName(nodeId));
         log.info("Event arrived: {} for {}", event.toLogMessage(), event.getFilter());
 
         eventsLock.writeLock().lock();
