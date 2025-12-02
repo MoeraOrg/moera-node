@@ -198,17 +198,21 @@ public class TokenController {
         try (var ignored = requestCounter.allot()) {
             log.info("Freezing inactive domains");
 
-            domains.getAllDomainNames().stream()
-                    .map(domains::getDomain)
-                    .filter(info -> Instant.ofEpochSecond(info.getCreatedAt())
-                            .plus(365, ChronoUnit.DAYS)
-                            .isBefore(Instant.now()))
-                    .map(DomainInfo::getNodeId)
-                    .map(domains::getDomainOptions)
-                    .filter(Objects::nonNull)
-                    .filter(options -> !options.isFrozen())
-                    .filter(options -> tokenRepository.countAllByNodeId(options.nodeId(), Util.now()) == 0)
-                    .forEach(options -> options.set("frozen", true));
+            domains
+                .getAllDomainNames()
+                .stream()
+                .map(domains::getDomain)
+                .filter(
+                    info -> Instant.ofEpochSecond(info.getCreatedAt())
+                        .plus(365, ChronoUnit.DAYS)
+                        .isBefore(Instant.now())
+                )
+                .map(DomainInfo::getNodeId)
+                .map(domains::getDomainOptions)
+                .filter(Objects::nonNull)
+                .filter(options -> !options.isFrozen())
+                .filter(options -> tokenRepository.countAllByNodeId(options.nodeId(), Util.now()) == 0)
+                .forEach(options -> options.set("frozen", true));
         }
     }
 
