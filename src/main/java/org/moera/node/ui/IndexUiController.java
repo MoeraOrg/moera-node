@@ -2,6 +2,8 @@ package org.moera.node.ui;
 
 import jakarta.inject.Inject;
 
+import org.moera.node.config.Config;
+import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
@@ -19,6 +21,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class IndexUiController {
 
     private static final Logger log = LoggerFactory.getLogger(IndexUiController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -84,6 +89,16 @@ public class IndexUiController {
                 Disallow: /
                 """;
         }
+    }
+
+    @GetMapping(value = "/index-now-key.txt", produces = MediaType.TEXT_PLAIN_VALUE)
+    @ResponseBody
+    public String indexNowKey() {
+        String key = config.getIndexNow().getKey();
+        if (key == null) {
+            throw new PageNotFoundException();
+        }
+        return key;
     }
 
 }

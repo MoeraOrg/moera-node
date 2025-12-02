@@ -33,6 +33,10 @@ public class Util {
         return Timestamp.from(Instant.now().plus(3650, ChronoUnit.DAYS));
     }
 
+    public static Timestamp farPast() {
+        return Timestamp.from(Instant.EPOCH);
+    }
+
     public static Long toEpochSecond(Timestamp timestamp) {
         return timestamp != null ? timestamp.getTime() / 1000 : null;
     }

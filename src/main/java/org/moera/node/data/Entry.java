@@ -83,6 +83,9 @@ public class Entry {
     @NotNull
     private Timestamp editedAt = Util.now();
 
+    @NotNull
+    private Timestamp indexNowUpdatedAt = Util.farPast();
+
     private Timestamp deletedAt;
 
     private Timestamp receiverCreatedAt;
@@ -423,6 +426,14 @@ public class Entry {
 
     public void setEditedAt(Timestamp editedAt) {
         this.editedAt = editedAt;
+    }
+
+    public Timestamp getIndexNowUpdatedAt() {
+        return indexNowUpdatedAt;
+    }
+
+    public void setIndexNowUpdatedAt(Timestamp indexNowUpdatedAt) {
+        this.indexNowUpdatedAt = indexNowUpdatedAt;
     }
 
     public Timestamp getDeletedAt() {

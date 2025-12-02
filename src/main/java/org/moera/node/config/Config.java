@@ -21,6 +21,7 @@ public class Config {
     private OptionConfig[] options = new OptionConfig[0];
     private String fcmRelay;
     private LinkPreviewConfig linkPreview = new LinkPreviewConfig();
+    private IndexNowConfig indexNow = new IndexNowConfig();
     private DebugConfig debug = new DebugConfig();
 
     public String getVersion() {
@@ -146,6 +147,14 @@ public class Config {
 
     public void setLinkPreview(LinkPreviewConfig linkPreview) {
         this.linkPreview = linkPreview;
+    }
+
+    public IndexNowConfig getIndexNow() {
+        return indexNow;
+    }
+
+    public void setIndexNow(IndexNowConfig indexNow) {
+        this.indexNow = indexNow;
     }
 
     public DebugConfig getDebug() {

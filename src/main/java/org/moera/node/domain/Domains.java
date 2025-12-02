@@ -39,6 +39,8 @@ public class Domains {
 
     private static final Logger log = LoggerFactory.getLogger(Domains.class);
 
+    private boolean initialized = false;
+
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final Map<UUID, DomainInfo> domains = new HashMap<>();
     private final Map<String, Options> domainOptions = new HashMap<>();
@@ -77,7 +79,12 @@ public class Domains {
         } else {
             domainRepository.findAll().forEach(this::configureDomain);
         }
+        initialized = true;
         applicationEventPublisher.publishEvent(new DomainsConfiguredEvent(this));
+    }
+
+    public boolean isReady() {
+        return initialized;
     }
 
     public AutoCloseable lockRead() {

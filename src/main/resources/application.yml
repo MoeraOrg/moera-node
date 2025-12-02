@@ -53,5 +53,7 @@ node:
   root-secret:
   multi: none
   fcm-relay: https://fcm.moera.org/moera-push-relay
+  index-now:
+    endpoint: https://api.indexnow.org/indexnow
   debug:
     mock-network-latency: false

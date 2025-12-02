@@ -93,7 +93,7 @@ public class OcrSpace {
             .addFormDataPart("OCREngine", "2")
             .build();
         Request request = new Request.Builder()
-            .method("POST", multipartBody)
+            .post(multipartBody)
             .addHeader("Accept", "application/json")
             .addHeader("User-Agent", config.getUserAgent())
             .url(API_ENDPOINT)
