@@ -15,7 +15,6 @@ public class Config {
     private PoolsConfig pools = new PoolsConfig();
     private MultiHost multi = MultiHost.NONE;
     private String domain;
-    private RegistrarConfig registrar;
     private MailConfig mail = new MailConfig();
     private MediaConfig media = new MediaConfig();
     private OptionConfig[] options = new OptionConfig[0];
@@ -88,25 +87,8 @@ public class Config {
         this.domain = domain;
     }
 
-    public RegistrarConfig getRegistrar() {
-        return registrar;
-    }
-
-    public void setRegistrar(RegistrarConfig registrar) {
-        this.registrar = registrar;
-    }
-
-    public boolean isRegistrarEnabled() {
-        return getMulti() == MultiHost.PUBLIC
-                && getRegistrar() != null
-                && !ObjectUtils.isEmpty(getRegistrar().getHost())
-                && !ObjectUtils.isEmpty(getRegistrar().getDomain());
-    }
-
     public boolean isRegistrationPublic() {
-        return getMulti() == MultiHost.PUBLIC
-                && getRegistrar() != null
-                && !ObjectUtils.isEmpty(getRegistrar().getDomain());
+        return getMulti() == MultiHost.PUBLIC && !ObjectUtils.isEmpty(getDomain());
     }
 
     public MailConfig getMail() {

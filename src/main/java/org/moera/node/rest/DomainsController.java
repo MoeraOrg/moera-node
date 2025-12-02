@@ -213,12 +213,12 @@ public class DomainsController {
         if (ObjectUtils.isEmpty(domainName)) {
             domainName = "x";
         }
-        String fqdn = domainName + "." + config.getRegistrar().getDomain();
+        String fqdn = domainName + "." + config.getDomain();
         if (domainName.equals("x") || domains.isDomainDefined(fqdn)) {
             int i = -1;
             do {
                 i++;
-                fqdn = domainName + i + "." + config.getRegistrar().getDomain();
+                fqdn = domainName + i + "." + config.getDomain();
             } while (domains.isDomainDefined(fqdn));
         }
         return DomainAvailableUtil.build(fqdn);

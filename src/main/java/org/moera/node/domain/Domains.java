@@ -12,6 +12,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.DomainInfo;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.node.config.Config;
 import org.moera.node.data.Domain;
 import org.moera.node.data.DomainRepository;
 import org.moera.node.data.FriendGroup;
@@ -49,6 +50,9 @@ public class Domains {
     private ApplicationEventPublisher applicationEventPublisher;
 
     @Inject
+    private Config config;
+
+    @Inject
     private OptionsMetadata optionsMetadata;
 
     @Inject
@@ -73,7 +77,10 @@ public class Domains {
     private InitialRecommendationOperations initialRecommendationOperations;
 
     @EventListener(OptionsMetadataConfiguredEvent.class)
-    public void load() {
+    public void load() throws DomainNotSetException {
+        if (ObjectUtils.isEmpty(config.getDomain())) {
+            throw new DomainNotSetException();
+        }
         if (domainRepository.count() == 0) {
             createDomain(DEFAULT_DOMAIN, UUID.randomUUID());
         } else {

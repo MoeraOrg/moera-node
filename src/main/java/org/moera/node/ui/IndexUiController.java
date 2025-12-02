@@ -34,7 +34,7 @@ public class IndexUiController {
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/")
     @VirtualPage
     public String index() {
-        return !requestContext.isRegistrar() ? "redirect:/timeline" : "redirect:/registrar";
+        return "redirect:/timeline";
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/profile", produces = "text/html")
@@ -59,7 +59,6 @@ public class IndexUiController {
             return String.format(
                 """
                 User-agent: *
-                Disallow: /registrar
                 Disallow: /moera/api-docs
                 Disallow: /moera/api-ui.html
                 Disallow: /moera/complaints

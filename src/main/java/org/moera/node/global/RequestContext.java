@@ -24,10 +24,6 @@ public interface RequestContext extends AccessChecker {
 
     }
 
-    boolean isRegistrar();
-
-    void setRegistrar(boolean registrar);
-
     boolean isUndefinedDomain();
 
     boolean isRootAdmin();

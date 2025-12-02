@@ -20,7 +20,7 @@ public class VirtualPageInterceptor implements HandlerInterceptor {
     public boolean preHandle(
         HttpServletRequest request, HttpServletResponse response, Object handler
     ) throws IOException {
-        if (requestContext.isRegistrar() || requestContext.isUndefinedDomain()) {
+        if (requestContext.isUndefinedDomain()) {
             return true;
         }
         if (!(handler instanceof HandlerMethod)) {

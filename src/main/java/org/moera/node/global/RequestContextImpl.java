@@ -28,7 +28,6 @@ import org.springframework.web.context.annotation.RequestScope;
 @Component
 public class RequestContextImpl implements RequestContext {
 
-    private boolean registrar;
     private boolean rootAdmin;
     private long adminScope;
     private boolean possibleSheriff;
@@ -64,16 +63,6 @@ public class RequestContextImpl implements RequestContext {
 
     @Inject
     private SubscribedCache subscribedCache;
-
-    @Override
-    public boolean isRegistrar() {
-        return registrar;
-    }
-
-    @Override
-    public void setRegistrar(boolean registrar) {
-        this.registrar = registrar;
-    }
 
     @Override
     public boolean isUndefinedDomain() {
