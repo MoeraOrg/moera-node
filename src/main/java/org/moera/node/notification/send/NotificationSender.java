@@ -133,10 +133,13 @@ public class NotificationSender extends Task {
                     }
                 }
             }
-        } finally {
+        } catch (Throwable e) {
             stopped = true; // if stopped abnormally by exception
-            pool.deleteSender(nodeId, receiverNodeName);
-            log.debug("Sender from node ID = {} to '{}' stopped", nodeId, receiverNodeName);
+        } finally {
+            if (stopped) {
+                pool.deleteSender(nodeId, receiverNodeName);
+                log.debug("Sender from node ID = {} to '{}' stopped", nodeId, receiverNodeName);
+            }
         }
     }
 
