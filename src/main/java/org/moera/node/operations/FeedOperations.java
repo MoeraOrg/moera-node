@@ -131,8 +131,10 @@ public class FeedOperations {
     @OptionHook({"sheriffs.timeline", "sheriffs.timeline.marks"})
     public void timelineSheriffDataChanged(OptionValueChange change) {
         universalContext.associate(change.getNodeId());
-        liberinManager.send(new FeedSheriffDataUpdatedLiberin(Feed.TIMELINE, universalContext.getOptions())
-                .withNodeId(change.getNodeId()));
+        liberinManager.send(
+            new FeedSheriffDataUpdatedLiberin(Feed.TIMELINE, universalContext.getOptions())
+                .withNodeId(change.getNodeId())
+        );
     }
 
 }
