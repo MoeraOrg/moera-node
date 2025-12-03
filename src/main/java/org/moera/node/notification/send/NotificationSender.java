@@ -111,7 +111,7 @@ public class NotificationSender extends Task {
             while (!stopped) {
                 if (notification == null) {
                     try {
-                        notification = queue.poll(1, TimeUnit.MINUTES);
+                        notification = queue.poll(10, TimeUnit.SECONDS);
                         delay = getConnectivityStatus() == ConnectivityStatus.FAILING ? FAILING_MIN_DELAY : null;
                     } catch (InterruptedException e) {
                         continue;
@@ -146,14 +146,15 @@ public class NotificationSender extends Task {
     private void deliver(Notification notification) {
         do {
             if (delay != null && pausedTill == null) {
-                log.debug("Notification sender paused for {} minutes", delay.toMinutes());
-                if (delay.compareTo(Duration.ofMinutes(2)) <= 0) {
+                if (delay.compareTo(Duration.ofSeconds(30)) <= 0) {
+                    log.debug("Notification sender paused for {} seconds", delay.toSeconds());
                     try {
                         Thread.sleep(delay.toMillis());
                     } catch (InterruptedException e) {
                         // ignore
                     }
                 } else {
+                    log.debug("Notification sender paused for {} minutes", delay.toMinutes());
                     pausedTill = Instant.now().plus(delay);
                     return;
                 }
