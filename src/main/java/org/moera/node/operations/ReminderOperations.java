@@ -184,13 +184,7 @@ public class ReminderOperations {
             case REMINDER_FULL_NAME -> !ObjectUtils.isEmpty(universalContext.fullName());
             case REMINDER_AVATAR -> universalContext.avatarId() != null;
             case REMINDER_EMAIL -> !ObjectUtils.isEmpty(universalContext.getOptions().getString("profile.email"));
-            case REMINDER_SHERIFF_ALLOW -> {
-                List<String> sheriffs = SheriffUtil.deserializeSheriffs(
-                    universalContext.getOptions().getString("sheriffs.timeline")
-                ).orElse(null);
-                yield sheriffs != null
-                    && sheriffs.stream().anyMatch(name -> name.equals(Sheriffs.GOOGLE_PLAY_TIMELINE));
-            }
+            case REMINDER_SHERIFF_ALLOW -> true; // deprecated
             default -> true;
         };
     }
