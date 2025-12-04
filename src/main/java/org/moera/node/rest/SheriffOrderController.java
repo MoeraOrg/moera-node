@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.Sheriffs;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.SheriffOrderCategory;
 import org.moera.lib.node.types.SheriffOrderDetails;
@@ -133,7 +134,12 @@ public class SheriffOrderController {
         }
         requestContext.authenticatedWithSignature(sheriffOrderDetails.getSheriffName());
 
-        if (!feedOperations.isFeedSheriff(sheriffOrderDetails.getFeedName())) {
+        if (
+            !feedOperations.isFeedSheriff(sheriffOrderDetails.getFeedName())
+            && !Sheriffs.GOOGLE_PLAY_TIMELINE.equals(sheriffOrderDetails.getSheriffName())
+            // FIXME Any node is allowed to put sheriff marks. But the current storage of sheriff marks
+            // is ineffective, that's why we temporarily allow only known sheriffs
+        ) {
             throw new OperationFailure("sheriff-order.not-sheriff");
         }
 
