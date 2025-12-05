@@ -29,9 +29,10 @@ public class SheriffUtil {
             return Optional.empty();
         }
         return Optional.of(
-                Arrays.stream(sheriffs.split(","))
-                    .map(String::strip)
-                    .collect(Collectors.toList()));
+            Arrays.stream(sheriffs.split(","))
+                .map(String::strip)
+                .collect(Collectors.toList())
+        );
     }
 
     public static Optional<String> serializeSheriffs(List<String> sheriffs) {
