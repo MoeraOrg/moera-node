@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.Sheriffs;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.CommentOperations;
@@ -340,6 +341,12 @@ public class PostingInfoUtil {
                     sheriffs = new ArrayList<>();
                 }
                 sheriffs.addAll(feedSheriffs);
+
+                Principal view = info.getOperations().getView(Principal.PUBLIC);
+                if (!sheriffs.contains(Sheriffs.GOOGLE_PLAY_TIMELINE) && (view.isPublic() || view.isSubscribed())) {
+                    sheriffs.add(Sheriffs.GOOGLE_PLAY_TIMELINE);
+                }
+
                 info.setSheriffs(sheriffs);
             });
 
