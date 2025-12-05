@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.Sheriffs;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.StoryInfo;
@@ -467,44 +468,61 @@ public class UserListOperations {
             .orElse(Collections.emptyList());
         for (String sheriffName : sheriffs) {
             if (!prevSheriffs.contains(sheriffName)) {
-                subscriptionOperations.subscribe(subscription -> {
-                    subscription.setSubscriptionType(SubscriptionType.USER_LIST);
-                    subscription.setRemoteNodeName(sheriffName);
-                    subscription.setRemoteFeedName(UserList.SHERIFF_HIDE);
-                    subscription.setReason(SubscriptionReason.USER);
-                });
-                jobs.run(
-                    UserListUpdateJob.class,
-                    new UserListUpdateJob.Parameters(
-                        sheriffName,
-                        UserList.SHERIFF_HIDE,
-                        feedOperations.getSheriffFeeds(sheriffName),
-                        null,
-                        false
-                    ),
-                    change.getNodeId()
-                );
+                subscribeToSheriffList(sheriffName, feedOperations.getSheriffFeeds(sheriffName));
             }
         }
         for (String sheriffName : prevSheriffs) {
-            if (!sheriffs.contains(sheriffName)) {
-                userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
-                    universalContext.nodeId(), SubscriptionType.USER_LIST, sheriffName, UserList.SHERIFF_HIDE
-                )
-                    .forEach(us -> userSubscriptionRepository.delete(us));
-
-                jobs.run(
-                    UserListUpdateJob.class,
-                    new UserListUpdateJob.Parameters(
-                        sheriffName,
-                        UserList.SHERIFF_HIDE,
-                        FeedOperations.getSheriffFeeds(prevOptions, sheriffName),
-                        null,
-                        true
-                    ),
-                    change.getNodeId()
-                );
+            if (!sheriffs.contains(sheriffName) && !sheriffName.equals(Sheriffs.GOOGLE_PLAY_TIMELINE)) {
+                unsubscribeFromSheriffList(sheriffName, FeedOperations.getSheriffFeeds(prevOptions, sheriffName));
             }
         }
     }
+
+    public void autoSubscribe() {
+        List<String> sheriffs = feedOperations.getFeedSheriffs(Feed.TIMELINE).orElse(Collections.emptyList());
+        if (!sheriffs.contains(Sheriffs.GOOGLE_PLAY_TIMELINE)) {
+            subscribeToSheriffList(Sheriffs.GOOGLE_PLAY_TIMELINE, List.of(Feed.TIMELINE));
+        }
+    }
+
+    private void subscribeToSheriffList(String sheriffName, List<String> feedNames) {
+        subscriptionOperations.subscribe(subscription -> {
+            subscription.setSubscriptionType(SubscriptionType.USER_LIST);
+            subscription.setRemoteNodeName(sheriffName);
+            subscription.setRemoteFeedName(UserList.SHERIFF_HIDE);
+            subscription.setReason(SubscriptionReason.USER);
+        });
+
+        jobs.run(
+            UserListUpdateJob.class,
+            new UserListUpdateJob.Parameters(
+                sheriffName,
+                UserList.SHERIFF_HIDE,
+                feedNames,
+                null,
+                false
+            ),
+            universalContext.nodeId()
+        );
+    }
+
+    private void unsubscribeFromSheriffList(String sheriffName, List<String> feedNames) {
+        userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
+            universalContext.nodeId(), SubscriptionType.USER_LIST, sheriffName, UserList.SHERIFF_HIDE
+        )
+            .forEach(us -> userSubscriptionRepository.delete(us));
+
+        jobs.run(
+            UserListUpdateJob.class,
+            new UserListUpdateJob.Parameters(
+                sheriffName,
+                UserList.SHERIFF_HIDE,
+                feedNames,
+                null,
+                true
+            ),
+            universalContext.nodeId()
+        );
+    }
+
 }

@@ -26,6 +26,7 @@ import org.moera.node.liberin.model.NodeNameChangedLiberin;
 import org.moera.node.liberin.model.RegisteredNameOperationStatusLiberin;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.operations.SubscriptionOperations;
+import org.moera.node.operations.UserListOperations;
 import org.moera.node.option.Options;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -51,6 +52,9 @@ public class NamingClient {
 
     @Inject
     private SubscriptionOperations subscriptionOperations;
+
+    @Inject
+    private UserListOperations userListOperations;
 
     @Inject
     private TaskScheduler taskScheduler;
@@ -196,11 +200,20 @@ public class NamingClient {
             options.set("profile.signing-key", signingKey);
         }
 
-        universalContext.associate(options.nodeId());
+        autoSubscribe(options.nodeId());
+    }
+
+    private void autoSubscribe(UUID nodeId) {
+        universalContext.associate(nodeId);
         try {
             subscriptionOperations.autoSubscribe();
         } catch (Throwable e) {
             log.error("Error automatically subscribing the node", e);
+        }
+        try {
+            userListOperations.autoSubscribe();
+        } catch (Throwable e) {
+            log.error("Error automatically subscribing to the Google Play sheriff's list", e);
         }
     }
 
