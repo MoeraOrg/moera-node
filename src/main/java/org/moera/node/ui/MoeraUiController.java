@@ -36,6 +36,12 @@ public class MoeraUiController {
         return "redirect:/";
     }
 
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/change-password", produces = "text/html")
+    @VirtualPage
+    public String changePassword(Model model) {
+        return openClient("Change Password", model);
+    }
+
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complaints", produces = "text/html")
     @VirtualPage
     public String complaints(Model model) {
