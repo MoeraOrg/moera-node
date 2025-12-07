@@ -141,7 +141,6 @@ public class MoeraUiController {
     }
 
     @GetMapping("/profile/verify-email")
-    @VirtualPage
     public String verifyEmail(@RequestParam(required = false) String token, Model model) {
         if (ObjectUtils.isEmpty(token)) {
             return openClient("Confirm your e-mail address", model);
