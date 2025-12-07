@@ -128,6 +128,10 @@ public class RecommendationOperations {
 
     @Scheduled(fixedDelayString = "PT2H")
     public void populateExplore() {
+        if (!jobs.isReady()) {
+            return;
+        }
+
         try (var ignored = requestCounter.allot()) {
             log.info("Fetching recommendations for 'explore' feed");
             for (String domainName : domains.getWarmDomainNames()) {
