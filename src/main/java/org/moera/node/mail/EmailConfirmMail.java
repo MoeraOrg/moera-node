@@ -27,7 +27,7 @@ public class EmailConfirmMail extends Mail {
     @Override
     Map<String, Object> getModel() {
         return Map.of(
-            "nodeName", NodeName.shorten(nodeName),
+            "nodeName", nodeName != null ? NodeName.shorten(nodeName) : getDomainName(),
             "domainName", getDomainName(),
             "email", getEmail(),
             "token", token
