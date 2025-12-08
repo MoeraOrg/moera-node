@@ -112,7 +112,7 @@ public class Picker extends Task {
             while (!stopped) {
                 Pick pick;
                 try {
-                    pick = queue.poll(1, TimeUnit.MINUTES);
+                    pick = queue.poll(10, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     continue;
                 }
