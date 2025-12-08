@@ -142,26 +142,28 @@ public class IndexNowClient {
         try (var ignored = requestCounter.allot()) {
             log.info("Sending IndexNow requests");
 
-            List<Entry> entries = tx.executeRead(() ->
-                entryRepository.findByIndexNow(PageRequest.of(0, BATCH_SIZE, Sort.by(Sort.Direction.DESC, "editedAt")))
-            );
-            if (entries.isEmpty()) {
-                return;
-            }
-
             Set<UUID> extraIds = new HashSet<>();
             List<Entry> indexed = new ArrayList<>();
-            for (Entry entry : entries) {
-                if (
-                    !entry.isOriginal()
-                    || !entry.getViewE().isPublic()
-                    || entry.getParent() != null && !entry.getParent().getViewE().isPublic()
-                ) {
-                    extraIds.add(entry.getId());
-                } else {
-                    indexed.add(entry);
+            tx.executeRead(() -> {
+                List<Entry> entries = entryRepository.findByIndexNow(
+                    PageRequest.of(0, BATCH_SIZE, Sort.by(Sort.Direction.DESC, "editedAt"))
+                );
+                if (entries.isEmpty()) {
+                    return;
                 }
-            }
+
+                for (Entry entry : entries) {
+                    if (
+                        !entry.isOriginal()
+                        || !entry.getViewE().isPublic()
+                        || entry.getParent() != null && !entry.getParent().getViewE().isPublic()
+                    ) {
+                        extraIds.add(entry.getId());
+                    } else {
+                        indexed.add(entry);
+                    }
+                }
+            });
             if (!extraIds.isEmpty()) {
                 tx.executeWrite(() -> entryRepository.indexedNow(extraIds, Util.now()));
             }
