@@ -222,7 +222,7 @@
         <dependency>
             <groupId>org.languagetool</groupId>
             <artifactId>language-ru</artifactId>
-            <version>6.6</version>
+            <version>6.7</version>
         </dependency>
         <dependency>
             <groupId>org.languagetool</groupId>
