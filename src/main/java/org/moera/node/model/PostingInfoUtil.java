@@ -335,20 +335,21 @@ public class PostingInfoUtil {
         for (FeedReference feedReference : info.getFeedReferences()) {
             String feedName = feedReference.getFeedName();
 
-            FeedOperations.getFeedSheriffs(options, feedName).ifPresent(feedSheriffs -> {
-                var sheriffs = info.getSheriffs();
-                if (sheriffs == null) {
-                    sheriffs = new ArrayList<>();
-                }
-                sheriffs.addAll(feedSheriffs);
+            var sheriffs = info.getSheriffs();
+            if (sheriffs == null) {
+                sheriffs = new ArrayList<>();
+            }
+            var feedSheriffs = FeedOperations.getFeedSheriffs(options, feedName);
+            if (feedSheriffs.isPresent()) {
+                sheriffs.addAll(feedSheriffs.get());
+            }
 
-                Principal view = info.getOperations().getView(Principal.PUBLIC);
-                if (!sheriffs.contains(Sheriffs.GOOGLE_PLAY_TIMELINE) && (view.isPublic() || view.isSubscribed())) {
-                    sheriffs.add(Sheriffs.GOOGLE_PLAY_TIMELINE);
-                }
+            Principal view = info.getOperations().getView(Principal.PUBLIC);
+            if (!sheriffs.contains(Sheriffs.GOOGLE_PLAY_TIMELINE) && (view.isPublic() || view.isSubscribed())) {
+                sheriffs.add(Sheriffs.GOOGLE_PLAY_TIMELINE);
+            }
 
-                info.setSheriffs(sheriffs);
-            });
+            info.setSheriffs(sheriffs);
 
             FeedOperations.getFeedSheriffMarks(options, feedName).ifPresent(marks -> {
                 var sheriffMarks = info.getSheriffMarks();
