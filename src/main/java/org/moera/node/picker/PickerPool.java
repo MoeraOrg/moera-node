@@ -81,8 +81,9 @@ public class PickerPool {
                 do {
                     UUID nodeId = pick.getNodeId();
                     picker = pickers.computeIfAbsent(
-                            new PickingDirection(nodeId, pick.getRemoteNodeName()),
-                            d -> createPicker(d.getNodeName(), nodeId));
+                        new PickingDirection(nodeId, pick.getRemoteNodeName()),
+                        d -> createPicker(d.getNodeName(), nodeId)
+                    );
                 } while (picker.isStopped());
                 try {
                     picker.put(pick);
@@ -108,9 +109,9 @@ public class PickerPool {
     @Scheduled(fixedDelayString = "PT10S")
     public void retry() {
         pending.values().stream()
-                .filter(p -> !p.isRunning())
-                .filter(p -> p.getRetryAt() == null || p.getRetryAt().before(Util.now()))
-                .forEach(this::pick);
+            .filter(p -> !p.isRunning())
+            .filter(p -> p.getRetryAt() == null || p.getRetryAt().before(Util.now()))
+            .forEach(this::pick);
     }
 
     private Picker createPicker(String nodeName, UUID nodeId) {
