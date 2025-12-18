@@ -154,28 +154,37 @@ public class StoryOperations {
 
             for (String domainName : domains.getAllDomainNames()) {
                 UUID nodeId = domains.getDomainNodeId(domainName);
-                purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.lifetime", false, true);
-                purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.viewed.lifetime", true, true);
+                purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.lifetime", storyRepository::findExpired, true);
                 purgeExpired(
-                    nodeId, domainName, Feed.NEWS, "news.lifetime", false,
-                    domains.getDomainOptions(nodeId).getBool("news.purge-pinned")
+                    nodeId, domainName, Feed.INSTANT, "instants.viewed.lifetime", storyRepository::findExpiredViewed,
+                    true
                 );
-                purgeExpired(nodeId, domainName, Feed.EXPLORE, "explore.lifetime", false, true);
+                boolean purgePinned = domains.getDomainOptions(nodeId).getBool("news.purge-pinned");
+                purgeExpired(nodeId, domainName, Feed.NEWS, "news.lifetime", storyRepository::findExpired, purgePinned);
+                purgeExpired(
+                    nodeId, domainName, Feed.NEWS, "recommendations.lifetime", storyRepository::findExpiredRecommended,
+                    purgePinned
+                );
+                purgeExpired(nodeId, domainName, Feed.EXPLORE, "explore.lifetime", storyRepository::findExpired, true);
             }
         }
     }
 
+    private interface ExpiredFinder {
+
+        List<Story> find(UUID nodeId, String feedName, Timestamp createdBefore);
+
+    }
+
     private void purgeExpired(
-        UUID nodeId, String domainName, String feedName, String optionName, boolean viewed, boolean purgePinned
+        UUID nodeId, String domainName, String feedName, String optionName, ExpiredFinder finder, boolean purgePinned
     ) {
         Duration lifetime = domains.getDomainOptions(domainName).getDuration(optionName).getDuration();
         Timestamp createdBefore = Timestamp.from(Instant.now().minus(lifetime));
         List<Liberin> liberins = new ArrayList<>();
         tx.executeWrite(() -> {
             mediaFileOwnerRepository.lockExclusive();
-            List<Story> stories = viewed
-                ? storyRepository.findExpiredViewed(nodeId, feedName, createdBefore)
-                : storyRepository.findExpired(nodeId, feedName, createdBefore);
+            List<Story> stories = finder.find(nodeId, feedName, createdBefore);
             stories.forEach(story -> {
                 if (story.isPinned() && !purgePinned) {
                     return;

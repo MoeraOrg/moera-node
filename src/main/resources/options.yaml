@@ -737,3 +737,11 @@
         value: more
       - title: Much more
         value: much-more
+
+- name: recommendations.lifetime
+  type: Duration
+  defaultValue: 7d
+  title: Purge recommendations after
+  modifiers:
+    min: 1d
+    max: 300d
