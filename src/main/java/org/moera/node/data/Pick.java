@@ -46,6 +46,8 @@ public class Pick {
     @NotNull
     private Timestamp createdAt = Util.now();
 
+    private Timestamp publishAt;
+
     private Timestamp retryAt;
 
     @Transient
@@ -129,6 +131,14 @@ public class Pick {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Timestamp getPublishAt() {
+        return publishAt;
+    }
+
+    public void setPublishAt(Timestamp publishAt) {
+        this.publishAt = publishAt;
     }
 
     public Timestamp getRetryAt() {
