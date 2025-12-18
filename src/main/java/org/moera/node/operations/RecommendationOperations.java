@@ -53,12 +53,22 @@ public class RecommendationOperations {
 
             for (String domainName : domains.getWarmDomainNames()) {
                 universalContext.associate(domains.getDomainNodeId(domainName));
+
                 var freq = RecommendationFrequency.forValue(
                     universalContext.getOptions().getString("recommendations.frequency")
                 );
                 if (freq == null || freq == RecommendationFrequency.NONE) {
                     continue;
                 }
+
+                int notViewed = tx.executeRead(() ->
+                    storyRepository.countNotViewed(universalContext.nodeId(), Feed.NEWS)
+                );
+                if (notViewed >= universalContext.getOptions().getInt("recommendations.max-non-viewed-news")) {
+                    log.debug("Max non-viewed news limit reached");
+                    continue;
+                }
+
                 int lastDay = tx.executeRead(() ->
                     storyRepository.countLastNotRecommendedPostings(
                         universalContext.nodeId(),

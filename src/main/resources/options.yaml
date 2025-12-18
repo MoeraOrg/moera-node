@@ -745,3 +745,11 @@
   modifiers:
     min: 1d
     max: 300d
+
+- name: recommendations.max-non-viewed-news
+  type: int
+  defaultValue: 200
+  title: Maximum non-viewed Newsfeed posts limit for adding recommendations
+  modifiers:
+    min: 10
+    max: 1500
