@@ -5,6 +5,7 @@ import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.EmailVerificationLiberin;
+import org.moera.node.liberin.model.EmailVerifiedLiberin;
 import org.moera.node.liberin.model.NodeNameChangedLiberin;
 import org.moera.node.liberin.model.ProfileUpdatedLiberin;
 import org.moera.node.liberin.model.RegisteredNameOperationStatusLiberin;
@@ -47,6 +48,11 @@ public class ProfileReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void emailVerification(EmailVerificationLiberin liberin) {
         send(new EmailConfirmMail(liberin.getNodeName(), liberin.getToken()));
+    }
+
+    @LiberinMapping
+    public void emailVerified(EmailVerifiedLiberin liberin) {
+        send(liberin, new ProfileUpdatedEvent());
     }
 
 }

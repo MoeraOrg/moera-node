@@ -16,6 +16,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.EmailVerificationLiberin;
+import org.moera.node.liberin.model.EmailVerifiedLiberin;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
 import org.moera.node.util.Transaction;
@@ -80,6 +81,7 @@ public class EmailVerificationOperations {
             var options = domains.getDomainOptions(verification.getNodeId());
             if (Objects.equals(options.getString("profile.email"), verification.getEmail())) {
                 options.set("profile.email.verified", true);
+                universalContext.send(new EmailVerifiedLiberin());
             }
             emailVerificationRepository.delete(verification);
 
