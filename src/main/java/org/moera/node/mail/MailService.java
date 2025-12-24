@@ -73,6 +73,7 @@ public class MailService {
     public void init() {
         Thread thread = new Thread(this::runMailQueue);
         thread.setDaemon(true);
+        thread.setName("mailDelivery");
         thread.start();
     }
 

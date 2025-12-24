@@ -7,6 +7,8 @@ public class PoolsConfig {
     private int notificationSender = 32;
     private int picker = 12;
     private int push = 4;
+    private int event = 4;
+    private int other = 4;
 
     public int getNaming() {
         return naming;
@@ -46,6 +48,22 @@ public class PoolsConfig {
 
     public void setPush(int push) {
         this.push = push;
+    }
+
+    public int getEvent() {
+        return event;
+    }
+
+    public void setEvent(int event) {
+        this.event = event;
+    }
+
+    public int getOther() {
+        return other;
+    }
+
+    public void setOther(int other) {
+        this.other = other;
     }
 
 }

@@ -46,6 +46,7 @@ public class FcmRelay {
 
         Thread thread = new Thread(this::deliver);
         thread.setDaemon(true);
+        thread.setName("fcmDelivery");
         thread.start();
     }
 

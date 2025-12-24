@@ -268,7 +268,7 @@ public class EventManager {
         }
     }
 
-    @Scheduled(fixedDelayString = "PT1M")
+    @Scheduled(fixedDelayString = "PT1M", scheduler = "eventScheduler")
     public void everyMinute() {
         try (var ignored = requestCounter.allot()) {
             log.debug("Retrying event delivery");
