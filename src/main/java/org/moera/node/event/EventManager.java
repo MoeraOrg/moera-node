@@ -170,10 +170,12 @@ public class EventManager {
 
         SeenHeader.Details seen = SeenHeader.parse(accessor);
         initLoggingDomain(accessor.getSessionId());
-        log.info("Session subscribed, id = {} seen = {}/{}",
-                accessor.getSessionId(),
-                LogUtil.format(seen.queueStartedAt),
-                LogUtil.format(seen.lastEvent));
+        log.info(
+            "Session subscribed, id = {} seen = {}/{}",
+            accessor.getSessionId(),
+            LogUtil.format(seen.queueStartedAt),
+            LogUtil.format(seen.lastEvent)
+        );
 
         EventSubscriber subscriber = subscribers.get(accessor.getSessionId());
         if (subscriber == null) {
@@ -284,9 +286,9 @@ public class EventManager {
 
     private void pingAll() {
         Set<UUID> nodeIds = subscribers.values().stream()
-                .filter(EventSubscriber::isSubscribed)
-                .map(EventSubscriber::getNodeId)
-                .collect(Collectors.toSet());
+            .filter(EventSubscriber::isSubscribed)
+            .map(EventSubscriber::getNodeId)
+            .collect(Collectors.toSet());
         nodeIds.forEach(nodeId -> send(nodeId, new PingEvent()));
     }
 
@@ -300,9 +302,9 @@ public class EventManager {
             }
             int last = queue.get(0).getOrdinal() + queue.size() - 1;
             subscribers.values().stream()
-                    .filter(EventSubscriber::isSubscribed)
-                    .filter(sub -> sub.getLastEventSeen() < last)
-                    .forEach(this::deliver);
+                .filter(EventSubscriber::isSubscribed)
+                .filter(sub -> sub.getLastEventSeen() < last)
+                .forEach(this::deliver);
         } finally {
             eventsLock.readLock().unlock();
         }
@@ -312,8 +314,7 @@ public class EventManager {
         initLoggingDomain(subscriber.getSessionId());
         log.debug("Delivering events to {}", subscriber.getSessionId());
 
-        SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor
-                .create(SimpMessageType.MESSAGE);
+        SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
         headerAccessor.setSessionId(subscriber.getSessionId());
         MessageHeaders headers = headerAccessor.getMessageHeaders();
 
@@ -322,8 +323,10 @@ public class EventManager {
         try {
             for (int i = beginIndex; i < queue.size(); i++) {
                 EventPacket packet = queue.get(i);
-                if (!Objects.equals(packet.getNodeId(), subscriber.getNodeId())
-                        || !packet.getEvent().isPermitted(subscriber)) {
+                if (
+                    !Objects.equals(packet.getNodeId(), subscriber.getNodeId())
+                    || !packet.getEvent().isPermitted(subscriber)
+                ) {
                     subscriber.setLastEventSeen(first + i);
                     continue;
                 }

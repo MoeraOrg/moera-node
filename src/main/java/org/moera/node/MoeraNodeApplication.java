@@ -134,7 +134,8 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     @Bean
     public HttpMessageConverters customMessageConverters() {
         return new HttpMessageConverters(
-                new SyndFeedHttpMessageConverter());
+            new SyndFeedHttpMessageConverter()
+        );
     }
 
     @Bean
