@@ -113,6 +113,9 @@ public class MediaOperations {
 
     private static final int[] PREVIEW_SIZES = {1400, 900, 150};
 
+    private static final int PERMISSIONS_REFRESH_BATCH_SIZE = 100;
+    private static final int PERMISSIONS_REFRESH_BATCHES_PER_CALL = 5;
+
     @Inject
     private RequestCounter requestCounter;
 
@@ -743,12 +746,25 @@ public class MediaOperations {
     }
 
     @Scheduled(fixedDelayString = "PT15M")
-    @Transactional
     public void refreshPermissions() {
         try (var ignored = requestCounter.allot()) {
             log.info("Refreshing permissions of media file owners");
 
-            mediaFileOwnerRepository.findOutdatedPermissions().forEach(this::updatePermissions);
+            for (int i = 0; i < PERMISSIONS_REFRESH_BATCHES_PER_CALL; i++) {
+                boolean empty = tx.executeWrite(() -> {
+                    var list = mediaFileOwnerRepository.findOutdatedPermissions(
+                        Pageable.ofSize(PERMISSIONS_REFRESH_BATCH_SIZE)
+                    );
+                    if (list.isEmpty()) {
+                        return true;
+                    }
+                    list.forEach(this::updatePermissions);
+                    return false;
+                });
+                if (empty) {
+                    break;
+                }
+            }
         }
     }
 
