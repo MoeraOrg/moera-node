@@ -69,8 +69,9 @@ public class EntryOperations implements MediaAttachmentsProvider {
         }
     }
 
-    private void purgeOutdatedRevisions(UUID nodeId, String domainName, EntryType entryType, boolean original,
-                                        String optionName) {
+    private void purgeOutdatedRevisions(
+        UUID nodeId, String domainName, EntryType entryType, boolean original, String optionName
+    ) {
         MDC.put("domain", domainName);
 
         ExtendedDuration lifetime = domains.getDomainOptions(domainName).getDuration(optionName);

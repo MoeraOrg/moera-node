@@ -42,15 +42,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/sitemaps")
 public class SitemapController {
 
-    private static final Instant SITEMAPS_UPGRADE_DATE = LocalDateTime
+    private static final Instant SITEMAPS_UPGRADE_DATE =
+        LocalDateTime
             .of(2022, Month.FEBRUARY, 12, 0, 0)
             .toInstant(ZoneOffset.UTC);
     private static final int MAX_SITEMAP_RECORD = 40000;
     private static final List<Pair<String, String>> STATIC_PAGES = List.of(
-            Pair.of("/timeline", "hourly"),
-            Pair.of("/profile", "monthly"),
-            Pair.of("/people/subscribers", "monthly"),
-            Pair.of("/people/subscriptions", "monthly")
+        Pair.of("/timeline", "hourly"),
+        Pair.of("/profile", "monthly"),
+        Pair.of("/people/subscribers", "monthly"),
+        Pair.of("/people/subscriptions", "monthly")
     );
 
     private static final Logger log = LoggerFactory.getLogger(SitemapController.class);
@@ -80,7 +81,8 @@ public class SitemapController {
         Collection<Sitemap> sitemaps = sitemapRecordRepository.findSitemaps(requestContext.nodeId());
         SitemapIndex sitemapIndex = new SitemapIndex(requestContext.getSiteUrl(), sitemaps, SITEMAPS_UPGRADE_DATE);
         sitemapIndex.getItems().add(
-                new SitemapIndexItem(requestContext.getSiteUrl(), "/sitemaps/static", applicationStartedAt));
+            new SitemapIndexItem(requestContext.getSiteUrl(), "/sitemaps/static", applicationStartedAt)
+        );
         return sitemapIndex;
     }
 
@@ -89,9 +91,11 @@ public class SitemapController {
     public SitemapUrlSet sitemapStatic() {
         log.info("GET /sitemaps/static");
 
-        return new SitemapUrlSet(STATIC_PAGES.stream()
+        return new SitemapUrlSet(
+            STATIC_PAGES.stream()
                 .map(p -> new SitemapUrl(requestContext.getSiteUrl(), p.getFirst(), p.getSecond()))
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList())
+        );
     }
 
     @GetMapping(path = "/{id}", produces = MediaType.TEXT_XML_VALUE)
@@ -109,9 +113,9 @@ public class SitemapController {
 
     private Sitemap findAvailableSitemap(Collection<Sitemap> sitemaps) {
         return sitemaps.stream()
-                .filter(m -> m.getTotal() < MAX_SITEMAP_RECORD)
-                .findFirst()
-                .orElse(new Sitemap(UUID.randomUUID()));
+            .filter(m -> m.getTotal() < MAX_SITEMAP_RECORD)
+            .findFirst()
+            .orElse(new Sitemap(UUID.randomUUID()));
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -151,8 +155,10 @@ public class SitemapController {
                         } else {
                             record = new SitemapRecord(sitemap.getId(), posting);
                             record = sitemapRecordRepository.save(record);
-                            log.debug("Created record {} in sitemap {} for posting {}",
-                                    record.getId(), record.getSitemapId(), posting.getId());
+                            log.debug(
+                                "Created record {} in sitemap {} for posting {}",
+                                record.getId(), record.getSitemapId(), posting.getId()
+                            );
                         }
                         sitemap.setTotal(sitemap.getTotal() + 1);
                         if (sitemap.getTotal() >= MAX_SITEMAP_RECORD) {
