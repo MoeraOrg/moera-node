@@ -105,10 +105,12 @@ public class EntryOperations implements MediaAttachmentsProvider {
             // fetch from the database
         }
 
-        jobs.runNoPersist(
-            CacheMediaAttachmentsJob.class,
-            new CacheMediaAttachmentsJob.Parameters(revision.getId(), receiverName)
-        );
+        if (jobs.isReady()) {
+            jobs.runNoPersist(
+                CacheMediaAttachmentsJob.class,
+                new CacheMediaAttachmentsJob.Parameters(revision.getId(), receiverName)
+            );
+        }
 
         Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
         return attachments.stream()
