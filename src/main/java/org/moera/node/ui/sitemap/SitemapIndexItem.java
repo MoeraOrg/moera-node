@@ -16,7 +16,7 @@ public class SitemapIndexItem {
 
     public SitemapIndexItem(String siteUrl, String location, Instant lastModified) {
         this.location = siteUrl + location;
-        this.lastModified = lastModified.toString();
+        this.lastModified = (lastModified != null ? lastModified : Instant.EPOCH).toString();
     }
 
     public SitemapIndexItem(String siteUrl, Sitemap sitemap, Instant earliestModified) {
