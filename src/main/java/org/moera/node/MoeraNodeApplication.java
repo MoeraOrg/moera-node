@@ -148,7 +148,7 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     }
 
     @Bean
-    public ThreadPoolTaskExecutor notificationSenderTaskExecutor() {
+    public TaskExecutor notificationSenderTaskExecutor() {
         return buildTaskExecutor(config.getPools().getNotificationSender());
     }
 
