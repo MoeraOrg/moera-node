@@ -25,6 +25,10 @@ public class Shortener {
     }
 
     private static String shorten(String html, boolean withGallery) {
+        if (html == null) {
+            return null;
+        }
+
         Document document = Jsoup.parseBodyFragment(html.trim());
         Measurer measurer = new Measurer(withGallery);
         document.body().filter(measurer);

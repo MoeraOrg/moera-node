@@ -40,9 +40,10 @@ public class PostingTextUtil {
         postingText.setOwnerGender(ownerGender);
         postingText.setOwnerAvatar(sourceText.getOwnerAvatar());
         postingText.setBodySrc(sourceText.getBodySrc());
-        postingText.setBodySrcFormat(sourceText.getBodySrcFormat() != null 
-            ? sourceText.getBodySrcFormat() 
-            : SourceFormat.PLAIN_TEXT);
+        postingText.setBodySrcFormat(sourceText.getBodySrcFormat());
+        if (postingText.getBodySrc() != null && postingText.getBodySrcFormat() == null) {
+            postingText.setBodySrcFormat(SourceFormat.PLAIN_TEXT);
+        }
         
         postingText.setMedia(
             sourceText.getMedia() != null
@@ -56,18 +57,20 @@ public class PostingTextUtil {
         postingText.setRejectedReactions(sourceText.getRejectedReactions());
         postingText.setCommentRejectedReactions(sourceText.getCommentRejectedReactions());
 
-        if (postingText.getBodySrcFormat() != SourceFormat.APPLICATION) {
-            Body decodedBody = textConverter.toHtml(postingText.getBodySrcFormat(), postingText.getBodySrc());
-            postingText.setBody(decodedBody);
-            postingText.setBodyFormat(BodyFormat.MESSAGE);
-            Body decodedBodyPreview = Shortener.shorten(decodedBody, false);
-            if (decodedBodyPreview == null) {
-                decodedBodyPreview = new Body(Body.EMPTY);
+        if (postingText.getBodySrc() != null) {
+            if (postingText.getBodySrcFormat() != SourceFormat.APPLICATION) {
+                Body decodedBody = textConverter.toHtml(postingText.getBodySrcFormat(), postingText.getBodySrc());
+                postingText.setBody(decodedBody);
+                postingText.setBodyFormat(BodyFormat.MESSAGE);
+                Body decodedBodyPreview = Shortener.shorten(decodedBody, false);
+                if (decodedBodyPreview == null) {
+                    decodedBodyPreview = new Body(Body.EMPTY);
+                }
+                postingText.setBodyPreview(decodedBodyPreview);
+            } else {
+                postingText.setBody(postingText.getBodySrc());
+                postingText.setBodyFormat(BodyFormat.APPLICATION);
             }
-            postingText.setBodyPreview(decodedBodyPreview);
-        } else {
-            postingText.setBody(postingText.getBodySrc());
-            postingText.setBodyFormat(BodyFormat.APPLICATION);
         }
         
         postingText.setOperations(sourceText.getOperations());
