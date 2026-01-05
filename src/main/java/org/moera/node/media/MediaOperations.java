@@ -270,6 +270,9 @@ public class MediaOperations {
             if (contentType == null || contentType.startsWith("image/")) {
                 contentType = detectContentType(tmpPath, contentType);
             }
+            if (contentType == null) {
+                throw new InvalidImageException();
+            }
 
             Path mediaPath = FileSystems.getDefault().getPath(
                 config.getMedia().getPath(), MimeUtils.fileName(id, contentType)
