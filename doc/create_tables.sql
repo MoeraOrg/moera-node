@@ -2,8 +2,10 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.18 (Ubuntu 14.18-0ubuntu0.22.04.1)
--- Dumped by pg_dump version 14.18 (Ubuntu 14.18-0ubuntu0.22.04.1)
+\restrict Tc2XxB7ObdUx5piTQHTiR1Yc7CRZOWtdNBwC5LpAUV34uySRUZQkB3YUxWFTqIf
+
+-- Dumped from database version 14.20 (Ubuntu 14.20-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.20 (Ubuntu 14.20-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -961,6 +963,21 @@ CREATE TABLE public.drafts (
 ALTER TABLE public.drafts OWNER TO moera;
 
 --
+-- Name: email_verifications; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.email_verifications (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    email character varying(127) NOT NULL,
+    token character varying(64) NOT NULL,
+    deadline timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.email_verifications OWNER TO moera;
+
+--
 -- Name: entries; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -1058,7 +1075,9 @@ CREATE TABLE public.entries (
     parent_rejected_reactions_positive character varying(255) DEFAULT ''::character varying NOT NULL,
     parent_rejected_reactions_negative character varying(255) DEFAULT ''::character varying NOT NULL,
     child_rejected_reactions_positive character varying(255) DEFAULT ''::character varying NOT NULL,
-    child_rejected_reactions_negative character varying(255) DEFAULT ''::character varying NOT NULL
+    child_rejected_reactions_negative character varying(255) DEFAULT ''::character varying NOT NULL,
+    index_now_updated_at timestamp without time zone DEFAULT '1970-01-01 00:00:00'::timestamp without time zone NOT NULL,
+    external_source_uri character varying(1024) DEFAULT ''::character varying NOT NULL
 );
 
 
@@ -1494,7 +1513,9 @@ CREATE TABLE public.picks (
     created_at timestamp without time zone NOT NULL,
     retry_at timestamp without time zone,
     media_file_owner_id uuid,
-    recommended boolean DEFAULT false NOT NULL
+    recommended boolean DEFAULT false NOT NULL,
+    viewed boolean DEFAULT false NOT NULL,
+    publish_at timestamp without time zone
 );
 
 
@@ -2016,6 +2037,19 @@ CREATE TABLE public.user_subscriptions (
 ALTER TABLE public.user_subscriptions OWNER TO moera;
 
 --
+-- Name: verified_emails; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.verified_emails (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    email character varying(127) NOT NULL
+);
+
+
+ALTER TABLE public.verified_emails OWNER TO moera;
+
+--
 -- Name: ask_history ask_history_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -2093,6 +2127,14 @@ ALTER TABLE ONLY public.domains
 
 ALTER TABLE ONLY public.drafts
     ADD CONSTRAINT drafts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: email_verifications email_verifications_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.email_verifications
+    ADD CONSTRAINT email_verifications_pkey PRIMARY KEY (id);
 
 
 --
@@ -2488,6 +2530,14 @@ ALTER TABLE ONLY public.user_subscriptions
 
 
 --
+-- Name: verified_emails verified_emails_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.verified_emails
+    ADD CONSTRAINT verified_emails_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: ask_history_node_id_remote_node_name_subject_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -2656,6 +2706,20 @@ CREATE INDEX drafts_owner_avatar_media_file_id_idx ON public.drafts USING btree 
 
 
 --
+-- Name: email_verifications_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX email_verifications_deadline_idx ON public.email_verifications USING btree (deadline);
+
+
+--
+-- Name: email_verifications_token_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX email_verifications_token_idx ON public.email_verifications USING btree (token);
+
+
+--
 -- Name: entries_current_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -2674,6 +2738,20 @@ CREATE INDEX entries_deadline_idx ON public.entries USING btree (deadline);
 --
 
 CREATE INDEX entries_entry_type_idx ON public.entries USING btree (entry_type);
+
+
+--
+-- Name: entries_external_source_uri_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entries_external_source_uri_idx ON public.entries USING btree (external_source_uri);
+
+
+--
+-- Name: entries_index_now_edited_at_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entries_index_now_edited_at_idx ON public.entries USING btree (edited_at DESC) WHERE ((edited_at > index_now_updated_at) OR ((deleted_at IS NOT NULL) AND (deleted_at > index_now_updated_at)));
 
 
 --
@@ -3594,6 +3672,13 @@ CREATE INDEX user_subscriptions_remote_node_idx ON public.user_subscriptions USI
 
 
 --
+-- Name: verified_emails_node_id_email_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX verified_emails_node_id_email_idx ON public.verified_emails USING btree (node_id, email);
+
+
+--
 -- Name: media_file_owners update_deadline; Type: TRIGGER; Schema: public; Owner: moera
 --
 
@@ -4230,4 +4315,6 @@ ALTER TABLE ONLY public.user_subscriptions
 --
 -- PostgreSQL database dump complete
 --
+
+\unrestrict Tc2XxB7ObdUx5piTQHTiR1Yc7CRZOWtdNBwC5LpAUV34uySRUZQkB3YUxWFTqIf
 

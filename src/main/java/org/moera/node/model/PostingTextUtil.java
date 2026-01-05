@@ -121,6 +121,9 @@ public class PostingTextUtil {
                 entry.setOwnerAvatarShape(postingText.getOwnerAvatar().getShape());
             }
         }
+        if (postingText.getExternalSourceUri() != null) {
+            entry.setExternalSourceUri(postingText.getExternalSourceUri());
+        }
 
         if (entry.getParentMedia() == null) {
             if (postingText.getOperations() != null) {
@@ -233,6 +236,10 @@ public class PostingTextUtil {
                 || entry.getOwnerAvatarMediaFile() != null
                 && AvatarDescriptionUtil.getMediaFile(postingText.getOwnerAvatar()).getId()
                         .equals(entry.getOwnerAvatarMediaFile().getId())
+            )
+            && (
+                postingText.getExternalSourceUri() == null
+                || postingText.getExternalSourceUri().equals(entry.getExternalSourceUri())
             )
             && (
                 postingText.getOperations() == null

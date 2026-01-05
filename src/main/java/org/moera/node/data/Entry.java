@@ -268,6 +268,10 @@ public class Entry {
 
     private boolean recommended;
 
+    @NotNull
+    @Size(max = 1024)
+    private String externalSourceUri = "";
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
 
@@ -1297,6 +1301,14 @@ public class Entry {
 
     public void setRecommended(boolean recommended) {
         this.recommended = recommended;
+    }
+
+    public String getExternalSourceUri() {
+        return externalSourceUri;
+    }
+
+    public void setExternalSourceUri(String externalSourceUri) {
+        this.externalSourceUri = externalSourceUri;
     }
 
     public Set<Story> getStories() {
