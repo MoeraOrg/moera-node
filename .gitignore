@@ -6,4 +6,5 @@
 /target/
 /log/
 /media/
+/.ssl/
 /application-dev*.yml
