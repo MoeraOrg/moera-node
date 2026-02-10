@@ -121,17 +121,14 @@
     </head>
     {{assignOption "maxWidth" "feed.width"}}
     <body style="--feed-width: {{maxWidth}}px">
-        <div class="alert alert-warning moera-addon" role="alert">
-            {{invitation}}
-        </div>
-        <nav class="navbar navbar-expand-md navbar-dark bg-dark navbar-moera sticky-top">
-            <a class="navbar-brand" href="/">{{image "/pics/logo-w-32.png" alt="Moera"}}</a>
+        <nav class="navbar navbar-expand-md bg-body sticky-top">
+            <a class="navbar-brand" href="/">{{image "/pics/logo.png" alt="Moera"}}</a>
             <a class="navbar-text" href="/">{{nodename nodeName.name "" linked=false}}</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse bg-dark" id="navbarNav">
+            <div class="collapse navbar-collapse bg-body" id="navbarNav">
                 <ul class="navbar-nav ms-3 me-auto">
                     {{> menuItem index="timeline" title="TIMELINE" href="/timeline"}}
                     {{> menuItem index="profile" title="PROFILE" href="/profile"}}
@@ -139,4 +136,7 @@
                 </ul>
             </div>
         </nav>
+        <div id="invitation-alert" role="alert">
+            <span>{{invitation}}</span>
+        </div>
         <div class="container">

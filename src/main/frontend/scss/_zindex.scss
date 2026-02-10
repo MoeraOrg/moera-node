@@ -1,7 +1,11 @@
 :root {
     --zindex-text-overlay: 1;
-    --zindex-page-header: 900;
+    --zindex-input-overlay: 6;
+    --zindex-overlay-loading: 895;
+    --zindex-back-box: 900;
     --zindex-feed-top-button: 950;
+    --zindex-invitation-alert: 960;
+    --zindex-page-header: 970;
     --zindex-dropdown: 1000; /* Bootstrap */
     --zindex-sticky: 1020; /* Bootstrap */
     --zindex-fixed: 1030; /* Bootstrap */
@@ -9,8 +13,8 @@
     --zindex-offcanvas: 1045; /* Bootstrap */
     --zindex-modal-backdrop: 1050; /* Bootstrap */
     --zindex-modal: 1055; /* Bootstrap */
+    --zindex-modal-loading: 1056;
     --zindex-popover: 1070; /* Bootstrap */
-    --zindex-risen-modal-backdrop: 1072;
-    --zindex-risen-modal: 1077;
     --zindex-tooltip: 1080; /* Bootstrap */
+    --zindex-toast: 1090; /* Bootstrap */
 }

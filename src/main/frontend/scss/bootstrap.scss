@@ -1,5 +1,68 @@
 @import "scss/functions";
 
-// Add Bootstrap Sass variable overrides here.
+$brand: #0fb6bf;
+
+$brand-100: tint-color($brand, 80%) !default;
+$brand-200: tint-color($brand, 60%) !default;
+$brand-300: tint-color($brand, 40%) !default;
+$brand-400: tint-color($brand, 20%) !default;
+$brand-500: $brand !default;
+$brand-600: shade-color($brand, 20%) !default;
+$brand-700: shade-color($brand, 40%) !default;
+$brand-800: shade-color($brand, 60%) !default;
+$brand-900: shade-color($brand, 80%) !default;
+
+$primary: $brand;
+$link-color: rgb(13, 110, 253); // $blue-500
 
 @import "scss/bootstrap";
+
+$brands: (
+        "100": $brand-100,
+        "200": $brand-200,
+        "300": $brand-300,
+        "400": $brand-400,
+        "500": $brand-500,
+        "600": $brand-600,
+        "700": $brand-700,
+        "800": $brand-800,
+        "900": $brand-900
+);
+
+$blues: (
+        "100": $blue-100,
+        "200": $blue-200,
+        "300": $blue-300,
+        "400": $blue-400,
+        "500": $blue-500,
+        "600": $blue-600,
+        "700": $blue-700,
+        "800": $blue-800,
+        "900": $blue-900
+);
+
+:root {
+    @each $color, $value in $brands {
+        --#{$prefix}brand-#{$color}: #{$value};
+    }
+
+    @each $color, $value in $blues {
+        --#{$prefix}blue-#{$color}: #{$value};
+    }
+
+    --#{$prefix}green-400: #{$green-400};
+
+    --#{$prefix}input-focus-border-color: #{$input-focus-border-color};
+    --#{$prefix}input-focus-box-shadow: #{$input-focus-box-shadow};
+}
+
+.btn-primary {
+    --#{$prefix}btn-color: white;
+    --#{$prefix}btn-hover-color: white;
+    --#{$prefix}btn-active-color: white;
+    --#{$prefix}btn-disabled-color: #{$gray-100};
+}
+
+.btn-outline-primary {
+    --#{$prefix}btn-hover-color: white;
+}

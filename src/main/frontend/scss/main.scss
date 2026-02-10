@@ -4,6 +4,7 @@
 
 :root:root {
     scroll-behavior: auto;
+
     --bs-font-sans-serif: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans",
                           sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
@@ -13,8 +14,8 @@ HTML {
 }
 
 BODY {
-    background-color: var(--body-background);
-    padding-bottom: 2rem;
+    background-color: var(--body-bg);
+    padding-bottom: 3rem;
 }
 
 A, .btn-link {
@@ -24,7 +25,7 @@ A, .btn-link {
 .container {
     max-width: var(--feed-width);
 
-    @media only screen and (max-width: 575px) {
+    @media only screen and (max-width: 991px) {
         padding-left: 0;
         padding-right: 0;
     }
@@ -39,20 +40,44 @@ H2 .avatar-link {
     height: 1em;
 }
 
-.alert.moera-addon {
-    padding-top: .25rem;
-    padding-bottom: .25rem;
-    margin-bottom: 0;
+#invitation-alert {
+    width: 100%;
+    background-color: var(--invitation);
+    font-weight: 400;
+    line-height: 2;
+    color: var(--bs-gray-900);
+    display: grid;
+    place-items: center;
+    text-align: center;
+
+    @media only screen and (min-width: 992px) {
+        position: sticky;
+        top: 4.25rem;
+        height: 3.5rem;
+        z-index: var(--zindex-invitation-alert);
+        margin-bottom: 1rem;
+    }
+
+    @media only screen and (max-width: 991px) {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 6rem;
+        z-index: var(--zindex-page-header);
+    }
 }
 
-.navbar-moera {
-    margin-bottom: 1rem;
-    padding-top: 0;
-    padding-bottom: 0;
+.navbar {
+    --bs-navbar-padding-x: 2rem;
+    --bs-navbar-padding-y: .6rem;
+    --bs-navbar-brand-margin-end: 1.5rem;
+    --bs-nav-link-font-size: 1.2rem;
+    --bs-navbar-toggler-border-color: transparent;
+    --bs-navbar-toggler-focus-width: 0;
 
-    .navbar-brand {
-        padding-left: .5rem;
-        padding-right: .5rem;
+    @media only screen and (max-width: 991px) {
+        margin-bottom: 1rem;
     }
 
     .node-name {
@@ -64,16 +89,21 @@ H2 .avatar-link {
     A.navbar-text:hover {
         text-decoration: none;
     }
+
+    .navbar-toggler {
+        margin-right: -1.5rem;
+    }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 991px) {
     #navbarNav {
-        position: absolute;
+        position: fixed;
         padding-right: 1rem;
-        top: 2.5em;
-        right: 0;
+        top: 4.5rem;
+        right: .5rem;
         box-shadow: 0 .125rem .25rem var(--shadow);
-        border: solid 1px var(--bs-gray-600);
+        border: solid 1px var(--bs-gray-400);
+        border-radius: .5rem;
     }
 }
 

@@ -1,11 +1,6 @@
 :root {
-    --body-background: #e9ebee;
-    --highlight: rgba(0, 0, 0, .05);
-    --highlight-blue: rgba(0, 123, 255, .1);
-    --highlight-cyan: #f0fafa;
-    --cyan-light: #96d6e0;
     /*
-     * Bootstrap gray colors
+     * Bootstrap colors (for reference)
      *
      * --bs-gray-900: #212529;
      * --bs-gray-800: #343a40; (dark)
@@ -16,26 +11,32 @@
      * --bs-gray-300: #dee2e6;
      * --bs-gray-200: #e9ecef; (ultralight)
      * --bs-gray-100: #f8f9fa;
+     *
+     * --bs-blue-600: #0a58ca;
+     * --bs-blue-200: #9ec5fe;
+     * --bs-blue-100: #cfe2ff;
+     *
+     * --bs-green-400: #479f76;
      */
-    --green-light: #42d042; /* forest green + 20% lighter */
-    --red-light: #df5a5a; /* fire brick + 20% lighter */
 
-    --verifying: var(--bs-cyan);
+    /* Design colors */
+    --brand-50: #eefafa;
+    --violet-800: #3d4170;
+    --violet-600: #515795;
+    --gray-100-transparent: rgb(0 0 0 / 3%);
+
+    /* Page body color */
+    --body-bg: var(--bs-gray-200);
+
+    /* Verification colors */
+    --verifying: var(--bs-brand-400);
     --correct: forestgreen;
     --incorrect: var(--bs-red);
-    --correct-light: var(--green-light);
-    --incorrect-light: var(--red-light);
-    --node-name: #385898;
-    --node-name-ts: #389858;
-    --blockquote: var(--highlight-cyan);
 
-    --status-icon: rgba(255, 255, 255, .5);
-    --status-icon-highlight: rgba(255, 255, 255, .75);
-    --shadow: rgba(0, 0, 0, .75);
-
+    /* Other elements' colors */
     --reactions-positive: #e9fce5;
     --reactions-negative: #feeff0;
-    --reactions-positive-border: #cddfc9;
-    --reactions-negative-border: #e1d3d4;
     --comments: #f8faff;
+    --subject: #385898;
+    --invitation: #7bedf4;
 }

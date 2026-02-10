@@ -195,14 +195,13 @@ public class MoeraHelperSource {
 
     public CharSequence invitation() {
         StringBuilder buf = new StringBuilder();
-        buf.append("This site participates in <a href=\"http://moera.org/\">Moera</a> Network. ");
-        buf.append("To unlock all features, ");
+        buf.append("Try all <a href=\"https://moera.org/\">Moera</a> features — ");
         if (requestContext.getUserAgentOs() == UserAgentOs.ANDROID) {
-            buf.append("<a href=\"https://play.google.com/store/apps/details"
-                    + "?id=org.moera.web.twa&pcampaignid=invitation-node\">"
-                    + "get Moera app on Google Play</a> or ");
+            buf.append("<br><a href=\"https://play.google.com/store/apps/details"
+                    + "?id=org.moera.web.twa&pcampaignid=invitation-node\" class=\"btn btn-light btn-sm\">"
+                    + "Get Moera App</a> or ");
         }
-        buf.append("<a class=\"btn btn-success btn-sm\" href=\"");
+        buf.append("<a class=\"btn btn-primary btn-sm\" href=\"");
         buf.append(Util.he(requestContext.getRedirectorUrl()));
         buf.append("\">View in Web Client</a>");
         return new SafeString(buf);
