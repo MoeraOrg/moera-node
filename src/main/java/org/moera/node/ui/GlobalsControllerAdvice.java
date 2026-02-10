@@ -7,6 +7,7 @@ import org.moera.lib.node.types.AvatarImage;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.model.AvatarImageUtil;
+import org.moera.node.model.NodeNameInfoUtil;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -21,6 +22,15 @@ public class GlobalsControllerAdvice {
     @ModelAttribute
     public void session(Model model) {
         model.addAttribute("webClientUrl", requestContext.getRedirectorUrl());
+        model.addAttribute("nodeName", NodeNameInfoUtil.build(requestContext.getPublic()));
+        model.addAttribute("nodeFullName", requestContext.getPublic().fullName());
+        model.addAttribute(
+            "nodeAvatar",
+            requestContext.getPublic().getAvatar() != null
+                ? AvatarImageUtil.build(requestContext.getPublic().getAvatar())
+                : null
+        );
+        model.addAttribute("siteUrl", requestContext.getSiteUrl());
         model.addAttribute("ogType", "website");
         if (requestContext.getAvatar() != null) {
             AvatarImage avatarImage = AvatarImageUtil.build(requestContext.getAvatar());

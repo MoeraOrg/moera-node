@@ -31,8 +31,39 @@ A, .btn-link {
     }
 }
 
-H2 .avatar-link {
-    margin-right: .15em;
+.page-title {
+    display: grid;
+    grid-template: "avatar full-name" min-content
+                   "avatar mention" min-content
+                  / 64px   1fr;
+    background-color: white;
+    border-radius: 1rem;
+    padding: 1rem;
+}
+
+.page-title .avatar-link {
+    grid-area: avatar;
+}
+
+.page-title A.full-name {
+    grid-area: full-name;
+    color: var(--bs-gray-900);
+    font-size: 1.31rem;
+    font-weight: 600;
+    line-height: 133%;
+    white-space: nowrap;
+}
+
+.page-title A.full-name:hover {
+    text-decoration: underline;
+}
+
+.page-title .mention {
+    grid-area: mention;
+    color: var(--bs-gray-600);
+    font-size: .88rem;
+    line-height: 143%;
+    white-space: nowrap;
 }
 
 .emoji {
@@ -78,16 +109,6 @@ H2 .avatar-link {
 
     @media only screen and (max-width: 991px) {
         margin-bottom: 1rem;
-    }
-
-    .node-name {
-        color: var(--cyan-light);
-        font-weight: bold;
-        margin-right: .5rem;
-    }
-
-    A.navbar-text:hover {
-        text-decoration: none;
     }
 
     .navbar-toggler {

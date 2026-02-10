@@ -19,10 +19,10 @@ import org.moera.lib.node.types.PostingOperations;
 import org.moera.lib.node.types.ReactionTotalInfo;
 import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgentOs;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.api.naming.NamingCache;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -73,6 +73,10 @@ public class MoeraHelperSource {
         return new SafeString(buf);
     }
 
+    public CharSequence fullName(String nodeName, String fullName) {
+        return !ObjectUtils.isEmpty(fullName) ? fullName : NodeName.shorten(nodeName);
+    }
+
     public CharSequence shortName(String nodeName) {
         return ObjectUtils.isEmpty(nodeName) ? "" : NodeName.shorten(nodeName);
     }
@@ -97,8 +101,9 @@ public class MoeraHelperSource {
         if (!ObjectUtils.isEmpty(registeredName.getName())) {
             String nodeUrl = namingCache.getFast(nodeName).getNodeUri();
             buf.append("<a");
-            HelperUtil.appendAttr(buf, "href",
-                    UniversalLocation.redirectTo(nodeName, nodeUrl, "/", null, null));
+            HelperUtil.appendAttr(
+                buf, "href", UniversalLocation.redirectTo(nodeName, nodeUrl, "/", null, null)
+            );
             HelperUtil.appendAttr(buf, "title", "Profile");
             buf.append('>');
         }
@@ -109,7 +114,7 @@ public class MoeraHelperSource {
             HelperUtil.appendAttr(buf, "class", "avatar avatar-circle");
         } else {
             AvatarImage avatarImage = avatar instanceof AvatarInfo
-                    ? AvatarImageUtil.build((AvatarInfo) avatar) : (AvatarImage) avatar;
+                ? AvatarImageUtil.build((AvatarInfo) avatar) : (AvatarImage) avatar;
 
             HelperUtil.appendAttr(buf, "src", "/moera/media/" + avatarImage.getPath());
             HelperUtil.appendAttr(buf, "alt", "Avatar");
@@ -197,9 +202,11 @@ public class MoeraHelperSource {
         StringBuilder buf = new StringBuilder();
         buf.append("Try all <a href=\"https://moera.org/\">Moera</a> features — ");
         if (requestContext.getUserAgentOs() == UserAgentOs.ANDROID) {
-            buf.append("<br><a href=\"https://play.google.com/store/apps/details"
-                    + "?id=org.moera.web.twa&pcampaignid=invitation-node\" class=\"btn btn-light btn-sm\">"
-                    + "Get Moera App</a> or ");
+            buf.append(
+                "<br><a href=\"https://play.google.com/store/apps/details"
+                + "?id=org.moera.web.twa&pcampaignid=invitation-node\" class=\"btn btn-light btn-sm\">"
+                + "Get Moera App</a> or "
+            );
         }
         buf.append("<a class=\"btn btn-primary btn-sm\" href=\"");
         buf.append(Util.he(requestContext.getRedirectorUrl()));
@@ -217,8 +224,7 @@ public class MoeraHelperSource {
     }
 
     public CharSequence buttonsInvitation(Long moment) {
-        UriComponentsBuilder builder = UriComponentsBuilder
-                .fromHttpUrl(requestContext.getRedirectorUrl());
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(requestContext.getRedirectorUrl());
         if (moment != null) {
             builder.replaceQuery("before=" + moment);
         }
