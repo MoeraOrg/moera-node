@@ -8,3 +8,4 @@
 /media/
 /.ssl/
 /application-dev*.yml
+/src/main/frontend/node_modules/

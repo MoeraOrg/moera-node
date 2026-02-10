@@ -1,0 +1,7 @@
+{
+  "name": "moera-node-frontend",
+  "private": true,
+  "devDependencies": {
+    "sass": "^1.97.3"
+  }
+}
