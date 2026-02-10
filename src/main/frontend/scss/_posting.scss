@@ -1,5 +1,7 @@
+@use 'mixins';
+
 .posting {
-    @include pane;
+    @include mixins.pane;
     margin-top: 1rem;
     padding: 0.5rem;
 
@@ -42,7 +44,7 @@
         }
 
         IMG, IFRAME {
-            max-width: css-min(unquote("100vw - 4rem"), unquote("var(--feed-width) - 3.5rem"), unquote("var(--width, 100vw)"));
+            max-width: calc(min(100vw - 4rem, var(--feed-width) - 3.5rem, var(--width, 100vw)));
             max-height: var(--height, 200vh);
         }
 
@@ -70,7 +72,7 @@
         }
 
         IMG, IFRAME {
-            max-height: css-min(unquote("35rem"), unquote("var(--height, 200vh)"));
+            max-height: calc(min(35rem, var(--height, 200vh)));
         }
     }
 

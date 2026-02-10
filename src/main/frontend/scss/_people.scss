@@ -1,5 +1,7 @@
+@use 'mixins';
+
 .people {
-    @include pane;
+    @include mixins.pane;
     padding: 1rem;
     min-height: 25vh;
 

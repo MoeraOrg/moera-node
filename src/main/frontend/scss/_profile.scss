@@ -1,5 +1,7 @@
+@use 'mixins';
+
 .profile-view {
-    @include pane;
+    @include mixins.pane;
     display: flow-root;
     padding: 1rem;
     margin-top: 1rem;

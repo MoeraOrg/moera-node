@@ -1,5 +1,7 @@
+@use 'mixins';
+
 .registration-form {
-    @include pane;
+    @include mixins.pane;
     margin-top: 2rem;
     padding-left: 1rem;
     padding-right: 1rem;
@@ -25,7 +27,7 @@
 }
 
 .registration-next {
-    @include pane;
+    @include mixins.pane;
     padding: 1rem;
 
     H1 {
