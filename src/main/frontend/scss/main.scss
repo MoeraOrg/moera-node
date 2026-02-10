@@ -1,21 +1,6 @@
-@import 'colors';
-@import 'zindex';
-
-@function css-function($function, $values...) {
-	@return $function + unquote("(") + $values + unquote(")");
-}
-
-@function css-min($values...) {
-	@return css-function(min, $values);
-}
-
-@function css-max($values...) {
-	@return css-function(max, $values);
-}
-
-@function css-clamp($values...) {
-	@return css-function(clamp, $values);
-}
+@use "sass:meta";
+@use 'colors';
+@use 'zindex';
 
 :root:root {
     scroll-behavior: auto;
@@ -101,7 +86,7 @@ SUB.generation {
 
 .no-postings {
 	font-weight: bold;
-	color: color(--bs-gray-400);
+	color: var(--bs-gray-400);
 	font-size: 4rem;
 	margin-top: 5rem;
 }
@@ -116,26 +101,14 @@ SUB.generation {
     }
 }
 
-@mixin pane {
-    background-color: white;
-    border: var(--bs-gray-400) 1px solid;
-    border-radius: 5px;
-
-    @media only screen and (max-width: 575px) {
-        border-left-width: 0;
-        border-right-width: 0;
-        border-radius: 0;
-    }
-}
-
-@import 'avatar';
-@import 'entry';
-@import 'gallery';
-@import 'posting';
-@import 'people';
-@import 'reactions';
-@import 'gallery_reactions';
-@import 'link_preview';
-@import 'comment';
-@import 'client';
-@import 'profile';
+@include meta.load-css('avatar');
+@include meta.load-css('entry');
+@include meta.load-css('gallery');
+@include meta.load-css('posting');
+@include meta.load-css('people');
+@include meta.load-css('reactions');
+@include meta.load-css('gallery_reactions');
+@include meta.load-css('link_preview');
+@include meta.load-css('comment');
+@include meta.load-css('client');
+@include meta.load-css('profile');

@@ -191,8 +191,10 @@ public class PostingInfoUtil {
         if (!ObjectUtils.isEmpty(stories)) {
             info.setFeedReferences(stories.stream().map(FeedReferenceUtil::build).collect(Collectors.toList()));
         }
-        if (accessChecker.isPrincipal(Principal.ADMIN, Scope.OTHER)
-            && posting.getBlockedInstants() != null && !posting.getBlockedInstants().isEmpty()) {
+        if (
+            accessChecker.isPrincipal(Principal.ADMIN, Scope.OTHER)
+            && posting.getBlockedInstants() != null && !posting.getBlockedInstants().isEmpty()
+        ) {
             info.setBlockedInstants(posting.getBlockedInstants().stream()
                 .map(BlockedPostingInstantInfoUtil::build)
                 .collect(Collectors.toList()));
@@ -308,6 +310,12 @@ public class PostingInfoUtil {
             accessChecker.isPrincipal(viewComments, Scope.VIEW_CONTENT) ? posting.getTotalChildren() : 0
         );
         info.setRecommended(posting.isRecommended());
+        if (
+            accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_CONTENT)
+            && !ObjectUtils.isEmpty(posting.getExternalSourceUri())
+        ) {
+            info.setExternalSourceUri(posting.getExternalSourceUri());
+        }
     }
 
     private static void fillSheriffs(PostingInfo info, Entry posting, Options options) {

@@ -259,7 +259,7 @@ public class NotificationSender extends Task {
         if (e instanceof MoeraNodeApiValidationException ve) {
             String errorCode = ve.getErrorCode();
             if (errorCode == null) {
-                log.error("Validation from the node error has null error code");
+                log.error("Validation error received has null error code");
                 return false;
             }
             return errorCode.equals("subscription.unsubscribe") || errorCode.equals("notification.type.unknown");

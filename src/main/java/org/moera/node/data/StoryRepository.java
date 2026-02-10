@@ -202,6 +202,12 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     List<Story> findExpiredViewed(UUID nodeId, String feedName, Timestamp createdBefore);
 
     @Query(
+        "select s from Story s inner join s.entry e"
+        + " where s.nodeId = ?1 and s.feedName = ?2 and s.viewed = false and e.recommended = true and s.createdAt < ?3"
+    )
+    List<Story> findExpiredRecommended(UUID nodeId, String feedName, Timestamp createdBefore);
+
+    @Query(
         "select count(*) from Story s"
         + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = org.moera.lib.node.types.StoryType.POSTING_ADDED"
         + " and s.createdAt > ?3"

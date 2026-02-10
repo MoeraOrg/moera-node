@@ -85,4 +85,12 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     )
     List<Posting> findExpiredUnsigned(Timestamp deadline);
 
+    @Query(
+        "select p from Posting p"
+        + " left join fetch p.currentRevision cr left join fetch p.reactionTotals left join fetch p.sources"
+        + " left join fetch p.ownerAvatarMediaFile left join fetch p.blockedInstants"
+        + " where p.nodeId = ?1 and p.externalSourceUri = ?2 and p.deletedAt is null"
+    )
+    List<Posting> findByExternalSourceUri(UUID nodeId, String externalSourceUri);
+
 }

@@ -2,10 +2,7 @@ package org.moera.node.mail;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -17,6 +14,7 @@ import jakarta.inject.Inject;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
 import com.github.jknack.handlebars.springmvc.HandlebarsViewResolver;
+import io.github.bucket4j.Bucket;
 import org.moera.node.config.Config;
 import org.moera.node.data.VerifiedEmailRepository;
 import org.moera.node.domain.Domains;
@@ -75,6 +73,7 @@ public class MailService {
     public void init() {
         Thread thread = new Thread(this::runMailQueue);
         thread.setDaemon(true);
+        thread.setName("mailDelivery");
         thread.start();
     }
 
@@ -175,27 +174,22 @@ public class MailService {
     }
 
     private void runMailQueue() {
-        Deque<Instant> sent = new ArrayDeque<>();
+        var bucket = Bucket.builder()
+            .addLimit(limit ->
+                limit
+                    .capacity(config.getMail().getSendLimit())
+                    .refillGreedy(config.getMail().getSendLimit(), Duration.ofMinutes(config.getMail().getSendPeriod()))
+            )
+            .build();
 
         while (true) {
             try {
-                while (sent.size() >= config.getMail().getSendLimit()) {
-                    while (
-                        sent.peekFirst() != null
-                        && sent.peekFirst().isBefore(
-                            Instant.now().minus(config.getMail().getSendPeriod(), ChronoUnit.MINUTES)
-                        )
-                    ) {
-                        sent.pollFirst();
-                    }
-                    if (sent.size() < config.getMail().getSendLimit()) {
-                        break;
-                    }
-                    Thread.sleep(1000);
+                while (!bucket.tryConsume(1)) {
+                    long retryAfter = bucket.estimateAbilityToConsume(1).getNanosToWaitForRefill() / 1000000 + 1;
+                    Thread.sleep(retryAfter);
                 }
                 log.info("Delivering an e-mail");
                 mailSender.send(mailQueue.take());
-                sent.offerLast(Instant.now());
             } catch (Exception e) {
                 log.error("Error delivering e-mail:", e);
             }

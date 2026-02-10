@@ -43,7 +43,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
                 .addLimit(limit ->
                     limit
                         .capacity(rateLimit.limit())
-                        .refillGreedy(1, Duration.ofSeconds(rateLimit.period() / rateLimit.limit()))
+                        .refillGreedy(rateLimit.limit(), Duration.ofSeconds(rateLimit.period()))
                 )
                 .build()
         );

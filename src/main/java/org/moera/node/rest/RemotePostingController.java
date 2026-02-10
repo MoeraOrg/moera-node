@@ -10,6 +10,7 @@ import org.moera.lib.node.types.PostingSourceText;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.OwnPosting;
@@ -33,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -85,6 +87,10 @@ public class RemotePostingController {
         );
 
         postingText.validate();
+        ValidationUtil.assertion(
+            postingText.getBodySrc() != null || !ObjectUtils.isEmpty(postingText.getMedia()),
+            "posting.body-src.blank"
+        );
         update(nodeName, null, postingText);
 
         return Result.OK;

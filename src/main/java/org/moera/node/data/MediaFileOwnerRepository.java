@@ -41,7 +41,7 @@ public interface MediaFileOwnerRepository extends JpaRepository<MediaFileOwner, 
     List<MediaFileOwner> findWithoutPosting(UUID nodeId);
 
     @Query("select mo from MediaFileOwner mo where mo.usageUpdatedAt > mo.permissionsUpdatedAt")
-    Collection<MediaFileOwner> findOutdatedPermissions();
+    Page<MediaFileOwner> findOutdatedPermissions(Pageable pageable);
 
     @Query(
         "update MediaFileOwner mo"

@@ -24,6 +24,7 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
+import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.UserBlockedException;
@@ -298,6 +299,7 @@ public class PostingController {
                     valid = true;
                 }
             }
+            valid = valid && (requestContext.isAdmin(scope) || postingText.getExternalSourceUri() == null);
             if (!valid) {
                 throw new AuthenticationException();
             }
@@ -370,6 +372,29 @@ public class PostingController {
     private byte[] mediaDigest(UUID id) {
         MediaFileOwner media = mediaFileOwnerRepository.findById(id).orElse(null);
         return media != null ? media.getMediaFile().getDigest() : null;
+    }
+
+    @GetMapping
+    @Admin(Scope.VIEW_CONTENT)
+    @Transactional
+    public List<PostingInfo> getByExternalSourceUri(@RequestParam String external) {
+        log.info("GET /postings (external = {})", LogUtil.format(external));
+
+        return postingRepository.findByExternalSourceUri(requestContext.nodeId(), external)
+            .stream()
+            .map(posting -> {
+                List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), posting.getId());
+                return withSheriffUserListMarks(withBlockings(withClientReaction(
+                    PostingInfoUtil.build(
+                        posting,
+                        stories,
+                        MediaAttachmentsProvider.RELATIONS,
+                        requestContext,
+                        requestContext.getOptions()
+                    )
+                )));
+            })
+            .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")

@@ -62,11 +62,9 @@ public class PopulateNewsfeedJob extends Job<PopulateNewsfeedJob.Parameters, Obj
             fail();
         }
 
-        List<InitialRecommendation> all = tx.executeRead(() -> initialRecommendationRepository.findAll());
-        for (InitialRecommendation recommendation : all) {
-            pickerPool.pick(createPick(recommendation, Feed.NEWS));
-            pickerPool.pick(createPick(recommendation, Feed.EXPLORE));
-        }
+        List<InitialRecommendation> all = tx.executeRead(() -> initialRecommendationRepository.findAllBackwards());
+        all.stream().map(r -> createPick(r, Feed.NEWS)).forEach(pickerPool::pick);
+        all.stream().map(r -> createPick(r, Feed.EXPLORE)).forEach(pickerPool::pick);
     }
 
     private static Pick createPick(InitialRecommendation recommendation, String feedName) {
@@ -77,6 +75,7 @@ public class PopulateNewsfeedJob extends Job<PopulateNewsfeedJob.Parameters, Obj
         pick.setFeedName(feedName);
         pick.setRecommended(true);
         pick.setViewed(true);
+        pick.setPublishAt(recommendation.getCreatedAt());
         return pick;
     }
 

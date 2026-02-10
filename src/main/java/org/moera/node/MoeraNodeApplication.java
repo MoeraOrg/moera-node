@@ -30,8 +30,10 @@ import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ViewResolverRegistry;
@@ -134,38 +136,57 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     @Bean
     public HttpMessageConverters customMessageConverters() {
         return new HttpMessageConverters(
-                new SyndFeedHttpMessageConverter());
+            new SyndFeedHttpMessageConverter()
+        );
     }
 
     @Bean
     public TaskExecutor namingTaskExecutor() {
-        return buildTaskExecutor(config.getPools().getNaming());
+        return buildTaskExecutor(config.getPools().getNaming(), "naming");
     }
 
     @Bean
     public TaskExecutor remoteTaskExecutor() {
-        return buildTaskExecutor(config.getPools().getRemoteTask());
+        return buildTaskExecutor(config.getPools().getRemoteTask(), "remoteTask");
     }
 
     @Bean
-    public ThreadPoolTaskExecutor notificationSenderTaskExecutor() {
-        return buildTaskExecutor(config.getPools().getNotificationSender());
+    public ThreadPoolTaskExecutor /* important! */ notificationSenderTaskExecutor() {
+        return buildTaskExecutor(config.getPools().getNotificationSender(), "notification");
     }
 
     @Bean
     public TaskExecutor pickerTaskExecutor() {
-        return buildTaskExecutor(config.getPools().getPicker());
+        return buildTaskExecutor(config.getPools().getPicker(), "picker");
     }
 
     @Bean
     public TaskExecutor pushTaskExecutor() {
-        return buildTaskExecutor(config.getPools().getPush());
+        return buildTaskExecutor(config.getPools().getPush(), "push");
     }
 
-    private ThreadPoolTaskExecutor buildTaskExecutor(int size) {
+    @Bean
+    public TaskScheduler eventScheduler() {
+        return buildTaskScheduler(config.getPools().getEvent(), "event");
+    }
+
+    @Bean
+    public TaskScheduler taskScheduler() {
+        return buildTaskScheduler(config.getPools().getOther(), "other");
+    }
+
+    private ThreadPoolTaskExecutor buildTaskExecutor(int size, String threadName) {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
         taskExecutor.setCorePoolSize(size);
         taskExecutor.setMaxPoolSize(size);
+        taskExecutor.setThreadNamePrefix(threadName + "-");
+        return taskExecutor;
+    }
+
+    private TaskScheduler buildTaskScheduler(int size, String threadName) {
+        ThreadPoolTaskScheduler taskExecutor = new ThreadPoolTaskScheduler();
+        taskExecutor.setPoolSize(size);
+        taskExecutor.setThreadNamePrefix(threadName + "-");
         return taskExecutor;
     }
 

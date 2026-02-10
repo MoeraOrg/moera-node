@@ -1,9 +1,11 @@
+@use 'mixins';
+
 .open-client {
-    @include pane;
+    @include mixins.pane;
     margin-left: auto;
     margin-right: auto;
     margin-top: 5rem;
-    width: css-min(unquote("35rem"), unquote("100vw - 1rem"));
+    width: calc(min(35rem, 100vw - 1rem));
     padding: 2rem;
     font-size: 20pt;
     font-weight: bold;

@@ -5,7 +5,7 @@
 
     <groupId>org.moera</groupId>
     <artifactId>moera-node</artifactId>
-    <version>0.17.12-SNAPSHOT</version>
+    <version>0.17.17-SNAPSHOT</version>
     <name>moera-node</name>
     <description>Moera node</description>
     <packaging>jar</packaging>
@@ -18,9 +18,55 @@
     </parent>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>17</java.version>
+        <node.version>v20.11.1</node.version>
+        <npm.version>10.2.4</npm.version>
+
         <maven.compiler.release>17</maven.compiler.release>
+        <frontend-maven-plugin.version>1.15.0</frontend-maven-plugin.version>
+        <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
+        <maven-dependency-plugin.version>3.6.1</maven-dependency-plugin.version>
+        <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
+        <versions-maven-plugin.version>2.20.1</versions-maven-plugin.version>
+
+        <bootstrap.version>5.3.3</bootstrap.version>
+        <bouncycastle.bcprov-lts8on.version>2.73.9</bouncycastle.bcprov-lts8on.version>
+        <bucket4j.version>8.15.0</bucket4j.version>
+        <checkstyle.version>10.12.3</checkstyle.version>
+        <commons-io.version>2.18.0</commons-io.version>
+        <flexmark.version>0.64.8</flexmark.version>
+        <flyway.version>9.22.0</flyway.version>
+        <guava.version>33.5.0-jre</guava.version>
+        <hamcrest.version>3.0</hamcrest.version>
+        <handlebars.version>4.5.0</handlebars.version>
+        <handlebars-springmvc.version>4.4.0</handlebars-springmvc.version>
+        <hypersistence-utils-hibernate-63.version>3.12.0</hypersistence-utils-hibernate-63.version>
+        <icu4j.version>78.1</icu4j.version>
+        <jackson-annotations.version>2.20</jackson-annotations.version>
+        <jackson-core.version>2.19.1</jackson-core.version>
+        <jackson-databind.version>2.20.1</jackson-databind.version>
+        <jackson-dataformat-xml.version>2.20.0</jackson-dataformat-xml.version>
+        <jackson-dataformat-yaml.version>2.18.0</jackson-dataformat-yaml.version>
+        <jakarta.inject.version>2.0.1.MR</jakarta.inject.version>
+        <jakarta.validation.version>3.1.1</jakarta.validation.version>
+        <janino.version>3.1.12</janino.version>
+        <jsoup.version>1.21.2</jsoup.version>
+        <languagetool.en.version>6.7</languagetool.en.version>
+        <languagetool.ru.version>6.6</languagetool.ru.version>
+        <languagetool.uk.version>6.6</languagetool.uk.version>
+        <lingua.version>1.2.2</lingua.version>
+        <metadata-extractor.version>2.19.0</metadata-extractor.version>
+        <moeralib.version>0.17.14</moeralib.version>
+        <owasp-java-html-sanitizer.version>20260101.1</owasp-java-html-sanitizer.version>
+        <postgresql.version>42.7.8</postgresql.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <querydsl.version>5.1.0</querydsl.version>
+        <reflections.version>0.10.2</reflections.version>
+        <rome.version>2.1.0</rome.version>
+        <slugify.version>3.0.7</slugify.version>
+        <springdoc-openapi-ui.version>1.7.0</springdoc-openapi-ui.version>
+        <thumbnailator.version>0.4.20</thumbnailator.version>
+        <twelvemonkeys.version>3.12.0</twelvemonkeys.version>
     </properties>
 
     <dependencies>
@@ -31,17 +77,17 @@
         <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
-            <version>2.0.1.MR</version>
+            <version>${jakarta.inject.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
-            <version>3.1.1</version>
+            <version>${jakarta.validation.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-ui</artifactId>
-            <version>1.7.0</version>
+            <version>${springdoc-openapi-ui.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -72,173 +118,179 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.8</version>
+            <version>${postgresql.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
-            <version>9.22.0</version>
+            <version>${flyway.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.jknack</groupId>
             <artifactId>handlebars</artifactId>
-            <version>4.5.0</version>
+            <version>${handlebars.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.jknack</groupId>
             <artifactId>handlebars-springmvc</artifactId>
-            <version>4.4.0</version>
+            <version>${handlebars-springmvc.version}</version>
         </dependency>
         <dependency>
             <groupId>com.querydsl</groupId>
             <artifactId>querydsl-apt</artifactId>
-            <version>5.1.0</version>
+            <version>${querydsl.version}</version>
             <classifier>jakarta</classifier>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.querydsl</groupId>
             <artifactId>querydsl-jpa</artifactId>
-            <version>5.1.0</version>
+            <version>${querydsl.version}</version>
             <classifier>jakarta</classifier>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>2.20</version>
+            <version>${jackson-annotations.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.19.1</version>
+            <version>${jackson-core.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.20.1</version>
+            <version>${jackson-databind.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>bootstrap</artifactId>
+            <version>${bootstrap.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>2.18.0</version>
+            <version>${jackson-dataformat-yaml.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
-            <version>2.20.0</version>
+            <version>${jackson-dataformat-xml.version}</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-lts8on</artifactId>
-            <version>2.73.9</version>
+            <version>${bouncycastle.bcprov-lts8on.version}</version>
         </dependency>
         <dependency>
             <groupId>com.ibm.icu</groupId>
             <artifactId>icu4j</artifactId>
-            <version>78.1</version>
+            <version>${icu4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.21.2</version>
+            <version>${jsoup.version}</version>
         </dependency>
         <dependency>
             <groupId>com.vladsch.flexmark</groupId>
             <artifactId>flexmark-all</artifactId>
-            <version>0.64.8</version>
+            <version>${flexmark.version}</version>
         </dependency>
         <dependency>
             <groupId>com.rometools</groupId>
             <artifactId>rome</artifactId>
-            <version>2.1.0</version>
+            <version>${rome.version}</version>
         </dependency>
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
-            <version>0.10.2</version>
+            <version>${reflections.version}</version>
         </dependency>
         <dependency>
             <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
             <artifactId>owasp-java-html-sanitizer</artifactId>
-            <version>20240325.1</version>
+            <version>${owasp-java-html-sanitizer.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.slugify</groupId>
             <artifactId>slugify</artifactId>
-            <version>3.0.7</version>
+            <version>${slugify.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.18.0</version>
+            <version>${commons-io.version}</version>
         </dependency>
         <dependency>
             <groupId>com.twelvemonkeys.imageio</groupId>
             <artifactId>imageio-webp</artifactId>
-            <version>3.12.0</version>
+            <version>${twelvemonkeys.version}</version>
         </dependency>
         <dependency>
             <groupId>com.twelvemonkeys.servlet</groupId>
             <artifactId>servlet</artifactId>
-            <version>3.12.0</version>
+            <version>${twelvemonkeys.version}</version>
             <classifier>jakarta</classifier>
         </dependency>
         <dependency>
             <groupId>net.coobird</groupId>
             <artifactId>thumbnailator</artifactId>
-            <version>0.4.20</version>
+            <version>${thumbnailator.version}</version>
         </dependency>
         <dependency>
             <groupId>com.drewnoakes</groupId>
             <artifactId>metadata-extractor</artifactId>
-            <version>2.19.0</version>
+            <version>${metadata-extractor.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>33.5.0-jre</version>
+            <version>${guava.version}</version>
         </dependency>
         <dependency>
             <groupId>io.hypersistence</groupId>
             <artifactId>hypersistence-utils-hibernate-63</artifactId>
-            <version>3.12.0</version>
+            <version>${hypersistence-utils-hibernate-63.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.janino</groupId>
             <artifactId>janino</artifactId>
-            <version>3.1.12</version>
+            <version>${janino.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.pemistahl</groupId>
             <artifactId>lingua</artifactId>
-            <version>1.2.2</version>
+            <version>${lingua.version}</version>
         </dependency>
         <dependency>
             <groupId>org.languagetool</groupId>
             <artifactId>language-en</artifactId>
-            <version>6.7</version>
+            <version>${languagetool.en.version}</version>
         </dependency>
         <dependency>
             <groupId>org.languagetool</groupId>
             <artifactId>language-ru</artifactId>
-            <version>6.6</version>
+            <version>${languagetool.ru.version}</version>
         </dependency>
         <dependency>
             <groupId>org.languagetool</groupId>
             <artifactId>language-uk</artifactId>
-            <version>6.6</version>
+            <version>${languagetool.uk.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j_jdk17-core</artifactId>
-            <version>8.15.0</version>
+            <version>${bucket4j.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.moera</groupId>
             <artifactId>moeralib</artifactId>
-            <version>0.17.11.2</version>
+            <version>${moeralib.version}</version>
         </dependency>
 
         <dependency>
@@ -249,14 +301,14 @@
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest</artifactId>
-            <version>3.0</version>
+            <version>${hamcrest.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>com.vladsch.flexmark</groupId>
             <artifactId>flexmark-test-util</artifactId>
-            <version>0.64.8</version>
+            <version>${flexmark.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -266,7 +318,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
-                <version>2.20.1</version>
+                <version>${versions-maven-plugin.version}</version>
                 <configuration>
                     <generateBackupPoms>false</generateBackupPoms>
                 </configuration>
@@ -274,13 +326,35 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>${maven-resources-plugin.version}</version>
                 <configuration>
                     <delimiters>
                         <delimiter>^</delimiter>
                     </delimiters>
                     <useDefaultDelimiters>false</useDefaultDelimiters>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>copy-bootstrap-js</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/classes/static/js</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/webjars/META-INF/resources/webjars/bootstrap/${bootstrap.version}/dist/js</directory>
+                                    <includes>
+                                        <include>bootstrap.bundle.min.js</include>
+                                        <include>bootstrap.bundle.min.js.map</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -292,12 +366,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>${maven-checkstyle-plugin.version}</version>
                 <dependencies>
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
-                        <version>10.12.3</version>
+                        <version>${checkstyle.version}</version>
                     </dependency>
                 </dependencies>
                 <executions>
@@ -316,22 +390,115 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.github.warmuuh</groupId>
-                <artifactId>libsass-maven-plugin</artifactId>
-                <version>0.2.10-libsass_3.5.3</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${maven-dependency-plugin.version}</version>
                 <executions>
                     <execution>
+                        <id>unpack-bootstrap-scss</id>
                         <phase>generate-resources</phase>
                         <goals>
-                            <goal>compile</goal>
+                            <goal>unpack</goal>
                         </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.webjars.npm</groupId>
+                                    <artifactId>bootstrap</artifactId>
+                                    <version>${bootstrap.version}</version>
+                                    <type>jar</type>
+                                    <outputDirectory>${project.build.directory}/webjars</outputDirectory>
+                                    <includes>
+                                        META-INF/resources/webjars/bootstrap/${bootstrap.version}/scss/**
+                                    </includes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>unpack-bootstrap-js</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.webjars.npm</groupId>
+                                    <artifactId>bootstrap</artifactId>
+                                    <version>${bootstrap.version}</version>
+                                    <type>jar</type>
+                                    <outputDirectory>${project.build.directory}/webjars</outputDirectory>
+                                    <includes>
+                                        META-INF/resources/webjars/bootstrap/${bootstrap.version}/dist/js/bootstrap.bundle.min.js,
+                                        META-INF/resources/webjars/bootstrap/${bootstrap.version}/dist/js/bootstrap.bundle.min.js.map
+                                    </includes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${frontend-maven-plugin.version}</version>
                 <configuration>
-                    <outputPath>${project.build.directory}/classes/static/css/</outputPath>
-                    <sourceMapOutputPath>${project.build.directory}/classes/static/css/</sourceMapOutputPath>
-                    <outputStyle>compressed</outputStyle>
+                    <installDirectory>${java.io.tmpdir}/moera-node-node</installDirectory>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>install-node-and-npm</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>${node.version}</nodeVersion>
+                            <npmVersion>${npm.version}</npmVersion>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-install</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${project.basedir}/src/main/frontend</workingDirectory>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>build-bootstrap</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${project.basedir}/src/main/frontend</workingDirectory>
+                            <arguments>
+                                exec -- sass --style=compressed --update --no-source-map
+                                --load-path=${project.build.directory}/webjars/META-INF/resources/webjars/bootstrap/${bootstrap.version}
+                                scss/bootstrap.scss:${project.build.directory}/classes/static/css/bootstrap.min.css
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>build-main-css</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${project.basedir}/src/main/frontend</workingDirectory>
+                            <arguments>
+                                exec -- sass --style=compressed --update --no-source-map
+                                scss/main.scss:${project.build.directory}/classes/static/css/main.css
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

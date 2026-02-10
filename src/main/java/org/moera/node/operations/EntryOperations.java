@@ -69,8 +69,9 @@ public class EntryOperations implements MediaAttachmentsProvider {
         }
     }
 
-    private void purgeOutdatedRevisions(UUID nodeId, String domainName, EntryType entryType, boolean original,
-                                        String optionName) {
+    private void purgeOutdatedRevisions(
+        UUID nodeId, String domainName, EntryType entryType, boolean original, String optionName
+    ) {
         MDC.put("domain", domainName);
 
         ExtendedDuration lifetime = domains.getDomainOptions(domainName).getDuration(optionName);
@@ -104,10 +105,12 @@ public class EntryOperations implements MediaAttachmentsProvider {
             // fetch from the database
         }
 
-        jobs.runNoPersist(
-            CacheMediaAttachmentsJob.class,
-            new CacheMediaAttachmentsJob.Parameters(revision.getId(), receiverName)
-        );
+        if (jobs.isReady()) {
+            jobs.runNoPersist(
+                CacheMediaAttachmentsJob.class,
+                new CacheMediaAttachmentsJob.Parameters(revision.getId(), receiverName)
+            );
+        }
 
         Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
         return attachments.stream()

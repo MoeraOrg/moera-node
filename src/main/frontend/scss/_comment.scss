@@ -95,8 +95,8 @@
         }
 
         IMG, IFRAME {
-            max-width: css-min(unquote("100vw - 7rem"), unquote("var(--feed-width) - 6.5rem"), unquote("var(--width, 100vw)"));
-            max-height: css-min(unquote("16rem"), unquote("var(--height, 200vh)"));
+            max-width: calc(min(100vw - 7rem, var(--feed-width) - 6.5rem, var(--width, 100vw)));
+            max-height: calc(min(16rem, var(--height, 200vh)));
         }
 
         FIGURE {

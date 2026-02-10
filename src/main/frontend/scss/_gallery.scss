@@ -84,22 +84,22 @@
 
 @media only screen and (min-width: 576px) {
     .posting .gallery.single .entry-image IMG {
-        max-height: css-min(unquote("560px"), unquote("var(--image-height)"));
+        max-height: calc(min(560px, var(--image-height)));
     }
 
     .comment .gallery.single .entry-image IMG {
         max-width: calc(min(var(--feed-width), 100vw) * 0.5);
-        max-height: css-min(unquote("250px"), unquote("var(--image-height)"));
+        max-height: calc(min(250px, var(--image-height)));
     }
 }
 
 @media only screen and (max-width: 575px) {
     .posting .gallery.single.horizontal .entry-image IMG {
-        max-height: css-min(unquote("75vh"), unquote("var(--image-height)"));
+        max-height: calc(min(75vh, var(--image-height)));
     }
 
     .posting .gallery.single.vertical .entry-image IMG {
-        max-height: css-min(unquote("100vh"), unquote("var(--image-height)"));
+        max-height: calc(min(100vh, var(--image-height)));
     }
 
     .comment .gallery.single .entry-image IMG {
@@ -107,10 +107,10 @@
     }
 
     .comment .gallery.single.horizontal .entry-image IMG {
-        max-height: css-min(unquote("25vh"), unquote("var(--image-height)"));
+        max-height: calc(min(25vh, var(--image-height)));
     }
 
     .comment .gallery.single.vertical .entry-image IMG {
-        max-height: css-min(unquote("33vh"), unquote("var(--image-height)"));
+        max-height: calc(min(33vh, var(--image-height)));
     }
 }
