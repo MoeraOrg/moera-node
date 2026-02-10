@@ -290,6 +290,28 @@
                     </delimiters>
                     <useDefaultDelimiters>false</useDefaultDelimiters>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>copy-bootstrap-js</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/classes/static/js</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/webjars/META-INF/resources/webjars/bootstrap/${bootstrap.version}/dist/js</directory>
+                                    <includes>
+                                        <include>bootstrap.bundle.min.js</include>
+                                        <include>bootstrap.bundle.min.js.map</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -363,6 +385,28 @@
                                     <outputDirectory>${project.build.directory}/webjars</outputDirectory>
                                     <includes>
                                         META-INF/resources/webjars/bootstrap/${bootstrap.version}/scss/**
+                                    </includes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>unpack-bootstrap-js</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.webjars.npm</groupId>
+                                    <artifactId>bootstrap</artifactId>
+                                    <version>${bootstrap.version}</version>
+                                    <type>jar</type>
+                                    <outputDirectory>${project.build.directory}/webjars</outputDirectory>
+                                    <includes>
+                                        META-INF/resources/webjars/bootstrap/${bootstrap.version}/dist/js/bootstrap.bundle.min.js,
+                                        META-INF/resources/webjars/bootstrap/${bootstrap.version}/dist/js/bootstrap.bundle.min.js.map
                                     </includes>
                                 </artifactItem>
                             </artifactItems>
