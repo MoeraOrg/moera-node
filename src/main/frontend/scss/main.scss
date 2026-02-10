@@ -101,7 +101,7 @@ SUB.generation {
 
 .no-postings {
 	font-weight: bold;
-	color: color(--bs-gray-400);
+	color: var(--bs-gray-400);
 	font-size: 4rem;
 	margin-top: 5rem;
 }

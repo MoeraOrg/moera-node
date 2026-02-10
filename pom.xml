@@ -24,7 +24,6 @@
 
         <maven.compiler.release>17</maven.compiler.release>
         <frontend-maven-plugin.version>1.15.0</frontend-maven-plugin.version>
-        <libsass-maven-plugin.version>0.2.10-libsass_3.5.3</libsass-maven-plugin.version>
         <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
         <maven-dependency-plugin.version>3.6.1</maven-dependency-plugin.version>
         <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
@@ -391,24 +390,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.github.warmuuh</groupId>
-                <artifactId>libsass-maven-plugin</artifactId>
-                <version>${libsass-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <outputPath>${project.build.directory}/classes/static/css/</outputPath>
-                    <sourceMapOutputPath>${project.build.directory}/classes/static/css/</sourceMapOutputPath>
-                    <outputStyle>compressed</outputStyle>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>${maven-dependency-plugin.version}</version>
@@ -500,6 +481,20 @@
                                 exec -- sass --style=compressed --update --no-source-map
                                 --load-path=${project.build.directory}/webjars/META-INF/resources/webjars/bootstrap/${bootstrap.version}
                                 scss/bootstrap.scss:${project.build.directory}/classes/static/css/bootstrap.min.css
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>build-main-css</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${project.basedir}/src/main/frontend</workingDirectory>
+                            <arguments>
+                                exec -- sass --style=compressed --update --no-source-map
+                                scss/main.scss:${project.build.directory}/classes/static/css/main.css
                             </arguments>
                         </configuration>
                     </execution>
