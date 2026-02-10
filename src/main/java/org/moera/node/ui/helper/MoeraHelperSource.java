@@ -92,6 +92,19 @@ public class MoeraHelperSource {
         };
     }
 
+    public int nameAngle(String ownerName) {
+        if (ownerName == null) {
+            return 0;
+        }
+
+        int angle = 0;
+        for (int i = 0; i < ownerName.length(); i++) {
+            angle = (angle + ownerName.charAt(i)) % 12;
+        }
+
+        return angle * 360 / 12;
+    }
+
     public CharSequence avatar(Object avatar, Object size, Options options) {
         long sz = HelperUtil.intArg(1, size);
         String nodeName = options.hash("nodeName");
@@ -105,24 +118,37 @@ public class MoeraHelperSource {
                 buf, "href", UniversalLocation.redirectTo(nodeName, nodeUrl, "/", null, null)
             );
             HelperUtil.appendAttr(buf, "title", "Profile");
+            HelperUtil.appendAttr(buf, "class", "avatar-link");
             buf.append('>');
         }
-        buf.append("<img");
         if (avatar == null) {
-            HelperUtil.appendAttr(buf, "src", "/pics/avatar.png");
-            HelperUtil.appendAttr(buf, "alt", "Avatar placeholder");
-            HelperUtil.appendAttr(buf, "class", "avatar avatar-circle");
+            buf.append("<div");
+            HelperUtil.appendAttr(buf, "title", "Avatar placeholder");
+            HelperUtil.appendAttr(buf, "class", "avatar avatar-circle avatar-placeholder");
+            String style = String.format(
+                "width: %dpx; height: %dpx; font-size: %dpx; filter: hue-rotate(%ddeg)",
+                sz, sz, sz / 3, nameAngle(nodeName)
+            );
+            HelperUtil.appendAttr(buf, "style", style);
+            buf.append('>');
+            String shortName = registeredName.toShortString();
+            if (shortName == null) {
+                shortName = "XX";
+            }
+            buf.append(shortName.length() > 2 ? shortName.substring(0, 2).toUpperCase() : shortName.toUpperCase());
+            buf.append("</div>");
         } else {
             AvatarImage avatarImage = avatar instanceof AvatarInfo
                 ? AvatarImageUtil.build((AvatarInfo) avatar) : (AvatarImage) avatar;
 
+            buf.append("<img");
             HelperUtil.appendAttr(buf, "src", "/moera/media/" + avatarImage.getPath());
             HelperUtil.appendAttr(buf, "alt", "Avatar");
             HelperUtil.appendAttr(buf, "class", "avatar avatar-" + avatarImage.getShape());
+            HelperUtil.appendAttr(buf, "width", sz);
+            HelperUtil.appendAttr(buf, "height", sz);
+            buf.append('>');
         }
-        HelperUtil.appendAttr(buf, "width", sz);
-        HelperUtil.appendAttr(buf, "height", sz);
-        buf.append('>');
         if (!ObjectUtils.isEmpty(registeredName.getName())) {
             buf.append("</a>");
         }
