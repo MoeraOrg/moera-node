@@ -99,10 +99,17 @@
         {{#if anchor}}
             <script>
                 $(function() {
-                    const element = $("a[name={{anchor}}]")[0];
+                    const name = "{{anchor}}";
+                    const element = (
+                        name.startsWith("comment-")
+                            ? $("a[name=" + name + "] + .comment")
+                            : $("a[name=" + name + "] + .posting")
+                    )[0];
                     if (element != null) {
-                        element.scrollIntoView();
-                        window.scrollBy(0, -$(".navbar-moera").height());
+                        window.setTimeout(() => {
+                            element.scrollIntoView({block: "start"});
+                            window.scrollBy(0, -$(".navbar").height() - $("#invitation-alert").height() - 20);
+                        }, 200);
                     }
                 })
             </script>
