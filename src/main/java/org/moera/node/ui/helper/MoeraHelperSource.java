@@ -217,9 +217,23 @@ public class MoeraHelperSource {
                 .collect(Collectors.toList());
         buf.append("<span class=\"emojis\">");
         for (int i = 0; i < 3 && i < totals.size(); i++) {
-            buf.append("&#%d;".formatted(totals.get(i).getEmoji()));
+            appendEmoji(buf, totals.get(i).getEmoji());
         }
         buf.append("</span>");
+    }
+
+    private void appendEmoji(StringBuilder buf, int emoji) {
+        switch (emoji) {
+            case 0x1f4a1:
+                emoji = 0x1f914;
+                break;
+            case 0x1f620:
+                emoji = 0x1f92c;
+                break;
+            case 0x1f643:
+                emoji = 0x1f921;
+        }
+        buf.append("&#%d;".formatted(emoji));
     }
 
     public CharSequence invitation() {
