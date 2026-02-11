@@ -1,0 +1,34 @@
+.page-title {
+    display: grid;
+    grid-template: "avatar full-name" min-content
+                   "avatar mention" min-content
+                  / 64px   1fr;
+    background-color: white;
+    border-radius: 1rem;
+    padding: 1rem;
+
+    .avatar-link {
+        grid-area: avatar;
+    }
+
+    A.full-name {
+        grid-area: full-name;
+        color: var(--bs-gray-900);
+        font-size: 1.31rem;
+        font-weight: 600;
+        line-height: 133%;
+        white-space: nowrap;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    .mention {
+        grid-area: mention;
+        color: var(--bs-gray-600);
+        font-size: .88rem;
+        line-height: 143%;
+        white-space: nowrap;
+    }
+}

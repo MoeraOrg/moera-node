@@ -11,19 +11,35 @@
         margin-right: .55em;
     }
 
-    .positive {
-        margin-right: 1.45em;
-        color: var(--correct);
-        background-color: var(--reactions-positive);
+    & .positive, & .negative {
         border-radius: .9em;
         padding: .44em 1.1em;
     }
 
+    .positive {
+        margin-right: 1.45em;
+        color: var(--correct);
+        background-color: var(--reactions-positive);
+    }
 
     .negative {
         color: var(--incorrect);
         background-color: var(--reactions-negative);
-        border-radius: .9em;
-        padding: .44em 1.1em;
+    }
+
+    & .senior-positive, & .senior-negative {
+        border-radius: 1em;
+        font-size: 1.3em;
+        padding: .35em .4em .4em;
+    }
+
+    .senior-positive {
+        color: var(--correct);
+        background-color: var(--reactions-positive);
+    }
+
+    .senior-negative {
+        color: var(--incorrect);
+        background-color: var(--reactions-negative);
     }
 }

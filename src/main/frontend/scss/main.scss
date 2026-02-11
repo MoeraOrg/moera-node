@@ -1,5 +1,16 @@
-@use "sass:meta";
+@use 'avatar';
+@use 'client';
 @use 'colors';
+@use 'comment';
+@use 'entry';
+@use 'gallery';
+@use 'gallery_reactions';
+@use 'link_preview';
+@use 'page_title';
+@use 'people';
+@use 'posting';
+@use 'profile';
+@use 'reactions';
 @use 'zindex';
 
 :root:root {
@@ -16,10 +27,64 @@ HTML {
 BODY {
     background-color: var(--body-bg);
     padding-bottom: 3rem;
+
+    @media only screen and (max-width: 991px) {
+        padding-bottom: 6rem;
+    }
 }
 
 A, .btn-link {
     text-decoration: none;
+}
+
+DETAILS {
+    cursor: pointer;
+}
+
+DETAILS[open] {
+    cursor: unset;
+}
+
+BLOCKQUOTE {
+    border-left: 3px solid var(--bs-primary);
+    padding: .2rem .2rem .2rem 2.7rem;
+    position: relative;
+    overflow: hidden;
+}
+
+BLOCKQUOTE BLOCKQUOTE {
+    padding-left: 1.5rem;
+}
+
+BLOCKQUOTE:not(BLOCKQUOTE BLOCKQUOTE)::before {
+    content: "\201C";
+    font-family: serif;
+    font-size: 4rem;
+    color: var(--bs-primary);
+    position: absolute;
+    left: .5rem;
+    top: -1.5rem;
+}
+
+BLOCKQUOTE BLOCKQUOTE:last-child, BLOCKQUOTE P:last-child {
+    margin-bottom: 0;
+}
+
+@media only screen and (max-width: 991px) {
+    BLOCKQUOTE {
+        border-left-width: 2px;
+        padding-left: 2.4rem;
+    }
+
+    BLOCKQUOTE BLOCKQUOTE {
+        padding-left: 1.2rem;
+    }
+
+    BLOCKQUOTE:not(BLOCKQUOTE BLOCKQUOTE)::before {
+        font-size: 3.5rem;
+        left: .45rem;
+        top: -1.4rem;
+    }
 }
 
 .container {
@@ -29,41 +94,6 @@ A, .btn-link {
         padding-left: 0;
         padding-right: 0;
     }
-}
-
-.page-title {
-    display: grid;
-    grid-template: "avatar full-name" min-content
-                   "avatar mention" min-content
-                  / 64px   1fr;
-    background-color: white;
-    border-radius: 1rem;
-    padding: 1rem;
-}
-
-.page-title .avatar-link {
-    grid-area: avatar;
-}
-
-.page-title A.full-name {
-    grid-area: full-name;
-    color: var(--bs-gray-900);
-    font-size: 1.31rem;
-    font-weight: 600;
-    line-height: 133%;
-    white-space: nowrap;
-}
-
-.page-title A.full-name:hover {
-    text-decoration: underline;
-}
-
-.page-title .mention {
-    grid-area: mention;
-    color: var(--bs-gray-600);
-    font-size: .88rem;
-    line-height: 143%;
-    white-space: nowrap;
 }
 
 .emoji {
@@ -151,15 +181,3 @@ SUB.generation {
         background-color: inherit;
     }
 }
-
-@include meta.load-css('avatar');
-@include meta.load-css('entry');
-@include meta.load-css('gallery');
-@include meta.load-css('posting');
-@include meta.load-css('people');
-@include meta.load-css('reactions');
-@include meta.load-css('gallery_reactions');
-@include meta.load-css('link_preview');
-@include meta.load-css('comment');
-@include meta.load-css('client');
-@include meta.load-css('profile');

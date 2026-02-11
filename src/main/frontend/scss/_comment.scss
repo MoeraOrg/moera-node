@@ -57,12 +57,10 @@
     }
 
     .content {
-        background-color: var(--comments);
         border-radius: 5px;
-        padding: .5rem;
-        width: max-content;
-        min-width: 16rem;
-        max-width: calc(100% - 1rem);
+        box-sizing: content-box;
+        padding: .5rem 0;
+        width: 100%;
         overflow-wrap: break-word;
         text-align: start;
 
@@ -72,31 +70,20 @@
             &:first-child {
                 margin-top: 0;
             }
+
             &:last-child {
                 margin-bottom: 0;
             }
         }
 
-        @media only screen and (min-width: 901px) {
-            IMG, IFRAME {
-                max-width: calc(900px - 6.5rem);
-            }
-        }
-
-        @media only screen and (max-width: 900px) {
-            IMG, IFRAME {
-                max-width: calc(100vw - 7rem);
-            }
+        IMG, IFRAME {
+            max-width: calc(min(100vw - 7rem, var(--feed-width) - 6.5rem, var(--width, 100vw)));
+            max-height: calc(min(16rem, var(--height, 200vh)));
         }
 
         IMG:not(.emoji) {
             width: auto;
             height: auto;
-        }
-
-        IMG, IFRAME {
-            max-width: calc(min(100vw - 7rem, var(--feed-width) - 6.5rem, var(--width, 100vw)));
-            max-height: calc(min(16rem, var(--height, 200vh)));
         }
 
         FIGURE {
@@ -107,7 +94,15 @@
             font-size: .875em;
             line-height: 1.5;
             margin-top: .5em;
-            color: var(--bs-gray-600);
+            color: var(--bs-secondary);
+            max-width: calc(var(--width) * 1.05);
+        }
+
+        .read-more {
+            width: 100%;
+            text-align: left;
+            padding-left: 0;
+            padding-top: 0;
         }
 
         .replied-to {
@@ -152,6 +147,9 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
+        height: 1.65em;
+        color: var(--bs-gray-400);
+        font-size: .75rem;
     }
 
     .reactions {
@@ -162,17 +160,14 @@
         top: -.9rem;
 
         .positive {
-            margin-right: 1em;
-            box-shadow: 2px 2px 3px #ddd;
-            border: solid 1px var(--reactions-positive-border);
-            padding: .3em .9em;
+            margin-right: 0;
+            margin-left: .7em;
+            padding: .4em .9em;
         }
 
         .negative {
-            margin-left: 0;
-            box-shadow: 2px 2px 3px #ddd;
-            border: solid 1px var(--reactions-negative-border);
-            padding: .3em .9em;
+            margin-left: 1em;
+            padding: .4em .9em;
         }
     }
 }

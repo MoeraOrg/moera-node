@@ -10,10 +10,10 @@ DIV.link-preview {
     position: relative;
 }
 
-@media only screen and (min-width: 576px) {
+@media only screen and (min-width: 992px) {
     A.link-preview, DIV.link-preview {
         display: inline-flex;
-        width: calc(50% - .40rem);
+        width: calc(50% - .25rem);
         margin-right: .25rem;
     }
 
@@ -22,16 +22,40 @@ DIV.link-preview {
     }
 }
 
-@media only screen and (max-width: 575px) {
+@media only screen and (max-width: 991px) {
     A.link-preview, DIV.link-preview {
         display: flex;
+    }
+
+    A.link-preview {
+        width: 99.6vw;
+        margin-left: -1rem;
+        margin-right: -1rem;
+    }
+
+    DIV.link-preview {
+        width: calc(99.6vw - 2rem);
         margin-left: -.5rem;
         margin-right: -.5rem;
     }
 
     .comment A.link-preview, .comment DIV.link-preview {
-        width: calc(100vw - .5rem - 36px);
+        width: calc(100vw - 32px);
     }
+
+    .comment A.link-preview {
+        width: calc(100vw - 32px);
+        margin-left: -.25rem;
+    }
+
+    .comment DIV.link-preview {
+        width: calc(100vw - 32px);
+        margin-left: -4rem;
+    }
+}
+
+A.link-preview:hover {
+    background-color: var(--bs-gray-300);
 }
 
 A.link-preview.large, DIV.link-preview.large {
@@ -44,10 +68,6 @@ A.link-preview.small, DIV.link-preview.small {
 
 .entry A.link-preview, .entry A.link-preview:hover {
     text-decoration: none;
-}
-
-A.link-preview:hover {
-    background-color: var(--bs-gray-300);
 }
 
 .link-preview .details {
@@ -75,8 +95,8 @@ A.link-preview:hover {
 }
 
 .link-preview .site .bullet {
-    margin-left: .5em;
-    margin-right: .5em;
+    margin-left: .25em;
+    margin-right: .25em;
 }
 
 .link-preview IMG {
@@ -90,7 +110,7 @@ A.link-preview:hover {
     object-position: center;
 }
 
-@media only screen and (min-width: 576px) {
+@media only screen and (min-width: 992px) {
     .link-preview IMG {
         width: 150px;
         height: auto;
@@ -99,19 +119,24 @@ A.link-preview:hover {
 
     .link-preview.large IMG {
         width: 100%;
-        max-height: 250px;
+        max-height: 350px;
     }
 }
 
-@media only screen and (max-width: 575px) {
+@media only screen and (max-width: 991px) {
     .link-preview IMG {
         width: 30vw;
         height: auto;
         max-height: 30vw;
     }
 
-    .link-preview.large IMG {
-        width: 100vw;
-        max-height: 55vw;
+    A.link-preview.large IMG {
+        width: 99.5vw;
+        max-height: 67vw;
+    }
+
+    DIV.link-preview.large IMG {
+        width: calc(99.5vw - 1rem);
+        max-height: calc(67vw - .6rem);
     }
 }

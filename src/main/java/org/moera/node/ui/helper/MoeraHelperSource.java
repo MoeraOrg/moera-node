@@ -25,7 +25,6 @@ import org.moera.node.global.UserAgentOs;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.util.UriComponentsBuilder;
 
 @HelperSource
 public class MoeraHelperSource {
@@ -245,19 +244,6 @@ public class MoeraHelperSource {
         buf.append("<div class=\"alert alert-info mt-3\">To react or comment&nbsp; ");
         buf.append("<a class=\"btn btn-success btn-sm\" href=\"");
         buf.append(Util.he(requestContext.getRedirectorUrl()));
-        buf.append("\">View in Web Client</a></div>");
-        return new SafeString(buf);
-    }
-
-    public CharSequence buttonsInvitation(Long moment) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(requestContext.getRedirectorUrl());
-        if (moment != null) {
-            builder.replaceQuery("before=" + moment);
-        }
-        StringBuilder buf = new StringBuilder();
-        buf.append("<div class=\"buttons-invitation\">To react or comment&nbsp; ");
-        buf.append("<a class=\"btn btn-outline-success btn-sm\" href=\"");
-        buf.append(Util.he(builder.toUriString()));
         buf.append("\">View in Web Client</a></div>");
         return new SafeString(buf);
     }

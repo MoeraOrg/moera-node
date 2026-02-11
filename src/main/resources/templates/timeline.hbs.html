@@ -12,32 +12,33 @@
     <a name="m{{moment}}"></a>
     <div class="posting entry preview" data-post-id="{{posting.id}}">
         {{#if pinned}}
-            <div class="pin-line">
-                <span class="badge bg-secondary">
+            <div class="badges-line">
+                <span class="pinned badge bg-secondary">
                     <i class="fas fa-thumbtack"></i>&nbsp;
                     Pinned post
                 </span>
             </div>
         {{/if}}
         <div class="owner-line">
-            {{avatar posting.ownerAvatar 48 nodeName=posting.ownerName}}
+            {{avatar posting.ownerAvatar 40 nodeName=posting.ownerName}}
             <div class="owner-info">
                 <span class="owner">
                     {{nodename posting.ownerName posting.ownerFullName}}
                     {{#if posting.receiverName}}
                         {{#ifne posting.receiverName posting.ownerName}}
-                            &#x25b8; {{nodename posting.receiverName posting.receiverFullName}}
+                            <span class="arrow"> &#x25b8; </span>
+                            {{nodename posting.receiverName posting.receiverFullName}}
                         {{/ifne}}
                     {{/if}}
                 </span>
                 <br/>
-                <span class="date">
-                    <a href="/post/{{posting.id}}">{{cal "dd-MM-yyyy HH:mm" es=publishedAt
-                                                         fromNow="posting.time.relative"}}</a>
-                    {{#ifgt posting.totalRevisions 1}}
+                <a href="/post/{{posting.id}}" class="date">{{cal "dd-MM-yyyy HH:mm" es=publishedAt
+                                                                  fromNow="posting.time.relative"}}</a>
+                {{#ifgt posting.totalRevisions 1}}
+                    <span class="date">
                         (updated {{cal "dd-MM-yyyy HH:mm" es=posting.editedAt fromNow="posting.time.relative"}})
-                    {{/ifgt}}
-                </span>
+                    </span>
+                {{/ifgt}}
             </div>
         </div>
         {{#if posting.bodyPreview.subject}}
@@ -50,7 +51,7 @@
         {{#if posting.bodyPreview.text}}
             <div class="content">
                 <div>{{{posting.saneBodyPreview}}}</div>
-                <p><a href="/post/{{posting.id}}">Continue Reading &rarr;</a></p>
+                <a href="/post/{{posting.id}}" class="btn btn-link read-more">Continue Reading &rarr;</a>
             </div>
         {{else}}
             <div class="content">{{{posting.saneBodyPreview}}}</div>
@@ -68,10 +69,6 @@
                     </a>
                 </div>
             {{/if}}
-        </div>
-        <div class="buttons-line">
-            {{> part/share posting=posting}}
-            {{buttonsInvitation moment}}
         </div>
     </div>
 {{/each}}

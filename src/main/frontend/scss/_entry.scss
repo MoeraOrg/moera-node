@@ -7,26 +7,6 @@
         text-decoration: none;
     }
 
-    & > .content {
-        BLOCKQUOTE {
-            padding: .2rem .2rem .2rem 2.7rem;
-            position: relative;
-            background-color: var(--blockquote);
-            border-radius: .5rem;
-            overflow: hidden;
-
-            &::before {
-                content: "\201C";
-                font-family: serif;
-                font-size: 4rem;
-                color: var(--bs-cyan);
-                position: absolute;
-                left: .5rem;
-                top: -1rem;
-            }
-        }
-    }
-
     .entry-image {
         &:hover IMG {
             filter: brightness(90%);

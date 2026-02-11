@@ -29,8 +29,8 @@
 
 <div class="posting entry" data-post-id="{{posting.id}}">
     {{#if posting.timelinePinned}}
-        <div class="pin-line">
-            <span class="badge bg-secondary">
+        <div class="badges-line">
+            <span class="pinned badge bg-secondary">
                 <i class="fas fa-thumbtack"></i>&nbsp;
                 Pinned post
             </span>
@@ -40,23 +40,26 @@
         {{#if originalHref}}
             <a class="posting-source" href="{{originalHref}}"><i class="fas fa-retweet"></i></a>
         {{/if}}
-        {{avatar posting.ownerAvatar 48 nodeName=posting.ownerName}}
+        {{avatar posting.ownerAvatar 40 nodeName=posting.ownerName}}
         <div class="owner-info">
             <span class="owner">
                 {{nodename posting.ownerName posting.ownerFullName}}
                 {{#if posting.receiverName}}
                     {{#ifne posting.receiverName posting.ownerName}}
-                        &#x25b8; {{nodename posting.receiverName posting.receiverFullName}}
+                        <span class="arrow"> &#x25b8; </span>
+                        {{nodename posting.receiverName posting.receiverFullName}}
                     {{/ifne}}
                 {{/if}}
             </span>
             <br/>
             <span class="date">
                 {{cal "dd-MM-yyyy HH:mm" es=posting.timelinePublishedAt fromNow="posting.time.relative"}}
-                {{#ifgt posting.totalRevisions 1}}
-                    (updated {{cal "dd-MM-yyyy HH:mm" es=posting.editedAt fromNow="posting.time.relative"}})
-                {{/ifgt}}
             </span>
+            {{#ifgt posting.totalRevisions 1}}
+                <span class="date">
+                    (updated {{cal "dd-MM-yyyy HH:mm" es=posting.editedAt fromNow="posting.time.relative"}})
+                </span>
+            {{/ifgt}}
         </div>
     </div>
     {{#if posting.body.subject}}
@@ -76,10 +79,6 @@
                 </a>
             </div>
         {{/if}}
-    </div>
-    <div class="buttons-line">
-        {{> part/share posting=posting}}
-        {{buttonsInvitation null}}
     </div>
 
     <a name="comments"></a>
