@@ -21,8 +21,12 @@
 {{/inline}}
 
 {{#if posting.timelineMoment}}
-    <a class="btn btn-outline-secondary btn-sm"
-       href="/timeline?before={{posting.timelineMoment}}">&larr; Timeline</a>
+    <a class="desktop-back" href="/timeline?before={{posting.timelineMoment}}">
+        <span class="btn btn-tool-round arrow">
+            <i class="fas fa-arrow-left"></i>
+        </span>
+        <div class="content">Back to Timeline</div>
+    </a>
 {{/if}}
 
 {{postingGalleries posting comments canonicalUrl openMediaPostingId openMediaCommentId openMediaId}}

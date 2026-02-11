@@ -2,6 +2,7 @@
 @use 'client';
 @use 'colors';
 @use 'comment';
+@use 'desktop_back';
 @use 'entry';
 @use 'gallery';
 @use 'gallery_reactions';
@@ -180,4 +181,22 @@ SUB.generation {
         border-bottom: none;
         background-color: inherit;
     }
+}
+
+.btn-tool-round {
+    --bs-btn-color: var(--bs-gray-700);
+    --bs-btn-bg: var(--bs-gray-100);
+    --bs-btn-border-color: var(--bs-gray-100);
+    --bs-btn-hover-color: var(--bs-gray-900);
+    --bs-btn-hover-bg: var(--bs-gray-200);
+    --bs-btn-hover-border-color: var(--bs-gray-300);
+    --bs-btn-active-color: var(--bs-gray-900);
+    --bs-btn-active-bg: var(--bs-gray-100);
+    --bs-btn-active-border-color: var(--bs-primary);
+    --bs-btn-disabled-color: var(--bs-gray-400);
+    --bs-btn-disabled-bg: var(--bs-gray-100);
+    --bs-btn-disabled-border-color: var(--bs-gray-100);
+    --bs-btn-border-radius: 50%;
+    --bs-btn-padding-x: .375em;
+    --bs-btn-padding-y: .25em;
 }

@@ -1,0 +1,25 @@
+.desktop-back {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: white;
+    border-radius: 1rem;
+    padding: 1rem 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    font-size: 1.13rem;
+    font-weight: 600;
+    line-height: 133%;
+    color: var(--bs-gray-900);
+
+    .arrow {
+        width: 2.125rem;
+        height: 2.125rem;
+    }
+
+    .content {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
