@@ -1,9 +1,12 @@
 {{> part/top}}
 
 <div class="open-client">
-    You need a Moera client<br/>
-    to view this page<br/>
-    <a class="btn btn-success" href="{{webClientUrl}}">View in Web Client</a>
+    {{> svg/OpenWebClient.svg }}
+    <div class="caption">Open Client App</div>
+    <div class="instructions">
+        You need a Moera client app to view this page
+    </div>
+    <a class="btn btn-primary" href="{{webClientUrl}}">View in Web Client</a>
 </div>
 
 {{> part/bottom}}
