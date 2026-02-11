@@ -1,12 +1,11 @@
-@use 'mixins';
-
 .open-client {
-    @include mixins.pane;
+    background-color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
     margin-left: auto;
     margin-right: auto;
     margin-top: 5rem;
     width: calc(min(35rem, 100vw - 1rem));
-    padding: 2rem;
     font-size: 20pt;
     font-weight: bold;
     color: var(--bs-info);

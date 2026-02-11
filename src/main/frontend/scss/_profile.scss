@@ -1,16 +1,9 @@
-@use 'mixins';
-
 .profile-view {
-    @include mixins.pane;
     display: flow-root;
-    padding: 1rem;
+    background-color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
     margin-top: 1rem;
-
-    @media only screen and (max-width: 575px) {
-        border-left-width: 0;
-        border-right-width: 0;
-        border-radius: 0;
-    }
 
     .avatar {
         display: block;
@@ -21,7 +14,7 @@
         @media only screen and (min-width: 576px) {
             float: left;
             margin-left: unset;
-            margin-right: .7rem;
+            margin-right: 1.5rem;
         }
     }
 

@@ -31,7 +31,7 @@
 
 {{postingGalleries posting comments canonicalUrl openMediaPostingId openMediaCommentId openMediaId}}
 
-<div class="posting entry" data-post-id="{{posting.id}}">
+<article class="posting entry" data-post-id="{{posting.id}}">
     {{#if posting.timelinePinned}}
         <div class="badges-line">
             <span class="pinned badge bg-secondary">
@@ -158,6 +158,6 @@
             See comments under <a href="{{commentsHref}}">original post</a>
         </div>
     {{/if}}
-</div>
+</article>
 
 {{> part/bottom}}

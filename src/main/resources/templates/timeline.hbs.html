@@ -10,7 +10,7 @@
 
 {{#each stories}}
     <a name="m{{moment}}"></a>
-    <div class="posting entry preview" data-post-id="{{posting.id}}">
+    <article class="posting entry preview" data-post-id="{{posting.id}}">
         {{#if pinned}}
             <div class="badges-line">
                 <span class="pinned badge bg-secondary">
@@ -70,7 +70,7 @@
                 </div>
             {{/if}}
         </div>
-    </div>
+    </article>
 {{/each}}
 
 {{#if pagination}}

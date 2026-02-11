@@ -1,8 +1,8 @@
-@use 'mixins';
-
 .people {
-    @include mixins.pane;
-    padding: 1rem;
+    background-color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-top: 1rem;
     min-height: 25vh;
 
     .people-tabs {
@@ -44,7 +44,7 @@
         margin-right: .5rem;
 
         .avatar {
-            display: inline-block;
+            display: inline-grid;
             margin-right: .5rem;
         }
 
