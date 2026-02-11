@@ -112,35 +112,38 @@
                 {{/ifeq}}
                 <div class="comment entry {{focusedClass}} {{tsClass}}" data-post-id="{{posting.id}}"
                      data-comment-id="{{id}}">
-                    {{avatar ownerAvatar 36 nodeName=ownerName}}
-                    <div class="details">
-                        <div class="owner-line">
+                    <div class="owner-line">
+                        <span>
+                            {{avatar ownerAvatar 32 nodeName=ownerName}}
                             <span class="owner">{{nodename ownerName ownerFullName}}</span>
-                            <span class="date">
-                                <a href="/post/{{posting.id}}?comment={{id}}">{{cal "dd-MM-yyyy HH:mm" es=createdAt
-                                                                                    fromNow="true"}}</a>
-                                {{#ifgt totalRevisions 1}}
+                        </span>
+                        <span>
+                            <a href="/post/{{posting.id}}?comment={{id}}" class="date">
+                                {{cal "dd-MM-yyyy HH:mm" es=createdAt fromNow="true"}}
+                            </a>
+                            {{#ifgt totalRevisions 1}}
+                                <span class="date updated">
                                     (updated {{cal "dd-MM-yyyy HH:mm" es=editedAt fromNow="true"}})
-                                {{/ifgt}}
-                            </span>
-                        </div>
-                        <div class="content">
-                            {{#if repliedTo}}
-                                <div class="replied-to">
-                                    <a href="/post/{{posting.id}}?comment={{repliedTo.id}}">
-                                        <i class="icon fas fa-reply"></i>&nbsp;
-                                        {{nodename repliedTo.name repliedTo.fullName linked=false}}
-                                        <span class="heading">{{repliedTo.heading}}</span>
-                                    </a>
-                                </div>
-                            {{/if}}
-                            {{{saneBody}}}
-                        </div>
-                        {{> part/entrypreviews linkPreviews=body.linkPreviews media=posting.media small=true}}
-                        {{entryGallery posting.id id media}}
-                        <div class="reactions-line">
-                            {{reactions this}}
-                        </div>
+                                </span>
+                            {{/ifgt}}
+                        </span>
+                    </div>
+                    <div class="content">
+                        {{#if repliedTo}}
+                            <div class="replied-to">
+                                <a href="/post/{{posting.id}}?comment={{repliedTo.id}}">
+                                    <i class="icon fas fa-reply"></i>&nbsp;
+                                    {{nodename repliedTo.name repliedTo.fullName linked=false}}
+                                    <span class="heading">{{repliedTo.heading}}</span>
+                                </a>
+                            </div>
+                        {{/if}}
+                        {{{saneBody}}}
+                    </div>
+                    {{> part/entrypreviews linkPreviews=body.linkPreviews media=posting.media small=true}}
+                    {{entryGallery posting.id id media}}
+                    <div class="reactions-line">
+                        {{reactions this}}
                     </div>
                 </div>
             {{/each}}
@@ -148,7 +151,6 @@
             {{#if pagination}}
                 {{> pages}}
             {{/if}}
-            {{commentInvitation}}
         </details>
     {{/if}}
     {{#if commentsHref}}

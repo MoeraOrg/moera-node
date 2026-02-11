@@ -252,13 +252,4 @@ public class MoeraHelperSource {
         return new SafeString(buf);
     }
 
-    public CharSequence commentInvitation() {
-        StringBuilder buf = new StringBuilder();
-        buf.append("<div class=\"alert alert-info mt-3\">To react or comment&nbsp; ");
-        buf.append("<a class=\"btn btn-success btn-sm\" href=\"");
-        buf.append(Util.he(requestContext.getRedirectorUrl()));
-        buf.append("\">View in Web Client</a></div>");
-        return new SafeString(buf);
-    }
-
 }

@@ -1,11 +1,10 @@
 #comments {
-    border-top: 1px solid var(--bs-gray-400);
-    margin-top: .5rem;
+    margin-top: 1rem;
     padding-top: 1rem;
 
     SUMMARY {
         font-size: large;
-        color: var(--bs-primary);
+        color: var(--violet-800);
         font-weight: 500;
         margin-bottom: 1rem;
     }
@@ -21,38 +20,46 @@
 
 .comment {
     position: relative;
-    margin-bottom: .6rem;
-    width: max-content;
-    max-width: 100%;
-    display: flex;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    width: 100%;
 
-    .details {
-        flex: auto;
-        margin-left: .25rem;
-        max-width: calc(100% - .25rem - 36px);
+    &.focused {
+        border: dashed 1px var(--bs-primary);
     }
 
-    .owner {
-        margin-left: .3em;
-        font-weight: bold;
+    .owner-line {
+        margin-bottom: 0;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
 
-        A {
-            color: var(--node-name);
+        & > SPAN {
+            display: flex;
+            align-items: baseline;
         }
     }
 
-    &.topic-starter .owner A {
-        color: var(--node-name-ts);
+    .owner {
+        font-weight: bold;
+        margin: 0 .5em;
+    }
+
+    .owner > A {
+        color: var(--bs-gray-900);
+    }
+
+    &.topic-starter > .owner-line .owner > A {
+        color: var(--bs-brand-600);
     }
 
     .date {
-        font-size: 0.8rem;
-        font-weight: normal;
-        color: var(--bs-gray-500);
-        margin-left: 0.5em;
+        font-size: .8rem;
+        color: var(--bs-gray-600);
 
-        A {
-            color: inherit;
+        &.updated {
+            margin-inline-start: .5em;
         }
     }
 
@@ -139,13 +146,9 @@
         }
     }
 
-    &.focused .content {
-        border: dashed 1px var(--bs-primary);
-    }
-
     .reactions-line {
         display: flex;
-        justify-content: space-between;
+        justify-content: end;
         align-items: flex-start;
         height: 1.65em;
         color: var(--bs-gray-400);
