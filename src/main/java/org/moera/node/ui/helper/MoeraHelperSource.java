@@ -72,8 +72,23 @@ public class MoeraHelperSource {
         return new SafeString(buf);
     }
 
-    public CharSequence fullName(String nodeName, String fullName) {
-        return !ObjectUtils.isEmpty(fullName) ? fullName : NodeName.shorten(nodeName);
+    public CharSequence fullName(String nodeName, String fullName, Options options) {
+        boolean linked = HelperUtil.boolArg(options.hash("linked", "false"));
+
+        StringBuilder buf = new StringBuilder();
+        if (linked) {
+            String nodeUrl = namingCache.getFast(nodeName).getNodeUri();
+
+            buf.append("<a");
+            HelperUtil.appendAttr(buf, "href", UniversalLocation.redirectTo(nodeName, nodeUrl));
+            HelperUtil.appendAttr(buf, "class", options.hash("class"));
+            buf.append('>');
+        }
+        HelperUtil.safeAppend(buf, !ObjectUtils.isEmpty(fullName) ? fullName : NodeName.shorten(nodeName));
+        if (linked) {
+            buf.append("</a>");
+        }
+        return new SafeString(buf);
     }
 
     public CharSequence shortName(String nodeName) {

@@ -5,55 +5,79 @@
     margin-top: 1rem;
     min-height: 25vh;
 
-    .people-tabs {
-        display: flex;
-        margin-top: -.5em;
-        margin-bottom: 1.5em;
+    .nav.nav-pills {
+        --bs-nav-tabs-link-active-color: var(--bs-gray-800);
+        --bs-nav-link-color: var(--bs-gray-600);
+        --bs-nav-link-hover-color: var(--bs-gray-700);
+        --bs-nav-pills-border-radius: 2rem;
 
-        .tab {
-            flex: 1;
-            max-width: 10em;
-            padding: .3rem;
-            font-size: larger;
-            margin-right: 1rem;
+        .nav-link .badge {
+            background-color: var(--bs-gray-100);
             color: var(--bs-gray-600);
-            white-space: nowrap;
+            margin-left: .75em;
+            vertical-align: .075em;
         }
+    }
 
-        A.tab {
-            text-decoration: none;
+    .people-content {
+        display: flow-root;
+        padding: 1rem;
+        min-height: 25vh;
 
-            &:hover {
-                color: var(--bs-gray-800);
-            }
-        }
-
-        DIV.tab {
-            color: var(--bs-primary);
-            cursor: default;
-            border-bottom: solid .25rem var(--bs-primary);
-        }
-
-        .rest {
-            flex: auto;
+        @media only screen and (max-width: 991px) {
+            border-radius: 0;
         }
     }
 
     .person {
-        margin-bottom: .3rem;
-        margin-right: .5rem;
+        margin-bottom: .5rem;
+        padding: .25rem .5rem .25rem .25rem;
+        border-radius: .25rem;
+        display: grid;
+        grid-template:
+            " avatar      details" min-content
+            / min-content auto;
+
+        @media only screen and (max-width: 991px) {
+            padding-right: 0;
+        }
+
+        &:hover {
+            background-color: var(--bs-gray-100);
+        }
 
         .avatar {
-            display: inline-grid;
-            margin-right: .5rem;
+            margin: .25rem .75rem .25rem 0;
+            grid-area: avatar;
         }
 
-        A.node-name:hover {
-            text-decoration: underline;
+        .details {
+            grid-area: details;
+            overflow-x: hidden;
+
+            .full-name {
+                display: block;
+                font-weight: 600;
+                font-size: 1.14rem;
+                line-height: 150%;
+                color: var(--bs-gray-800);
+                overflow-x: hidden;
+                text-overflow: ellipsis;
+
+                @media only screen and (max-width: 991px) {
+                    font-size: 1rem;
+                }
+            }
+
+            .name {
+                display: block;
+                color: var(--bs-gray-600);
+                font-size: .88rem;
+                line-height: 143%;
+                overflow-x: hidden;
+                text-overflow: ellipsis;
+            }
         }
     }
 
-    .node-name {
-        font-weight: bold;
-    }
 }

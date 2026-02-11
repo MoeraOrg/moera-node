@@ -3,24 +3,30 @@
 {{> part/pagetitle }}
 
 <div class="people">
-    <div class="people-tabs">
-        <a class="tab" href="/people/subscribers">
-            Subscribers {{#if subscribersTotal}}({{subscribersTotal}}){{/if}}
-        </a>
-        <div class="tab">
-            Subscriptions {{#if subscriptionsTotal}}({{subscriptionsTotal}}){{/if}}
-        </div>
-        <div class="rest"></div>
-    </div>
+    <ul class="nav nav-pills">
+        <li class="nav-item">
+            <a class="nav-link" href="/people/subscribers">
+                Subscribers {{#if subscribersTotal}}<span class="badge">{{subscribersTotal}}</span>{{/if}}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="/people/subscriptions">
+                Subscriptions {{#if subscriptionsTotal}}<span class="badge">{{subscriptionsTotal}}</span>{{/if}}
+            </a>
+        </li>
+    </ul>
 
-    <div class="row">
+    <main class="people-content">
         {{#each subscriptions}}
-            <div class="person col-sm-4">
-                {{avatar contact.avatar 48 nodeName=remoteNodeName}}
-                {{nodename remoteNodeName contact.fullName}}
+            <div class="person">
+                {{avatar contact.avatar 40 nodeName=remoteNodeName}}
+                <div class="details">
+                    {{fullName remoteNodeName contact.fullName linked="true" class="full-name"}}
+                    <div class="name">@{{shortName remoteNodeName}}</div>
+                </div>
             </div>
         {{/each}}
-    </div>
+    </main>
 </div>
 
 {{> part/bottom}}
