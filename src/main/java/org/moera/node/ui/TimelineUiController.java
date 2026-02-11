@@ -147,12 +147,18 @@ public class TimelineUiController {
             return "redirect:" + requestContext.getRedirectorUrl();
         }
 
-        log.info("UI /post/{id} (id = {}, before = {}, comment = {}, media = {})",
-                LogUtil.format(id), LogUtil.format(before), LogUtil.format(commentId), LogUtil.format(mediaId));
+        log.info(
+            "UI /post/{id} (id = {}, before = {}, comment = {}, media = {})",
+            LogUtil.format(id), LogUtil.format(before), LogUtil.format(commentId), LogUtil.format(mediaId)
+        );
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-        if (posting == null || !posting.isMessage() || posting.getParentMedia() != null
-                || !posting.getViewCompound().isPublic()) {
+        if (
+            posting == null
+            || !posting.isMessage()
+            || posting.getParentMedia() != null
+            || !posting.getViewCompound().isPublic()
+        ) {
             throw new PageNotFoundException();
         }
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
