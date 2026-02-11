@@ -124,10 +124,9 @@ public class MoeraHelperSource {
             buf.append("<div");
             HelperUtil.appendAttr(buf, "title", "Avatar placeholder");
             HelperUtil.appendAttr(buf, "class", "avatar avatar-circle avatar-placeholder");
-            String style = String.format(
-                "width: %dpx; height: %dpx; font-size: %dpx; filter: hue-rotate(%ddeg)",
-                sz, sz, sz / 3, nameAngle(nodeName)
-            );
+            String style =
+                "width: %dpx; height: %dpx; font-size: %dpx; filter: hue-rotate(%ddeg)"
+                .formatted(sz, sz, sz / 3, nameAngle(nodeName));
             HelperUtil.appendAttr(buf, "style", style);
             buf.append('>');
             String shortName = registeredName.toShortString();

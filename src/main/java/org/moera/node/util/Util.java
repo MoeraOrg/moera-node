@@ -96,40 +96,28 @@ public class Util {
     public static String fromNow(LocalDateTime dateTime) {
         long diff = dateTime.until(LocalDateTime.now(), ChronoUnit.SECONDS);
         if (diff < 60) {
-            return "few seconds ago";
+            return "now";
         }
         diff /= 60;
-        if (diff == 1) {
-            return "a minute ago";
-        }
         if (diff < 60) {
-            return "%d minutes ago".formatted(diff);
+            return "%d\u00a0min".formatted(diff);
         }
         diff /= 60;
-        if (diff == 1) {
-            return "an hour ago";
-        }
         if (diff < 24) {
-            return "%d hours ago".formatted(diff);
+            return "%d\u00a0hr".formatted(diff);
         }
         diff /= 24;
-        if (diff == 1) {
-            return "yesterday";
+        if (diff < 14) {
+            return "%d\u00a0d".formatted(diff);
         }
-        if (diff < 30) {
-            return "%d days ago".formatted(diff);
+        if (diff < 35) {
+            return "%d\u00a0wk".formatted(diff / 7);
         }
-        if (diff < 60) {
-            return "a month ago";
-        }
-        if (diff < 330) {
-            return "%d months ago".formatted(diff / 30);
+        if (diff < 365) {
+            return "%d\u00a0mo".formatted(diff / 30);
         }
         diff /= 365;
-        if (diff <= 1) {
-            return "a year ago";
-        }
-        return "%d years ago".formatted(diff);
+        return "%d\u00a0yr".formatted(diff);
     }
 
     public static Boolean toBoolean(String value) {
