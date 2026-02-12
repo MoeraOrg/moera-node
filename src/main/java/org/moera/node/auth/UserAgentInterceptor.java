@@ -38,6 +38,14 @@ public class UserAgentInterceptor implements HandlerInterceptor {
             requestContext.setUserAgent(UserAgent.PETALBOT);
         } else if (userAgent.contains("SemrushBot")) {
             requestContext.setUserAgent(UserAgent.SEMRUSHBOT);
+        } else if (userAgent.contains("MJ12bot")) {
+            requestContext.setUserAgent(UserAgent.MJ12BOT);
+        } else if (userAgent.contains("Amazonbot")) {
+            requestContext.setUserAgent(UserAgent.AMAZONBOT);
+        } else if (userAgent.contains("OAI-SearchBot")) {
+            requestContext.setUserAgent(UserAgent.OAISEARCHBOT);
+        } else if (userAgent.contains("Applebot")) {
+            requestContext.setUserAgent(UserAgent.APPLEBOT);
         } else if (userAgent.contains("Chrome")) {
             if (userAgent.contains("YaBrowser")) {
                 requestContext.setUserAgent(UserAgent.YANDEX);
