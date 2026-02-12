@@ -3,7 +3,13 @@
 {{> part/pagetitle }}
 
 {{#unless stories}}
-    <div class="no-postings">Nothing yet.</div>
+    <div class="fallback mt-3">
+        {{> svg/NoPosts.svg }}
+        <div class="caption">No posts yet</div>
+        <div class="instructions">
+            User hasn't posted anything yet
+        </div>
+    </div>
 {{/unless}}
 
 {{feedGalleries stories canonicalUrl}}

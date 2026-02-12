@@ -1,46 +1,51 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="icon" href="/favicon.ico" type="image/x-icon">
-        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-        <title>{{pageTitle}}</title>
+        <link rel="icon" href="/pics/icon.svg" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="/pics/icon-apple-touch.png">
         <style>
-            #content {
-                display: flex;
-                flex-flow: row wrap;
-                justify-content: center;
+            :root {
+                --bs-gray-900: #212529;
+                --bs-gray-800: #343a40;
+                --bs-gray-700: #495057;
+                --bs-gray-600: #6c757d;
+                --bs-gray-500: #adb5bd;
+                --bs-gray-400: #ced4da;
+                --bs-gray-300: #dee2e6;
+                --bs-gray-200: #e9ecef;
+                --bs-gray-100: #f8f9fa;
+                --body-bg: var(--bs-gray-200);
             }
-            .column {
-                margin: 1.5em;
-            }
-            #status {
-                font-size: 40pt;
-                font-weight: bold;
+
+            .fallback {
+                max-width: 900px;
+                margin: 1rem auto;
                 position: relative;
-                top: -6pt;
-                margin-left: 0.5em;
             }
-            #comment {
-                font-size: 24pt;
-                font-style: italic;
-            }
-            HEADER {
-                font-weight: bold;
-                font-size: larger;
-            }
-            LI {
-                margin: 5pt 0;
+
+            .brand {
+                position: absolute;
+                top: 2rem;
+                left: 2rem;
             }
         </style>
+        <link href="/css/main.css" rel="stylesheet">
+        <title>{{pageTitle}}</title>
     </head>
     <body>
-        <div id="content">
-            <div class="column">
-                {{image "/pics/logo-128.png"}}
-            </div>
-            <div class="column">
-                <span id="status">{{status}}</span><br>
-                <span id="comment">{{comment}}</span>
-            </div>
+        <div class="fallback">
+            <div class="brand">{{image "/pics/logo.png" alt="Moera"}}</div>
+            {{#ifeq status 404}}
+                {{> svg/NotFound.svg }}
+                <div class="caption">{{comment}}</div>
+            {{else}}
+                {{> svg/Error.svg }}
+                <div class="caption">{{comment}} ({{status}})</div>
+            {{/ifeq}}
         </div>
     </body>
 </html>
