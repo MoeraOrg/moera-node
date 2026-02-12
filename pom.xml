@@ -56,7 +56,7 @@
         <languagetool.uk.version>6.6</languagetool.uk.version>
         <lingua.version>1.2.2</lingua.version>
         <metadata-extractor.version>2.19.0</metadata-extractor.version>
-        <moeralib.version>0.17.14</moeralib.version>
+        <moeralib.version>0.17.17-SNAPSHOT</moeralib.version>
         <owasp-java-html-sanitizer.version>20260101.1</owasp-java-html-sanitizer.version>
         <postgresql.version>42.7.3</postgresql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -38,7 +38,11 @@ public class SearchEngineInterceptor implements HandlerInterceptor {
 
     private static final SearchEngineReferer[] SEARCH_ENGINE_REFERERS = {
         new SearchEngineReferer("^https?://[a-z]+\\.google\\.com", UserAgent.GOOGLEBOT, SearchEngine.GOOGLE),
-        new SearchEngineReferer("^https?://[a-z]+\\.bing\\.com", UserAgent.BINGBOT, SearchEngine.BING)
+        new SearchEngineReferer(
+            "^android-app://com\\.google\\.android\\.googlequicksearchbox", UserAgent.GOOGLEBOT, SearchEngine.GOOGLE
+        ),
+        new SearchEngineReferer("^https?://(?:[a-z]+\\.)?bing\\.com", UserAgent.BINGBOT, SearchEngine.BING),
+        new SearchEngineReferer("^https?://ya(?:ndex)?\\.ru", UserAgent.YANDEXBOT, SearchEngine.YANDEX)
     };
 
     @Inject
