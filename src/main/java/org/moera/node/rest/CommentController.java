@@ -238,7 +238,10 @@ public class CommentController {
             null,
             media,
             null,
-            revision -> CommentTextUtil.toEntryRevision(commentText, revision, digest, textConverter, media),
+            revision ->
+                CommentTextUtil.toEntryRevision(
+                    commentText, revision, digest, textConverter, media, !requestContext.isAdmin(Scope.ADD_COMMENT)
+                ),
             entry -> CommentTextUtil.toEntry(commentText, entry)
         );
 
@@ -324,7 +327,10 @@ public class CommentController {
                 comment.getCurrentRevision(),
                 media,
                 revision -> CommentTextUtil.sameAsRevision(commentText, revision),
-                revision -> CommentTextUtil.toEntryRevision(commentText, revision, digest, textConverter, media),
+                revision ->
+                    CommentTextUtil.toEntryRevision(
+                        commentText, revision, digest, textConverter, media, !requestContext.isAdmin(Scope.ADD_COMMENT)
+                    ),
                 entry -> CommentTextUtil.toEntry(commentText, entry)
             );
         } else {

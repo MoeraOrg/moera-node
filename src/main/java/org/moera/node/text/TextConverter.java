@@ -10,15 +10,11 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.text.shorten.Shortener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 @Component
 public class TextConverter {
-
-    private static final Logger log = LoggerFactory.getLogger(TextConverter.class);
 
     @Inject
     private MarkdownConverter markdownConverter;
@@ -47,6 +43,7 @@ public class TextConverter {
         boolean isSigned,
         List<MediaFileOwner> media,
         boolean collapseQuotations,
+        boolean noFollowOnLinks,
         EntryRevision revision
     ) {
         Body body = new Body();
@@ -56,15 +53,17 @@ public class TextConverter {
                     revision.setBodySrc(bodySrc.getEncoded());
                     body = toHtml(revision.getBodySrcFormat(), bodySrc);
                     revision.setBody(body.getEncoded());
-                    revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
+                    revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media, noFollowOnLinks));
                     revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
                     Body bodyPreview = Shortener.shorten(body, hasAttachedGallery(body, media));
                     if (bodyPreview != null) {
                         revision.setBodyPreview(bodyPreview.getEncoded());
-                        revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true, media));
+                        revision.setSaneBodyPreview(
+                            HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true, media, noFollowOnLinks)
+                        );
                     } else {
                         revision.setBodyPreview(Body.EMPTY);
-                        revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(body, true, media));
+                        revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(body, true, media, noFollowOnLinks));
                     }
                 } else {
                     revision.setBodySrc(Body.EMPTY);
@@ -79,12 +78,12 @@ public class TextConverter {
             if (BodyFormat.MESSAGE.equals(bodyFormat)) {
                 body = sourceBody.clone();
                 revision.setBody(sourceBody.getEncoded());
-                revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
+                revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media, noFollowOnLinks));
 
                 Body bodyPreview = sourceBodyPreview.clone();
                 revision.setBodyPreview(sourceBodyPreview.getEncoded());
                 revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
-                    !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true, media)
+                    !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true, media, noFollowOnLinks)
                 );
             } else {
                 revision.setBody(sourceBody.getEncoded());

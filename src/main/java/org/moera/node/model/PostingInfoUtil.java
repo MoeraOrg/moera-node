@@ -557,14 +557,15 @@ public class PostingInfoUtil {
             HtmlSanitizer.sanitizeIfNeeded(
                 !ObjectUtils.isEmpty(info.getBodyPreview().getText()) ? info.getBodyPreview() : info.getBody(),
                 true,
-                media
+                media,
+                false
             )
         );
         entryRevision.setBodySrcFormat(info.getBodySrcFormat());
         entryRevision.setReceiverBodySrcHash(info.getBodySrcHash());
         entryRevision.setBodyFormat(info.getBodyFormat().getValue());
         entryRevision.setBody(info.getBody().getEncoded());
-        entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(info.getBody(), false, media));
+        entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(info.getBody(), false, media, false));
         entryRevision.setHeading(info.getHeading());
         entryRevision.setDescription(info.getDescription());
         if (info.getDeletedAt() != null) {

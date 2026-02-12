@@ -375,6 +375,7 @@ public class PostingTextUtil {
             postingText.getSignature() != null,
             media,
             false,
+            false,
             revision
         );
 

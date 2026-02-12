@@ -70,7 +70,7 @@
         <div class="subject" dir="auto">{{posting.body.subject}}</div>
     {{/if}}
     <div class="content">{{{posting.saneBody}}}</div>
-    {{> part/entrypreviews linkPreviews=posting.body.linkPreviews media=posting.media small=false}}
+    {{> part/entrypreviews linkPreviews=posting.body.linkPreviews media=posting.media small=false noFollow=false}}
     {{entryGallery posting.id null posting.media}}
     <div class="reactions-line">
         {{reactions posting}}
@@ -140,7 +140,13 @@
                         {{/if}}
                         {{{saneBody}}}
                     </div>
-                    {{> part/entrypreviews linkPreviews=body.linkPreviews media=posting.media small=true}}
+                    {{#ifeq ownerName nodeName.name}}
+                        {{#assign "noFollow"}}false{{/assign}}
+                    {{else}}
+                        {{#assign "noFollow"}}true{{/assign}}
+                    {{/ifeq}}
+                    {{> part/entrypreviews linkPreviews=body.linkPreviews media=posting.media small=true
+                                           noFollow=noFollow}}
                     {{entryGallery posting.id id media}}
                     <div class="reactions-line">
                         {{reactions this}}

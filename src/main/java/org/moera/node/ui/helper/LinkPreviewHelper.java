@@ -23,7 +23,8 @@ public class LinkPreviewHelper {
         String description,
         String imageHash,
         List<MediaAttachment> media,
-        boolean small
+        boolean small,
+        Object noFollow
     ) {
         if (ObjectUtils.isEmpty(url)) {
             return null;
@@ -31,7 +32,7 @@ public class LinkPreviewHelper {
 
         String host;
         try {
-            host = UriComponentsBuilder.fromHttpUrl(url).build().getHost();
+            host = UriComponentsBuilder.fromUriString(url).build().getHost();
             if (ObjectUtils.isEmpty(host)) {
                 return null;
             }
@@ -57,6 +58,9 @@ public class LinkPreviewHelper {
         HelperUtil.appendAttr(
             buf, "class", "link-preview" + (large ? " large" : "") + (small ? " small" : "")
         );
+        if (HelperUtil.boolArg(noFollow)) {
+            HelperUtil.appendAttr(buf, "rel", "nofollow");
+        }
         buf.append('>');
         if (mediaFile != null) {
             boolean directServing = mediaFile.getDirectPath() != null;

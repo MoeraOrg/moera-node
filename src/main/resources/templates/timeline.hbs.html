@@ -62,7 +62,7 @@
         {{else}}
             <div class="content">{{{posting.saneBodyPreview}}}</div>
         {{/if}}
-        {{> part/entrypreviews linkPreviews=posting.body.linkPreviews media=posting.media small=false}}
+        {{> part/entrypreviews linkPreviews=posting.body.linkPreviews media=posting.media small=false noFollow=false}}
         {{entryGallery posting.id null posting.media}}
         <div class="reactions-line">
             {{reactions posting}}

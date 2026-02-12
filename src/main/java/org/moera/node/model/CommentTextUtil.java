@@ -320,7 +320,8 @@ public class CommentTextUtil {
         EntryRevision revision,
         byte[] digest,
         TextConverter textConverter,
-        List<MediaFileOwner> media
+        List<MediaFileOwner> media,
+        boolean noFollowOnLinks
     ) {
         if (commentText.getCreatedAt() != null) {
             revision.setCreatedAt(Util.toTimestamp(commentText.getCreatedAt()));
@@ -341,6 +342,7 @@ public class CommentTextUtil {
             commentText.getSignature() != null,
             media,
             true,
+            noFollowOnLinks,
             revision
         );
     }
