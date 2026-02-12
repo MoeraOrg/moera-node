@@ -22,11 +22,13 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
 
         media = mediaFileOwners != null
                 ? mediaFileOwners.stream()
-                    .collect(Collectors.toMap(
+                    .collect(
+                        Collectors.toMap(
                             mfo -> mfo.getMediaFile().getId(),
                             Function.identity(),
                             (mfo1, mfo2) -> mfo1
-                    ))
+                        )
+                    )
                 : Collections.emptyMap();
     }
 
@@ -95,16 +97,17 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                     + (directServing ? mediaFileOwner.getDirectFileName() : mediaFileOwner.getFileName());
 
             super.openTag("a", new ArrayList<>(List.of(
-                    "href", mediaLocation,
-                    "class", "entry-image",
-                    "data-id", mediaFileOwner.getId().toString()
+                "href", mediaLocation,
+                "class", "entry-image",
+                "data-id", mediaFileOwner.getId().toString()
             )));
 
             newAttrs.add("src");
             newAttrs.add(directServing ? mediaLocation : MediaUtil.mediaPreview(mediaLocation, 900));
             newAttrs.add("srcset");
             newAttrs.add(
-                    MediaUtil.mediaSources(mediaLocation, mediaFileOwner.getMediaFile().getPreviews(), directServing));
+                MediaUtil.mediaSources(mediaLocation, mediaFileOwner.getMediaFile().getPreviews(), directServing)
+            );
             newAttrs.add("sizes");
             newAttrs.add(MediaUtil.mediaSizes(mediaFileOwner.getMediaFile()));
 
