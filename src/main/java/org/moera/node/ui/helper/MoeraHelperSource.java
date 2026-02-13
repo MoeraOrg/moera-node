@@ -267,4 +267,37 @@ public class MoeraHelperSource {
         return new SafeString(buf);
     }
 
+    public CharSequence webmasterContact() {
+        if (requestContext.getOptions() == null) {
+            return "";
+        }
+
+        String name = requestContext.getOptions().getString("webmaster.name");
+        String email = requestContext.getOptions().getString("webmaster.email");
+        boolean hasName = !ObjectUtils.isEmpty(name);
+        boolean hasEmail = !ObjectUtils.isEmpty(email);
+        if (!hasName && !hasEmail) {
+            return "";
+        }
+
+        StringBuilder buf = new StringBuilder();
+        if (hasName) {
+            HelperUtil.safeAppend(buf, name);
+            if (hasEmail) {
+                buf.append(" (");
+            }
+        }
+        if (hasEmail) {
+            buf.append("<a");
+            HelperUtil.appendAttr(buf, "href", "mailto:" + email);
+            buf.append('>');
+            HelperUtil.safeAppend(buf, email);
+            buf.append("</a>");
+            if (hasName) {
+                buf.append(')');
+            }
+        }
+        return new SafeString(buf);
+    }
+
 }

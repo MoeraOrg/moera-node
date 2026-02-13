@@ -187,11 +187,13 @@
 
 - name: webmaster.name
   type: string
+  privileged: true
   defaultValue:
   title: Webmaster name
 
 - name: webmaster.email
   type: string
+  privileged: true
   defaultValue:
   title: Webmaster e-mail
 
