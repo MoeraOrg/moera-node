@@ -753,3 +753,19 @@
   modifiers:
     min: 10
     max: 1500
+
+- name: email.language
+  type: string
+  defaultValue: "en"
+  title: Language of e-mails
+  modifiers:
+    format: select
+    items:
+      - title: English
+        value: en
+      - title: Polski
+        value: pl
+      - title: Русский
+        value: ru
+      - title: Українська
+        value: uk

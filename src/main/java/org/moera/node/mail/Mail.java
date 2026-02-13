@@ -7,6 +7,7 @@ public abstract class Mail {
 
     private String domainName;
     private String email;
+    private String language;
 
     public String getDomainName() {
         return domainName;
@@ -22,6 +23,14 @@ public abstract class Mail {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     abstract String getTemplateName();

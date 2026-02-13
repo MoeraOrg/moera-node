@@ -39,6 +39,7 @@ public class MailService {
     private static final String MAILROBOT_PREFIX = "mailrobot@";
     private static final String TEMPLATES_DIRECTORY = "mail/";
     private static final String SUBJECT_PREFIX = "[Moera] ";
+    private static final String DEFAULT_LANGUAGE = "en";
 
     private static final Logger log = LoggerFactory.getLogger(MailService.class);
 
@@ -91,6 +92,7 @@ public class MailService {
         mail.setDomainName(domains.getDomainDnsName(nodeId));
         if (toRoot) {
             mail.setEmail(config.getMail().getRootAddress());
+            mail.setLanguage(DEFAULT_LANGUAGE);
         } else {
             String email = domains.getDomainOptions(nodeId).getString("profile.email");
             if (mail.verifiedAddressOnly()) {
@@ -101,6 +103,8 @@ public class MailService {
                 }
             }
             mail.setEmail(email);
+            String language = domains.getDomainOptions(nodeId).getString("email.language");
+            mail.setLanguage(normalizeLanguage(language));
         }
         try {
             send(mail);
@@ -128,12 +132,12 @@ public class MailService {
                     message.setReplyTo(replyTo);
                 }
 
-                String document = getDocument(mail.getTemplateName(), false, mail.getModel());
+                String document = getDocument(mail.getTemplateName(), false, mail.getModel(), mail.getLanguage());
                 MailXmlToText handler = new MailXmlToText();
                 XmlConverter.convert(document, handler);
                 var plainText = handler.getResult();
 
-                var html = getDocument(mail.getTemplateName(), true, mail.getModel());
+                var html = getDocument(mail.getTemplateName(), true, mail.getModel(), mail.getLanguage());
 
                 message.setSubject(SUBJECT_PREFIX + plainText.getSubject().toString());
                 message.setText(plainText.getBody().toString(), html);
@@ -145,9 +149,9 @@ public class MailService {
     }
 
     private String getDocument(
-        String templateName, boolean html, Map<String, Object> model
+        String templateName, boolean html, Map<String, Object> model, String language
     ) throws MailServiceException {
-        Template template = getTemplate(templateName, html);
+        Template template = getTemplate(templateName, html, language);
         try {
             return template.apply(model);
         } catch (IOException e) {
@@ -156,7 +160,8 @@ public class MailService {
         }
     }
 
-    private Template getTemplate(String templateName, boolean html) throws MailServiceException {
+    private Template getTemplate(String templateName, boolean html, String language) throws MailServiceException {
+        templateName = resolveTemplateName(templateName, html, language);
         if (html) {
             templateName += ".html";
         }
@@ -171,6 +176,31 @@ public class MailService {
             compiledTemplates.put(templateName, template);
         }
         return template;
+    }
+
+    private String resolveTemplateName(String templateName, boolean html, String language) {
+        String normalized = normalizeLanguage(language);
+        if (DEFAULT_LANGUAGE.equals(normalized)) {
+            return templateName;
+        }
+        String localized = templateName + "_" + normalized;
+        return templateExists(localized, html) ? localized : templateName;
+    }
+
+    private boolean templateExists(String templateName, boolean html) {
+        String suffix = html ? ".html.hbs.html" : ".hbs.html";
+        String path = "classpath:templates/" + TEMPLATES_DIRECTORY + templateName + suffix;
+        return applicationContext.getResource(path).exists();
+    }
+
+    private String normalizeLanguage(String language) {
+        if (ObjectUtils.isEmpty(language)) {
+            return DEFAULT_LANGUAGE;
+        }
+        return switch (language) {
+            case "en", "pl", "ru", "uk" -> language;
+            default -> DEFAULT_LANGUAGE;
+        };
     }
 
     private void runMailQueue() {
