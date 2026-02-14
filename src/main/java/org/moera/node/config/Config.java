@@ -22,6 +22,7 @@ public class Config {
     private LinkPreviewConfig linkPreview = new LinkPreviewConfig();
     private IndexNowConfig indexNow = new IndexNowConfig();
     private DebugConfig debug = new DebugConfig();
+    private WebmasterConfig webmaster = new WebmasterConfig();
 
     public String getVersion() {
         return version;
@@ -145,6 +146,14 @@ public class Config {
 
     public void setDebug(DebugConfig debug) {
         this.debug = debug;
+    }
+
+    public WebmasterConfig getWebmaster() {
+        return webmaster;
+    }
+
+    public void setWebmaster(WebmasterConfig webmaster) {
+        this.webmaster = webmaster;
     }
 
 }

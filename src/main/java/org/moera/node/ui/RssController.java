@@ -15,6 +15,7 @@ import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.feed.synd.SyndFeedImpl;
 import com.rometools.rome.feed.synd.SyndImage;
 import com.rometools.rome.feed.synd.SyndImageImpl;
+import org.moera.node.config.Config;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
@@ -32,6 +33,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class RssController {
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -82,8 +86,8 @@ public class RssController {
     }
 
     private String buildWebmaster() {
-        String name = requestContext.getOptions().getString("webmaster.name");
-        String email = requestContext.getOptions().getString("webmaster.email");
+        String name = config.getWebmaster().getName();
+        String email = config.getWebmaster().getEmail();
         if (ObjectUtils.isEmpty(name)) {
             if (ObjectUtils.isEmpty(email)) {
                 return null;

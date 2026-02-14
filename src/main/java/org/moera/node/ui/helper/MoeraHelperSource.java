@@ -20,6 +20,7 @@ import org.moera.lib.node.types.ReactionTotalInfo;
 import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.api.naming.NamingCache;
+import org.moera.node.config.Config;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgentOs;
 import org.moera.node.model.AvatarImageUtil;
@@ -28,6 +29,9 @@ import org.springframework.util.ObjectUtils;
 
 @HelperSource
 public class MoeraHelperSource {
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -272,8 +276,8 @@ public class MoeraHelperSource {
             return "";
         }
 
-        String name = requestContext.getOptions().getString("webmaster.name");
-        String email = requestContext.getOptions().getString("webmaster.email");
+        String name = config.getWebmaster().getName();
+        String email = config.getWebmaster().getEmail();
         boolean hasName = !ObjectUtils.isEmpty(name);
         boolean hasEmail = !ObjectUtils.isEmpty(email);
         if (!hasName && !hasEmail) {
