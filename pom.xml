@@ -33,7 +33,7 @@
         <bouncycastle.bcprov-lts8on.version>2.73.9</bouncycastle.bcprov-lts8on.version>
         <bucket4j.version>8.15.0</bucket4j.version>
         <checkstyle.version>10.12.3</checkstyle.version>
-        <commons-io.version>2.18.0</commons-io.version>
+        <commons-io.version>2.21.0</commons-io.version>
         <flexmark.version>0.64.8</flexmark.version>
         <flyway.version>9.22.0</flyway.version>
         <guava.version>33.5.0-jre</guava.version>
