@@ -29,7 +29,7 @@
         <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
         <versions-maven-plugin.version>2.20.1</versions-maven-plugin.version>
 
-        <bootstrap.version>5.3.3</bootstrap.version>
+        <bootstrap.version>5.3.8</bootstrap.version>
         <bouncycastle.bcprov-lts8on.version>2.73.9</bouncycastle.bcprov-lts8on.version>
         <bucket4j.version>8.15.0</bucket4j.version>
         <checkstyle.version>10.12.3</checkstyle.version>
