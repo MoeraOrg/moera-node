@@ -16,7 +16,6 @@ public class EventSubscriber implements AccessChecker {
     private long adminScope;
     private long clientScope;
     private String clientName;
-    private boolean owner;
     private boolean subscribedToClient;
     private String[] friendGroups;
     private boolean subscribed;
@@ -83,14 +82,6 @@ public class EventSubscriber implements AccessChecker {
 
     public void setClientName(String clientName) {
         this.clientName = clientName;
-    }
-
-    public boolean isOwner() {
-        return owner;
-    }
-
-    public void setOwner(boolean owner) {
-        this.owner = owner;
     }
 
     public boolean isSubscribedToClient(Scope scope) {

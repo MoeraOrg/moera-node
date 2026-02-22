@@ -106,14 +106,14 @@ public class EventManager {
         long adminScope = 0;
         long clientScope = 0;
         String clientName = null;
-        boolean owner = false;
         String[] friendGroups = null;
         boolean subscribedToClient = false;
         try {
             Token token = authenticationManager.getToken(secrets.token, nodeId);
             if (token != null) {
                 adminScope = token.getAuthScope() != 0 ? token.getAuthScope() : Scope.ALL.getMask();
-                owner = true;
+                clientScope = adminScope;
+                clientName = universalContext.nodeName();
             } else if (secrets.carte != null) {
                 CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte, getRemoteAddress(accessor));
                 if (carteAuthInfo != null) {
@@ -121,10 +121,9 @@ public class EventManager {
                     clientScope = carteAuthInfo.getClientScope();
                     friendGroups = friendCache.getClientGroupIds(clientName);
                     subscribedToClient = subscribedCache.isSubscribed(clientName);
-                    owner = Objects.equals(clientName, universalContext.nodeName());
                     adminScope = carteAuthInfo.getAdminScope();
                     adminScope &= grantCache.get(universalContext.nodeId(), clientName);
-                    if (owner) {
+                    if (Objects.equals(clientName, universalContext.nodeName())) {
                         adminScope |= clientScope & Scope.VIEW_ALL.getMask();
                     }
                 }
@@ -141,7 +140,6 @@ public class EventManager {
         subscriber.setAdminScope(adminScope);
         subscriber.setClientScope(clientScope);
         subscriber.setClientName(clientName);
-        subscriber.setOwner(owner);
         subscriber.setSubscribedToClient(subscribedToClient);
         subscriber.setFriendGroups(friendGroups);
         subscribers.put(accessor.getSessionId(), subscriber);
@@ -154,8 +152,8 @@ public class EventManager {
             if (ip != null) {
                 address = ip.toString();
             }
-            if (address.equals("/127.0.0.1")) { // Don't understand why '/' is here
-                address = "127.0.0.1";
+            if (address.startsWith("/")) { // Don't understand why '/' is here
+                address = address.substring(1);
             }
         }
         return InetAddress.getByName(address);
