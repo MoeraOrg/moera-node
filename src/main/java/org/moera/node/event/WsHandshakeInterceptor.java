@@ -14,17 +14,23 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 public class WsHandshakeInterceptor implements HandshakeInterceptor {
 
     @Override
-    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
-                                   WebSocketHandler webSocketHandler, Map<String, Object> attributes)
-            throws UnknownHostException {
-
+    public boolean beforeHandshake(
+        ServerHttpRequest request,
+        ServerHttpResponse response,
+        WebSocketHandler webSocketHandler,
+        Map<String, Object> attributes
+    ) throws UnknownHostException {
         attributes.put("ip", UriUtil.remoteAddress(request));
         return true;
     }
 
     @Override
-    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
-                               WebSocketHandler webSocketHandler, Exception e) {
+    public void afterHandshake(
+        ServerHttpRequest request,
+        ServerHttpResponse response,
+        WebSocketHandler webSocketHandler,
+        Exception e
+    ) {
     }
 
 }

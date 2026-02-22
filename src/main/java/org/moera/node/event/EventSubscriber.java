@@ -120,7 +120,8 @@ public class EventSubscriber implements AccessChecker {
     @Override
     public boolean isPrincipal(PrincipalFilter principal, Scope scope) {
         return principal.includes(
-                isAdmin(scope), getClientName(scope), isSubscribedToClient(scope), getFriendGroups(scope));
+            isAdmin(scope), getClientName(scope), isSubscribedToClient(scope), getFriendGroups(scope)
+        );
     }
 
     public String nodeName() {
