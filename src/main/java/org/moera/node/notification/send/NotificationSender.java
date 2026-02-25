@@ -10,8 +10,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.exception.MoeraNodeApiAuthenticationException;
@@ -33,6 +31,8 @@ import org.moera.node.task.Task;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 public class NotificationSender extends Task {
 
@@ -192,7 +192,7 @@ public class NotificationSender extends Task {
         deletePending(notification);
     }
 
-    private NotificationPacket createPacket(Notification notification) throws JsonProcessingException {
+    private NotificationPacket createPacket(Notification notification) {
         NotificationPacket packet = new NotificationPacket();
         packet.setId(UUID.randomUUID().toString());
         packet.setNodeName(nodeName());
@@ -274,7 +274,7 @@ public class NotificationSender extends Task {
         if (e instanceof MoeraNodeApiAuthenticationException) {
             return true;
         }
-        if (e instanceof JsonProcessingException) {
+        if (e instanceof JacksonException) {
             return true;
         }
         if (e instanceof MoeraNodeApiOperationException oe) {

@@ -3,8 +3,6 @@ package org.moera.node.media;
 import java.io.IOException;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.task.Job;
@@ -13,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import tools.jackson.databind.ObjectMapper;
 
 public class PreparePublicDirectServingJob extends Job<PreparePublicDirectServingJob.Parameters, Object> {
 
@@ -37,12 +36,12 @@ public class PreparePublicDirectServingJob extends Job<PreparePublicDirectServin
     }
 
     @Override
-    protected void setParameters(String parameters, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setParameters(String parameters, ObjectMapper objectMapper) {
         this.parameters = objectMapper.readValue(parameters, Parameters.class);
     }
 
     @Override
-    protected void setState(String state, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setState(String state, ObjectMapper objectMapper) {
         this.state = null;
     }
 

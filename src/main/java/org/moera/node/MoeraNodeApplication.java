@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+import org.springframework.boot.http.converter.autoconfigure.ServerHttpMessageConvertersCustomizer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.task.TaskExecutor;
@@ -134,10 +134,8 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     }
 
     @Bean
-    public HttpMessageConverters customMessageConverters() {
-        return new HttpMessageConverters(
-            new SyndFeedHttpMessageConverter()
-        );
+    public ServerHttpMessageConvertersCustomizer additionalServerConvertersCustomizer() {
+        return builder -> builder.addCustomConverter(new SyndFeedHttpMessageConverter());
     }
 
     @Bean

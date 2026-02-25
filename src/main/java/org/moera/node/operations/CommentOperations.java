@@ -53,7 +53,7 @@ import org.springframework.stereotype.Component;
 public class CommentOperations {
 
     public static final int MAX_COMMENTS_PER_REQUEST = 200;
-    private static final Duration UNSIGNED_TTL = Duration.of(15, ChronoUnit.MINUTES);
+    public static final Duration UNSIGNED_TTL = Duration.of(15, ChronoUnit.MINUTES);
 
     private static final Logger log = LoggerFactory.getLogger(CommentOperations.class);
 

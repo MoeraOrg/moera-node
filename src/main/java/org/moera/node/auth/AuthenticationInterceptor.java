@@ -11,7 +11,6 @@ import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.config.Config;
@@ -34,6 +33,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 public class AuthenticationInterceptor implements HandlerInterceptor {

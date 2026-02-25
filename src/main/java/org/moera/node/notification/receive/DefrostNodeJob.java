@@ -3,8 +3,6 @@ package org.moera.node.notification.receive;
 import java.util.List;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.NotificationPacket;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.notifications.Notification;
@@ -23,6 +21,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.method.HandlerMethod;
+import tools.jackson.databind.ObjectMapper;
 
 public class DefrostNodeJob extends Job<DefrostNodeJob.Parameters, Object> {
 
@@ -55,12 +54,12 @@ public class DefrostNodeJob extends Job<DefrostNodeJob.Parameters, Object> {
     }
 
     @Override
-    protected void setParameters(String parameters, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setParameters(String parameters, ObjectMapper objectMapper) {
         this.parameters = objectMapper.readValue(parameters, Parameters.class);
     }
 
     @Override
-    protected void setState(String state, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setState(String state, ObjectMapper objectMapper) {
         this.state = null;
     }
 

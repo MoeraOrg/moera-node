@@ -2,8 +2,6 @@ package org.moera.node.model;
 
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.DraftText;
 import org.moera.lib.node.types.RemoteMedia;
@@ -18,6 +16,8 @@ import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 public class DraftTextUtil {
 
@@ -97,7 +97,7 @@ public class DraftTextUtil {
         if (draftText.getOperations() != null) {
             try {
                 draft.setOperations(new ObjectMapper().writeValueAsString(draftText.getOperations()));
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 log.error("Error serializing DraftText.operations", e);
             }
         }
@@ -105,7 +105,7 @@ public class DraftTextUtil {
         if (draftText.getCommentOperations() != null) {
             try {
                 draft.setChildOperations(new ObjectMapper().writeValueAsString(draftText.getCommentOperations()));
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 log.error("Error serializing DraftText.commentOperations", e);
             }
         }

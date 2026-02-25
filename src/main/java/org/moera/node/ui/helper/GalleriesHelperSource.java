@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.MediaAttachment;
@@ -23,6 +21,7 @@ import org.moera.node.model.MediaFilePreviewInfoUtil;
 import org.moera.node.util.MediaUtil;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
+import tools.jackson.databind.ObjectMapper;
 
 @HelperSource
 public class GalleriesHelperSource {
@@ -40,7 +39,7 @@ public class GalleriesHelperSource {
         String postingId,
         String commentId,
         String mediaId
-    ) throws JsonProcessingException {
+    ) {
         Collection<MediaInfo> entries = new ArrayList<>();
         entries.add(posting);
         if (comments != null) {
@@ -52,7 +51,7 @@ public class GalleriesHelperSource {
     public CharSequence feedGalleries(
         Collection<StoryInfo> stories,
         String canonicalUrl
-    ) throws JsonProcessingException {
+    ) {
         return galleries(
             stories.stream().map(StoryInfo::getPosting).collect(Collectors.toList()), canonicalUrl, null, null, null
         );
@@ -64,7 +63,7 @@ public class GalleriesHelperSource {
         String galleryPostingId,
         String galleryCommentId,
         String galleryMediaId
-    ) throws JsonProcessingException {
+    ) {
         Map<String, Map<String, String>[]> entryMap = new HashMap<>();
         for (MediaInfo entry : entries) {
             var props = entry.getMedia()

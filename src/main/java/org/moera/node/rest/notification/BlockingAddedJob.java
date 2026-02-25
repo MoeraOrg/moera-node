@@ -4,8 +4,6 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.node.data.BlockedByUser;
@@ -19,6 +17,7 @@ import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
 import org.moera.node.util.Util;
+import tools.jackson.databind.ObjectMapper;
 
 public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingAddedJob.State> {
 
@@ -183,12 +182,12 @@ public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingA
     }
 
     @Override
-    protected void setParameters(String parameters, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setParameters(String parameters, ObjectMapper objectMapper) {
         this.parameters = objectMapper.readValue(parameters, Parameters.class);
     }
 
     @Override
-    protected void setState(String state, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setState(String state, ObjectMapper objectMapper) {
         this.state = objectMapper.readValue(state, State.class);
     }
 

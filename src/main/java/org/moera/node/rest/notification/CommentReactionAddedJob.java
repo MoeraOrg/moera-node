@@ -2,14 +2,13 @@ package org.moera.node.rest.notification;
 
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.node.data.Contact;
 import org.moera.node.liberin.model.RemoteCommentReactionAddedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
+import tools.jackson.databind.ObjectMapper;
 
 public class CommentReactionAddedJob extends Job<CommentReactionAddedJob.Parameters, Object> {
 
@@ -200,12 +199,12 @@ public class CommentReactionAddedJob extends Job<CommentReactionAddedJob.Paramet
     }
 
     @Override
-    protected void setParameters(String parameters, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setParameters(String parameters, ObjectMapper objectMapper) {
         this.parameters = objectMapper.readValue(parameters, Parameters.class);
     }
 
     @Override
-    protected void setState(String state, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setState(String state, ObjectMapper objectMapper) {
         this.state = null;
     }
 

@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Objects;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
@@ -30,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class OcrSpace {

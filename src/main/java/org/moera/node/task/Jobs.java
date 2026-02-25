@@ -13,8 +13,6 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.PendingJob;
 import org.moera.node.data.PendingJobRepository;
@@ -29,6 +27,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class Jobs {
@@ -172,7 +172,7 @@ public class Jobs {
             if (pendingJob.getState() != null) {
                 job.setState(pendingJob.getState(), objectMapper);
             }
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Cannot load a job", e);
         }
 

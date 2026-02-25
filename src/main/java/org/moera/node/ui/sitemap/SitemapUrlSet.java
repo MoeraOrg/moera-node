@@ -4,12 +4,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import org.moera.node.data.SitemapRecord;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
-@JacksonXmlRootElement(localName = "urlset", namespace = org.moera.node.ui.sitemap.Sitemap.NAMESPACE)
+@JsonRootName(value = "urlset", namespace = org.moera.node.ui.sitemap.Sitemap.NAMESPACE)
 public class SitemapUrlSet {
 
     @JacksonXmlElementWrapper(useWrapping = false)

@@ -3,8 +3,6 @@ package org.moera.node.model;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.CommentOperations;
 import org.moera.lib.node.types.DraftInfo;
@@ -15,6 +13,8 @@ import org.moera.node.data.EntryAttachment;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 public class DraftInfoUtil {
 
@@ -71,7 +71,7 @@ public class DraftInfoUtil {
 
         try {
             draftInfo.setOperations(new ObjectMapper().readValue(draft.getOperations(), PostingOperations.class));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Error deserializing Draft.operations", e);
         }
 
@@ -79,7 +79,7 @@ public class DraftInfoUtil {
             draftInfo.setCommentOperations(
                 new ObjectMapper().readValue(draft.getChildOperations(), CommentOperations.class)
             );
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Error deserializing Draft.childOperations", e);
         }
 

@@ -1,6 +1,5 @@
 package org.moera.node.notification.send;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -14,8 +13,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.RejectedExecutionException;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.notifications.Notification;
@@ -50,6 +47,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class NotificationSenderPool {
@@ -129,7 +128,7 @@ public class NotificationSenderPool {
             notification = objectMapper.readValue(
                 pending.getNotification(), pending.getNotificationType().getStructure()
             );
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             log.error("Error deserializing pending notification {}: {}", pending.getId(), e.getMessage());
             return;
         }
@@ -226,7 +225,7 @@ public class NotificationSenderPool {
                 sender.put(notification);
             } catch (InterruptedException e) {
                 continue;
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 log.error("Error serializing notification", e);
             }
             break;
@@ -284,7 +283,7 @@ public class NotificationSenderPool {
         }
     }
 
-    private void storePending(NotificationSender sender, Notification notification) throws JsonProcessingException {
+    private void storePending(NotificationSender sender, Notification notification) {
         if (notification.getPendingNotificationId() != null) {
             return;
         }

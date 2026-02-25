@@ -5,7 +5,7 @@ import java.util.Map;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver;
+import org.springframework.boot.webmvc.autoconfigure.error.ErrorViewResolver;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;

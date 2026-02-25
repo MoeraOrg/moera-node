@@ -3,8 +3,6 @@ package org.moera.node.rest.notification;
 import java.util.List;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.SheriffMark;
 import org.moera.lib.node.types.SubscriptionReason;
@@ -14,6 +12,7 @@ import org.moera.node.liberin.model.ForeignCommentAddedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
+import tools.jackson.databind.ObjectMapper;
 
 public class RemotePostingCommentAddedJob
         extends Job<RemotePostingCommentAddedJob.Parameters, RemotePostingCommentAddedJob.State> {
@@ -259,12 +258,12 @@ public class RemotePostingCommentAddedJob
     }
 
     @Override
-    protected void setParameters(String parameters, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setParameters(String parameters, ObjectMapper objectMapper) {
         this.parameters = objectMapper.readValue(parameters, Parameters.class);
     }
 
     @Override
-    protected void setState(String state, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setState(String state, ObjectMapper objectMapper) {
         this.state = objectMapper.readValue(state, State.class);
     }
 

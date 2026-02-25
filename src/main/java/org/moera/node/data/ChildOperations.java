@@ -1,12 +1,10 @@
 package org.moera.node.data;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.principal.Principal;
+import tools.jackson.databind.ObjectMapper;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ChildOperations implements Cloneable {
@@ -24,11 +22,11 @@ public class ChildOperations implements Cloneable {
     private Principal addNegativeReaction;
     private Principal overrideReaction;
 
-    public static ChildOperations decode(String encoded) throws IOException {
+    public static ChildOperations decode(String encoded) {
         return encoded != null ? new ObjectMapper().readValue(encoded, ChildOperations.class) : null;
     }
 
-    public static String encode(ChildOperations decoded) throws JsonProcessingException {
+    public static String encode(ChildOperations decoded) {
         return decoded != null ? new ObjectMapper().writeValueAsString(decoded) : null;
     }
 
@@ -160,20 +158,12 @@ public class ChildOperations implements Cloneable {
 
     @Override
     public ChildOperations clone() throws CloneNotSupportedException {
-        try {
-            return decode(encode(this));
-        } catch (IOException e) {
-            throw new CloneNotSupportedException("Cannot encode or decode object");
-        }
+        return decode(encode(this));
     }
 
     @Override
     public String toString() {
-        try {
-            return encode(this);
-        } catch (JsonProcessingException e) {
-            return null;
-        }
+        return encode(this);
     }
 
 }

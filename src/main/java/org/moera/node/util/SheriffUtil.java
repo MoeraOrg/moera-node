@@ -9,8 +9,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.SheriffMark;
@@ -19,6 +17,8 @@ import org.moera.node.data.SheriffMarkUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 public class SheriffUtil {
 
@@ -46,7 +46,7 @@ public class SheriffUtil {
         if (!ObjectUtils.isEmpty(sheriffMarks)) {
             try {
                 return Optional.of(Arrays.asList(new ObjectMapper().readValue(sheriffMarks, SheriffMark[].class)));
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 log.error("Error deserializing sheriff marks", e);
             }
         }
@@ -57,7 +57,7 @@ public class SheriffUtil {
         if (!ObjectUtils.isEmpty(sheriffMarks)) {
             try {
                 return Optional.of(new ObjectMapper().writeValueAsString(sheriffMarks));
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 log.error("Error serializing sheriff marks", e);
             }
         }

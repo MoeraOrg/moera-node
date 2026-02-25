@@ -13,8 +13,8 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.4</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <version>4.0.3</version>
+        <relativePath/> <!-- lookup parent from the repository -->
     </parent>
 
     <properties>
@@ -40,13 +40,8 @@
         <hamcrest.version>3.0</hamcrest.version>
         <handlebars.version>4.5.0</handlebars.version>
         <handlebars-springmvc.version>4.4.0</handlebars-springmvc.version>
-        <hypersistence-utils-hibernate-63.version>3.12.0</hypersistence-utils-hibernate-63.version>
+        <hypersistence-utils-hibernate-71.version>3.15.2</hypersistence-utils-hibernate-71.version>
         <icu4j.version>78.1</icu4j.version>
-        <jackson-annotations.version>2.20</jackson-annotations.version>
-        <jackson-core.version>2.19.1</jackson-core.version>
-        <jackson-databind.version>2.20.1</jackson-databind.version>
-        <jackson-dataformat-xml.version>2.20.0</jackson-dataformat-xml.version>
-        <jackson-dataformat-yaml.version>2.18.0</jackson-dataformat-yaml.version>
         <jakarta.inject.version>2.0.1.MR</jakarta.inject.version>
         <jakarta.validation.version>3.1.1</jakarta.validation.version>
         <janino.version>3.1.12</janino.version>
@@ -56,7 +51,7 @@
         <languagetool.uk.version>6.6</languagetool.uk.version>
         <lingua.version>1.2.2</lingua.version>
         <metadata-extractor.version>2.19.0</metadata-extractor.version>
-        <moeralib.version>0.18.0</moeralib.version>
+        <moeralib.version>0.18.1-SNAPSHOT</moeralib.version>
         <owasp-java-html-sanitizer.version>20260101.1</owasp-java-html-sanitizer.version>
         <postgresql.version>42.7.3</postgresql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -72,22 +67,7 @@
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.inject</groupId>
-            <artifactId>jakarta.inject-api</artifactId>
-            <version>${jakarta.inject.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-            <version>${jakarta.validation.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-ui</artifactId>
-            <version>${springdoc-openapi-ui.version}</version>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -104,16 +84,54 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tools.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tools.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <version>${jakarta.inject.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <version>${jakarta.validation.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
+            <version>${springdoc-openapi-ui.version}</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -150,35 +168,10 @@
             <classifier>jakarta</classifier>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>${jackson-annotations.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>${jackson-core.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson-databind.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.webjars.npm</groupId>
             <artifactId>bootstrap</artifactId>
             <version>${bootstrap.version}</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>${jackson-dataformat-yaml.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-xml</artifactId>
-            <version>${jackson-dataformat-xml.version}</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
@@ -253,8 +246,8 @@
         </dependency>
         <dependency>
             <groupId>io.hypersistence</groupId>
-            <artifactId>hypersistence-utils-hibernate-63</artifactId>
-            <version>${hypersistence-utils-hibernate-63.version}</version>
+            <artifactId>hypersistence-utils-hibernate-71</artifactId>
+            <version>${hypersistence-utils-hibernate-71.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.janino</groupId>
@@ -355,13 +348,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <executable>true</executable>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

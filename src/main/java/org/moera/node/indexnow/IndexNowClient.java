@@ -9,8 +9,6 @@ import java.util.Set;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -32,6 +30,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 public class IndexNowClient {
@@ -80,7 +80,7 @@ public class IndexNowClient {
                         throw new IndexNowException("Invalid format of IndexNow request", host);
                     case FORBIDDEN:
                         throw new IndexNowException("Invalid IndexNow key", host);
-                    case UNPROCESSABLE_ENTITY:
+                    case UNPROCESSABLE_CONTENT:
                         log.error("Unprocessable IndexNow entity: {}", response.body());
                         break;
                     case TOO_MANY_REQUESTS:
@@ -93,7 +93,7 @@ public class IndexNowClient {
                         throw new IndexNowException("Unexpected response from IndexNow endpoint: " + status, host);
                 }
             }
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IndexNowException("Cannot serialize IndexNowRequest", host, e);
         } catch (IOException e) {
             throw new IndexNowException("Error connecting to IndexNow endpoint", host, e);

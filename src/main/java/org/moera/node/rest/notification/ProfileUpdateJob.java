@@ -2,8 +2,6 @@ package org.moera.node.rest.notification;
 
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.data.MediaFile;
 import org.moera.node.liberin.model.RemoteNodeAvatarChangedLiberin;
@@ -12,6 +10,7 @@ import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
+import tools.jackson.databind.ObjectMapper;
 
 public class ProfileUpdateJob extends Job<ProfileUpdateJob.Parameters, ProfileUpdateJob.State> {
 
@@ -74,12 +73,12 @@ public class ProfileUpdateJob extends Job<ProfileUpdateJob.Parameters, ProfileUp
     }
 
     @Override
-    protected void setParameters(String parameters, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setParameters(String parameters, ObjectMapper objectMapper) {
         this.parameters = objectMapper.readValue(parameters, Parameters.class);
     }
 
     @Override
-    protected void setState(String state, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setState(String state, ObjectMapper objectMapper) {
         this.state = objectMapper.readValue(state, State.class);
     }
 

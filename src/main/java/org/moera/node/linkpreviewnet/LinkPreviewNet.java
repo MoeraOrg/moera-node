@@ -8,13 +8,14 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.config.Config;
 import org.moera.node.util.Util;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class LinkPreviewNet {
@@ -61,7 +62,7 @@ public class LinkPreviewNet {
         if (response.statusCode() == HttpStatus.OK.value()) {
             try {
                 return objectMapper.readValue(response.body(), LinkPreviewNetInfo.class);
-            } catch (IOException e) {
+            } catch (JacksonException e) {
                 throw new LinkPreviewNetException("Error parsing API response", e);
             }
         } else {
@@ -71,7 +72,7 @@ public class LinkPreviewNet {
                 throw new LinkPreviewNetException(
                     "Error returned (%d): %s".formatted(errorCode, info.getDescription())
                 );
-            } catch (IOException e) {
+            } catch (JacksonException e) {
                 throw new LinkPreviewNetException("Error status returned: " + response.statusCode());
             }
         }

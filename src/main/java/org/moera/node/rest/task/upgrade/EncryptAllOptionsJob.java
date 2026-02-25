@@ -4,8 +4,6 @@ import java.util.Set;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.SettingDescriptor;
 import org.moera.node.data.DomainUpgrade;
 import org.moera.node.data.DomainUpgradeRepository;
@@ -16,6 +14,7 @@ import org.moera.node.option.OptionsMetadata;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.ObjectMapper;
 
 public class EncryptAllOptionsJob extends Job<EncryptAllOptionsJob.Parameters, Object> {
 
@@ -41,12 +40,12 @@ public class EncryptAllOptionsJob extends Job<EncryptAllOptionsJob.Parameters, O
     }
 
     @Override
-    protected void setParameters(String parameters, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setParameters(String parameters, ObjectMapper objectMapper) {
         this.parameters = objectMapper.readValue(parameters, Parameters.class);
     }
 
     @Override
-    protected void setState(String state, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setState(String state, ObjectMapper objectMapper) {
         this.state = null;
     }
 

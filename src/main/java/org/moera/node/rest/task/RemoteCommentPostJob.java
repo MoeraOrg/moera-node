@@ -8,8 +8,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.AvatarImage;
@@ -35,6 +33,7 @@ import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.CommentTextUtil;
+import org.moera.node.operations.CommentOperations;
 import org.moera.node.operations.FavorOperations;
 import org.moera.node.operations.FavorType;
 import org.moera.node.task.Job;
@@ -43,6 +42,7 @@ import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
+import tools.jackson.databind.ObjectMapper;
 
 public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, RemoteCommentPostJob.State> {
 
@@ -217,15 +217,16 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
 
     public RemoteCommentPostJob() {
         state = new State();
+        exponentialRetry("PT10S", CommentOperations.UNSIGNED_TTL.toString());
     }
 
     @Override
-    protected void setParameters(String parameters, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setParameters(String parameters, ObjectMapper objectMapper) {
         this.parameters = objectMapper.readValue(parameters, RemoteCommentPostJob.Parameters.class);
     }
 
     @Override
-    protected void setState(String state, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setState(String state, ObjectMapper objectMapper) {
         this.state = objectMapper.readValue(state, RemoteCommentPostJob.State.class);
     }
 

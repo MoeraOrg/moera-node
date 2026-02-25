@@ -2,9 +2,9 @@ package org.moera.node.ui.sitemap;
 
 import java.time.Instant;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.moera.node.data.Sitemap;
 import org.moera.node.util.Util;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 public class SitemapIndexItem {
 

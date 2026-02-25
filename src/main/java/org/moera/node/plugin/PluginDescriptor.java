@@ -8,7 +8,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.persistence.EntityManager;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.EvictingQueue;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.sse.SsePacket;
@@ -17,6 +16,7 @@ import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import tools.jackson.databind.ObjectMapper;
 
 public class PluginDescriptor {
 

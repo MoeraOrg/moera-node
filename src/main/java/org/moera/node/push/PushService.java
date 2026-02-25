@@ -8,8 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.PushContent;
 import org.moera.node.data.PushClient;
 import org.moera.node.data.PushClientRepository;
@@ -22,6 +20,8 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class PushService {
@@ -64,7 +64,7 @@ public class PushService {
         String content;
         try {
             content = objectMapper.writeValueAsString(pushContent);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Error encoding a story for Push notification", e);
             return;
         }

@@ -9,8 +9,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
@@ -28,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 public class EntryOperations implements MediaAttachmentsProvider {
@@ -100,7 +100,7 @@ public class EntryOperations implements MediaAttachmentsProvider {
                     return cache;
                 }
             }
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Error parsing media attachments cache", e);
             // fetch from the database
         }

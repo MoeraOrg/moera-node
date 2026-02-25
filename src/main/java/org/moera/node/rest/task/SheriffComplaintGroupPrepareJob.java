@@ -6,8 +6,6 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
@@ -28,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import tools.jackson.databind.ObjectMapper;
 
 public class SheriffComplaintGroupPrepareJob
         extends Job<SheriffComplaintGroupPrepareJob.Parameters, SheriffComplaintGroupPrepareJob.State> {
@@ -151,12 +150,12 @@ public class SheriffComplaintGroupPrepareJob
     }
 
     @Override
-    protected void setParameters(String parameters, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setParameters(String parameters, ObjectMapper objectMapper) {
         this.parameters = objectMapper.readValue(parameters, Parameters.class);
     }
 
     @Override
-    protected void setState(String state, ObjectMapper objectMapper) throws JsonProcessingException {
+    protected void setState(String state, ObjectMapper objectMapper) {
         this.state = objectMapper.readValue(state, State.class);
     }
 

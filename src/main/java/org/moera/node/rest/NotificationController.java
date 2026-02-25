@@ -1,6 +1,5 @@
 package org.moera.node.rest;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -9,8 +8,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.naming.NodeName;
 import org.moera.lib.naming.types.RegisteredNameInfo;
@@ -41,6 +38,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.method.HandlerMethod;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @ApiController
 @RequestMapping("/moera/api/notifications")
@@ -101,7 +100,7 @@ public class NotificationController {
         Notification notification;
         try {
             notification = objectMapper.readValue(packet.getNotification(), type.getStructure());
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new ValidationFailure("notification.notification.invalid");
         }
 
@@ -143,7 +142,7 @@ public class NotificationController {
         return nameInfo != null ? nameInfo.getSigningKey() : null;
     }
 
-    private void freeze(NotificationPacket packet) throws JsonProcessingException {
+    private void freeze(NotificationPacket packet) {
         FrozenNotification frozenNotification = new FrozenNotification();
         frozenNotification.setId(UUID.randomUUID());
         frozenNotification.setNodeId(requestContext.nodeId());

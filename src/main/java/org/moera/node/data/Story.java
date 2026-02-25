@@ -16,8 +16,6 @@ import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.Principal;
@@ -25,6 +23,8 @@ import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Entity
 @Table(name = "stories")
@@ -249,7 +249,7 @@ public class Story {
     public StorySummaryData getSummaryData() {
         try {
             return new ObjectMapper().readValue(getSummary(), StorySummaryData.class);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Cannot decode story summary data: {}", getSummary());
             return null;
         }
@@ -259,7 +259,7 @@ public class Story {
     public void setSummaryData(StorySummaryData summaryData) {
         try {
             setSummary(new ObjectMapper().writeValueAsString(summaryData));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Cannot encode story summary data: {}", summaryData);
         }
     }
