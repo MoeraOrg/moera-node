@@ -27,16 +27,16 @@ public class SyndFeedHttpMessageConverter extends AbstractHttpMessageConverter<S
     }
 
     @Override
-    protected SyndFeed readInternal(Class<? extends SyndFeed> clazz, HttpInputMessage inputMessage)
-            throws HttpMessageNotReadableException {
-
-        throw new HttpMessageNotReadableException("Reading SyndFeed is not implemented");
+    protected SyndFeed readInternal(
+        Class<? extends SyndFeed> clazz, HttpInputMessage inputMessage
+    ) throws HttpMessageNotReadableException {
+        throw new HttpMessageNotReadableException("Reading SyndFeed is not implemented", inputMessage);
     }
 
     @Override
-    protected void writeInternal(SyndFeed syndFeed, HttpOutputMessage outputMessage)
-            throws IOException, HttpMessageNotWritableException {
-
+    protected void writeInternal(
+        SyndFeed syndFeed, HttpOutputMessage outputMessage
+    ) throws IOException, HttpMessageNotWritableException {
         SyndFeedOutput feedOutput = new SyndFeedOutput();
         try {
             Writer writer = new OutputStreamWriter(outputMessage.getBody(), StandardCharsets.UTF_8);
@@ -44,7 +44,6 @@ public class SyndFeedHttpMessageConverter extends AbstractHttpMessageConverter<S
         } catch (FeedException ex) {
             throw new HttpMessageNotWritableException("Could not write SyndFeed: " + ex.getMessage(), ex);
         }
-
     }
 
 }
