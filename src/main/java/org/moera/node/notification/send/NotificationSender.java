@@ -96,6 +96,10 @@ public class NotificationSender extends Task {
         this.pausedTill = pausedTill;
     }
 
+    public boolean isPaused() {
+        return pausedTill != null;
+    }
+
     public void put(@NotNull Notification notification) throws InterruptedException {
         queue.put(notification);
     }

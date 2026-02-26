@@ -217,7 +217,7 @@ public class EventManager {
 
     @PostConstruct
     public void init() {
-        Thread deliveryThread = new Thread(() -> {
+        Thread.ofVirtual().name("eventDelivery").start(() -> {
             while (true) {
                 try {
                     synchronized (deliverySignal) {
@@ -229,9 +229,6 @@ public class EventManager {
                 deliver();
             }
         });
-        deliveryThread.setName("eventDelivery");
-        deliveryThread.setDaemon(true);
-        deliveryThread.start();
     }
 
     private void purge() {

@@ -44,8 +44,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -76,7 +76,7 @@ public class NotificationSenderPool {
 
     @Inject
     @Qualifier("notificationSenderTaskExecutor")
-    private ThreadPoolTaskExecutor taskExecutor;
+    private TaskExecutor taskExecutor;
 
     @Inject
     private TaskAutowire taskAutowire;
@@ -173,9 +173,9 @@ public class NotificationSenderPool {
                     subscriber.getNodeId(), subscriber.getRemoteNodeName(), direction.getPrincipalFilter()
                 );
                 Notification nt = notification.clone();
-                if (nt instanceof SubscriberNotification) {
-                    ((SubscriberNotification) nt).setSubscriberId(subscriber.getId().toString());
-                    ((SubscriberNotification) nt).setSubscriptionCreatedAt(subscriber.getCreatedAt());
+                if (nt instanceof SubscriberNotification sn) {
+                    sn.setSubscriberId(subscriber.getId().toString());
+                    sn.setSubscriptionCreatedAt(subscriber.getCreatedAt());
                 }
                 sendSingle(dir, nt);
             }
@@ -263,8 +263,13 @@ public class NotificationSenderPool {
 
     private boolean isFrozenNode(String nodeName) {
         var connectivityStatus = remoteConnectivityOperations.getStatus(nodeName);
-        float load = (float) taskExecutor.getActiveCount() / config.getPools().getNotificationSender();
-        return connectivityStatus == ConnectivityStatus.FROZEN && load > FROZEN_DELIVERY_LOAD_THRESHOLD;
+        if (connectivityStatus != ConnectivityStatus.FROZEN) {
+            return false;
+        }
+
+        float activeCount = senders.values().stream().filter(s -> !s.isStopped() && s.isPaused()).count();
+        float load = activeCount / config.getPools().getNotificationSender();
+        return load > FROZEN_DELIVERY_LOAD_THRESHOLD;
     }
 
     void unsubscribe(UUID subscriberId) {
