@@ -44,7 +44,6 @@ public class RequestContextImpl implements RequestContext {
     private String redirectorUrl;
     private String clientId;
     private String clientName;
-    private InetAddress localAddr;
     private InetAddress remoteAddr;
     private UserAgent userAgent = UserAgent.UNKNOWN;
     private UserAgentOs userAgentOs = UserAgentOs.UNKNOWN;
@@ -241,16 +240,6 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public boolean isClient(String name, Scope scope) {
         return Objects.equals(getClientName(scope), name);
-    }
-
-    @Override
-    public InetAddress getLocalAddr() {
-        return localAddr;
-    }
-
-    @Override
-    public void setLocalAddr(InetAddress localAddr) {
-        this.localAddr = localAddr;
     }
 
     @Override

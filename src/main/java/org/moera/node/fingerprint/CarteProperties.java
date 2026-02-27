@@ -2,6 +2,7 @@ package org.moera.node.fingerprint;
 
 import java.net.InetAddress;
 import java.sql.Timestamp;
+import java.util.List;
 
 import org.moera.lib.crypto.Fingerprint;
 
@@ -21,8 +22,13 @@ public class CarteProperties {
         return (String) fingerprint.get("owner_name");
     }
 
-    public InetAddress getAddress() {
-        return (InetAddress) fingerprint.get("address");
+    public List<InetAddress> getAddresses() {
+        var addresses = (List<InetAddress>) fingerprint.get("address");
+        if (addresses != null) {
+            return addresses;
+        }
+        var address = (InetAddress) fingerprint.get("address");
+        return address != null ? List.of(address) : null;
     }
 
     public Timestamp getBeginning() {

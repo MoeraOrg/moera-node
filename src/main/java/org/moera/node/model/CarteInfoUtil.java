@@ -3,6 +3,7 @@ package org.moera.node.model;
 import java.net.InetAddress;
 import java.security.PrivateKey;
 import java.time.Instant;
+import java.util.List;
 
 import org.moera.lib.node.carte.Carte;
 import org.moera.lib.node.types.CarteInfo;
@@ -12,7 +13,7 @@ public class CarteInfoUtil {
 
     public static CarteInfo generate(
         String ownerName,
-        InetAddress address,
+        List<InetAddress> addresses,
         Instant beginning,
         PrivateKey signingKey,
         String nodeName,
@@ -21,7 +22,7 @@ public class CarteInfoUtil {
     ) {
         CarteInfo carteInfo = new CarteInfo();
         carteInfo.setCarte(
-            Carte.generate(ownerName, address, beginning, signingKey, nodeName, clientScope, adminScope)
+            Carte.generate(ownerName, addresses, beginning, signingKey, nodeName, clientScope, adminScope)
         );
         carteInfo.setBeginning(beginning.getEpochSecond());
         carteInfo.setDeadline(Carte.getDeadline(beginning).getEpochSecond());

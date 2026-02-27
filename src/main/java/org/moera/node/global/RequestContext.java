@@ -92,10 +92,6 @@ public interface RequestContext extends AccessChecker {
 
     boolean isClient(String name, Scope scope);
 
-    InetAddress getLocalAddr();
-
-    void setLocalAddr(InetAddress localAddr);
-
     InetAddress getRemoteAddr();
 
     void setRemoteAddr(InetAddress remoteAddr);

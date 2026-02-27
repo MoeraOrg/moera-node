@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
@@ -153,8 +154,11 @@ public class AuthenticationManager {
             log.info("Carte: not a carte fingerprint");
             throw new InvalidCarteException("carte.invalid");
         }
-        if (cp.getAddress() != null && clientAddress != null && !cp.getAddress().equals(clientAddress)) {
-            log.info("Carte: IP {} differs from client IP {}", cp.getAddress(), clientAddress);
+        if (cp.getAddresses() != null && clientAddress != null && !cp.getAddresses().contains(clientAddress)) {
+            log.info("Carte: IPs [{}] do not include client IP {}",
+                cp.getAddresses().stream().map(InetAddress::getHostAddress).collect(Collectors.joining(", ")),
+                clientAddress
+            );
             throw new InvalidCarteException("carte.invalid");
         }
         if (Instant.now().isBefore(cp.getBeginning().toInstant().minusSeconds(120))) {

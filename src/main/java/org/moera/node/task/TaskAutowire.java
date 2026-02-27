@@ -3,6 +3,9 @@ package org.moera.node.task;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
@@ -15,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class TaskAutowire {
@@ -39,49 +43,46 @@ public class TaskAutowire {
     public void autowire(Task task) {
         autowireCapableBeanFactory.autowireBean(task);
         task.setNodeId(universalContext.nodeId());
-        task.setLocalAddr(
-            universalContext.isBackground()
-                ? getLocalAddr(domains.getDomainDnsName(universalContext.nodeId()))
-                : getLocalAddr()
-        );
+        task.setLocalAddrs(getLocalAddrs(domains.getDomainDnsName(universalContext.nodeId())));
     }
 
     public void autowireWithoutRequest(Task task, UUID nodeId) {
         autowireCapableBeanFactory.autowireBean(task);
         task.setNodeId(nodeId);
-        task.setLocalAddr(getLocalAddr(domains.getDomainDnsName(nodeId)));
+        task.setLocalAddrs(getLocalAddrs(domains.getDomainDnsName(nodeId)));
     }
 
     public void autowireWithoutRequestAndDomain(Task task) {
         autowireCapableBeanFactory.autowireBean(task);
     }
 
-    private InetAddress getLocalAddr() {
-        if (config.getAddress() != null) {
-            try {
-                return InetAddress.getByName(config.getAddress());
-            } catch (UnknownHostException e) {
-                log.error("Configured IP address {} is invalid", LogUtil.format(config.getAddress()));
-            }
+    private List<InetAddress> getConfiguredAddresses() {
+        if (config.getAddresses() == null) {
+            return null;
         }
 
-        return requestContext.getLocalAddr();
+        List<InetAddress> addresses = new ArrayList<>();
+        for (String address : config.getAddresses()) {
+            try {
+                addresses.addAll(Arrays.asList(InetAddress.getAllByName(address)));
+            } catch (UnknownHostException e) {
+                log.error("Configured IP address {} is invalid", LogUtil.format(address));
+            }
+        }
+        return addresses;
     }
 
-    private InetAddress getLocalAddr(String domainName) {
-        if (config.getAddress() != null) {
-            try {
-                return InetAddress.getByName(config.getAddress());
-            } catch (UnknownHostException e) {
-                log.error("Configured IP address {} is invalid", LogUtil.format(config.getAddress()));
-            }
+    private List<InetAddress> getLocalAddrs(String domainName) {
+        List<InetAddress> configuredAddresses = getConfiguredAddresses();
+        if (!ObjectUtils.isEmpty(configuredAddresses)) {
+            return configuredAddresses;
         }
 
         if (domainName != null && !domainName.equals(Domains.DEFAULT_DOMAIN)) {
             try {
                 InetAddress[] ips = InetAddress.getAllByName(domainName);
                 if (ips != null && ips.length > 0) {
-                    return ips[0];
+                    return List.of(ips);
                 }
             } catch (UnknownHostException e) {
                 log.error("Could not resolve our domain {}", LogUtil.format(domainName));
@@ -95,7 +96,7 @@ public class TaskAutowire {
             local = "127.0.0.1";
         }
         try {
-            return InetAddress.getByName(local);
+            return List.of(InetAddress.getAllByName(local));
         } catch (UnknownHostException e) {
             return null;
         }

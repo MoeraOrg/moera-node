@@ -2,7 +2,6 @@ package org.moera.node.auth;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Locale;
 import java.util.Objects;
@@ -133,7 +132,6 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     }
 
     private void processAuthParameters(HttpServletRequest request) throws InvalidTokenException, UnknownHostException {
-        requestContext.setLocalAddr(InetAddress.getByName(request.getLocalAddr()));
         requestContext.setRemoteAddr(UriUtil.remoteAddress(request));
         AuthSecrets secrets = extractSecrets(request);
         if (Objects.equals(config.getRootSecret(), secrets.rootSecret)) {

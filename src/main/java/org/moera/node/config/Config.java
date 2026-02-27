@@ -11,7 +11,7 @@ public class Config {
     private String version;
     private String rootSecret;
     private String encryptionKey;
-    private String address;
+    private String[] addresses;
     private PoolsConfig pools = new PoolsConfig();
     private MultiHost multi = MultiHost.NONE;
     private String domain;
@@ -56,12 +56,22 @@ public class Config {
         this.encryptionKey = encryptionKey;
     }
 
+    @Deprecated
     public String getAddress() {
-        return address;
+        return !ObjectUtils.isEmpty(addresses) ? addresses[0] : null;
     }
 
+    @Deprecated
     public void setAddress(String address) {
-        this.address = address;
+        this.addresses = new String[]{address};
+    }
+
+    public String[] getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(String[] addresses) {
+        this.addresses = addresses;
     }
 
     public PoolsConfig getPools() {

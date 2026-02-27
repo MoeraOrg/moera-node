@@ -17,7 +17,6 @@ import org.moera.lib.node.types.CarteSet;
 import org.moera.lib.node.types.CarteVerificationInfo;
 import org.moera.lib.node.types.ClientCarte;
 import org.moera.lib.node.types.Scope;
-import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationManager;
 import org.moera.node.auth.CarteAuthInfo;
@@ -33,11 +32,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/cartes")
@@ -58,39 +55,6 @@ public class CarteController {
 
     @Inject
     private MessageSource messageSource;
-
-    // FIXME GET is for backward compatibility only
-    @GetMapping
-    @Admin(Scope.REMOTE_IDENTIFY)
-    @Entitled
-    @Transactional
-    @Deprecated
-    public CarteSet get(@RequestParam(required = false) Integer limit, HttpServletRequest request) {
-        log.info("GET /cartes (limit = {})", LogUtil.format(limit));
-
-        limit = limit != null ? limit : DEFAULT_SET_SIZE;
-        limit = (limit > 0 && limit <= MAX_SET_SIZE) ? limit : MAX_SET_SIZE;
-
-        String ownerName = requestContext.nodeName();
-        PrivateKey signingKey = requestContext.getOptions().getPrivateKey("profile.signing-key");
-
-        try {
-            InetAddress remoteAddress = UriUtil.remoteAddress(request);
-
-            CarteSet carteSet = new CarteSet();
-            carteSet.setCartesIp(remoteAddress.getHostAddress());
-            List<CarteInfo> cartes =
-                generateCarteList(ownerName, signingKey, remoteAddress, Scope.ALL.getMask(), 0, limit);
-            cartes.addAll(
-                generateCarteList(ownerName, signingKey, remoteAddress, Scope.VIEW_MEDIA.getMask(), 0, limit)
-            );
-            carteSet.setCartes(cartes);
-            carteSet.setCreatedAt(Instant.now().getEpochSecond());
-            return carteSet;
-        } catch (UnknownHostException e) {
-            throw new OperationFailure("carte.client-address-unknown");
-        }
-    }
 
     @PostMapping
     @Admin(Scope.REMOTE_IDENTIFY)
@@ -115,7 +79,9 @@ public class CarteController {
 
             CarteSet carteSet = new CarteSet();
             carteSet.setCartesIp(remoteAddress.getHostAddress());
-            carteSet.setCartes(generateCarteList(ownerName, signingKey, remoteAddress, scopeMask, adminMask, limit));
+            carteSet.setCartes(
+                generateCarteList(ownerName, signingKey, List.of(remoteAddress), scopeMask, adminMask, limit)
+            );
             carteSet.setCreatedAt(Instant.now().getEpochSecond());
             return carteSet;
         } catch (UnknownHostException e) {
@@ -124,13 +90,14 @@ public class CarteController {
     }
 
     private List<CarteInfo> generateCarteList(
-        String ownerName, PrivateKey signingKey, InetAddress remoteAddress, long scopeMask, long adminMask, int limit
+        String ownerName, PrivateKey signingKey, List<InetAddress> remoteAddresses, long scopeMask, long adminMask,
+        int limit
     ) {
         List<CarteInfo> cartes = new ArrayList<>();
         Instant beginning = Instant.now().minusSeconds(BEGINNING_IN_PAST);
         for (int i = 0; i < limit; i++) {
             CarteInfo carteAll = CarteInfoUtil.generate(
-                ownerName, remoteAddress, beginning, signingKey, null, scopeMask, adminMask
+                ownerName, remoteAddresses, beginning, signingKey, null, scopeMask, adminMask
             );
             cartes.add(carteAll);
             beginning = Instant.ofEpochSecond(carteAll.getDeadline());

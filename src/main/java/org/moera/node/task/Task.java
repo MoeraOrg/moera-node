@@ -3,6 +3,7 @@ package org.moera.node.task;
 import java.net.InetAddress;
 import java.security.PrivateKey;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
@@ -27,7 +28,7 @@ public abstract class Task implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(Task.class);
 
     protected UUID nodeId;
-    protected InetAddress localAddr;
+    protected List<InetAddress> localAddrs;
 
     @Inject
     protected UniversalContext universalContext;
@@ -76,8 +77,8 @@ public abstract class Task implements Runnable {
         return universalContext.getOptions().getPrivateKey("profile.signing-key");
     }
 
-    public void setLocalAddr(InetAddress localAddr) {
-        this.localAddr = localAddr;
+    public void setLocalAddrs(List<InetAddress> localAddrs) {
+        this.localAddrs = localAddrs;
     }
 
     protected byte[] fetchSigningKey(String remoteNodeName, long at) {
@@ -95,7 +96,7 @@ public abstract class Task implements Runnable {
     protected String generateCarte(String targetNodeName, Scope clientScope, Scope adminScope) {
         try {
             return Carte.generate(
-                nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName, clientScope.getMask(),
+                nodeName(), localAddrs, Instant.now(), signingKey(), targetNodeName, clientScope.getMask(),
                 adminScope.getMask()
             );
         } catch (Exception e) {
