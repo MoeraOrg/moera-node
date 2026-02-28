@@ -87,8 +87,7 @@ public class CommentReactionController {
 
     @PostMapping
     public ResponseEntity<ReactionCreated> post(
-        @PathVariable UUID postingId, @PathVariable UUID commentId,
-        @RequestBody ReactionDescription reactionDescription
+        @PathVariable UUID postingId, @PathVariable UUID commentId, @RequestBody ReactionDescription reactionDescription
     ) {
         log.info(
             "POST /postings/{postingId}/comments/{commentId}/reactions"
@@ -233,20 +232,22 @@ public class CommentReactionController {
     @GetMapping
     @Transactional
     public ReactionsSliceInfo getAll(
-            @PathVariable UUID postingId,
-            @PathVariable UUID commentId,
-            @RequestParam(defaultValue = "false") boolean negative,
-            @RequestParam(required = false) Integer emoji,
-            @RequestParam(required = false) Long before,
-            @RequestParam(required = false) Integer limit) {
-
-        log.info("GET /postings/{postingId}/comments/{commentId}/reactions"
-                        + " (postingId = {}, commentId = {}, negative = {} emoji = {} before = {}, limit = {})",
-                LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(negative), LogUtil.format(emoji),
-                LogUtil.format(before), LogUtil.format(limit));
+        @PathVariable UUID postingId,
+        @PathVariable UUID commentId,
+        @RequestParam(defaultValue = "false") boolean negative,
+        @RequestParam(required = false) Integer emoji,
+        @RequestParam(required = false) Long before,
+        @RequestParam(required = false) Integer limit
+    ) {
+        log.info(
+            "GET /postings/{postingId}/comments/{commentId}/reactions"
+                + " (postingId = {}, commentId = {}, negative = {} emoji = {} before = {}, limit = {})",
+            LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(negative), LogUtil.format(emoji),
+            LogUtil.format(before), LogUtil.format(limit)
+        );
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
@@ -274,13 +275,17 @@ public class CommentReactionController {
 
     @GetMapping("/{ownerName}")
     @Transactional
-    public ReactionInfo get(@PathVariable UUID postingId, @PathVariable UUID commentId, @PathVariable String ownerName) {
-        log.info("GET /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
-                        + " (postingId = {}, commentId = {}, ownerName = {})",
-                LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName));
+    public ReactionInfo get(
+        @PathVariable UUID postingId, @PathVariable UUID commentId, @PathVariable String ownerName
+    ) {
+        log.info(
+            "GET /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
+                + " (postingId = {}, commentId = {}, ownerName = {})",
+            LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName)
+        );
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
@@ -293,17 +298,21 @@ public class CommentReactionController {
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        if (!requestContext.isPrincipal(comment.getViewReactionsE(), Scope.VIEW_CONTENT)
-                && !requestContext.isClient(ownerName, Scope.VIEW_CONTENT)) {
+        if (
+            !requestContext.isPrincipal(comment.getViewReactionsE(), Scope.VIEW_CONTENT)
+            && !requestContext.isClient(ownerName, Scope.VIEW_CONTENT)
+        ) {
             return ReactionInfoUtil.ofComment(commentId); // FIXME ugly, return 404
         }
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(commentId, ownerName);
 
-        if (reaction == null
-                || !requestContext.isPrincipal(reaction.getViewE(), Scope.VIEW_CONTENT)
-                || reaction.isNegative()
-                    && !requestContext.isPrincipal(comment.getViewNegativeReactionsE(), Scope.VIEW_CONTENT)) {
+        if (
+            reaction == null
+            || !requestContext.isPrincipal(reaction.getViewE(), Scope.VIEW_CONTENT)
+            || reaction.isNegative()
+                && !requestContext.isPrincipal(comment.getViewNegativeReactionsE(), Scope.VIEW_CONTENT)
+        ) {
             return ReactionInfoUtil.ofComment(commentId); // FIXME ugly, return 404
         }
 
@@ -314,11 +323,13 @@ public class CommentReactionController {
     @Admin(Scope.DELETE_OTHERS_CONTENT)
     @Transactional
     public Result deleteAll(@PathVariable UUID postingId, @PathVariable UUID commentId) {
-        log.info("DELETE /postings/{postingId}/comments/{commentId}/reactions (postingId = {}, commentId = {})",
-                LogUtil.format(postingId), LogUtil.format(commentId));
+        log.info(
+            "DELETE /postings/{postingId}/comments/{commentId}/reactions (postingId = {}, commentId = {})",
+            LogUtil.format(postingId), LogUtil.format(commentId)
+        );
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
@@ -344,17 +355,19 @@ public class CommentReactionController {
     }
 
     @DeleteMapping("/{ownerName}")
-    public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable UUID commentId,
-                                     @PathVariable String ownerName) {
-
-        log.info("DELETE /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
-                        + " (postingId = {}, commentId = {}, ownerName = {})",
-                LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName));
+    public ReactionTotalsInfo delete(
+        @PathVariable UUID postingId, @PathVariable UUID commentId, @PathVariable String ownerName
+    ) {
+        log.info(
+            "DELETE /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
+                + " (postingId = {}, commentId = {}, ownerName = {})",
+            LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName)
+        );
 
         try (var ignored = lock.lock(postingId)) {
             return tx.executeWrite(() -> {
                 Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                        .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+                    .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
                 if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("comment.not-found");
                 }

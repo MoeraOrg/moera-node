@@ -134,8 +134,10 @@ public class ReactionOperations {
             if (!requestContext.isPrincipal(entry.getAddReactionE(), Scope.REACT)) {
                 throw new AuthenticationException();
             }
-            if (reactionDescription.isNegative()
-                    && !requestContext.isPrincipal(entry.getAddNegativeReactionE(), Scope.REACT)) {
+            if (
+                reactionDescription.isNegative()
+                && !requestContext.isPrincipal(entry.getAddNegativeReactionE(), Scope.REACT)
+            ) {
                 throw new AuthenticationException();
             }
             UUID postingId = entry.getParent() != null ? entry.getParent().getId() : entry.getId();
@@ -155,8 +157,12 @@ public class ReactionOperations {
         );
     }
 
-    public Reaction post(ReactionDescription reactionDescription, Entry entry, Consumer<Reaction> reactionDeleted,
-                         Consumer<Reaction> reactionAdded) {
+    public Reaction post(
+        ReactionDescription reactionDescription,
+        Entry entry,
+        Consumer<Reaction> reactionDeleted,
+        Consumer<Reaction> reactionAdded
+    ) {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(entry.getId(), reactionDescription.getOwnerName());
         if (reaction != null) {
             log.debug("Found previous reaction {}, deadline {}",
@@ -238,12 +244,12 @@ public class ReactionOperations {
     public ReactionsSliceInfo getBefore(UUID entryId, boolean negative, Integer emoji, long before, int limit) {
         Pageable pageable = PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment");
         Page<Reaction> page = emoji == null
-                ? reactionRepository.findSlice(
-                    entryId, negative, SafeInteger.MIN_VALUE, before, pageable
-                )
-                : reactionRepository.findSliceWithEmoji(
-                    entryId, negative, emoji, SafeInteger.MIN_VALUE, before, pageable
-                );
+            ? reactionRepository.findSlice(
+                entryId, negative, SafeInteger.MIN_VALUE, before, pageable
+            )
+            : reactionRepository.findSliceWithEmoji(
+                entryId, negative, emoji, SafeInteger.MIN_VALUE, before, pageable
+            );
         ReactionsSliceInfo sliceInfo = new ReactionsSliceInfo();
         sliceInfo.setBefore(before);
         if (page.getNumberOfElements() < limit + 1) {

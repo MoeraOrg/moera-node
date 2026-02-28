@@ -171,8 +171,10 @@ public class CommentController {
     private EntityManager entityManager;
 
     private int getMaxCommentSize() {
-        return Math.min(requestContext.getOptions().getInt("comment.max-size"),
-                requestContext.getOptions().getInt("comment.max-size.soft"));
+        return Math.min(
+            requestContext.getOptions().getInt("comment.max-size"),
+            requestContext.getOptions().getInt("comment.max-size.soft")
+        );
     }
 
     @PostMapping
