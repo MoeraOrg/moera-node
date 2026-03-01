@@ -136,6 +136,9 @@ public class Entry {
     private MediaFileOwner parentMedia;
 
     @NotNull
+    private boolean allowAnonymousChildren;
+
+    @NotNull
     private int totalChildren;
 
     private Long moment;
@@ -607,6 +610,14 @@ public class Entry {
 
     public void setParentMedia(MediaFileOwner parentMedia) {
         this.parentMedia = parentMedia;
+    }
+
+    public boolean isAllowAnonymousChildren() {
+        return allowAnonymousChildren;
+    }
+
+    public void setAllowAnonymousChildren(boolean allowAnonymousChildren) {
+        this.allowAnonymousChildren = allowAnonymousChildren;
     }
 
     public int getTotalChildren() {

@@ -110,6 +110,9 @@ public class Draft {
     @NotNull
     private String childOperations = "{}";
 
+    @NotNull
+    private boolean allowAnonymousChildren;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "draft")
     private Set<EntryAttachment> attachments = new HashSet<>();
 
@@ -345,6 +348,14 @@ public class Draft {
     public void removeAttachment(EntryAttachment attachment) {
         attachments.removeIf(r -> r.getId().equals(attachment.getId()));
         attachment.setDraft(null);
+    }
+
+    public boolean isAllowAnonymousChildren() {
+        return allowAnonymousChildren;
+    }
+
+    public void setAllowAnonymousChildren(boolean allowAnonymousChildren) {
+        this.allowAnonymousChildren = allowAnonymousChildren;
     }
 
 }

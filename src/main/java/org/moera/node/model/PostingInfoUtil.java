@@ -309,6 +309,9 @@ public class PostingInfoUtil {
         info.setTotalComments(
             accessChecker.isPrincipal(viewComments, Scope.VIEW_CONTENT) ? posting.getTotalChildren() : 0
         );
+        if (posting.isAllowAnonymousChildren()) {
+            info.setAllowAnonymousComments(posting.isAllowAnonymousChildren());
+        }
         info.setRecommended(posting.isRecommended());
         if (
             accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_CONTENT)
@@ -494,6 +497,7 @@ public class PostingInfoUtil {
                 posting.setRejectedReactionsNegative(info.getRejectedReactions().getNegative());
             }
         }
+        posting.setAllowAnonymousChildren(info.getAllowAnonymousComments() != null && info.getAllowAnonymousComments());
         posting.setTotalChildren(info.getTotalComments());
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207

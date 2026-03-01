@@ -72,7 +72,8 @@ public class PostingTextUtil {
                 postingText.setBodyFormat(BodyFormat.APPLICATION);
             }
         }
-        
+
+        postingText.setAllowAnonymousComments(sourceText.getAllowAnonymousComments());
         postingText.setOperations(sourceText.getOperations());
         postingText.setCommentOperations(sourceText.getCommentOperations());
         postingText.setReactionOperations(sourceText.getReactionOperations());
@@ -120,6 +121,9 @@ public class PostingTextUtil {
             if (postingText.getOwnerAvatar().getShape() != null) {
                 entry.setOwnerAvatarShape(postingText.getOwnerAvatar().getShape());
             }
+        }
+        if (postingText.getAllowAnonymousComments() != null) {
+            entry.setAllowAnonymousChildren(postingText.getAllowAnonymousComments());
         }
         if (postingText.getExternalSourceUri() != null) {
             entry.setExternalSourceUri(postingText.getExternalSourceUri());
@@ -236,6 +240,10 @@ public class PostingTextUtil {
                 || entry.getOwnerAvatarMediaFile() != null
                 && AvatarDescriptionUtil.getMediaFile(postingText.getOwnerAvatar()).getId()
                         .equals(entry.getOwnerAvatarMediaFile().getId())
+            )
+            && (
+                postingText.getAllowAnonymousComments() == null
+                || postingText.getAllowAnonymousComments() == entry.isAllowAnonymousChildren()
             )
             && (
                 postingText.getExternalSourceUri() == null

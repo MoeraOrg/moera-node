@@ -109,6 +109,10 @@ public class DraftTextUtil {
                 log.error("Error serializing DraftText.commentOperations", e);
             }
         }
+
+        if (draftText.getAllowAnonymousComments() != null) {
+            draft.setAllowAnonymousChildren(draftText.getAllowAnonymousComments());
+        }
     }
 
     private static boolean hasAttachedGallery(Body body, List<RemoteMedia> media) {
