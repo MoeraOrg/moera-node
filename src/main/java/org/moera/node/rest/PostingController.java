@@ -158,6 +158,9 @@ public class PostingController {
 
         postingText.validate();
 
+        mediaOperations.validateAvatar(postingText.getOwnerAvatar());
+        byte[] digest = validatePostingText(null, postingText, postingText.getOwnerName());
+        // permission checks only AFTER this point
         if (
             !requestContext.isAdmin(Scope.ADD_POST)
             && !requestContext.getOptions().getBool("posting.non-admin.allowed")
@@ -166,11 +169,6 @@ public class PostingController {
         }
         if (!ObjectUtils.isEmpty(postingText.getPublications()) && !requestContext.isAdmin(Scope.UPDATE_FEEDS)) {
             throw new AuthenticationException();
-        }
-        mediaOperations.validateAvatar(postingText.getOwnerAvatar());
-        byte[] digest = validatePostingText(null, postingText, postingText.getOwnerName());
-        if (postingText.getSignature() != null) {
-            requestContext.authenticatedWithSignature(postingText.getOwnerName());
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
             throw new UserBlockedException();
@@ -228,9 +226,7 @@ public class PostingController {
         EntryRevision latest = posting.getCurrentRevision();
         mediaOperations.validateAvatar(postingText.getOwnerAvatar());
         byte[] digest = validatePostingText(posting, postingText, posting.getOwnerName());
-        if (postingText.getSignature() != null) {
-            requestContext.authenticatedWithSignature(postingText.getOwnerName());
-        }
+        // permission checks only AFTER this point
         if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
@@ -283,6 +279,7 @@ public class PostingController {
     private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {
         byte[] digest = null;
         if (postingText.getSignature() == null) {
+            // permission checks only AFTER this point
             Scope scope = posting == null ? Scope.ADD_POST : Scope.UPDATE_POST;
             String clientName = requestContext.getClientName(scope);
             boolean valid = false;
@@ -321,6 +318,8 @@ public class PostingController {
             if (!CryptoUtil.verifySignature(fingerprint, postingText.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
             }
+            requestContext.authenticatedWithSignature(postingText.getOwnerName());
+            // permission checks only AFTER this point
             digest = CryptoUtil.digest(fingerprint);
 
             ValidationUtil.assertion(

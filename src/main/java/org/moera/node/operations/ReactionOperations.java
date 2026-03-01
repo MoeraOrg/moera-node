@@ -101,6 +101,7 @@ public class ReactionOperations {
         mediaOperations.validateAvatar(reactionDescription.getOwnerAvatar());
 
         if (reactionDescription.getSignature() == null) {
+            // permission checks only AFTER this point
             String ownerName = reactionDescription.getOwnerName();
             String clientName = requestContext.getClientName(Scope.REACT);
             boolean valid = false;
@@ -128,6 +129,7 @@ public class ReactionOperations {
                 throw new IncorrectSignatureException();
             }
             requestContext.authenticatedWithSignature(reactionDescription.getOwnerName());
+            // permission checks only AFTER this point
         }
 
         if (entry.isOriginal()) {

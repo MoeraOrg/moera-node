@@ -107,6 +107,7 @@ public class CommentReactionController {
                 }
                 ValidationUtil.notNull(comment.getCurrentRevision().getSignature(), "comment.not-signed");
                 reactionOperations.validate(reactionDescription, comment);
+                // permission checks only AFTER this point
                 if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("comment.not-found");
                 }

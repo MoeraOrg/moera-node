@@ -114,6 +114,7 @@ public class PostingReactionController {
                     .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
                 ValidationUtil.notNull(posting.getCurrentRevision().getSignature(), "posting.not-signed");
                 reactionOperations.validate(reactionDescription, posting);
+                // permission checks only AFTER this point
                 if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("posting.not-found");
                 }

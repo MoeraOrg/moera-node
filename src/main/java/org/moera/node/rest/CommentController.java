@@ -191,20 +191,13 @@ public class CommentController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
         ValidationUtil.notNull(posting.getCurrentRevision().getSignature(), "posting.not-signed");
         Comment repliedTo = null;
         if (commentText.getRepliedToId() != null) {
             UUID repliedToId = Util.uuid(commentText.getRepliedToId())
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.replied-to-id.not-found"));
             repliedTo = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), repliedToId).orElse(null);
-            if (
-                repliedTo == null
-                || !repliedTo.getPosting().getId().equals(posting.getId())
-                || !requestContext.isPrincipal(repliedTo.getViewE(), Scope.VIEW_CONTENT)
-            ) {
+            if (repliedTo == null || !repliedTo.getPosting().getId().equals(posting.getId())) {
                 throw new ObjectNotFoundFailure("comment.replied-to-id.not-found");
             }
         }
@@ -212,8 +205,12 @@ public class CommentController {
         byte[] digest = validateCommentText(
             posting, null, commentText, commentText.getOwnerName(), repliedToDigest
         );
-        if (commentText.getSignature() != null) {
-            requestContext.authenticatedWithSignature(commentText.getOwnerName());
+        // permission checks only AFTER this point
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (repliedTo != null && !requestContext.isPrincipal(repliedTo.getViewE(), Scope.VIEW_CONTENT)) {
+            throw new ObjectNotFoundFailure("comment.replied-to-id.not-found");
         }
         if (!requestContext.isPrincipal(posting.getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new AuthenticationException();
@@ -296,9 +293,7 @@ public class CommentController {
         byte[] digest = validateCommentText(
             comment.getPosting(), comment, commentText, comment.getOwnerName(), repliedToDigest
         );
-        if (commentText.getSignature() != null) {
-            requestContext.authenticatedWithSignature(commentText.getOwnerName());
-        }
+        // permission checks only AFTER this point
         if (!requestContext.isPrincipal(comment.getPosting().getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
@@ -355,12 +350,13 @@ public class CommentController {
         String ownerName,
         byte[] repliedToDigest
     ) {
-        boolean isSenior = requestContext.isPrincipal(posting.getOverrideCommentE(), Scope.DELETE_OTHERS_CONTENT);
-
         byte[] digest = null;
+        boolean isSenior;
         if (commentText.getSignature() == null) {
+            // permission checks only AFTER this point
             Scope scope = comment == null ? Scope.ADD_COMMENT : Scope.UPDATE_COMMENT;
             String clientName = requestContext.getClientName(scope);
+            isSenior = requestContext.isPrincipal(posting.getOverrideCommentE(), Scope.DELETE_OTHERS_CONTENT);
             boolean valid = false;
             if (!ObjectUtils.isEmpty(ownerName)) {
                 valid = ownerName.equals(clientName)
@@ -402,7 +398,10 @@ public class CommentController {
             if (!CryptoUtil.verifySignature(fingerprint, commentText.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
             }
+            requestContext.authenticatedWithSignature(commentText.getOwnerName());
+            // permission checks only AFTER this point
             digest = CryptoUtil.digest(fingerprint);
+            isSenior = requestContext.isPrincipal(posting.getOverrideCommentE(), Scope.DELETE_OTHERS_CONTENT);
 
             ValidationUtil.assertion(
                 commentText.getBody() != null || !ObjectUtils.isEmpty(commentText.getMedia()),
