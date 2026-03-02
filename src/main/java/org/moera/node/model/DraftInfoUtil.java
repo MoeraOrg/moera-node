@@ -83,10 +83,6 @@ public class DraftInfoUtil {
             log.error("Error deserializing Draft.childOperations", e);
         }
 
-        if (draft.isAllowAnonymousChildren()) {
-            draftInfo.setAllowAnonymousComments(draft.isAllowAnonymousChildren());
-        }
-
         return draftInfo;
     }
 
