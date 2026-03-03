@@ -24,6 +24,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.SimplePath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.moera.lib.Rules;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.CommentCreated;
@@ -352,7 +353,22 @@ public class CommentController {
     ) {
         byte[] digest = null;
         boolean isSenior;
-        if (commentText.getSignature() == null) {
+        if (Rules.ANONYMOUS_NODE_NAME.equals(ownerName) && comment == null) {
+            // permission checks only AFTER this point
+            isSenior = false;
+            commentText.setOwnerAvatar(null); // make anonymous comments visually distinct
+            commentText.setSignature(null);
+            commentText.setSignatureVersion(null);
+            ValidationUtil.assertion(
+                commentText.getBodySrc() != null || !ObjectUtils.isEmpty(commentText.getMedia()),
+                "comment.body-src.blank"
+            );
+            ValidationUtil.assertion(
+                commentText.getBodySrc() == null
+                    || commentText.getBodySrc().getEncoded().length() <= getMaxCommentSize(),
+                "comment.body-src.wrong-size"
+            );
+        } else if (commentText.getSignature() == null) {
             // permission checks only AFTER this point
             Scope scope = comment == null ? Scope.ADD_COMMENT : Scope.UPDATE_COMMENT;
             String clientName = requestContext.getClientName(scope);

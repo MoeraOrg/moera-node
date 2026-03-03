@@ -55,8 +55,8 @@ public class OperationsValidator {
         );
         v.accept(
             operations.getAddComment(),
-            PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE
-            | PrincipalFlag.NONE
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
         );
         v.accept(
             operations.getOverrideComment(),

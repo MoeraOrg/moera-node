@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import jakarta.inject.Inject;
 
+import org.moera.lib.Rules;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.CommentText;
 import org.moera.lib.node.types.body.Body;
@@ -217,7 +218,7 @@ public class CommentOperations {
 
         comment.setEditedAt(Util.now());
         comment = commentRepository.saveAndFlush(comment);
-        signIfOwned(comment);
+        signIfOwnedOrAnonymous(comment);
 
         updateRelatedObjects(comment);
 
@@ -262,14 +263,16 @@ public class CommentOperations {
         return revision;
     }
 
-    private void signIfOwned(Comment comment) {
+    private void signIfOwnedOrAnonymous(Comment comment) {
         EntryRevision current = comment.getCurrentRevision();
 
         if (current.getSignature() == null) {
-            if (comment.getOwnerName().equals(requestContext.nodeName())) {
+            boolean owned = comment.getOwnerName().equals(requestContext.nodeName());
+            boolean anonymous = comment.getOwnerName().equals(Rules.ANONYMOUS_NODE_NAME);
+            if (owned || anonymous) {
                 byte[] fingerprint = CommentFingerprintBuilder.build(comment);
                 current.setDigest(CryptoUtil.digest(fingerprint));
-                current.setSignature(CryptoUtil.sign(fingerprint, getSigningKey()));
+                current.setSignature(CryptoUtil.sign(fingerprint, getSigningKey(anonymous)));
                 current.setSignatureVersion(CommentFingerprintBuilder.LATEST_VERSION);
             } else {
                 current.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
@@ -289,8 +292,10 @@ public class CommentOperations {
         }
     }
 
-    private ECPrivateKey getSigningKey() {
-        return (ECPrivateKey) requestContext.getOptions().getPrivateKey("profile.signing-key");
+    private ECPrivateKey getSigningKey(boolean anonymous) {
+        return anonymous
+            ? CryptoUtil.rawToPrivateKey(Rules.ANONYMOUS_NODE_PRIVATE_KEY)
+            : (ECPrivateKey) requestContext.getOptions().getPrivateKey("profile.signing-key");
     }
 
     public void deleteComment(Comment comment) {
