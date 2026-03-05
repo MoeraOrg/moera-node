@@ -13,6 +13,7 @@ public class CommentCreatedUtil {
     public static CommentCreated build(
         Comment comment,
         Integer total,
+        boolean premoderating,
         MediaAttachmentsProvider mediaAttachmentsProvider,
         AccessChecker accessChecker,
         List<BlockedOperation> blockedOperations
@@ -26,6 +27,7 @@ public class CommentCreatedUtil {
         }
         
         commentCreated.setTotal(total);
+        commentCreated.setPremoderating(premoderating);
         
         return commentCreated;
     }

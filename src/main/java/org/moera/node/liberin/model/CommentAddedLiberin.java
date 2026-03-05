@@ -15,10 +15,12 @@ public class CommentAddedLiberin extends Liberin {
 
     private Posting posting;
     private Comment comment;
+    private boolean premoderating;
 
-    public CommentAddedLiberin(Posting posting, Comment comment) {
+    public CommentAddedLiberin(Posting posting, Comment comment, boolean premoderating) {
         this.posting = posting;
         this.comment = comment;
+        this.premoderating = premoderating;
     }
 
     public Posting getPosting() {
@@ -37,6 +39,14 @@ public class CommentAddedLiberin extends Liberin {
         this.comment = comment;
     }
 
+    public boolean isPremoderating() {
+        return premoderating;
+    }
+
+    public void setPremoderating(boolean premoderating) {
+        this.premoderating = premoderating;
+    }
+
     @Override
     protected void toModel(Map<String, Object> model, EntityManager entityManager) {
         super.toModel(model);
@@ -44,6 +54,7 @@ public class CommentAddedLiberin extends Liberin {
         comment = entityManager.merge(comment);
         model.put("posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN));
         model.put("comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN));
+        model.put("premoderating", premoderating);
     }
 
 }

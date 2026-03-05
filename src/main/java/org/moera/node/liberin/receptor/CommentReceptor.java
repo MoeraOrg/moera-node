@@ -82,7 +82,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         Comment comment = liberin.getComment();
         Posting posting = liberin.getPosting();
 
-        notifySubscribersCommentAdded(posting, comment);
+        notifySubscribersCommentAdded(posting, comment, liberin.isPremoderating());
         notifyReplyAdded(posting, comment);
         notifyMentioned(
             posting,
@@ -110,7 +110,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         Comment comment = liberin.getComment();
         Entry posting = comment.getPosting();
 
-        notifySubscribersCommentAdded(posting, comment);
+        notifySubscribersCommentAdded(posting, comment, false);
         notifyReplyAdded(posting, comment);
         notifyMentioned(
             posting,
@@ -197,50 +197,56 @@ public class CommentReceptor extends LiberinReceptorBase {
         send(liberin, new PostingCommentsChangedEvent(posting, generalVisibilityFilter(posting)));
     }
 
-    private void notifySubscribersCommentAdded(Entry posting, Comment comment) {
-        if (comment.getCurrentRevision().getSignature() != null) {
-            tx.executeWriteQuietly(() -> {
-                Entry aposting = entityManager.merge(posting);
-                Comment acomment = entityManager.merge(comment);
-                PostingInfo postingInfo = PostingInfoUtil.build(
-                    aposting,
-                    aposting.getStories(),
-                    MediaAttachmentsProvider.NONE,
-                    AccessCheckers.ADMIN,
-                    universalContext.getOptions()
-                );
-                userListOperations.fillSheriffListMarks(postingInfo);
-                CommentInfo commentInfo = CommentInfoUtil.build(
-                    acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN
-                );
-                userListOperations.fillSheriffListMarks(aposting, commentInfo);
-                UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
-                send(
-                    Directions.postingCommentsSubscribers(
-                        posting.getNodeId(), posting.getId(), visibilityFilter(posting, comment)
-                    ),
-                    PostingCommentAddedNotificationUtil.build(
-                        posting.getOwnerName(),
-                        posting.getOwnerFullName(),
-                        posting.getOwnerGender(),
-                        postingInfo.getOwnerAvatar(),
-                        posting.getId(),
-                        postingInfo.getHeading(),
-                        postingInfo.getSheriffs(),
-                        postingInfo.getSheriffMarks(),
-                        comment.getId(),
-                        comment.getOwnerName(),
-                        comment.getOwnerFullName(),
-                        comment.getOwnerGender(),
-                        commentInfo.getOwnerAvatar(),
-                        commentInfo.getHeading(),
-                        commentInfo.getSheriffMarks(),
-                        repliedToId
-                    )
-                );
-                commentInstants.added(comment);
-            });
+    private void notifySubscribersCommentAdded(Entry posting, Comment comment, boolean premoderating) {
+        if (comment.getCurrentRevision().getSignature() == null) {
+            return;
         }
+
+        tx.executeWriteQuietly(() -> {
+            Entry aposting = entityManager.merge(posting);
+            Comment acomment = entityManager.merge(comment);
+            PostingInfo postingInfo = PostingInfoUtil.build(
+                aposting,
+                aposting.getStories(),
+                MediaAttachmentsProvider.NONE,
+                AccessCheckers.ADMIN,
+                universalContext.getOptions()
+            );
+            userListOperations.fillSheriffListMarks(postingInfo);
+            CommentInfo commentInfo = CommentInfoUtil.build(
+                acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN
+            );
+            userListOperations.fillSheriffListMarks(aposting, commentInfo);
+            UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
+            send(
+                Directions.postingCommentsSubscribers(
+                    posting.getNodeId(), posting.getId(), visibilityFilter(posting, comment)
+                ),
+                PostingCommentAddedNotificationUtil.build(
+                    posting.getOwnerName(),
+                    posting.getOwnerFullName(),
+                    posting.getOwnerGender(),
+                    postingInfo.getOwnerAvatar(),
+                    posting.getId(),
+                    postingInfo.getHeading(),
+                    postingInfo.getSheriffs(),
+                    postingInfo.getSheriffMarks(),
+                    comment.getId(),
+                    comment.getOwnerName(),
+                    comment.getOwnerFullName(),
+                    comment.getOwnerGender(),
+                    commentInfo.getOwnerAvatar(),
+                    commentInfo.getHeading(),
+                    commentInfo.getSheriffMarks(),
+                    repliedToId
+                )
+            );
+            if (!premoderating) {
+                commentInstants.added(comment);
+            } else {
+                commentInstants.needsApproval(comment);
+            }
+        });
     }
 
     private void notifyReplyAdded(Entry posting, Comment comment) {

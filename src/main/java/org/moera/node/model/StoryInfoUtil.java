@@ -123,6 +123,18 @@ public class StoryInfoUtil {
                 }
                 break;
 
+            case COMMENT_NEEDS_APPROVAL:
+                info.setPostingId(story.getEntry().getParent().getId().toString());
+                info.setCommentId(story.getEntry().getId().toString());
+                info.setSummaryNodeName(story.getRemoteOwnerName());
+                info.setSummaryFullName(story.getRemoteOwnerFullName());
+                if (story.getRemoteOwnerAvatarMediaFile() != null) {
+                    info.setSummaryAvatar(AvatarImageUtil.build(
+                        story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()
+                    ));
+                }
+                break;
+
             case MENTION_COMMENT:
             case REPLY_COMMENT:
             case COMMENT_REACTION_ADDED_POSITIVE:

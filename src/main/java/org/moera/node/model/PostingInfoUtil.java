@@ -206,6 +206,7 @@ public class PostingInfoUtil {
         operations.setDelete(posting.getDeletePrincipal(), Principal.PRIVATE);
         operations.setViewComments(posting.getViewCommentsPrincipal(), Principal.PUBLIC);
         operations.setAddComment(posting.getAddCommentPrincipal(), Principal.SIGNED);
+        operations.setTrustComment(posting.getTrustCommentPrincipal(), Principal.SIGNED);
         operations.setOverrideComment(posting.getOverrideCommentPrincipal(), Principal.OWNER);
         operations.setViewReactions(posting.getViewReactionsPrincipal(), Principal.PUBLIC);
         operations.setViewNegativeReactions(posting.getViewNegativeReactionsPrincipal(), Principal.PUBLIC);
@@ -226,6 +227,7 @@ public class PostingInfoUtil {
             receiverOperations.setDelete(posting.getReceiverDeletePrincipal(), Principal.PRIVATE);
             receiverOperations.setViewComments(posting.getReceiverViewCommentsPrincipal(), Principal.PUBLIC);
             receiverOperations.setAddComment(posting.getReceiverAddCommentPrincipal(), Principal.SIGNED);
+            receiverOperations.setTrustComment(posting.getReceiverTrustCommentPrincipal(), Principal.SIGNED);
             receiverOperations.setOverrideComment(posting.getReceiverOverrideCommentPrincipal(), Principal.OWNER);
             receiverOperations.setViewReactions(posting.getReceiverViewReactionsPrincipal(), Principal.PUBLIC);
             receiverOperations.setViewNegativeReactions(
@@ -512,6 +514,9 @@ public class PostingInfoUtil {
         principal = PostingOperations.getAddComment(info.getOperations(), Principal.SIGNED);
         posting.setAddCommentPrincipal(Principal.NONE);
         posting.setReceiverAddCommentPrincipal(principal);
+        principal = PostingOperations.getTrustComment(info.getOperations(), Principal.SIGNED);
+        posting.setTrustCommentPrincipal(Principal.NONE);
+        posting.setReceiverTrustCommentPrincipal(principal);
         principal = PostingOperations.getOverrideComment(info.getOperations(), Principal.OWNER);
         posting.setReceiverOverrideCommentPrincipal(principal);
         principal = PostingOperations.getViewReactions(info.getOperations(), Principal.PUBLIC);

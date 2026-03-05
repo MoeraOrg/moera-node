@@ -511,6 +511,10 @@ public class MediaOperations {
                 .reduce(Principal.NONE, Principal::union);
             posting.setAddCommentPrincipal(principal);
             principal = list.stream()
+                .map(Entry::getTrustCommentPrincipal)
+                .reduce(Principal.NONE, Principal::union);
+            posting.setTrustCommentPrincipal(principal);
+            principal = list.stream()
                 .map(Entry::getViewReactionsPrincipal)
                 .reduce(Principal.NONE, Principal::union);
             posting.setViewReactionsPrincipal(principal);

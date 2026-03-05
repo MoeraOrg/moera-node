@@ -130,6 +130,7 @@ public class PostingTextUtil {
                 toPrincipal(postingText.getOperations().getView(), entry::setViewPrincipal);
                 toPrincipal(postingText.getOperations().getViewComments(), entry::setViewCommentsPrincipal);
                 toPrincipal(postingText.getOperations().getAddComment(), entry::setAddCommentPrincipal);
+                toPrincipal(postingText.getOperations().getTrustComment(), entry::setTrustCommentPrincipal);
                 toPrincipal(postingText.getOperations().getViewReactions(), entry::setViewReactionsPrincipal);
                 toPrincipal(
                     postingText.getOperations().getViewNegativeReactions(),
@@ -246,6 +247,7 @@ public class PostingTextUtil {
                 || samePrincipalAs(postingText.getOperations().getView(), entry.getViewPrincipal())
                 && samePrincipalAs(postingText.getOperations().getViewComments(), entry.getViewCommentsPrincipal())
                 && samePrincipalAs(postingText.getOperations().getAddComment(), entry.getAddCommentPrincipal())
+                && samePrincipalAs(postingText.getOperations().getTrustComment(), entry.getTrustCommentPrincipal())
                 && samePrincipalAs(postingText.getOperations().getViewReactions(), entry.getViewReactionsPrincipal())
                 && samePrincipalAs(
                     postingText.getOperations().getViewNegativeReactions(),

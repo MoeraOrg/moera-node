@@ -192,6 +192,12 @@ public class Entry {
 
     private Principal receiverAddCommentPrincipal;
 
+    private Principal trustCommentPrincipal = Principal.SIGNED;
+
+    private Principal parentTrustCommentPrincipal = Principal.UNSET;
+
+    private Principal receiverTrustCommentPrincipal;
+
     private Principal parentOverrideCommentPrincipal = Principal.UNSET;
 
     private Principal receiverOverrideCommentPrincipal;
@@ -865,6 +871,38 @@ public class Entry {
 
     public void setReceiverAddCommentPrincipal(Principal receiverAddCommentPrincipal) {
         this.receiverAddCommentPrincipal = receiverAddCommentPrincipal;
+    }
+
+    public Principal getTrustCommentPrincipal() {
+        return trustCommentPrincipal;
+    }
+
+    public void setTrustCommentPrincipal(Principal trustCommentPrincipal) {
+        this.trustCommentPrincipal = trustCommentPrincipal;
+    }
+
+    public Principal getParentTrustCommentPrincipal() {
+        return parentTrustCommentPrincipal;
+    }
+
+    public void setParentTrustCommentPrincipal(Principal parentTrustCommentPrincipal) {
+        this.parentTrustCommentPrincipal = parentTrustCommentPrincipal;
+    }
+
+    public Principal getTrustCommentCompound() {
+        return getParentTrustCommentPrincipal().withSubordinate(getTrustCommentPrincipal());
+    }
+
+    public Principal getTrustCommentE() {
+        return toAbsolute(getTrustCommentCompound());
+    }
+
+    public Principal getReceiverTrustCommentPrincipal() {
+        return receiverTrustCommentPrincipal;
+    }
+
+    public void setReceiverTrustCommentPrincipal(Principal receiverTrustCommentPrincipal) {
+        this.receiverTrustCommentPrincipal = receiverTrustCommentPrincipal;
     }
 
     public Principal getOverrideCommentPrincipal() {

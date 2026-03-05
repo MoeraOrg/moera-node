@@ -17,6 +17,7 @@ import jakarta.inject.Inject;
 import org.moera.lib.Rules;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.CommentText;
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
@@ -166,6 +167,17 @@ public class CommentOperations {
 
     private Principal orUnset(Principal principal) {
         return principal != null ? principal : Principal.UNSET;
+    }
+
+    public boolean premoderate(Posting posting, Comment comment) {
+        if (
+            comment.getParentViewPrincipal().equals(Principal.UNSET)
+            && !requestContext.isPrincipal(posting.getTrustCommentE(), Scope.ADD_COMMENT)
+        ) {
+            comment.setParentViewPrincipal(Principal.PRIVATE);
+            return true;
+        }
+        return false;
     }
 
     public Comment createOrUpdateComment(

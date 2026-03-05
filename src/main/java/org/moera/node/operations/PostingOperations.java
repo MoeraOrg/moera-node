@@ -131,6 +131,7 @@ public class PostingOperations {
         posting.setViewPrincipal(mediaFileOwner.getViewPrincipal());
         posting.setViewCommentsPrincipal(mediaFileOwner.getViewPrincipal());
         posting.setAddCommentPrincipal(mediaFileOwner.getViewPrincipal());
+        posting.setTrustCommentPrincipal(mediaFileOwner.getViewPrincipal());
         posting.setViewReactionsPrincipal(mediaFileOwner.getViewPrincipal());
         posting.setViewNegativeReactionsPrincipal(mediaFileOwner.getViewPrincipal());
         posting.setViewReactionTotalsPrincipal(mediaFileOwner.getViewPrincipal());

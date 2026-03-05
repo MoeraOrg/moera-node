@@ -17,6 +17,7 @@ import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Comment;
+import org.moera.node.data.Entry;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
@@ -46,9 +47,11 @@ public class CommentInstants extends InstantsCreator {
             return;
         }
 
-        boolean alreadyReported = !storyRepository.findSubsByTypeAndEntryId(
-            nodeId(), StoryType.COMMENT_ADDED, comment.getId()
-        ).isEmpty();
+        boolean alreadyReported =
+            storyRepository.countSubsByTypeAndEntryId(nodeId(), StoryType.COMMENT_ADDED, comment.getId()) > 0
+            || storyRepository.countByFeedAndTypeAndEntryId(
+                nodeId(), Feed.INSTANT, StoryType.COMMENT_NEEDS_APPROVAL, comment.getId()
+            ) > 0;
         if (alreadyReported) {
             return;
         }
@@ -112,11 +115,11 @@ public class CommentInstants extends InstantsCreator {
         }
 
         story.setSummaryData(buildAddedSummary(story, stories));
-        story.setRemoteCommentId(stories.get(stories.size() - 1).getEntry().getId().toString());
-        story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
-        story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
-        story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
-        story.setRemoteOwnerAvatarShape(stories.get(0).getRemoteOwnerAvatarShape());
+        story.setRemoteCommentId(stories.getLast().getEntry().getId().toString());
+        story.setRemoteOwnerName(stories.getFirst().getRemoteOwnerName());
+        story.setRemoteOwnerFullName(stories.getFirst().getRemoteOwnerFullName());
+        story.setRemoteOwnerAvatarMediaFile(stories.getFirst().getRemoteOwnerAvatarMediaFile());
+        story.setRemoteOwnerAvatarShape(stories.getFirst().getRemoteOwnerAvatarShape());
         story.setPublishedAt(Util.now());
         if (isAdded) {
             story.setRead(false);
@@ -130,7 +133,7 @@ public class CommentInstants extends InstantsCreator {
         StorySummaryData summaryData = new StorySummaryData();
         List<StorySummaryEntry> comments = new ArrayList<>();
         summaryData.setComments(comments);
-        Story firstStory = stories.get(0);
+        Story firstStory = stories.getFirst();
         comments.add(StorySummaryEntryUtil.build(
             firstStory.getRemoteOwnerName(),
             firstStory.getRemoteOwnerFullName(),
@@ -240,6 +243,45 @@ public class CommentInstants extends InstantsCreator {
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setPosting(StorySummaryEntryUtil.build(nodeName, fullName, gender, postingHeading));
         summaryData.setComment(StorySummaryEntryUtil.build(null, null, null, commentHeading));
+        return summaryData;
+    }
+
+    public void needsApproval(Comment comment) {
+        if (isBlocked(
+            StoryType.COMMENT_NEEDS_APPROVAL, comment.getPosting().getId(), null, null, comment.getOwnerName()
+        )) {
+            return;
+        }
+
+        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_NEEDS_APPROVAL);
+        story.setFeedName(Feed.INSTANT);
+        story.setEntry(comment);
+        story.setRemoteOwnerName(comment.getOwnerName());
+        story.setRemoteOwnerFullName(comment.getOwnerFullName());
+        story.setRemoteOwnerAvatarMediaFile(comment.getOwnerAvatarMediaFile());
+        story.setRemoteOwnerAvatarShape(comment.getOwnerAvatarShape());
+        story.setSummaryData(buildNeedsApprovalSummary(comment));
+        story.setPublishedAt(Util.now());
+        updateMoment(story);
+        story = storyRepository.save(story);
+        storyAdded(story);
+    }
+
+    private static StorySummaryData buildNeedsApprovalSummary(Comment comment) {
+        StorySummaryData summaryData = new StorySummaryData();
+        Entry posting = comment.getPosting();
+        summaryData.setPosting(StorySummaryEntryUtil.build(
+            posting.getOwnerName(),
+            posting.getOwnerFullName(),
+            posting.getOwnerGender(),
+            posting.getCurrentRevision().getHeading()
+        ));
+        summaryData.setComment(StorySummaryEntryUtil.build(
+            comment.getOwnerName(),
+            comment.getOwnerFullName(),
+            comment.getOwnerGender(),
+            comment.getCurrentRevision().getHeading()
+        ));
         return summaryData;
     }
 

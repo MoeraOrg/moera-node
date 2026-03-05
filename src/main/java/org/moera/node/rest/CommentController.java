@@ -232,6 +232,7 @@ public class CommentController {
         );
 
         Comment comment = commentOperations.newComment(posting, commentText, repliedTo);
+        boolean premoderating = commentOperations.premoderate(posting, comment);
         comment = commentOperations.createOrUpdateComment(
             posting,
             comment,
@@ -251,7 +252,7 @@ public class CommentController {
             }
         }
 
-        requestContext.send(new CommentAddedLiberin(posting, comment));
+        requestContext.send(new CommentAddedLiberin(posting, comment, premoderating));
 
         var blockedOperations = blockedUserOperations.findBlockedOperations(postingId);
         return ResponseEntity
@@ -259,6 +260,7 @@ public class CommentController {
             .body(CommentCreatedUtil.build(
                 comment,
                 posting.getTotalChildren(),
+                premoderating,
                 MediaAttachmentsProvider.RELATIONS,
                 requestContext,
                 blockedOperations

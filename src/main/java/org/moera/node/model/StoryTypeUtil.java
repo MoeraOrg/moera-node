@@ -40,6 +40,7 @@ public class StoryTypeUtil {
                    REMINDER_FULL_NAME -> 1;
 
               case COMMENT_ADDED,
+                   COMMENT_NEEDS_APPROVAL,
                    REMOTE_COMMENT_ADDED,
                    REPLY_COMMENT,
                    BLOCKED_USER_IN_POSTING,
