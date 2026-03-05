@@ -150,6 +150,9 @@ public class CommentTextUtil {
                 entry.setParentRejectedReactionsNegative(commentText.getSeniorRejectedReactions().getNegative());
             }
         }
+        if (commentText.getPremoderating() != null) {
+            entry.setPremoderating(commentText.getPremoderating());
+        }
 
         if (commentText.getSeniorOperations() == null) {
             return;
@@ -217,6 +220,9 @@ public class CommentTextUtil {
                         entry.getParentRejectedReactionsNegative()
                     )
                 )
+            )
+            && (
+                commentText.getPremoderating() == null || commentText.getPremoderating().equals(entry.isPremoderating())
             )
             && (
                 commentText.getOwnerFullName() == null

@@ -274,6 +274,8 @@ public class Entry {
 
     private boolean recommended;
 
+    private boolean premoderating;
+
     @NotNull
     @Size(max = 1024)
     private String externalSourceUri = "";
@@ -1339,6 +1341,14 @@ public class Entry {
 
     public void setRecommended(boolean recommended) {
         this.recommended = recommended;
+    }
+
+    public boolean isPremoderating() {
+        return premoderating;
+    }
+
+    public void setPremoderating(boolean premoderating) {
+        this.premoderating = premoderating;
     }
 
     public String getExternalSourceUri() {

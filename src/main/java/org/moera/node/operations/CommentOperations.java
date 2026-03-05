@@ -169,15 +169,14 @@ public class CommentOperations {
         return principal != null ? principal : Principal.UNSET;
     }
 
-    public boolean premoderate(Posting posting, Comment comment) {
+    public void premoderate(Posting posting, Comment comment) {
         if (
             comment.getParentViewPrincipal().equals(Principal.UNSET)
             && !requestContext.isPrincipal(posting.getTrustCommentE(), Scope.ADD_COMMENT)
         ) {
             comment.setParentViewPrincipal(Principal.PRIVATE);
-            return true;
+            comment.setPremoderating(true);
         }
-        return false;
     }
 
     public Comment createOrUpdateComment(

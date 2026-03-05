@@ -101,6 +101,9 @@ public class CommentInfoUtil {
         commentInfo.setDigest(revision.getDigest());
         commentInfo.setSignature(revision.getSignature());
         commentInfo.setSignatureVersion(revision.getSignatureVersion());
+        if (comment.isPremoderating()) {
+            commentInfo.setPremoderating(comment.isPremoderating());
+        }
 
         CommentOperations operations = new CommentOperations();
         operations.setView(comment.getViewCompound(), Principal.PUBLIC);

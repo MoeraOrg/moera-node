@@ -82,7 +82,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         Comment comment = liberin.getComment();
         Posting posting = liberin.getPosting();
 
-        notifySubscribersCommentAdded(posting, comment, liberin.isPremoderating());
+        notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
         notifyMentioned(
             posting,
@@ -110,7 +110,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         Comment comment = liberin.getComment();
         Entry posting = comment.getPosting();
 
-        notifySubscribersCommentAdded(posting, comment, false);
+        notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
         notifyMentioned(
             posting,
@@ -197,8 +197,8 @@ public class CommentReceptor extends LiberinReceptorBase {
         send(liberin, new PostingCommentsChangedEvent(posting, generalVisibilityFilter(posting)));
     }
 
-    private void notifySubscribersCommentAdded(Entry posting, Comment comment, boolean premoderating) {
-        if (comment.getCurrentRevision().getSignature() == null && !premoderating) {
+    private void notifySubscribersCommentAdded(Entry posting, Comment comment) {
+        if (comment.getCurrentRevision().getSignature() == null) {
             return;
         }
 
@@ -241,7 +241,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                     repliedToId
                 )
             );
-            if (!premoderating) {
+            if (!comment.isPremoderating()) {
                 commentInstants.added(comment);
             } else {
                 commentInstants.needsApproval(comment);
