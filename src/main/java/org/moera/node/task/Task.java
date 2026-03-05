@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.Rules;
 import org.moera.lib.naming.NodeName;
 import org.moera.lib.naming.types.RegisteredNameInfo;
 import org.moera.lib.node.carte.Carte;
@@ -87,6 +88,12 @@ public abstract class Task implements Runnable {
         RegisteredNameInfo nameInfo =
             namingClient.getPast(registeredName.getName(), registeredName.getGeneration(), at, namingLocation);
         return nameInfo != null ? nameInfo.getSigningKey() : null;
+    }
+
+    protected byte[] fetchSigningKeyAnonymousAllowed(String remoteNodeName, long at) {
+        return !Rules.ANONYMOUS_NODE_NAME.equals(remoteNodeName)
+            ? fetchSigningKey(remoteNodeName, at)
+            : Rules.ANONYMOUS_NODE_PUBLIC_KEY;
     }
 
     protected String generateCarte(String targetNodeName, Scope clientScope) {

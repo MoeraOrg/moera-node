@@ -96,7 +96,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         Map<String, PostingRevisionInfo> revisions = new HashMap<>();
         revisions.put(revisionInfo.getId(), revisionInfo);
 
-        byte[] signingKey = fetchSigningKey(commentInfo.getOwnerName(), commentInfo.getEditedAt());
+        byte[] signingKey = fetchSigningKeyAnonymousAllowed(commentInfo.getOwnerName(), commentInfo.getEditedAt());
         if (signingKey == null) {
             succeeded(false);
             return;
@@ -159,7 +159,9 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         Map<String, PostingRevisionInfo> revisions = new HashMap<>();
         revisions.put(postingRevisionInfo.getId(), postingRevisionInfo);
 
-        byte[] signingKey = fetchSigningKey(commentInfo.getOwnerName(), commentRevisionInfo.getCreatedAt());
+        byte[] signingKey = fetchSigningKeyAnonymousAllowed(
+            commentInfo.getOwnerName(), commentRevisionInfo.getCreatedAt()
+        );
         if (signingKey == null) {
             succeeded(false);
             return;
