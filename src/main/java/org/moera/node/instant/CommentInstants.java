@@ -100,6 +100,14 @@ public class CommentInstants extends InstantsCreator {
             storyRepository.delete(substory);
             updated(story, false, false);
         }
+
+        stories = storyRepository.findFullByFeedAndTypeAndEntryId(
+            nodeId(), Feed.INSTANT, StoryType.COMMENT_NEEDS_APPROVAL, comment.getId()
+        );
+        for (Story story : stories) {
+            storyRepository.delete(story);
+            storyDeleted(story);
+        }
     }
 
     private void updated(Story story, boolean isNew, boolean isAdded) {

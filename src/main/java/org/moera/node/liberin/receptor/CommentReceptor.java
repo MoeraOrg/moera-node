@@ -198,7 +198,7 @@ public class CommentReceptor extends LiberinReceptorBase {
     }
 
     private void notifySubscribersCommentAdded(Entry posting, Comment comment, boolean premoderating) {
-        if (comment.getCurrentRevision().getSignature() == null) {
+        if (comment.getCurrentRevision().getSignature() == null && !premoderating) {
             return;
         }
 
