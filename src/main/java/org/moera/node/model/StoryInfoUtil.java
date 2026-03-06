@@ -155,6 +155,8 @@ public class StoryInfoUtil {
                 break;
 
             case COMMENT_UPDATE_TASK_FAILED:
+            case PREMODERATED_COMMENT_ACCEPTED:
+            case PREMODERATED_COMMENT_REJECTED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setSummaryNodeName(story.getRemotePostingNodeName());
                 info.setSummaryFullName(story.getRemotePostingFullName());

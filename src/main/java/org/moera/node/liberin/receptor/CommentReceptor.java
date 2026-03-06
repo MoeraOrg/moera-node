@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
+import org.moera.lib.Rules;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.SearchContentUpdateType;
@@ -44,6 +45,7 @@ import org.moera.node.model.notification.MentionCommentDeletedNotificationUtil;
 import org.moera.node.model.notification.PostingCommentAddedNotificationUtil;
 import org.moera.node.model.notification.PostingCommentDeletedNotificationUtil;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotificationUtil;
+import org.moera.node.model.notification.PremoderatedCommentDecidedNotificationUtil;
 import org.moera.node.model.notification.ReplyCommentAddedNotificationUtil;
 import org.moera.node.model.notification.ReplyCommentDeletedNotificationUtil;
 import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
@@ -120,6 +122,9 @@ public class CommentReceptor extends LiberinReceptorBase {
             liberin.getLatestRevision(),
             liberin.getLatestViewE()
         );
+        if (liberin.isLatestPremoderating() && !comment.isPremoderating()) {
+            notifyPremoderatedCommentDecided(posting, comment, true);
+        }
 
         // TODO other notifications should also be sent here
         PrincipalExpression addedFilter = visibilityFilter(posting, comment).a().andNot(liberin.getLatestViewE());
@@ -161,6 +166,9 @@ public class CommentReceptor extends LiberinReceptorBase {
         Entry posting = comment.getPosting();
 
         commentInstants.deleted(comment);
+        if (comment.isPremoderating()) {
+            notifyPremoderatedCommentDecided(posting, comment, false);
+        }
         notifyReplyDeleted(posting, comment);
         notifyMentioned(
             posting,
@@ -315,6 +323,40 @@ public class CommentReceptor extends LiberinReceptorBase {
                 AvatarImageUtil.build(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())
             )
         );
+    }
+
+    private void notifyPremoderatedCommentDecided(Entry posting, Comment comment, boolean accepted) {
+        if (comment.getOwnerName().equals(Rules.ANONYMOUS_NODE_NAME)) {
+            return;
+        }
+
+        tx.executeWriteQuietly(() -> {
+            Entry aposting = entityManager.merge(posting);
+            PostingInfo postingInfo = PostingInfoUtil.build(
+                aposting,
+                aposting.getStories(),
+                MediaAttachmentsProvider.NONE,
+                AccessCheckers.ADMIN,
+                universalContext.getOptions()
+            );
+            userListOperations.fillSheriffListMarks(postingInfo);
+            send(
+                Directions.single(comment.getNodeId(), comment.getOwnerName()),
+                PremoderatedCommentDecidedNotificationUtil.build(
+                    comment.getPosting().getId(),
+                    comment.getId(),
+                    posting.getOwnerName(),
+                    posting.getOwnerFullName(),
+                    posting.getOwnerGender(),
+                    postingInfo.getOwnerAvatar(),
+                    postingInfo.getHeading(),
+                    postingInfo.getSheriffs(),
+                    postingInfo.getSheriffMarks(),
+                    comment.getCurrentRevision().getHeading(),
+                    accepted
+                )
+            );
+        });
     }
 
     private void notifyMentioned(

@@ -3,6 +3,7 @@ package org.moera.node.liberin.receptor;
 import jakarta.inject.Inject;
 
 import org.moera.node.instant.MentionPostingInstants;
+import org.moera.node.instant.PremoderatedCommentInstants;
 import org.moera.node.instant.PostingInstants;
 import org.moera.node.instant.RemoteCommentInstants;
 import org.moera.node.instant.ReplyCommentInstants;
@@ -22,6 +23,7 @@ import org.moera.node.liberin.model.RemotePostingUpdateFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.liberin.model.RemotePostingVerificationFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingVerifiedLiberin;
+import org.moera.node.liberin.model.PremoderatedCommentDecidedLiberin;
 import org.moera.node.liberin.model.ReplyCommentAddedLiberin;
 import org.moera.node.liberin.model.ReplyCommentDeletedLiberin;
 import org.moera.node.model.event.RemotePostingAddedEvent;
@@ -43,6 +45,9 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
 
     @Inject
     private ReplyCommentInstants replyCommentInstants;
+
+    @Inject
+    private PremoderatedCommentInstants premoderatedCommentInstants;
 
     @LiberinMapping
     public void added(RemotePostingAddedLiberin liberin) {
@@ -134,6 +139,39 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
     public void replyCommentDeleted(ReplyCommentDeletedLiberin liberin) {
         replyCommentInstants.deleted(liberin.getNodeName(), liberin.getPostingId(), liberin.getCommentId(),
                 liberin.getCommentOwnerName());
+    }
+
+    @LiberinMapping
+    public void premoderatedCommentDecided(PremoderatedCommentDecidedLiberin liberin) {
+        if (liberin.isAccepted()) {
+            premoderatedCommentInstants.accepted(
+                liberin.getNodeName(),
+                liberin.getPostingOwnerName(),
+                liberin.getPostingOwnerFullName(),
+                liberin.getPostingOwnerGender(),
+                liberin.getPostingOwnerAvatar(),
+                liberin.getPostingHeading(),
+                liberin.getPostingSheriffs(),
+                liberin.getPostingSheriffMarks(),
+                liberin.getPostingId(),
+                liberin.getCommentId(),
+                liberin.getCommentHeading()
+            );
+        } else {
+            premoderatedCommentInstants.rejected(
+                liberin.getNodeName(),
+                liberin.getPostingOwnerName(),
+                liberin.getPostingOwnerFullName(),
+                liberin.getPostingOwnerGender(),
+                liberin.getPostingOwnerAvatar(),
+                liberin.getPostingHeading(),
+                liberin.getPostingSheriffs(),
+                liberin.getPostingSheriffMarks(),
+                liberin.getPostingId(),
+                liberin.getCommentId(),
+                liberin.getCommentHeading()
+            );
+        }
     }
 
 }

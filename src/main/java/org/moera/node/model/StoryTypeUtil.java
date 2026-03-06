@@ -33,7 +33,9 @@ public class StoryTypeUtil {
                    SHERIFF_COMPLAINT_DECIDED,
                    DEFROSTING,
                    SEARCH_REPORT,
-                   REMINDER_AVATAR -> 0;
+                   REMINDER_AVATAR,
+                   PREMODERATED_COMMENT_ACCEPTED,
+                   PREMODERATED_COMMENT_REJECTED -> 0;
 
               case MENTION_POSTING,
                    MENTION_COMMENT,

@@ -17,11 +17,22 @@ public class CommentUpdatedLiberin extends Liberin {
     private Comment comment;
     private EntryRevision latestRevision;
     private Principal latestViewE;
+    private boolean latestPremoderating;
 
     public CommentUpdatedLiberin(Comment comment, EntryRevision latestRevision, Principal latestViewE) {
+        this(comment, latestRevision, latestViewE, false);
+    }
+
+    public CommentUpdatedLiberin(
+        Comment comment,
+        EntryRevision latestRevision,
+        Principal latestViewE,
+        boolean latestPremoderating
+    ) {
         this.comment = comment;
         this.latestRevision = latestRevision;
         this.latestViewE = latestViewE;
+        this.latestPremoderating = latestPremoderating;
     }
 
     public Comment getComment() {
@@ -48,6 +59,14 @@ public class CommentUpdatedLiberin extends Liberin {
         this.latestViewE = latestViewE;
     }
 
+    public boolean isLatestPremoderating() {
+        return latestPremoderating;
+    }
+
+    public void setLatestPremoderating(boolean latestPremoderating) {
+        this.latestPremoderating = latestPremoderating;
+    }
+
     @Override
     protected void toModel(Map<String, Object> model, EntityManager entityManager) {
         super.toModel(model);
@@ -56,6 +75,7 @@ public class CommentUpdatedLiberin extends Liberin {
         model.put("comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN));
         model.put("latestRevision", CommentRevisionInfoUtil.build(comment, latestRevision, AccessCheckers.ADMIN));
         model.put("latestViewPrincipal", latestViewE);
+        model.put("latestPremoderating", latestPremoderating);
     }
 
 }

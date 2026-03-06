@@ -286,6 +286,7 @@ public class CommentController {
             .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         EntryRevision latest = comment.getCurrentRevision();
         Principal latestView = comment.getViewE();
+        boolean latestPremoderating = comment.isPremoderating();
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
@@ -337,7 +338,7 @@ public class CommentController {
             CommentTextUtil.toEntrySenior(commentText, comment);
         }
 
-        requestContext.send(new CommentUpdatedLiberin(comment, latest, latestView));
+        requestContext.send(new CommentUpdatedLiberin(comment, latest, latestView, latestPremoderating));
 
         return withBlockings(withSeniorReaction(
             withClientReaction(CommentInfoUtil.build(comment, MediaAttachmentsProvider.RELATIONS, requestContext)),
@@ -511,8 +512,13 @@ public class CommentController {
             for (Comment comment : page.getContent()) {
                 if (!CommentMassAttributesUtil.sameAsEntry(commentMassAttributes, comment)) {
                     Principal latestView = comment.getViewE();
+                    boolean latestPremoderating = comment.isPremoderating();
                     CommentMassAttributesUtil.toEntry(commentMassAttributes, comment);
-                    requestContext.send(new CommentUpdatedLiberin(comment, comment.getCurrentRevision(), latestView));
+                    requestContext.send(
+                        new CommentUpdatedLiberin(
+                            comment, comment.getCurrentRevision(), latestView, latestPremoderating
+                        )
+                    );
                 }
             }
             commentRepository.flush();
