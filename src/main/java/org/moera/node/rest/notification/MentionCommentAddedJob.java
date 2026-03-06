@@ -36,12 +36,24 @@ public class MentionCommentAddedJob extends Job<MentionCommentAddedJob.Parameter
         public Parameters() {
         }
 
-        public Parameters(String senderNodeName, String postingId, String postingOwnerName, String postingOwnerFullName,
-                          String postingOwnerGender, AvatarImage postingOwnerAvatar, String postingHeading,
-                          List<String> postingSheriffs, List<SheriffMark> postingSheriffMarks, String commentId,
-                          String commentOwnerName, String commentOwnerFullName, String commentOwnerGender,
-                          AvatarImage commentOwnerAvatar, String commentHeading,
-                          List<SheriffMark> commentSheriffMarks) {
+        public Parameters(
+            String senderNodeName,
+            String postingId,
+            String postingOwnerName,
+            String postingOwnerFullName,
+            String postingOwnerGender,
+            AvatarImage postingOwnerAvatar,
+            String postingHeading,
+            List<String> postingSheriffs,
+            List<SheriffMark> postingSheriffMarks,
+            String commentId,
+            String commentOwnerName,
+            String commentOwnerFullName,
+            String commentOwnerGender,
+            AvatarImage commentOwnerAvatar,
+            String commentHeading,
+            List<SheriffMark> commentSheriffMarks
+        ) {
             this.senderNodeName = senderNodeName;
             this.postingId = postingId;
             this.postingOwnerName = postingOwnerName;
@@ -212,23 +224,41 @@ public class MentionCommentAddedJob extends Job<MentionCommentAddedJob.Parameter
     @Override
     protected void execute() throws Exception {
         Contact.toAvatar(
-                contactOperations.find(parameters.postingOwnerName),
-                parameters.postingOwnerAvatar);
+            contactOperations.find(parameters.postingOwnerName),
+            parameters.postingOwnerAvatar
+        );
         Contact.toAvatar(
-                contactOperations.find(parameters.commentOwnerName),
-                parameters.commentOwnerAvatar);
+            contactOperations.find(parameters.commentOwnerName),
+            parameters.commentOwnerAvatar
+        );
 
         tx.executeWriteWithExceptions(() ->
-            mediaManager.downloadAvatars(parameters.senderNodeName,
-                    new AvatarImage[] {parameters.postingOwnerAvatar, parameters.commentOwnerAvatar}));
+            mediaManager.downloadAvatars(
+                parameters.senderNodeName,
+                new AvatarImage[] {parameters.postingOwnerAvatar, parameters.commentOwnerAvatar}
+            )
+        );
 
         universalContext.send(
-                new MentionInRemoteCommentAddedLiberin(parameters.senderNodeName, parameters.postingOwnerName,
-                        parameters.postingOwnerFullName, parameters.postingOwnerGender, parameters.postingOwnerAvatar,
-                        parameters.postingId, parameters.postingHeading, parameters.postingSheriffs,
-                        parameters.postingSheriffMarks, parameters.commentOwnerName, parameters.commentOwnerFullName,
-                        parameters.commentOwnerGender, parameters.commentOwnerAvatar, parameters.commentId,
-                        parameters.commentHeading, parameters.commentSheriffMarks));
+            new MentionInRemoteCommentAddedLiberin(
+                parameters.senderNodeName,
+                parameters.postingOwnerName,
+                parameters.postingOwnerFullName,
+                parameters.postingOwnerGender,
+                parameters.postingOwnerAvatar,
+                parameters.postingId,
+                parameters.postingHeading,
+                parameters.postingSheriffs,
+                parameters.postingSheriffMarks,
+                parameters.commentOwnerName,
+                parameters.commentOwnerFullName,
+                parameters.commentOwnerGender,
+                parameters.commentOwnerAvatar,
+                parameters.commentId,
+                parameters.commentHeading,
+                parameters.commentSheriffMarks
+            )
+        );
     }
 
 }
