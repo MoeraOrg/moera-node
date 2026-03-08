@@ -86,14 +86,20 @@ public class AvatarController {
         rotateClipToOrientation(avatarAttributes, mediaFile);
         ValidationUtil.assertion(
             avatarAttributes.getClipX() >= 0
-                && avatarAttributes.getClipX() + avatarAttributes.getClipSize() <= mediaFile.getSizeX(),
+                && avatarAttributes.getClipX() + avatarAttributes.getClipSize() - 1 <= mediaFile.getSizeX(),
             "avatar.clip-x.out-of-range"
         );
+        if (avatarAttributes.getClipX() + avatarAttributes.getClipSize() > mediaFile.getSizeX()) {
+            avatarAttributes.setClipSize(mediaFile.getSizeX() - avatarAttributes.getClipX());
+        }
         ValidationUtil.assertion(
             avatarAttributes.getClipY() >= 0
-                && avatarAttributes.getClipY() + avatarAttributes.getClipSize() <= mediaFile.getSizeY(),
+                && avatarAttributes.getClipY() + avatarAttributes.getClipSize() - 1 <= mediaFile.getSizeY(),
             "avatar.clip-y.out-of-range"
         );
+        if (avatarAttributes.getClipY() + avatarAttributes.getClipSize() > mediaFile.getSizeY()) {
+            avatarAttributes.setClipSize(mediaFile.getSizeY() - avatarAttributes.getClipY());
+        }
 
         var thumbnailFormat = MimeUtils.thumbnail(mediaFile.getMimeType());
         ValidationUtil.assertion(thumbnailFormat != null, "avatar.media-unsupported");
