@@ -17,6 +17,9 @@ public class ClientIdInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String cid = request.getParameter("cid");
+        if (ObjectUtils.isEmpty(cid)) {
+            cid = request.getHeader("Client-ID");
+        }
         requestContext.setClientId(ObjectUtils.isEmpty(cid) ? null : cid);
 
         return true;
