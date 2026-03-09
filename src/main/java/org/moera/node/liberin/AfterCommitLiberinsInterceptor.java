@@ -40,13 +40,13 @@ public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
     private BlockedUserOperations blockedUserOperations;
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
-                                Exception ex) {
+    public void afterCompletion(
+        HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex
+    ) {
         if (ex == null) {
             requestContext.getFriendCacheInvalidations().forEach(friendCache::invalidate);
             requestContext.getSubscribedCacheInvalidations().forEach(subscribedCache::invalidate);
-            boolean noClientId = handler instanceof HandlerMethod
-                    && ((HandlerMethod) handler).hasMethodAnnotation(NoClientId.class);
+            boolean noClientId = handler instanceof HandlerMethod mtd && mtd.hasMethodAnnotation(NoClientId.class);
             String clientId = noClientId ? null : requestContext.getClientId();
             requestContext.getAfterCommitLiberins().forEach(liberin -> {
                 liberin.setNodeId(requestContext.nodeId());
