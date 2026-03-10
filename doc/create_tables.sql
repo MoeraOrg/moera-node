@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict Tc2XxB7ObdUx5piTQHTiR1Yc7CRZOWtdNBwC5LpAUV34uySRUZQkB3YUxWFTqIf
+\restrict TeUrxl6MHvNpMTSevwJq2AjlQ49311nnco08fCwKrMAdwruClmEkBiKpnhRGYfM
 
--- Dumped from database version 14.20 (Ubuntu 14.20-0ubuntu0.22.04.1)
--- Dumped by pg_dump version 14.20 (Ubuntu 14.20-0ubuntu0.22.04.1)
+-- Dumped from database version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -956,7 +956,8 @@ CREATE TABLE public.drafts (
     rejected_reactions_positive character varying(255) DEFAULT ''::character varying NOT NULL,
     rejected_reactions_negative character varying(255) DEFAULT '*'::character varying NOT NULL,
     child_rejected_reactions_positive character varying(255) DEFAULT ''::character varying NOT NULL,
-    child_rejected_reactions_negative character varying(255) DEFAULT ''::character varying NOT NULL
+    child_rejected_reactions_negative character varying(255) DEFAULT ''::character varying NOT NULL,
+    allow_anonymous_children boolean DEFAULT false NOT NULL
 );
 
 
@@ -1077,7 +1078,13 @@ CREATE TABLE public.entries (
     child_rejected_reactions_positive character varying(255) DEFAULT ''::character varying NOT NULL,
     child_rejected_reactions_negative character varying(255) DEFAULT ''::character varying NOT NULL,
     index_now_updated_at timestamp without time zone DEFAULT '1970-01-01 00:00:00'::timestamp without time zone NOT NULL,
-    external_source_uri character varying(1024) DEFAULT ''::character varying NOT NULL
+    external_source_uri character varying(1024) DEFAULT ''::character varying NOT NULL,
+    allow_anonymous_children boolean DEFAULT false NOT NULL,
+    trust_comment_principal character varying(70) DEFAULT 'signed'::character varying NOT NULL,
+    parent_trust_comment_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    receiver_trust_comment_principal character varying(70),
+    premoderating boolean DEFAULT false NOT NULL,
+    client_id character varying(40)
 );
 
 
@@ -2720,6 +2727,13 @@ CREATE INDEX email_verifications_token_idx ON public.email_verifications USING b
 
 
 --
+-- Name: entries_client_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entries_client_id_idx ON public.entries USING btree (client_id);
+
+
+--
 -- Name: entries_current_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -4316,5 +4330,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Tc2XxB7ObdUx5piTQHTiR1Yc7CRZOWtdNBwC5LpAUV34uySRUZQkB3YUxWFTqIf
+\unrestrict TeUrxl6MHvNpMTSevwJq2AjlQ49311nnco08fCwKrMAdwruClmEkBiKpnhRGYfM
 
