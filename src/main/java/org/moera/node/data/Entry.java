@@ -77,6 +77,9 @@ public class Entry {
     @Size(max = 8)
     private String ownerAvatarShape;
 
+    @Size(max = 40)
+    private String clientId;
+
     @NotNull
     private Timestamp createdAt = Util.now();
 
@@ -454,6 +457,14 @@ public class Entry {
 
     public void setDeletedAt(Timestamp deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     public Timestamp getReceiverCreatedAt() {

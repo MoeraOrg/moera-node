@@ -107,6 +107,9 @@ public class CommentOperations {
                 comment.setOwnerAvatarShape(commentText.getOwnerAvatar().getShape());
             }
         }
+        if (Rules.ANONYMOUS_NODE_NAME.equals(commentText.getOwnerName())) {
+            comment.setClientId(requestContext.getClientId());
+        }
         comment.setPosting(posting);
         if (repliedTo != null) {
             comment.setRepliedTo(repliedTo);
@@ -384,6 +387,14 @@ public class CommentOperations {
             });
 
             liberins.forEach(liberinManager::send);
+        }
+    }
+
+    @Scheduled(fixedDelayString = "PT1H")
+    public void purgeExpiredClientIds() {
+        try (var ignored = requestCounter.allot()) {
+            Timestamp before = Timestamp.from(Instant.now().minus(3, ChronoUnit.HOURS));
+            tx.executeWrite(() -> commentRepository.resetClientId(before));
         }
     }
 

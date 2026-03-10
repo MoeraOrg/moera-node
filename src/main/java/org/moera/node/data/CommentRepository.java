@@ -68,4 +68,8 @@ public interface CommentRepository extends JpaRepository<Comment, UUID>, Queryds
     @Query("select c from Comment c where c.deletedAt is not null and c.deadline < ?1")
     List<Comment> findExpired(Timestamp deadline);
 
+    @Query("update Comment c set c.clientId = null where c.clientId is not null and c.createdAt < ?1")
+    @Modifying
+    void resetClientId(Timestamp before);
+
 }
