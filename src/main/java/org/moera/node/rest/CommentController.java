@@ -669,6 +669,12 @@ public class CommentController {
             priv.and(viewPrincipal.eq(Principal.PRIVATE));
             priv.and(comment.ownerName.eq(clientName));
             visibility.or(priv);
+        } else {
+            BooleanBuilder priv = new BooleanBuilder();
+            priv.and(viewPrincipal.eq(Principal.PRIVATE));
+            priv.and(comment.ownerName.eq(Rules.ANONYMOUS_NODE_NAME));
+            priv.and(comment.clientId.eq(requestContext.getClientId()));
+            visibility.or(priv);
         }
         if (requestContext.isSubscribedToClient(Scope.VIEW_CONTENT) || sheriff) {
             visibility.or(viewPrincipal.eq(Principal.SUBSCRIBED));
@@ -717,8 +723,6 @@ public class CommentController {
             ))
             .fetch()
             .stream()
-            // This should be unnecessary, but let it be for reliability
-            .filter(c -> requestContext.isPrincipal(c.getViewE(), Scope.VIEW_CONTENT) || sheriff)
             .map(c -> CommentInfoUtil.build(c, entryOperations, requestContext))
             .sorted(Comparator.comparing(CommentInfo::getMoment))
             .collect(Collectors.toList());
