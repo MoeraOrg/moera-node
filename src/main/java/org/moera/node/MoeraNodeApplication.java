@@ -177,16 +177,18 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
         SimpleAsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
         taskExecutor.setVirtualThreads(true);
         taskExecutor.setConcurrencyLimit(size);
+        taskExecutor.setRejectTasksWhenLimitReached(true);
         taskExecutor.setThreadNamePrefix(threadName + "-");
         return taskExecutor;
     }
 
     private TaskScheduler buildTaskScheduler(int size, String threadName) {
-        SimpleAsyncTaskScheduler taskExecutor = new SimpleAsyncTaskScheduler();
-        taskExecutor.setVirtualThreads(true);
-        taskExecutor.setConcurrencyLimit(size);
-        taskExecutor.setThreadNamePrefix(threadName + "-");
-        return taskExecutor;
+        SimpleAsyncTaskScheduler taskScheduler = new SimpleAsyncTaskScheduler();
+        taskScheduler.setVirtualThreads(true);
+        taskScheduler.setConcurrencyLimit(size);
+        taskScheduler.setRejectTasksWhenLimitReached(true);
+        taskScheduler.setThreadNamePrefix(threadName + "-");
+        return taskScheduler;
     }
 
     public static void main(String[] args) {

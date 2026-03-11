@@ -326,7 +326,12 @@ public class NotificationSenderPool {
                     .toList();
             resumed.forEach(sender -> {
                 resumeSender(sender);
-                taskExecutor.execute(sender);
+                try {
+                    taskExecutor.execute(sender);
+                } catch (RejectedExecutionException e) {
+                    log.warn("Sender was rejected by task executor");
+                    pauseSender(sender);
+                }
             });
         }
     }

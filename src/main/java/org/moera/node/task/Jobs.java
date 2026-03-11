@@ -126,7 +126,7 @@ public class Jobs {
             taskExecutor.execute(job);
         } catch (RejectedExecutionException e) {
             // No space in the executor, wait a bit
-            pending.add(job);
+            rejectedExecution(job);
         }
     }
 
@@ -195,7 +195,7 @@ public class Jobs {
                 taskExecutor.execute(job);
             } catch (Exception e) {
                 // No space in the executor, wait a bit
-                pending.add(job);
+                rejectedExecution(job);
             }
         }
     }
@@ -260,6 +260,11 @@ public class Jobs {
         update(job);
     }
 
+    private void rejectedExecution(Job<?, ?> job) {
+        job.setWaitUntil(Instant.now().plus(10, ChronoUnit.SECONDS));
+        pending.add(job);
+    }
+
     @Scheduled(fixedDelayString = "PT10S")
     public void restartPending() {
         var job = pending.peek();
@@ -269,7 +274,7 @@ public class Jobs {
                 taskExecutor.execute(job);
             } catch (RejectedExecutionException e) {
                 // No space in the executor, wait a bit
-                pending.add(job);
+                rejectedExecution(job);
                 return;
             }
             job = pending.peek();
