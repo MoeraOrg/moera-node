@@ -18,20 +18,33 @@ public class StoryDeletedEvent extends Event {
     private String feedName;
     private long moment;
     private String postingId;
+    private String commentId;
 
     public StoryDeletedEvent() {
         super(EventType.STORY_DELETED, Scope.VIEW_FEEDS);
     }
 
-    public StoryDeletedEvent(String id, StoryType storyType, String feedName, long moment, String postingId,
-                             boolean isAdmin, PrincipalFilter viewFilter) {
-        super(EventType.STORY_DELETED, Scope.VIEW_FEEDS,
-                isAdmin ? Principal.ADMIN : viewFilter.a().andNot(Principal.ADMIN));
+    public StoryDeletedEvent(
+        String id,
+        StoryType storyType,
+        String feedName,
+        long moment,
+        String postingId,
+        String commentId,
+        boolean isAdmin,
+        PrincipalFilter viewFilter
+    ) {
+        super(
+            EventType.STORY_DELETED,
+            Scope.VIEW_FEEDS,
+            isAdmin ? Principal.ADMIN : viewFilter.a().andNot(Principal.ADMIN)
+        );
         this.id = id;
         this.storyType = storyType;
         this.feedName = feedName;
         this.moment = moment;
         this.postingId = postingId;
+        this.commentId = commentId;
     }
 
     public String getId() {
@@ -74,6 +87,14 @@ public class StoryDeletedEvent extends Event {
         this.postingId = postingId;
     }
 
+    public String getCommentId() {
+        return commentId;
+    }
+
+    public void setCommentId(String commentId) {
+        this.commentId = commentId;
+    }
+
     @Override
     public void logParameters(List<Pair<String, String>> parameters) {
         super.logParameters(parameters);
@@ -81,6 +102,7 @@ public class StoryDeletedEvent extends Event {
         parameters.add(Pair.of("feedName", LogUtil.format(feedName)));
         parameters.add(Pair.of("moment", LogUtil.format(moment)));
         parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
+        parameters.add(Pair.of("commentId", LogUtil.format(commentId)));
     }
 
 }

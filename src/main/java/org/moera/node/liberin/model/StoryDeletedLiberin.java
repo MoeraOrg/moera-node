@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.PrincipalFilter;
+import org.moera.node.data.EntryType;
 import org.moera.node.data.Story;
 import org.moera.node.liberin.Liberin;
 
@@ -15,6 +16,7 @@ public class StoryDeletedLiberin extends Liberin {
     private String feedName;
     private long moment;
     private UUID postingId;
+    private UUID commentId;
     private PrincipalFilter viewFilter;
 
     public StoryDeletedLiberin(Story story) {
@@ -22,7 +24,14 @@ public class StoryDeletedLiberin extends Liberin {
         storyType = story.getStoryType();
         feedName = story.getFeedName();
         moment = story.getMoment();
-        postingId = story.getEntry() != null ? story.getEntry().getId() : null;
+        if (story.getEntry() != null) {
+            if (story.getEntry().getEntryType() == EntryType.COMMENT) {
+                postingId = story.getEntry().getParent().getId();
+                commentId = story.getEntry().getId();
+            } else {
+                postingId = story.getEntry().getId();
+            }
+        }
         viewFilter = story.getViewPrincipalFilter();
     }
 
@@ -66,6 +75,14 @@ public class StoryDeletedLiberin extends Liberin {
         this.postingId = postingId;
     }
 
+    public UUID getCommentId() {
+        return commentId;
+    }
+
+    public void setCommentId(UUID commentId) {
+        this.commentId = commentId;
+    }
+
     public PrincipalFilter getViewFilter() {
         return viewFilter;
     }
@@ -82,6 +99,7 @@ public class StoryDeletedLiberin extends Liberin {
         model.put("feedName", feedName);
         model.put("moment", moment);
         model.put("postingId", postingId);
+        model.put("commentId", commentId);
     }
 
 }

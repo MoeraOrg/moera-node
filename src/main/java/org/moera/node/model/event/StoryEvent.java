@@ -27,6 +27,7 @@ public class StoryEvent extends Event {
     private boolean pinned;
     private long moment;
     private String postingId;
+    private String commentId;
     private Boolean viewed;
     private Boolean read;
     private Boolean satisfied;
@@ -58,26 +59,22 @@ public class StoryEvent extends Event {
         publishedAt = Util.toEpochSecond(story.getPublishedAt());
         pinned = story.isPinned();
         moment = story.getMoment();
-        postingId = story.getEntry() != null ? story.getEntry().getId().toString() : null;
+        postingId = storyInfo.getPostingId();
+        commentId = storyInfo.getCommentId();
         if (isAdmin) {
             viewed = story.isViewed();
             read = story.isRead();
             satisfied = story.isSatisfied();
         }
-        remoteNodeName = story.getRemoteNodeName();
-        remoteFullName = story.getRemoteFullName();
-        remotePostingId = story.getRemotePostingId();
-        remoteCommentId = story.getRemoteCommentId();
+        remoteNodeName = storyInfo.getRemoteNodeName();
+        remoteFullName = storyInfo.getRemoteFullName();
+        remotePostingId = storyInfo.getRemotePostingId();
+        remoteCommentId = storyInfo.getRemoteCommentId();
         summaryNodeName = storyInfo.getSummaryNodeName();
         summaryFullName = storyInfo.getSummaryFullName();
         summaryAvatar = storyInfo.getSummaryAvatar();
-        if (story.getSummary().startsWith("{")) {
-            summaryData = story.getSummaryData();
-        } else if (story.getSummary().isEmpty()) {
-            summaryData = new StorySummaryData();
-        } else {
-            summary = story.getSummary();
-        }
+        summaryData = storyInfo.getSummaryData();
+        summary = storyInfo.getSummary();
         operations = new HashMap<>();
         operations.put("edit", Principal.ADMIN);
         operations.put("delete", Principal.ADMIN);
@@ -137,6 +134,14 @@ public class StoryEvent extends Event {
 
     public void setPostingId(String postingId) {
         this.postingId = postingId;
+    }
+
+    public String getCommentId() {
+        return commentId;
+    }
+
+    public void setCommentId(String commentId) {
+        this.commentId = commentId;
     }
 
     public Boolean getViewed() {
@@ -251,6 +256,7 @@ public class StoryEvent extends Event {
         parameters.add(Pair.of("pinned", LogUtil.format(pinned)));
         parameters.add(Pair.of("moment", LogUtil.format(moment)));
         parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
+        parameters.add(Pair.of("commentId", LogUtil.format(commentId)));
         parameters.add(Pair.of("viewed", LogUtil.format(viewed)));
         parameters.add(Pair.of("read", LogUtil.format(read)));
         parameters.add(Pair.of("satisfied", LogUtil.format(satisfied)));

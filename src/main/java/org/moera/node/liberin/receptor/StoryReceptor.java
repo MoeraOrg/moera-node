@@ -97,6 +97,7 @@ public class StoryReceptor extends LiberinReceptorBase {
                     liberin.getFeedName(),
                     liberin.getMoment(),
                     Objects.toString(liberin.getPostingId(), null),
+                    Objects.toString(liberin.getCommentId(), null),
                     false,
                     liberin.getViewFilter()
                 )
@@ -110,6 +111,7 @@ public class StoryReceptor extends LiberinReceptorBase {
                 liberin.getFeedName(),
                 liberin.getMoment(),
                 Objects.toString(liberin.getPostingId(), null),
+                Objects.toString(liberin.getCommentId(), null),
                 true,
                 liberin.getViewFilter()
             )
