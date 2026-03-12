@@ -70,9 +70,10 @@ public class LiberinManager implements Runnable {
         if (deliveryThread != null) {
             log.warn("Liberin delivery thread died, restarting");
         }
-        deliveryThread = Thread.ofVirtual()
+        deliveryThread = Thread.ofPlatform()
             .name("liberinDelivery")
             .uncaughtExceptionHandler((thread, throwable) -> startThread())
+            .daemon()
             .start(this);
     }
 

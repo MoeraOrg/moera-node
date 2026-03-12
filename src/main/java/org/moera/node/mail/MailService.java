@@ -72,7 +72,7 @@ public class MailService {
 
     @PostConstruct
     public void init() {
-        Thread.ofVirtual().name("mailDelivery").start(this::runMailQueue);
+        Thread.ofPlatform().name("mailDelivery").daemon().start(this::runMailQueue);
     }
 
     public void send(UUID nodeId, Mail mail) {

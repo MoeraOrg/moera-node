@@ -217,7 +217,7 @@ public class EventManager {
 
     @PostConstruct
     public void init() {
-        Thread.ofVirtual().name("eventDelivery").start(() -> {
+        Thread.ofPlatform().name("eventDelivery").daemon().start(() -> {
             while (true) {
                 try {
                     synchronized (deliverySignal) {

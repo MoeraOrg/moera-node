@@ -29,11 +29,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.http.converter.autoconfigure.ServerHttpMessageConvertersCustomizer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ViewResolverRegistry;
@@ -173,22 +173,19 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
         return buildTaskScheduler(config.getPools().getOther(), "other");
     }
 
-    private SimpleAsyncTaskExecutor buildTaskExecutor(int size, String threadName) {
-        SimpleAsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
-        taskExecutor.setVirtualThreads(true);
-        taskExecutor.setConcurrencyLimit(size);
-        taskExecutor.setRejectTasksWhenLimitReached(true);
+    private ThreadPoolTaskExecutor buildTaskExecutor(int size, String threadName) {
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(size);
+        taskExecutor.setMaxPoolSize(size);
         taskExecutor.setThreadNamePrefix(threadName + "-");
         return taskExecutor;
     }
 
     private TaskScheduler buildTaskScheduler(int size, String threadName) {
-        SimpleAsyncTaskScheduler taskScheduler = new SimpleAsyncTaskScheduler();
-        taskScheduler.setVirtualThreads(true);
-        taskScheduler.setConcurrencyLimit(size);
-        taskScheduler.setRejectTasksWhenLimitReached(true);
-        taskScheduler.setThreadNamePrefix(threadName + "-");
-        return taskScheduler;
+        ThreadPoolTaskScheduler taskExecutor = new ThreadPoolTaskScheduler();
+        taskExecutor.setPoolSize(size);
+        taskExecutor.setThreadNamePrefix(threadName + "-");
+        return taskExecutor;
     }
 
     public static void main(String[] args) {

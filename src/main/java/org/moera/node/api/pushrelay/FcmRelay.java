@@ -44,7 +44,7 @@ public class FcmRelay {
     public void init() {
         service = new PushRelay(config.getFcmRelay());
 
-        Thread.ofVirtual().name("fcmDelivery").start(this::deliver);
+        Thread.ofPlatform().name("fcmDelivery").daemon().start(this::deliver);
     }
 
     private void deliver() {
