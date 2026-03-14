@@ -86,6 +86,8 @@ public interface RequestContext extends AccessChecker {
 
     void setClientId(String clientId);
 
+    String getSessionId();
+
     String getClientName(Scope scope);
 
     void setClientName(String clientName);

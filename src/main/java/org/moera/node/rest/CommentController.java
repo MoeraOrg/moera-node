@@ -673,7 +673,7 @@ public class CommentController {
             BooleanBuilder priv = new BooleanBuilder();
             priv.and(viewPrincipal.eq(Principal.PRIVATE));
             priv.and(comment.ownerName.eq(Rules.ANONYMOUS_NODE_NAME));
-            priv.and(comment.clientId.eq(requestContext.getClientId()));
+            priv.and(comment.clientId.eq(requestContext.getSessionId()));
             visibility.or(priv);
         }
         if (requestContext.isSubscribedToClient(Scope.VIEW_CONTENT) || sheriff) {

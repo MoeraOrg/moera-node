@@ -228,6 +228,12 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
+    public String getSessionId() {
+        int pos = clientId.indexOf(':');
+        return pos > 0 ? clientId.substring(0, pos) : clientId;
+    }
+
+    @Override
     public String getClientName(Scope scope) {
         return hasClientScope(scope) ? clientName : null;
     }

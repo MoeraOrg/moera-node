@@ -108,7 +108,7 @@ public class CommentOperations {
             }
         }
         if (Rules.ANONYMOUS_NODE_NAME.equals(commentText.getOwnerName())) {
-            comment.setClientId(requestContext.getClientId());
+            comment.setClientId(requestContext.getSessionId());
         }
         comment.setPosting(posting);
         if (repliedTo != null) {
