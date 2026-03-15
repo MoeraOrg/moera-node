@@ -23,7 +23,7 @@ public class CarteProperties {
     }
 
     public List<InetAddress> getAddresses() {
-        var addresses = (List<InetAddress>) fingerprint.get("address");
+        var addresses = (List<InetAddress>) fingerprint.get("addresses");
         if (addresses != null) {
             return addresses;
         }
