@@ -12,6 +12,7 @@ import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.data.EntryType;
 import org.moera.node.data.Story;
 import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.util.Util;
@@ -59,7 +60,9 @@ public class StoryEvent extends Event {
         publishedAt = Util.toEpochSecond(story.getPublishedAt());
         pinned = story.isPinned();
         moment = story.getMoment();
-        postingId = storyInfo.getPostingId();
+        postingId = story.getEntry() != null && story.getEntry().getEntryType() == EntryType.POSTING
+            ? story.getEntry().getId().toString()
+            : storyInfo.getPostingId();
         commentId = storyInfo.getCommentId();
         if (isAdmin) {
             viewed = story.isViewed();
