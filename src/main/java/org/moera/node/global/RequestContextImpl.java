@@ -229,6 +229,9 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public String getSessionId() {
+        if (clientId == null) {
+            return null;
+        }
         int pos = clientId.indexOf(':');
         return pos > 0 ? clientId.substring(0, pos) : clientId;
     }
