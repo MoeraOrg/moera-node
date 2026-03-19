@@ -172,11 +172,11 @@ public class MediaOperations {
         return FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
     }
 
-    public Path getPublicServingPath() {
+    private Path getPublicServingPath() {
         return FileSystems.getDefault().getPath(config.getMedia().getPath(), PUBLIC_DIR);
     }
 
-    public Path getPublicServingPath(MediaFile mediaFile) {
+    private Path getPublicServingPath(MediaFile mediaFile) {
         return getPublicServingPath().resolve(mediaFile.getFileName());
     }
 
@@ -187,15 +187,15 @@ public class MediaOperations {
         }
     }
 
-    public Path getPrivateServingPath() {
+    private Path getPrivateServingPath() {
         return FileSystems.getDefault().getPath(config.getMedia().getPath(), PRIVATE_DIR);
     }
 
-    public Path getPrivateServingPath(MediaFileOwner mediaFileOwner) {
+    private Path getPrivateServingPath(MediaFileOwner mediaFileOwner) {
         return getPrivateServingPath().resolve(mediaFileOwner.getDirectFileName());
     }
 
-    public Path getPrivateServingPath(MediaFilePreview mediaFilePreview, String originalFileName) {
+    private Path getPrivateServingPath(MediaFilePreview mediaFilePreview, String originalFileName) {
         return getPrivateServingPath().resolve(mediaFilePreview.getDirectFileName(originalFileName));
     }
 
