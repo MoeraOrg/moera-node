@@ -72,7 +72,9 @@ public class CommentUpdatedLiberin extends Liberin {
         super.toModel(model);
         comment = entityManager.merge(comment);
         latestRevision = entityManager.merge(latestRevision);
-        model.put("comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN));
+        model.put(
+            "comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+        );
         model.put("latestRevision", CommentRevisionInfoUtil.build(comment, latestRevision, AccessCheckers.ADMIN));
         model.put("latestViewPrincipal", latestViewE);
         model.put("latestPremoderating", latestPremoderating);

@@ -9,6 +9,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 
+import org.moera.node.config.Config;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.plugin.Plugins;
 import org.moera.node.util.Transaction;
@@ -33,6 +34,8 @@ public class LiberinManager implements Runnable {
     @Inject
     private ApplicationContext applicationContext;
 
+    @Inject
+    private Config config;
     @Inject
     private UniversalContext universalContext;
 
@@ -87,6 +90,7 @@ public class LiberinManager implements Runnable {
     public void send(Liberin... liberins) {
         try {
             for (Liberin liberin : liberins) {
+                liberin.setConfig(config);
                 queue.put(liberin);
             }
         } catch (InterruptedException e) {

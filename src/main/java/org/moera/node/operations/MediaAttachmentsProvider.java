@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.moera.lib.node.types.MediaAttachment;
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.model.MediaAttachmentUtil;
@@ -13,12 +14,14 @@ import org.moera.node.model.MediaAttachmentUtil;
 public interface MediaAttachmentsProvider {
 
     MediaAttachmentsProvider NONE = (revision, receiverName) -> Collections.emptyList();
-    MediaAttachmentsProvider RELATIONS =
-        (revision, receiverName) ->
+
+    static MediaAttachmentsProvider relations(DirectServeConfig config) {
+        return (revision, receiverName) ->
             revision.getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> MediaAttachmentUtil.build(ea, receiverName))
+                .map(ea -> MediaAttachmentUtil.build(ea, receiverName, config))
                 .collect(Collectors.toList());
+    }
 
     List<MediaAttachment> getMediaAttachments(EntryRevision revision, String receiverName);
 

@@ -25,7 +25,7 @@ public class DraftDeletedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("draft", DraftInfoUtil.build(draft));
+        model.put("draft", DraftInfoUtil.build(draft, getConfig().getMedia().getDirectServe()));
     }
 
 }

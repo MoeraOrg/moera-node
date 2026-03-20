@@ -5,7 +5,7 @@ public class MediaConfig {
     private String path;
     private String serve = "stream"; // stream, sendfile, accel
     private String accelPrefix = "/";
-    private boolean directServe;
+    private DirectServeConfig directServe = new DirectServeConfig();
     private String ocrService;
     private String ocrServiceKey;
 
@@ -33,11 +33,11 @@ public class MediaConfig {
         this.accelPrefix = accelPrefix;
     }
 
-    public boolean isDirectServe() {
+    public DirectServeConfig getDirectServe() {
         return directServe;
     }
 
-    public void setDirectServe(boolean directServe) {
+    public void setDirectServe(DirectServeConfig directServe) {
         this.directServe = directServe;
     }
 

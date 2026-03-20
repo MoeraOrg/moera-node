@@ -57,6 +57,7 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
+import org.moera.node.config.DirectServeSource;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Draft;
 import org.moera.node.data.Entry;
@@ -291,12 +292,12 @@ public class MediaOperations {
             mediaFile.setExposed(exposed);
             mediaFile = mediaFileRepository.save(mediaFile);
 
-            if (config.getMedia().isDirectServe() && exposed) {
+            if (config.getMedia().getDirectServe().getSource() == DirectServeSource.FILESYSTEM && exposed) {
                 createPublicServingLink(mediaFile);
             }
         } else if (exposed && !mediaFile.isExposed()) {
             mediaFile.setExposed(exposed);
-            if (config.getMedia().isDirectServe()) {
+            if (config.getMedia().getDirectServe().getSource() == DirectServeSource.FILESYSTEM) {
                 createPublicServingLink(mediaFile);
             }
         }
@@ -448,7 +449,7 @@ public class MediaOperations {
 
         mediaFileOwner = mediaFileOwnerRepository.save(mediaFileOwner);
 
-        if (config.getMedia().isDirectServe()) {
+        if (config.getMedia().getDirectServe().getSource() == DirectServeSource.FILESYSTEM) {
             mediaFileOwner.setNonce(MediaFileOwner.generateNonce());
             Timestamp deadline = Timestamp.from(Instant.now().plus(MediaOperations.NONCE_REFRESH_INTERVAL));
             mediaFileOwner.setNonceDeadline(deadline);
@@ -727,7 +728,10 @@ public class MediaOperations {
                 } catch (IOException e) {
                     log.warn("Error deleting {}: {}", path, e.getMessage());
                 }
-                if (config.getMedia().isDirectServe() && mediaFile.isExposed()) {
+                if (
+                    config.getMedia().getDirectServe().getSource() == DirectServeSource.FILESYSTEM
+                    && mediaFile.isExposed()
+                ) {
                     Path publicPath = getPublicServingPath(mediaFile);
                     try {
                         Files.deleteIfExists(publicPath);
@@ -777,7 +781,7 @@ public class MediaOperations {
 
     @EventListener(JobsManagerInitializedEvent.class)
     public void prepareDirectServing() throws IOException {
-        if (!config.getMedia().isDirectServe()) {
+        if (config.getMedia().getDirectServe().getSource() != DirectServeSource.FILESYSTEM) {
             return;
         }
         Path publicDir = getPublicServingPath();
@@ -794,7 +798,7 @@ public class MediaOperations {
 
     @Scheduled(fixedDelayString = "PT3H")
     public void refreshNonce() {
-        if (!config.getMedia().isDirectServe()) {
+        if (config.getMedia().getDirectServe().getSource() != DirectServeSource.FILESYSTEM) {
             return;
         }
 

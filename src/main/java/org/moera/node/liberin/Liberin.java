@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 import jakarta.persistence.EntityManager;
 
+import org.moera.node.config.Config;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.plugin.PluginContext;
@@ -16,6 +17,7 @@ public class Liberin {
     private UUID nodeId;
     private String clientId;
     private PluginContext pluginContext;
+    private Config config;
 
     public Liberin() {
     }
@@ -65,6 +67,14 @@ public class Liberin {
     public Liberin withPluginContext(UniversalContext universalContext) {
         setPluginContext(universalContext);
         return this;
+    }
+
+    public Config getConfig() {
+        return config;
+    }
+
+    public void setConfig(Config config) {
+        this.config = config;
     }
 
     public String getTypeName() {

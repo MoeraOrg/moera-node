@@ -24,6 +24,7 @@ import org.moera.lib.node.types.validate.ValidationFailure;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.UserBlockedException;
+import org.moera.node.config.Config;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRepository;
@@ -68,6 +69,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class MediaController {
 
     private static final Logger log = LoggerFactory.getLogger(MediaController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -203,7 +207,7 @@ public class MediaController {
                 mediaFile.setRecognizeAt(Util.now());
             }
 
-            return PrivateMediaFileInfoUtil.build(mediaFileOwner, null);
+            return PrivateMediaFileInfoUtil.build(mediaFileOwner, null, config.getMedia().getDirectServe());
         } catch (InvalidImageException e) {
             throw new ValidationFailure("media.image-invalid");
         } catch (ThresholdReachedException e) {
@@ -254,7 +258,7 @@ public class MediaController {
     public PrivateMediaFileInfo getInfoPrivate(@PathVariable UUID id) {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
 
-        return PrivateMediaFileInfoUtil.build(getMediaFileOwner(id), null);
+        return PrivateMediaFileInfoUtil.build(getMediaFileOwner(id), null, config.getMedia().getDirectServe());
     }
 
     @GetMapping("/public/{id}/data")

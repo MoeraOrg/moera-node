@@ -11,6 +11,7 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.config.Config;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
@@ -48,6 +49,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class DeletedPostingController {
 
     private static final Logger log = LoggerFactory.getLogger(DeletedPostingController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -124,7 +128,11 @@ public class DeletedPostingController {
 
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
         return PostingInfoUtil.build(
-            posting, stories, MediaAttachmentsProvider.RELATIONS, requestContext, requestContext.getOptions()
+            posting,
+            stories,
+            MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
+            requestContext,
+            requestContext.getOptions()
         );
     }
 

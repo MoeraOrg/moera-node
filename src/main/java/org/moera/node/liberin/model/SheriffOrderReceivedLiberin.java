@@ -95,11 +95,17 @@ public class SheriffOrderReceivedLiberin extends Liberin {
         model.put("feedName", feedName);
         if (posting != null) {
             posting = entityManager.merge(posting);
-            model.put("posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN));
+            model.put(
+                "posting",
+                PostingInfoUtil.build(posting, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+            );
         }
         if (comment != null) {
             comment = entityManager.merge(comment);
-            model.put("comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN));
+            model.put(
+                "comment",
+                CommentInfoUtil.build(comment, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+            );
         }
         model.put("sheriffName", sheriffName);
         model.put("sheriffAvatar", sheriffAvatar);

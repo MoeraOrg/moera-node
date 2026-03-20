@@ -42,8 +42,12 @@ public class CommentAddedLiberin extends Liberin {
         super.toModel(model);
         posting = entityManager.merge(posting);
         comment = entityManager.merge(comment);
-        model.put("posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN));
-        model.put("comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN));
+        model.put(
+            "posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+        );
+        model.put(
+            "comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+        );
     }
 
 }

@@ -41,7 +41,9 @@ public class CommentDeletedLiberin extends Liberin {
         super.toModel(model);
         comment = entityManager.merge(comment);
         latestRevision = entityManager.merge(latestRevision);
-        model.put("comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN));
+        model.put(
+            "comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+        );
     }
 
 }

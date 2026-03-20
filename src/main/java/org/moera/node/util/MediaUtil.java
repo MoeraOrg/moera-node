@@ -1,10 +1,17 @@
 package org.moera.node.util;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.bouncycastle.crypto.macs.HMac;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.jcajce.provider.util.DigestFactory;
 import org.moera.lib.node.types.MediaFilePreviewInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.data.MediaFile;
@@ -73,6 +80,34 @@ public class MediaUtil {
             Math.min(350, findLargerPreviewWidth(mediaFile, 350)),
             Math.min(900, findLargerPreviewWidth(mediaFile, 900))
         );
+    }
+
+    public static String presignUrl(String location, String id, ExtendedDuration valid, String secret) {
+        long expires = switch (valid.getZone()) {
+            case FIXED ->
+                Instant.now()
+                    .plus(valid.getDuration())
+                    .atZone(ZoneOffset.UTC)
+                    .toLocalDate()
+                    .atStartOfDay()
+                    .plusDays(1)
+                    .toEpochSecond(ZoneOffset.UTC);
+            case ALWAYS ->
+                LocalDate.of(2100, 1, 1).atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+            case NEVER ->
+                Instant.now().toEpochMilli() / 1000;
+        };
+
+        var mac = new HMac(DigestFactory.getDigest("SHA-256"));
+        mac.init(new KeyParameter(secret.getBytes(StandardCharsets.UTF_8)));
+        byte[] data = id.getBytes(StandardCharsets.UTF_8);
+        mac.update(data, 0, data.length);
+        data = Long.toString(expires).getBytes(StandardCharsets.UTF_8);
+        mac.update(data, 0, data.length);
+        byte[] signature = new byte[mac.getMacSize()];
+        mac.doFinal(signature, 0);
+
+        return String.format("%s?exp=%d&sig=%s", location, expires, Util.base64urlencode(signature));
     }
 
 }

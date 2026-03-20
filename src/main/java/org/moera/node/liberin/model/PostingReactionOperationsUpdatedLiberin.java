@@ -42,7 +42,9 @@ public class PostingReactionOperationsUpdatedLiberin extends Liberin {
         super.toModel(model);
         posting = entityManager.merge(posting);
         reaction = entityManager.merge(reaction);
-        model.put("posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN));
+        model.put(
+            "posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+        );
         model.put("reaction", ReactionInfoUtil.build(reaction, AccessCheckers.ADMIN));
     }
 

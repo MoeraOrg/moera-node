@@ -20,6 +20,7 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
@@ -37,12 +38,12 @@ import org.springframework.util.ObjectUtils;
 public class PostingInfoUtil {
 
     // for liberin models
-    public static PostingInfo build(Entry posting, AccessChecker accessChecker) {
+    public static PostingInfo build(Entry posting, AccessChecker accessChecker, DirectServeConfig config) {
         return build(
             posting,
             posting.getCurrentRevision(),
             null,
-            MediaAttachmentsProvider.RELATIONS,
+            MediaAttachmentsProvider.relations(config),
             false,
             accessChecker,
             null
@@ -551,7 +552,7 @@ public class PostingInfoUtil {
         posting.setReceiverSheriffMarks(SheriffUtil.serializeSheriffMarks(info.getSheriffMarks()).orElse(null));
     }
 
-    public static void toPickedEntryRevision(PostingInfo info, EntryRevision entryRevision) {
+    public static void toPickedEntryRevision(PostingInfo info, EntryRevision entryRevision, DirectServeConfig config) {
         List<MediaFileOwner> media = entryRevision.getAttachments().stream()
             .map(EntryAttachment::getMediaFileOwner)
             .collect(Collectors.toList());
@@ -563,14 +564,15 @@ public class PostingInfoUtil {
                 !ObjectUtils.isEmpty(info.getBodyPreview().getText()) ? info.getBodyPreview() : info.getBody(),
                 true,
                 media,
-                false
+                false,
+                config
             )
         );
         entryRevision.setBodySrcFormat(info.getBodySrcFormat());
         entryRevision.setReceiverBodySrcHash(info.getBodySrcHash());
         entryRevision.setBodyFormat(info.getBodyFormat().getValue());
         entryRevision.setBody(info.getBody().getEncoded());
-        entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(info.getBody(), false, media, false));
+        entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(info.getBody(), false, media, false, config));
         entryRevision.setHeading(info.getHeading());
         entryRevision.setDescription(info.getDescription());
         if (info.getDeletedAt() != null) {

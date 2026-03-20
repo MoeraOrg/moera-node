@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.moera.lib.node.types.body.Body;
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFileOwner;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
@@ -68,7 +69,13 @@ public class HtmlSanitizer {
         return IFRAME_HOSTNAMES.contains(hostname);
     }
 
-    private static String sanitize(String html, boolean preview, List<MediaFileOwner> media, boolean noFollowOnLinks) {
+    private static String sanitize(
+        String html,
+        boolean preview,
+        List<MediaFileOwner> media,
+        boolean noFollowOnLinks,
+        DirectServeConfig config
+    ) {
         if (html == null) {
             return null;
         }
@@ -83,7 +90,7 @@ public class HtmlSanitizer {
         }
         policyFactory = policyFactory.and(
             new HtmlPolicyBuilder()
-                .withPreprocessor(u -> new ImageProcessor(u, media))
+                .withPreprocessor(u -> new ImageProcessor(config, u, media))
                 .toFactory()
         );
         return policyFactory.sanitize(html);
@@ -93,9 +100,10 @@ public class HtmlSanitizer {
         String html,
         boolean preview,
         List<MediaFileOwner> media,
-        boolean noFollowOnLinks
+        boolean noFollowOnLinks,
+        DirectServeConfig config
     ) {
-        String saneHtml = sanitize(html, preview, media, noFollowOnLinks);
+        String saneHtml = sanitize(html, preview, media, noFollowOnLinks, config);
         return saneHtml == null || saneHtml.equals(html) ? null : saneHtml;
     }
 
@@ -103,9 +111,10 @@ public class HtmlSanitizer {
         Body body,
         boolean preview,
         List<MediaFileOwner> media,
-        boolean noFollowOnLinks
+        boolean noFollowOnLinks,
+        DirectServeConfig config
     ) {
-        return sanitizeIfNeeded(body.getText(), preview, media, noFollowOnLinks);
+        return sanitizeIfNeeded(body.getText(), preview, media, noFollowOnLinks, config);
     }
 
 }

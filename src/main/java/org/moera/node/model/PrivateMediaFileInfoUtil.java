@@ -5,20 +5,21 @@ import java.util.stream.Collectors;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.PrivateMediaFileOperations;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 
 public class PrivateMediaFileInfoUtil {
 
-    public static PrivateMediaFileInfo build(MediaFileOwner mediaFileOwner, String receiverName) {
+    public static PrivateMediaFileInfo build(
+        MediaFileOwner mediaFileOwner, String receiverName, DirectServeConfig config
+    ) {
         PrivateMediaFileInfo info = new PrivateMediaFileInfo();
         
         info.setId(mediaFileOwner.getId().toString());
         info.setHash(mediaFileOwner.getMediaFile().getId());
         info.setPath("private/" + mediaFileOwner.getFileName());
-        info.setDirectPath(
-            mediaFileOwner.getDirectFileName() != null ? "private/" + mediaFileOwner.getDirectFileName() : null
-        );
+        info.setDirectPath(mediaFileOwner.getDirectPath(config));
         info.setMimeType(mediaFileOwner.getMediaFile().getMimeType());
         info.setWidth(mediaFileOwner.getMediaFile().getSizeX());
         info.setHeight(mediaFileOwner.getMediaFile().getSizeY());

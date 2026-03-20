@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.MediaAttachment;
+import org.moera.node.config.Config;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
@@ -33,6 +34,9 @@ import tools.jackson.databind.ObjectMapper;
 public class EntryOperations implements MediaAttachmentsProvider {
 
     private static final Logger log = LoggerFactory.getLogger(EntryOperations.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestCounter requestCounter;
@@ -115,7 +119,7 @@ public class EntryOperations implements MediaAttachmentsProvider {
         Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
         return attachments.stream()
             .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-            .map(ea -> MediaAttachmentUtil.build(ea, receiverName))
+            .map(ea -> MediaAttachmentUtil.build(ea, receiverName, config.getMedia().getDirectServe()))
             .collect(Collectors.toList());
     }
 

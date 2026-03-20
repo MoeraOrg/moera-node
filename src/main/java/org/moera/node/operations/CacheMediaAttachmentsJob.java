@@ -9,6 +9,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.config.Config;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
@@ -54,6 +55,9 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
         }
 
     }
+
+    @Inject
+    private Config config;
 
     @Inject
     private EntryRevisionRepository entryRevisionRepository;
@@ -104,7 +108,7 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
             Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
             List<MediaAttachment> mediaAttachments = attachments.stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> MediaAttachmentUtil.build(ea, parameters.receiverName))
+                .map(ea -> MediaAttachmentUtil.build(ea, parameters.receiverName, config.getMedia().getDirectServe()))
                 .collect(Collectors.toList());
             cache.putCache(parameters.receiverName, mediaAttachments);
 

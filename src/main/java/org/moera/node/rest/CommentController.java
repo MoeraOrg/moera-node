@@ -44,6 +44,7 @@ import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.UserBlockedException;
+import org.moera.node.config.Config;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
@@ -115,6 +116,9 @@ public class CommentController {
 
     private static final Duration CREATED_AT_MARGIN = Duration.ofMinutes(10);
     private static final int MASS_UPDATE_PAGE_SIZE = 100;
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -260,7 +264,7 @@ public class CommentController {
             .body(CommentCreatedUtil.build(
                 comment,
                 posting.getTotalChildren(),
-                MediaAttachmentsProvider.RELATIONS,
+                MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
                 requestContext,
                 blockedOperations
             ));
@@ -340,10 +344,18 @@ public class CommentController {
 
         requestContext.send(new CommentUpdatedLiberin(comment, latest, latestView, latestPremoderating));
 
-        return withBlockings(withSeniorReaction(
-            withClientReaction(CommentInfoUtil.build(comment, MediaAttachmentsProvider.RELATIONS, requestContext)),
-            comment.getPosting().getOwnerName()
-        ));
+        return withBlockings(
+            withSeniorReaction(
+                withClientReaction(
+                    CommentInfoUtil.build(
+                        comment,
+                        MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
+                        requestContext
+                    )
+                ),
+                comment.getPosting().getOwnerName()
+            )
+        );
     }
 
     private byte[] validateCommentText(

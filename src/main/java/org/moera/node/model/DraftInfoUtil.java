@@ -8,6 +8,7 @@ import org.moera.lib.node.types.CommentOperations;
 import org.moera.lib.node.types.DraftInfo;
 import org.moera.lib.node.types.PostingOperations;
 import org.moera.lib.node.types.body.Body;
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Draft;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.util.Util;
@@ -20,7 +21,7 @@ public class DraftInfoUtil {
 
     private static final Logger log = LoggerFactory.getLogger(DraftInfoUtil.class);
 
-    public static DraftInfo build(Draft draft) {
+    public static DraftInfo build(Draft draft, DirectServeConfig config) {
         DraftInfo draftInfo = new DraftInfo();
         
         draftInfo.setId(draft.getId().toString());
@@ -58,7 +59,7 @@ public class DraftInfoUtil {
         draftInfo.setMedia(
             draft.getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> MediaAttachmentUtil.build(ea, null))
+                .map(ea -> MediaAttachmentUtil.build(ea, null, config))
                 .collect(Collectors.toList())
         );
 

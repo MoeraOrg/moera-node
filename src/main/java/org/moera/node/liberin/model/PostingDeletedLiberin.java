@@ -43,11 +43,16 @@ public class PostingDeletedLiberin extends Liberin {
         super.toModel(model);
         posting = entityManager.merge(posting);
         latestRevision = entityManager.merge(latestRevision);
-        model.put("posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN));
+        model.put(
+            "posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+        );
         model.put(
             "latestRevision",
             PostingRevisionInfoUtil.build(
-                posting, latestRevision, MediaAttachmentsProvider.RELATIONS, posting.getReceiverName(),
+                posting,
+                latestRevision,
+                MediaAttachmentsProvider.relations(getConfig().getMedia().getDirectServe()),
+                posting.getReceiverName(),
                 AccessCheckers.ADMIN
             )
         );

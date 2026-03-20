@@ -23,6 +23,7 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.config.Config;
 import org.moera.node.data.Draft;
 import org.moera.node.data.DraftRepository;
 import org.moera.node.data.EntryAttachment;
@@ -74,6 +75,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class DraftController {
 
     private static final Logger log = LoggerFactory.getLogger(DraftController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestCounter requestCounter;
@@ -168,7 +172,7 @@ public class DraftController {
                 break;
         }
         return drafts.stream()
-            .map(DraftInfoUtil::build)
+            .map(draft -> DraftInfoUtil.build(draft, config.getMedia().getDirectServe()))
             .collect(Collectors.toList());
     }
 
@@ -220,7 +224,9 @@ public class DraftController {
 
         requestContext.send(new DraftAddedLiberin(draft));
 
-        return ResponseEntity.created(URI.create("/drafts/" + draft.getId())).body(DraftInfoUtil.build(draft));
+        return ResponseEntity
+            .created(URI.create("/drafts/" + draft.getId()))
+            .body(DraftInfoUtil.build(draft, config.getMedia().getDirectServe()));
     }
 
     @PutMapping("/{id}")
@@ -246,7 +252,7 @@ public class DraftController {
 
         requestContext.send(new DraftUpdatedLiberin(draft));
 
-        return DraftInfoUtil.build(draft);
+        return DraftInfoUtil.build(draft, config.getMedia().getDirectServe());
     }
 
     private List<MediaFileOwner> validate(DraftText draftText) {
@@ -328,7 +334,7 @@ public class DraftController {
         Draft draft = draftRepository.findById(requestContext.nodeId(), id)
             .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
 
-        return DraftInfoUtil.build(draft);
+        return DraftInfoUtil.build(draft, config.getMedia().getDirectServe());
     }
 
     @DeleteMapping("/{id}")

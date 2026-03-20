@@ -29,7 +29,9 @@ public class CommentReactionsDeletedAllLiberin extends Liberin {
     protected void toModel(Map<String, Object> model, EntityManager entityManager) {
         super.toModel(model);
         comment = entityManager.merge(comment);
-        model.put("comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN));
+        model.put(
+            "comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+        );
     }
 
 }

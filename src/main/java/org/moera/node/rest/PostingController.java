@@ -28,6 +28,7 @@ import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.UserBlockedException;
+import org.moera.node.config.Config;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwner;
@@ -86,6 +87,9 @@ public class PostingController {
     private static final Logger log = LoggerFactory.getLogger(PostingController.class);
 
     private static final Duration CREATED_AT_MARGIN = Duration.ofMinutes(10);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -200,7 +204,7 @@ public class PostingController {
             .body(withBlockings(PostingInfoUtil.build(
                 posting,
                 stories,
-                MediaAttachmentsProvider.RELATIONS,
+                MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
                 requestContext,
                 requestContext.getOptions()
             )));
@@ -269,7 +273,7 @@ public class PostingController {
             PostingInfoUtil.build(
                 posting,
                 stories,
-                MediaAttachmentsProvider.RELATIONS,
+                MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
                 requestContext,
                 requestContext.getOptions()
             )
@@ -387,7 +391,7 @@ public class PostingController {
                     PostingInfoUtil.build(
                         posting,
                         stories,
-                        MediaAttachmentsProvider.RELATIONS,
+                        MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
                         requestContext,
                         requestContext.getOptions()
                     )

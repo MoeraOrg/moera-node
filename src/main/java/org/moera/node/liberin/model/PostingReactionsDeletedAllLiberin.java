@@ -29,7 +29,9 @@ public class PostingReactionsDeletedAllLiberin extends Liberin {
     protected void toModel(Map<String, Object> model, EntityManager entityManager) {
         super.toModel(model);
         posting = entityManager.merge(posting);
-        model.put("posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN));
+        model.put(
+            "posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+        );
     }
 
 }

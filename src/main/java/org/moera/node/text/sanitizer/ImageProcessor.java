@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.util.MediaUtil;
@@ -15,11 +16,13 @@ import org.owasp.html.HtmlStreamEventReceiverWrapper;
 
 class ImageProcessor extends HtmlStreamEventReceiverWrapper {
 
+    private final DirectServeConfig config;
     private final Map<String, MediaFileOwner> media;
 
-    ImageProcessor(HtmlStreamEventReceiver underlying, List<MediaFileOwner> mediaFileOwners) {
+    ImageProcessor(DirectServeConfig config, HtmlStreamEventReceiver underlying, List<MediaFileOwner> mediaFileOwners) {
         super(underlying);
 
+        this.config = config;
         media = mediaFileOwners != null
                 ? mediaFileOwners.stream()
                     .collect(
@@ -92,9 +95,10 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                 return;
             }
 
-            boolean directServing = mediaFileOwner.getDirectFileName() != null;
-            String mediaLocation = "/moera/media/private/"
-                    + (directServing ? mediaFileOwner.getDirectFileName() : mediaFileOwner.getFileName());
+            String directPath = mediaFileOwner.getDirectPath(config);
+            boolean directServing = directPath != null;
+            String mediaLocation =
+                "/moera/media/" + (directServing ? directPath : "private/" + mediaFileOwner.getFileName());
 
             super.openTag("a", new ArrayList<>(List.of(
                 "href", mediaLocation,

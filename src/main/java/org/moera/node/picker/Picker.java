@@ -22,6 +22,7 @@ import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.config.Config;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
@@ -62,6 +63,9 @@ public class Picker extends Task {
     private final BlockingQueue<Pick> queue = new LinkedBlockingQueue<>();
     private boolean stopped = false;
     private final PickerPool pool;
+
+    @Inject
+    private Config config;
 
     @Inject
     private PostingRepository postingRepository;
@@ -284,7 +288,7 @@ public class Picker extends Task {
     }
 
     private void updateRevision(Posting posting, PostingInfo postingInfo, EntryRevision revision) {
-        PostingInfoUtil.toPickedEntryRevision(postingInfo, revision);
+        PostingInfoUtil.toPickedEntryRevision(postingInfo, revision, config.getMedia().getDirectServe());
 
         byte[] fingerprint = PostingFingerprintBuilder.build(revision.getSignatureVersion(), posting, revision);
         revision.setDigest(CryptoUtil.digest(fingerprint));

@@ -16,6 +16,7 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.OwnComment;
@@ -25,15 +26,29 @@ import org.moera.node.util.Util;
 
 public class CommentInfoUtil {
 
-    // for liberins
-    public static CommentInfo build(Comment comment, AccessChecker accessChecker) {
-        return build(comment, comment.getCurrentRevision(), MediaAttachmentsProvider.RELATIONS, false, accessChecker);
+    // for liberin models
+    public static CommentInfo build(Comment comment, AccessChecker accessChecker, DirectServeConfig config) {
+        return build(
+            comment,
+            comment.getCurrentRevision(),
+            MediaAttachmentsProvider.relations(config),
+            false,
+            accessChecker
+        );
     }
 
     public static CommentInfo build(
-        Comment comment, MediaAttachmentsProvider mediaAttachmentsProvider, AccessChecker accessChecker
+        Comment comment,
+        MediaAttachmentsProvider mediaAttachmentsProvider,
+        AccessChecker accessChecker
     ) {
-        return build(comment, comment.getCurrentRevision(), mediaAttachmentsProvider, false, accessChecker);
+        return build(
+            comment,
+            comment.getCurrentRevision(),
+            mediaAttachmentsProvider,
+            false,
+            accessChecker
+        );
     }
 
     public static CommentInfo build(
@@ -42,7 +57,13 @@ public class CommentInfoUtil {
         boolean includeSource,
         AccessChecker accessChecker
     ) {
-        return build(comment, comment.getCurrentRevision(), mediaAttachmentsProvider, includeSource, accessChecker);
+        return build(
+            comment,
+            comment.getCurrentRevision(),
+            mediaAttachmentsProvider,
+            includeSource,
+            accessChecker
+        );
     }
 
     public static CommentInfo build(
