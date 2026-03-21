@@ -1,6 +1,7 @@
 package org.moera.node.util;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -14,7 +15,9 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.jcajce.provider.util.DigestFactory;
 import org.moera.lib.node.types.MediaFilePreviewInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
 import org.springframework.util.ObjectUtils;
@@ -30,7 +33,11 @@ public class MediaUtil {
         return "%s_%d%s".formatted(location.substring(0, pos), width, location.substring(pos));
     }
 
-    public static String mediaSources(String location, Collection<MediaFilePreview> previews, boolean directServing) {
+    public static String mediaSources(
+        String location,
+        Collection<MediaFilePreview> previews,
+        DirectServeConfig config
+    ) {
         if (ObjectUtils.isEmpty(previews)) {
             return "";
         }
@@ -39,7 +46,7 @@ public class MediaUtil {
             previews
                 .stream()
                 .filter(preview -> preview.getMediaFile() != null)
-                .map(preview -> MediaFilePreviewInfoUtil.build(preview, directServing ? location : null))
+                .map(preview -> MediaFilePreviewInfoUtil.build(preview, config))
                 .collect(Collectors.toList())
         );
     }
@@ -48,10 +55,10 @@ public class MediaUtil {
         List<String> sources = new ArrayList<>();
         for (MediaFilePreviewInfo preview : previews) {
             String url = Boolean.TRUE.equals(preview.getOriginal())
-                    ? location
-                    : (preview.getDirectPath() != null
-                        ? "/moera/media/" + preview.getDirectPath()
-                        : mediaPreview(location, preview.getTargetWidth()));
+                ? location
+                : (preview.getDirectPath() != null
+                   ? "/moera/media/" + preview.getDirectPath()
+                   : mediaPreview(location, preview.getTargetWidth()));
             sources.add("%s %dw".formatted(url, preview.getWidth()));
         }
         return String.join(",", sources);
@@ -60,7 +67,7 @@ public class MediaUtil {
     private static int findLargerPreviewWidth(MediaFile mediaFile, int width) {
         MediaFilePreview preview = mediaFile.findLargerPreview(width);
         return preview != null && preview.getMediaFile() != null && preview.getMediaFile().getSizeX() != null
-                ? preview.getMediaFile().getSizeX() : width;
+            ? preview.getMediaFile().getSizeX() : width;
     }
 
     private static int findLargerPreviewWidth(PrivateMediaFileInfo mediaFile, int width) {
@@ -82,20 +89,20 @@ public class MediaUtil {
         );
     }
 
-    public static String presignUrl(String location, String id, ExtendedDuration valid, String secret) {
+    public record PresignedUrl(String url, Long expires) {
+    }
+
+    public static PresignedUrl presignUrl(String location, String id, ExtendedDuration valid, String secret) {
         long expires = switch (valid.getZone()) {
-            case FIXED ->
-                Instant.now()
-                    .plus(valid.getDuration())
-                    .atZone(ZoneOffset.UTC)
-                    .toLocalDate()
-                    .atStartOfDay()
-                    .plusDays(1)
-                    .toEpochSecond(ZoneOffset.UTC);
-            case ALWAYS ->
-                LocalDate.of(2100, 1, 1).atStartOfDay().toEpochSecond(ZoneOffset.UTC);
-            case NEVER ->
-                Instant.now().toEpochMilli() / 1000;
+            case FIXED -> Instant.now()
+                .plus(valid.getDuration())
+                .atZone(ZoneOffset.UTC)
+                .toLocalDate()
+                .atStartOfDay()
+                .plusDays(1)
+                .toEpochSecond(ZoneOffset.UTC);
+            case ALWAYS -> LocalDate.of(2100, 1, 1).atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+            case NEVER -> Instant.now().toEpochMilli() / 1000;
         };
 
         var mac = new HMac(DigestFactory.getDigest("SHA-256"));
@@ -107,7 +114,29 @@ public class MediaUtil {
         byte[] signature = new byte[mac.getMacSize()];
         mac.doFinal(signature, 0);
 
-        return String.format("%s?exp=%d&sig=%s", location, expires, Util.base64urlencode(signature));
+        return new PresignedUrl(
+            String.format("%s?exp=%d&sig=%s", location, expires, Util.base64urlencode(signature)),
+            expires
+        );
+    }
+
+    public static PresignedUrl presignDirectPath(
+        String location, String id, ExtendedDuration valid, DirectServeConfig config
+    ) {
+        return switch (config.getSource()) {
+            case NONE -> new PresignedUrl(null, null);
+            case FILESYSTEM ->
+                MediaUtil.presignUrl(location, id, valid, config.getSecret());
+        };
+    }
+
+    public static PresignedUrl presignDirectPath(MediaFileOwner mediaFileOwner, DirectServeConfig config) {
+        return presignDirectPath(
+            mediaFileOwner.getMediaFile().getFileName(),
+            mediaFileOwner.getMediaFile().getId(),
+            new ExtendedDuration(Duration.ofDays(3)),
+            config
+        );
     }
 
 }

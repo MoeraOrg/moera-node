@@ -1,7 +1,6 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -18,10 +17,7 @@ import jakarta.validation.constraints.Size;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.config.DirectServeConfig;
 import org.moera.node.media.MimeUtils;
-import org.moera.node.util.ExtendedDuration;
-import org.moera.node.util.MediaUtil;
 import org.moera.node.util.Util;
 
 @Entity
@@ -83,25 +79,14 @@ public class MediaFileOwner {
         return MimeUtils.fileName(id.toString(), getMediaFile().getMimeType());
     }
 
-    public String getDirectPath(DirectServeConfig config) {
-        return switch (config.getSource()) {
-            case NONE -> null;
-            case FILESYSTEM ->
-                MediaUtil.presignUrl(
-                    getMediaFile().getFileName(),
-                    getMediaFile().getId(),
-                    new ExtendedDuration(Duration.ofDays(3)),
-                    config.getSecret()
-                );
-        };
-    }
-
+    @Deprecated
     public String getDirectFileName() {
         return nonce != null
                 ? MimeUtils.fileName(id.toString() + '_' + nonce, getMediaFile().getMimeType())
                 : null;
     }
 
+    @Deprecated
     public String getPrevDirectFileName() {
         return prevNonce != null
                 ? MimeUtils.fileName(id.toString() + '_' + prevNonce, getMediaFile().getMimeType())

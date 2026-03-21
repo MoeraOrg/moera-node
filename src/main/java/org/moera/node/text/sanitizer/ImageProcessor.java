@@ -95,7 +95,7 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                 return;
             }
 
-            String directPath = mediaFileOwner.getDirectPath(config);
+            String directPath = MediaUtil.presignDirectPath(mediaFileOwner, config).url();
             boolean directServing = directPath != null;
             String mediaLocation =
                 "/moera/media/" + (directServing ? directPath : "private/" + mediaFileOwner.getFileName());
@@ -110,7 +110,7 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
             newAttrs.add(directServing ? mediaLocation : MediaUtil.mediaPreview(mediaLocation, 900));
             newAttrs.add("srcset");
             newAttrs.add(
-                MediaUtil.mediaSources(mediaLocation, mediaFileOwner.getMediaFile().getPreviews(), directServing)
+                MediaUtil.mediaSources(mediaLocation, mediaFileOwner.getMediaFile().getPreviews(), config)
             );
             newAttrs.add("sizes");
             newAttrs.add(MediaUtil.mediaSizes(mediaFileOwner.getMediaFile()));

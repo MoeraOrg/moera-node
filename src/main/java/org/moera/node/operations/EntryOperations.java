@@ -19,6 +19,8 @@ import org.moera.node.data.EntryType;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.model.MediaAttachmentUtil;
+import org.moera.node.model.MediaFilePreviewInfoUtil;
+import org.moera.node.model.PrivateMediaFileInfoUtil;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Transaction;
@@ -101,6 +103,8 @@ public class EntryOperations implements MediaAttachmentsProvider {
                 var data = objectMapper.readValue(revision.getAttachmentsCache(), MediaAttachmentsCache.class);
                 var cache = data.getCache(receiverName);
                 if (cache != null) {
+                    // Direct paths expire, so assuming that they always need to be updated
+                    updateCachedDirectPaths(cache);
                     return cache;
                 }
             }
@@ -121,6 +125,19 @@ public class EntryOperations implements MediaAttachmentsProvider {
             .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
             .map(ea -> MediaAttachmentUtil.build(ea, receiverName, config.getMedia().getDirectServe()))
             .collect(Collectors.toList());
+    }
+
+    private void updateCachedDirectPaths(List<MediaAttachment> attachments) {
+        for (var attachment : attachments) {
+            if (attachment.getMedia() != null) {
+                PrivateMediaFileInfoUtil.fillDirectPath(attachment.getMedia(), config.getMedia().getDirectServe());
+                if (attachment.getMedia().getPreviews() != null) {
+                    for (var preview : attachment.getMedia().getPreviews()) {
+                        MediaFilePreviewInfoUtil.fillDirectPath(preview, config.getMedia().getDirectServe());
+                    }
+                }
+            }
+        }
     }
 
 }
