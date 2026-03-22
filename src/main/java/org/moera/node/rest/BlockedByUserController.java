@@ -11,6 +11,7 @@ import org.moera.lib.node.types.BlockedByUserInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.config.Config;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.global.ApiController;
@@ -33,6 +34,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class BlockedByUserController {
 
     private static final Logger log = LoggerFactory.getLogger(BlockedByUserController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -58,7 +62,9 @@ public class BlockedByUserController {
             throw new AuthenticationException();
         }
 
-        return BlockedByUserInfoUtil.build(blockedByUser, requestContext.getOptions(), requestContext);
+        return BlockedByUserInfoUtil.build(
+            blockedByUser, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+        );
     }
 
     @PostMapping("/search")
@@ -77,7 +83,9 @@ public class BlockedByUserController {
             blockedByUserFilter.getStrict() != null && blockedByUserFilter.getStrict()
         )
             .stream()
-            .map(bbu -> BlockedByUserInfoUtil.build(bbu, requestContext.getOptions(), requestContext))
+            .map(bbu -> BlockedByUserInfoUtil.build(
+                bbu, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+            ))
             .collect(Collectors.toList());
     }
 

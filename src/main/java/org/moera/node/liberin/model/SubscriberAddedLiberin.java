@@ -38,7 +38,12 @@ public class SubscriberAddedLiberin extends Liberin {
         super.toModel(model);
         model.put(
             "subscriber",
-            SubscriberInfoUtil.build(subscriber, getPluginContext().getOptions(), AccessCheckers.ADMIN)
+            SubscriberInfoUtil.build(
+                subscriber,
+                getPluginContext().getOptions(),
+                AccessCheckers.ADMIN,
+                getConfig().getMedia().getDirectServe()
+            )
         );
         model.put("subscriberLastUpdatedAt", subscriberLastUpdatedAt);
     }

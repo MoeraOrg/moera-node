@@ -47,7 +47,7 @@ public class SheriffComplaintReceptor extends LiberinReceptorBase {
                     sheriffInstants.complaintAdded(
                         universalContext.nodeName(),
                         universalContext.getAvatar() != null
-                            ? AvatarImageUtil.build(universalContext.getAvatar())
+                            ? AvatarImageUtil.build(universalContext.getAvatar(), config.getMedia().getDirectServe())
                             : null,
                         liberin.getGroup().getId().toString()
                     );

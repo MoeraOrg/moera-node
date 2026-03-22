@@ -25,7 +25,14 @@ public class BlockedUserDeletedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("blockedUser", BlockedUserInfoUtil.build(blockedUser, getPluginContext().getOptions()));
+        model.put(
+            "blockedUser",
+            BlockedUserInfoUtil.build(
+                blockedUser,
+                getPluginContext().getOptions(),
+                getConfig().getMedia().getDirectServe()
+            )
+        );
     }
 
 }

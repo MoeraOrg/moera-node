@@ -3,6 +3,7 @@ package org.moera.node.rest;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.WhoAmI;
+import org.moera.node.config.Config;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -20,13 +21,16 @@ public class WhoAmIiController {
     private static final Logger log = LoggerFactory.getLogger(WhoAmIiController.class);
 
     @Inject
+    private Config config;
+
+    @Inject
     private RequestContext requestContext;
 
     @GetMapping
     public WhoAmI get() {
         log.info("GET /whoami");
 
-        return WhoAmIiUtil.build(requestContext);
+        return WhoAmIiUtil.build(requestContext, config.getMedia().getDirectServe());
     }
 
 }

@@ -24,7 +24,12 @@ public class ProfileReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void updated(ProfileUpdatedLiberin liberin) {
         send(liberin, new ProfileUpdatedEvent());
-        send(liberin, new NodeNameChangedEvent(liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar()));
+        send(
+            liberin,
+            new NodeNameChangedEvent(
+                liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar(), config.getMedia().getDirectServe()
+            )
+        );
         send(Directions.profileSubscribers(liberin.getNodeId()), new ProfileUpdatedNotification());
         send(
             Directions.searchSubscribers(liberin.getNodeId()),
@@ -34,7 +39,12 @@ public class ProfileReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void nodeNameChanged(NodeNameChangedLiberin liberin) {
-        send(liberin, new NodeNameChangedEvent(liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar()));
+        send(
+            liberin,
+            new NodeNameChangedEvent(
+                liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar(), config.getMedia().getDirectServe()
+            )
+        );
         if (ObjectUtils.isEmpty(liberin.getPrevNodeName())) {
             sendToRoot(new DomainCreatedMail(liberin.getNodeName()));
         }

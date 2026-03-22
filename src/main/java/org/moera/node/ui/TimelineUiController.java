@@ -18,6 +18,7 @@ import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
+import org.moera.node.config.Config;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
@@ -55,6 +56,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class TimelineUiController {
 
     private static final Logger log = LoggerFactory.getLogger(TimelineUiController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -105,7 +109,14 @@ public class TimelineUiController {
                 .filter(t -> t.getEntry() != null)
                 .filter(t -> t.getEntry().isMessage())
                 .filter(t -> t.getEntry().getViewCompound().isPublic())
-                .map(s -> StoryInfoUtil.build(s, false, t -> PostingInfoUtil.buildForUi(t.getEntry(), entryOperations)))
+                .map(s -> StoryInfoUtil.build(
+                    s,
+                    false,
+                    t -> PostingInfoUtil.buildForUi(
+                        t.getEntry(), entryOperations, config.getMedia().getDirectServe()
+                    ),
+                    config.getMedia().getDirectServe()
+                ))
                 .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                 .toList();
         }
@@ -167,7 +178,9 @@ public class TimelineUiController {
         model.addAttribute("menuIndex", "timeline");
         model.addAttribute(
             "posting",
-            PostingInfoUtil.buildForUi(posting, stories, entryOperations, requestContext.getOptions())
+            PostingInfoUtil.buildForUi(
+                posting, stories, entryOperations, requestContext.getOptions(), config.getMedia().getDirectServe()
+            )
         );
         model.addAttribute("canonicalUrl", canonicalUrl);
         model.addAttribute("openComments", commentId != null || before != null);
@@ -191,7 +204,7 @@ public class TimelineUiController {
                         .stream()
                         .filter(Comment::isMessage)
                         .filter(c -> c.getViewCompound().isPublic())
-                        .map(c -> CommentInfoUtil.buildForUi(c, entryOperations))
+                        .map(c -> CommentInfoUtil.buildForUi(c, entryOperations, config.getMedia().getDirectServe()))
                         .sorted(Comparator.comparing(CommentInfo::getMoment))
                         .collect(Collectors.toList());
                 }
@@ -234,7 +247,7 @@ public class TimelineUiController {
             model.addAttribute("ogImageHeight", image.getHeight());
         } else if (entry.getOwnerAvatarMediaFile() != null) {
             AvatarImage avatarImage = AvatarImageUtil.build(
-                entry.getOwnerAvatarMediaFile(), entry.getOwnerAvatarShape()
+                entry.getOwnerAvatarMediaFile(), entry.getOwnerAvatarShape(), config.getMedia().getDirectServe()
             );
             model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + avatarImage.getPath());
             model.addAttribute("ogImageType", AvatarImageUtil.getMediaFile(avatarImage).getMimeType());

@@ -47,7 +47,8 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
             );
         }
         send(liberin, new SubscriptionAddedEvent(
-            SubscriptionInfoUtil.build(subscription, universalContext.getOptions()), visibilityFilter
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), config.getMedia().getDirectServe()),
+            visibilityFilter
         ));
         sendPeopleChangedEvent(liberin);
     }
@@ -70,14 +71,16 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
             );
         }
         send(liberin, new SubscriptionAddedEvent(
-            SubscriptionInfoUtil.build(subscription, universalContext.getOptions()), addedFilter
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), config.getMedia().getDirectServe()),
+            addedFilter
         ));
 
         PrincipalExpression updatedFilter = generalVisibilityFilter(universalContext.getOptions(), subscription).a()
             .and(subscription.getViewE())
             .and(liberin.getLatestViewPrincipal());
         send(liberin, new SubscriptionUpdatedEvent(
-            SubscriptionInfoUtil.build(subscription, universalContext.getOptions()), updatedFilter
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), config.getMedia().getDirectServe()),
+            updatedFilter
         ));
 
         PrincipalExpression deletedFilter = generalVisibilityFilter(universalContext.getOptions(), subscription).a()
@@ -94,7 +97,8 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
             );
         }
         send(liberin, new SubscriptionDeletedEvent(
-            SubscriptionInfoUtil.build(subscription, universalContext.getOptions()), deletedFilter
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), config.getMedia().getDirectServe()),
+            deletedFilter
         ));
     }
 
@@ -114,7 +118,8 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
             );
         }
         send(liberin, new SubscriptionDeletedEvent(
-            SubscriptionInfoUtil.build(subscription, universalContext.getOptions()), visibilityFilter
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), config.getMedia().getDirectServe()),
+            visibilityFilter
         ));
         sendPeopleChangedEvent(liberin);
     }

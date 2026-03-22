@@ -25,7 +25,7 @@ public class AvatarOrderedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("avatar", AvatarInfoUtil.build(avatar));
+        model.put("avatar", AvatarInfoUtil.build(avatar, getConfig().getMedia().getDirectServe()));
     }
 
 }

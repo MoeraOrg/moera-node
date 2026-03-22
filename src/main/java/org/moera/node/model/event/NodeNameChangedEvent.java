@@ -5,6 +5,7 @@ import java.util.List;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Avatar;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.option.Options;
@@ -22,14 +23,14 @@ public class NodeNameChangedEvent extends Event {
         super(EventType.NODE_NAME_CHANGED, Scope.IDENTIFY);
     }
 
-    public NodeNameChangedEvent(String name, Options options, Avatar avatar) {
+    public NodeNameChangedEvent(String name, Options options, Avatar avatar, DirectServeConfig config) {
         this();
         this.name = name;
         fullName = options.getString("profile.full-name");
         gender = options.getString("profile.gender");
         title = options.getString("profile.title");
         if (avatar != null) {
-            this.avatar = AvatarImageUtil.build(avatar);
+            this.avatar = AvatarImageUtil.build(avatar, config);
         }
     }
 

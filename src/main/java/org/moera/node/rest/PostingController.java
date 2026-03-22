@@ -206,7 +206,8 @@ public class PostingController {
                 stories,
                 MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
                 requestContext,
-                requestContext.getOptions()
+                requestContext.getOptions(),
+                config.getMedia().getDirectServe()
             )));
     }
 
@@ -275,7 +276,8 @@ public class PostingController {
                 stories,
                 MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
                 requestContext,
-                requestContext.getOptions()
+                requestContext.getOptions(),
+                config.getMedia().getDirectServe()
             )
         ));
     }
@@ -393,7 +395,8 @@ public class PostingController {
                         stories,
                         MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
                         requestContext,
-                        requestContext.getOptions()
+                        requestContext.getOptions(),
+                        config.getMedia().getDirectServe()
                     )
                 )));
             })
@@ -426,7 +429,8 @@ public class PostingController {
                 entryOperations,
                 includeSet.contains("source"),
                 requestContext,
-                requestContext.getOptions()
+                requestContext.getOptions(),
+                config.getMedia().getDirectServe()
             )
         )));
     }
@@ -481,7 +485,9 @@ public class PostingController {
                 requestContext.nodeId(), posting.getCurrentRevision().getId(), posting.getReceiverName()
             );
         return attached.stream()
-            .map(p -> withBlockings(withClientReaction(PostingInfoUtil.build(p, false, requestContext))))
+            .map(p -> withBlockings(withClientReaction(
+                PostingInfoUtil.build(p, false, requestContext, config.getMedia().getDirectServe())
+            )))
             .collect(Collectors.toList());
     }
 

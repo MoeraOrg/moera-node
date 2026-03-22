@@ -16,6 +16,7 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.config.Config;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.BlockedUserRepository;
 import org.moera.node.data.Entry;
@@ -49,6 +50,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class BlockedUserController {
 
     private static final Logger log = LoggerFactory.getLogger(BlockedUserController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -111,7 +115,9 @@ public class BlockedUserController {
         requestContext.send(new BlockedUserAddedLiberin(blockedUser));
 
         return ResponseEntity.created(URI.create("/blocked-users/" + blockedUser.getId()))
-            .body(BlockedUserInfoUtil.build(blockedUser, requestContext.getOptions(), requestContext));
+            .body(BlockedUserInfoUtil.build(
+                blockedUser, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+            ));
     }
 
     @GetMapping("/{id}")
@@ -129,7 +135,9 @@ public class BlockedUserController {
             throw new AuthenticationException();
         }
 
-        return BlockedUserInfoUtil.build(blockedUser, requestContext.getOptions(), requestContext);
+        return BlockedUserInfoUtil.build(
+            blockedUser, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+        );
     }
 
     @DeleteMapping("/{id}")
@@ -174,7 +182,9 @@ public class BlockedUserController {
             blockedUserFilter.getStrict() != null && blockedUserFilter.getStrict()
         )
             .stream()
-            .map(bu -> BlockedUserInfoUtil.build(bu, requestContext.getOptions(), requestContext))
+            .map(bu -> BlockedUserInfoUtil.build(
+                bu, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+            ))
             .collect(Collectors.toList());
     }
 

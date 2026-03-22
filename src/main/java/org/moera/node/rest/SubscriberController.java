@@ -22,6 +22,7 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.config.Config;
 import org.moera.node.data.Contact;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
@@ -65,6 +66,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class SubscriberController {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriberController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -123,7 +127,11 @@ public class SubscriberController {
 
         return fetchSubscribers(where).stream()
             .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
-            .map(s -> SubscriberInfoUtil.build(s, requestContext.getOptions(), requestContext))
+            .map(s ->
+                SubscriberInfoUtil.build(
+                    s, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                )
+            )
             .collect(Collectors.toList());
     }
 
@@ -148,7 +156,9 @@ public class SubscriberController {
             }
         }
 
-        return SubscriberInfoUtil.build(subscriber, requestContext.getOptions(), requestContext);
+        return SubscriberInfoUtil.build(
+            subscriber, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+        );
     }
 
     @PostMapping
@@ -209,7 +219,9 @@ public class SubscriberController {
             requestContext.send(new SubscriberAddedLiberin(subscriber, subscriberDescription.getLastUpdatedAt()));
         }
 
-        return SubscriberInfoUtil.build(subscriber, requestContext.getOptions(), requestContext);
+        return SubscriberInfoUtil.build(
+            subscriber, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+        );
     }
 
     private void validateOptionalFields(SubscriberDescription description) {
@@ -319,7 +331,9 @@ public class SubscriberController {
 
         requestContext.send(new SubscriberOperationsUpdatedLiberin(subscriber, latestView));
 
-        return SubscriberInfoUtil.build(subscriber, requestContext.getOptions(), requestContext);
+        return SubscriberInfoUtil.build(
+            subscriber, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+        );
     }
 
     @DeleteMapping("/{id}")
@@ -341,7 +355,9 @@ public class SubscriberController {
         requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriberDeletedLiberin(subscriber));
 
-        return ContactInfoUtil.build(subscriber.getContact(), requestContext.getOptions(), requestContext);
+        return ContactInfoUtil.build(
+            subscriber.getContact(), requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+        );
     }
 
     private List<Subscriber> fetchSubscribers(Predicate where) {

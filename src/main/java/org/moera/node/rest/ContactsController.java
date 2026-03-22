@@ -30,6 +30,7 @@ import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.config.Config;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.data.BlockedUser;
@@ -76,6 +77,9 @@ public class ContactsController {
     private static final int ARRANGEMENT_DEPTH = 5;
 
     private static final Logger log = LoggerFactory.getLogger(ContactsController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -157,7 +161,9 @@ public class ContactsController {
             page.stream()
                 .filter(ct -> contactMatch(ct, regexes))
                 .limit(limit - result.size())
-                .map(c -> ContactInfoUtil.build(c, requestContext.getOptions(), requestContext))
+                .map(c -> ContactInfoUtil.build(
+                    c, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                ))
                 .forEach(result::add);
             if (result.size() >= limit) {
                 return result;
@@ -233,7 +239,9 @@ public class ContactsController {
         );
         for (Contact c : contacts) {
             ContactWithRelationships cr = new ContactWithRelationships();
-            cr.setContact(ContactInfoUtil.build(c, requestContext.getOptions(), requestContext));
+            cr.setContact(ContactInfoUtil.build(
+                c, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+            ));
             info.put(c.getRemoteNodeName(), cr);
         }
 

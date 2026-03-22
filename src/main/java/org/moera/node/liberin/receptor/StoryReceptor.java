@@ -38,7 +38,7 @@ public class StoryReceptor extends LiberinReceptorBase {
         Story story = liberin.getStory();
 
         if (!Feed.isAdmin(story.getFeedName())) {
-            send(liberin, new StoryAddedEvent(story, false));
+            send(liberin, new StoryAddedEvent(story, false, config.getMedia().getDirectServe()));
             if (story.getStoryType() == StoryType.POSTING_ADDED) {
                 send(
                     Directions.searchSubscribers(liberin.getNodeId(), story.getViewPrincipalFilter()),
@@ -48,7 +48,7 @@ public class StoryReceptor extends LiberinReceptorBase {
                 );
             }
         }
-        send(liberin, new StoryAddedEvent(story, true));
+        send(liberin, new StoryAddedEvent(story, true, config.getMedia().getDirectServe()));
         if (isNotifyWhenPublished(story)) {
             send(
                 Directions.feedSubscribers(liberin.getNodeId(), story.getFeedName(), story.getViewPrincipalFilter()),
@@ -75,9 +75,9 @@ public class StoryReceptor extends LiberinReceptorBase {
         Story story = liberin.getStory();
 
         if (!Feed.isAdmin(story.getFeedName())) {
-            send(liberin, new StoryUpdatedEvent(story, false));
+            send(liberin, new StoryUpdatedEvent(story, false, config.getMedia().getDirectServe()));
         }
-        send(liberin, new StoryUpdatedEvent(story, true));
+        send(liberin, new StoryUpdatedEvent(story, true, config.getMedia().getDirectServe()));
         if (!story.isViewed()) {
             push(story);
         } else {
@@ -122,7 +122,7 @@ public class StoryReceptor extends LiberinReceptorBase {
 
     private void push(Story story) {
         if (Objects.equals(story.getFeedName(), Feed.INSTANT)) {
-            send(PushContentBuilder.storyAdded(story));
+            send(PushContentBuilder.storyAdded(story, config.getMedia().getDirectServe()));
         }
     }
 

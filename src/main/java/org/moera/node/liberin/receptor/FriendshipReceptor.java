@@ -43,7 +43,9 @@ public class FriendshipReceptor extends LiberinReceptorBase {
 
         FriendInfo friend = FriendInfoUtil.build(
             liberin.getFriendNodeName(),
-            ContactInfoUtil.build(liberin.getContact(), universalContext.getOptions()),
+            ContactInfoUtil.build(
+                liberin.getContact(), universalContext.getOptions(), config.getMedia().getDirectServe()
+            ),
             friendGroups
         );
         send(liberin, new FriendshipUpdatedEvent(friend));

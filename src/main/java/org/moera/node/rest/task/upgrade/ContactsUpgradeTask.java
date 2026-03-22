@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.api.node.MoeraNodeUnknownNameException;
+import org.moera.node.config.Config;
 import org.moera.node.data.ContactUpgrade;
 import org.moera.node.data.ContactUpgradeRepository;
 import org.moera.node.data.MediaFile;
@@ -29,6 +30,9 @@ public class ContactsUpgradeTask extends Task {
     private static final int PAGE_SIZE = 1024;
 
     @Inject
+    private Config config;
+
+    @Inject
     private ContactUpgradeRepository contactUpgradeRepository;
 
     @Inject
@@ -47,7 +51,8 @@ public class ContactsUpgradeTask extends Task {
         try {
             do {
                 upgrades = tx.executeWrite(() ->
-                        contactUpgradeRepository.findPending(UpgradeType.PROFILE_DOWNLOAD, pageable));
+                    contactUpgradeRepository.findPending(UpgradeType.PROFILE_DOWNLOAD, pageable)
+                );
                 upgrades.forEach(this::download);
             } while (!upgrades.isEmpty());
         } catch (Throwable e) {
@@ -70,7 +75,8 @@ public class ContactsUpgradeTask extends Task {
             if (mediaFile != null) {
                 contactOperations.updateAvatar(upgrade.getRemoteNodeName(), mediaFile, targetAvatar.getShape());
                 send(new RemoteNodeAvatarChangedLiberin(
-                    upgrade.getRemoteNodeName(), AvatarImageUtil.build(mediaFile, targetAvatar.getShape())
+                    upgrade.getRemoteNodeName(),
+                    AvatarImageUtil.build(mediaFile, targetAvatar.getShape(), config.getMedia().getDirectServe())
                 ));
             }
             success(upgrade);

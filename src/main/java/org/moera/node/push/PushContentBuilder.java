@@ -6,6 +6,7 @@ import org.moera.lib.node.types.FeedStatus;
 import org.moera.lib.node.types.PushContent;
 import org.moera.lib.node.types.PushContentType;
 import org.moera.lib.node.types.principal.AccessCheckers;
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Story;
 import org.moera.node.model.FeedWithStatusUtil;
 import org.moera.node.model.PostingInfoUtil;
@@ -14,13 +15,14 @@ import org.moera.node.operations.MediaAttachmentsProvider;
 
 public class PushContentBuilder {
 
-    public static PushContent storyAdded(Story story) {
+    public static PushContent storyAdded(Story story, DirectServeConfig config) {
         PushContent packet = new PushContent();
         packet.setType(PushContentType.STORY_ADDED);
         packet.setStory(StoryInfoUtil.build(
             story,
             true,
-            t -> PostingInfoUtil.build(t.getEntry(), MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN)
+            t -> PostingInfoUtil.build(t.getEntry(), MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, config),
+            config
         ));
         return packet;
     }

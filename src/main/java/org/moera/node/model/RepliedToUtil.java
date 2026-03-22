@@ -1,11 +1,12 @@
 package org.moera.node.model;
 
 import org.moera.lib.node.types.RepliedTo;
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Comment;
 
 public class RepliedToUtil {
     
-    public static RepliedTo build(Comment comment) {
+    public static RepliedTo build(Comment comment, DirectServeConfig config) {
         RepliedTo repliedTo = new RepliedTo();
         
         if (comment.getRepliedTo() != null) {
@@ -22,7 +23,8 @@ public class RepliedToUtil {
             if (comment.getRepliedToAvatarMediaFile() != null) {
                 repliedTo.setAvatar(AvatarImageUtil.build(
                     comment.getRepliedToAvatarMediaFile(), 
-                    comment.getRepliedToAvatarShape()
+                    comment.getRepliedToAvatarShape(),
+                    config
                 ));
             }
             

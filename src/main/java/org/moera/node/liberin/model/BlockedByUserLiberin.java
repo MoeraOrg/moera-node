@@ -35,7 +35,12 @@ public class BlockedByUserLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("blockedByUser", BlockedByUserInfoUtil.build(blockedByUser, getPluginContext().getOptions()));
+        model.put(
+            "blockedByUser",
+            BlockedByUserInfoUtil.build(
+                blockedByUser, getPluginContext().getOptions(), getConfig().getMedia().getDirectServe()
+            )
+        );
         model.put("entryHeading", entryHeading);
     }
 

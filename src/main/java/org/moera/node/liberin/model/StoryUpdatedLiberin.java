@@ -35,7 +35,8 @@ public class StoryUpdatedLiberin extends Liberin {
                 true,
                 t -> PostingInfoUtil.build(
                     entityManager.merge(t.getEntry()), AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe()
-                )
+                ),
+                getConfig().getMedia().getDirectServe()
             )
         );
     }

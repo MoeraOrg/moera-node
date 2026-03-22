@@ -44,7 +44,10 @@ public class IndexUiController {
 
         model.addAttribute("pageTitle", titleBuilder.build("Profile"));
         model.addAttribute("menuIndex", "profile");
-        model.addAttribute("profile", ProfileInfoUtil.build(requestContext.getPublic(), false));
+        model.addAttribute(
+            "profile",
+            ProfileInfoUtil.build(requestContext.getPublic(), false, config.getMedia().getDirectServe())
+        );
 
         model.addAttribute("ogUrl", requestContext.getSiteUrl() + "/profile");
         model.addAttribute("ogTitle", "Profile");

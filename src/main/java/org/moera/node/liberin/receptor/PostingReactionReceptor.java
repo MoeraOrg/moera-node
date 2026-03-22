@@ -80,7 +80,9 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
     ) {
         if (deletedReaction != null) {
             AvatarImage ownerAvatar = AvatarImageUtil.build(
-                deletedReaction.getOwnerAvatarMediaFile(), deletedReaction.getOwnerAvatarShape()
+                deletedReaction.getOwnerAvatarMediaFile(),
+                deletedReaction.getOwnerAvatarShape(),
+                config.getMedia().getDirectServe()
             );
             if (posting.getParentMedia() == null) {
                 if (!Objects.equals(posting.getOwnerName(), universalContext.nodeName())) {
@@ -151,12 +153,16 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
 
         if (addedReaction != null && addedReaction.getSignature() != null) {
             AvatarImage ownerAvatar = AvatarImageUtil.build(
-                addedReaction.getOwnerAvatarMediaFile(), addedReaction.getOwnerAvatarShape()
+                addedReaction.getOwnerAvatarMediaFile(),
+                addedReaction.getOwnerAvatarShape(),
+                config.getMedia().getDirectServe()
             );
             if (posting.getParentMedia() == null) {
                 if (!Objects.equals(posting.getOwnerName(), universalContext.nodeName())) {
                     AvatarImage postingOwnerAvatar = AvatarImageUtil.build(
-                        posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape()
+                        posting.getOwnerAvatarMediaFile(),
+                        posting.getOwnerAvatarShape(),
+                        config.getMedia().getDirectServe()
                     );
                     send(
                         Directions.single(
@@ -214,7 +220,9 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                 for (Entry entry : entries) {
                     Entry parentPosting = entry instanceof Comment comment ? comment.getPosting() : entry;
                     AvatarImage parentPostingAvatar = AvatarImageUtil.build(
-                        parentPosting.getOwnerAvatarMediaFile(), parentPosting.getOwnerAvatarShape()
+                        parentPosting.getOwnerAvatarMediaFile(),
+                        parentPosting.getOwnerAvatarShape(),
+                        config.getMedia().getDirectServe()
                     );
                     UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
                     send(

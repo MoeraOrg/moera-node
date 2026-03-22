@@ -24,7 +24,11 @@ public class BlockedByUserReceptor extends LiberinReceptorBase {
         BlockedByUser blockedByUser = liberin.getBlockedByUser();
         blockedUserInstants.blocked(blockedByUser, liberin.getEntryHeading());
         send(liberin, new BlockedByUserAddedEvent(
-            BlockedByUserInfoUtil.build(blockedByUser, universalContext.getOptions()),
+            BlockedByUserInfoUtil.build(
+                blockedByUser,
+                universalContext.getOptions(),
+                config.getMedia().getDirectServe()
+            ),
             BlockedByUser.getViewAllE(universalContext.getOptions())
         ));
     }
@@ -34,7 +38,11 @@ public class BlockedByUserReceptor extends LiberinReceptorBase {
         BlockedByUser blockedByUser = liberin.getBlockedByUser();
         blockedUserInstants.unblocked(blockedByUser, liberin.getEntryHeading());
         send(liberin, new BlockedByUserDeletedEvent(
-            BlockedByUserInfoUtil.build(blockedByUser, universalContext.getOptions()),
+            BlockedByUserInfoUtil.build(
+                blockedByUser,
+                universalContext.getOptions(),
+                config.getMedia().getDirectServe()
+            ),
             BlockedByUser.getViewAllE(universalContext.getOptions())
         ));
     }

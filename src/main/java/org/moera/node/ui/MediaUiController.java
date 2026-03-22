@@ -8,6 +8,7 @@ import com.github.jknack.handlebars.Handlebars.SafeString;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -37,6 +38,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class MediaUiController {
 
     private static final Logger log = LoggerFactory.getLogger(MediaUiController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -131,7 +135,12 @@ public class MediaUiController {
         }
         String body = posting.getCurrentRevision().getSaneBody();
         body = body != null ? body : "";
-        model.addAttribute("posting", PostingInfoUtil.build(posting, MediaAttachmentsProvider.NONE, requestContext));
+        model.addAttribute(
+            "posting",
+            PostingInfoUtil.build(
+                posting, MediaAttachmentsProvider.NONE, requestContext, config.getMedia().getDirectServe()
+            )
+        );
         model.addAttribute("caption", new SafeString(body));
 
         return "caption";

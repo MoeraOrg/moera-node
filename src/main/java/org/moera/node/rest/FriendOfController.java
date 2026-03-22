@@ -13,6 +13,7 @@ import org.moera.lib.node.types.FriendOfInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.config.Config;
 import org.moera.node.data.FriendOf;
 import org.moera.node.data.FriendOfRepository;
 import org.moera.node.global.ApiController;
@@ -33,6 +34,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class FriendOfController {
 
     private static final Logger log = LoggerFactory.getLogger(FriendOfController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -59,7 +63,9 @@ public class FriendOfController {
                 groups = null;
             }
             if (groups == null) {
-                FriendOfInfo info = FriendOfInfoUtil.build(friendOf, requestContext.getOptions(), requestContext);
+                FriendOfInfo info = FriendOfInfoUtil.build(
+                    friendOf, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                );
                 groups = new ArrayList<>();
                 info.setGroups(groups);
                 friendOfInfos.add(info);
@@ -93,7 +99,10 @@ public class FriendOfController {
             .collect(Collectors.toList());
 
         ContactInfo contactInfo = ContactInfoUtil.build(
-            friendOfs.get(0).getContact(), requestContext.getOptions(), requestContext
+            friendOfs.get(0).getContact(),
+            requestContext.getOptions(),
+            requestContext,
+            config.getMedia().getDirectServe()
         );
         return FriendOfInfoUtil.build(nodeName, contactInfo, groups);
     }

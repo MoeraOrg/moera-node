@@ -25,6 +25,7 @@ import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.UserBlockedException;
+import org.moera.node.config.Config;
 import org.moera.node.data.ChildOperations;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
@@ -64,6 +65,9 @@ public class ReactionOperations {
     public static final int MAX_REACTIONS_PER_REQUEST = 200;
 
     private static final Logger log = LoggerFactory.getLogger(ReactionOperations.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestCounter requestCounter;
@@ -263,7 +267,7 @@ public class ReactionOperations {
         sliceInfo.setReactions(
             page.stream()
                 .filter(r -> requestContext.isPrincipal(r.getViewE(), Scope.VIEW_CONTENT))
-                .map(r -> ReactionInfoUtil.build(r, requestContext))
+                .map(r -> ReactionInfoUtil.build(r, requestContext, config.getMedia().getDirectServe()))
                 .collect(Collectors.toList())
         );
         return sliceInfo;

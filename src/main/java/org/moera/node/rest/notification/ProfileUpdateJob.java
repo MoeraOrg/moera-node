@@ -3,6 +3,7 @@ package org.moera.node.rest.notification;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.WhoAmI;
+import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
 import org.moera.node.liberin.model.RemoteNodeAvatarChangedLiberin;
 import org.moera.node.liberin.model.RemoteNodeFullNameChangedLiberin;
@@ -62,6 +63,9 @@ public class ProfileUpdateJob extends Job<ProfileUpdateJob.Parameters, ProfileUp
     }
 
     @Inject
+    private Config config;
+
+    @Inject
     private ContactOperations contactOperations;
 
     @Inject
@@ -91,12 +95,12 @@ public class ProfileUpdateJob extends Job<ProfileUpdateJob.Parameters, ProfileUp
 
         if (!state.detailsUpdated) {
             contactOperations.updateDetails(
-                    parameters.nodeName,
-                    state.whoAmI.getFullName(),
-                    state.whoAmI.getGender(),
-                    () -> universalContext.send(
-                        new RemoteNodeFullNameChangedLiberin(parameters.nodeName, state.whoAmI.getFullName())
-                    )
+                parameters.nodeName,
+                state.whoAmI.getFullName(),
+                state.whoAmI.getGender(),
+                () -> universalContext.send(
+                    new RemoteNodeFullNameChangedLiberin(parameters.nodeName, state.whoAmI.getFullName())
+                )
             );
             state.detailsUpdated = true;
             checkpoint();
@@ -107,12 +111,15 @@ public class ProfileUpdateJob extends Job<ProfileUpdateJob.Parameters, ProfileUp
             MediaFile mediaFile = AvatarImageUtil.getMediaFile(state.whoAmI.getAvatar());
             String shape = state.whoAmI.getAvatar().getShape();
             contactOperations.updateAvatar(
-                    parameters.nodeName,
-                    mediaFile,
-                    shape,
-                    () -> universalContext.send(
-                        new RemoteNodeAvatarChangedLiberin(parameters.nodeName, AvatarImageUtil.build(mediaFile, shape))
+                parameters.nodeName,
+                mediaFile,
+                shape,
+                () -> universalContext.send(
+                    new RemoteNodeAvatarChangedLiberin(
+                        parameters.nodeName,
+                        AvatarImageUtil.build(mediaFile, shape, config.getMedia().getDirectServe())
                     )
+                )
             );
         }
     }

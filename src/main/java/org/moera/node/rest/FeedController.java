@@ -38,6 +38,7 @@ import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.config.Config;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.Feed;
@@ -90,6 +91,9 @@ public class FeedController {
     private static final Logger log = LoggerFactory.getLogger(FeedController.class);
 
     private static final int DELETE_BATCH_SIZE = 500;
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -530,8 +534,14 @@ public class FeedController {
             story,
             requestContext.isAdmin(Scope.VIEW_FEEDS),
             t -> PostingInfoUtil.build(
-                t.getEntry(), List.of(t), entryOperations, requestContext, requestContext.getOptions()
-            )
+                t.getEntry(),
+                List.of(t),
+                entryOperations,
+                requestContext,
+                requestContext.getOptions(),
+                config.getMedia().getDirectServe()
+            ),
+            config.getMedia().getDirectServe()
         );
     }
 

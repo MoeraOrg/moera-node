@@ -70,7 +70,10 @@ public class RssController {
         if (rcp.avatarId() != null) {
             SyndImage image = new SyndImageImpl();
             image.setTitle(title);
-            image.setUrl(rcp.getSiteUrl() + "/moera/media/" + AvatarImageUtil.build(rcp.getAvatar()).getPath());
+            image.setUrl(
+                rcp.getSiteUrl() + "/moera/media/"
+                    + AvatarImageUtil.build(rcp.getAvatar(), config.getMedia().getDirectServe()).getPath()
+            );
             image.setLink(rcp.getSiteUrl() + "/");
             feed.setImage(image);
         }

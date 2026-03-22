@@ -10,6 +10,7 @@ import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.config.Config;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
@@ -41,6 +42,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class StoryController {
 
     private static final Logger log = LoggerFactory.getLogger(StoryController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -76,7 +80,10 @@ public class StoryController {
         return StoryInfoUtil.build(
             story,
             requestContext.isAdmin(Scope.VIEW_FEEDS),
-            t -> PostingInfoUtil.build(t.getEntry(), entryOperations, requestContext)
+            t -> PostingInfoUtil.build(
+                t.getEntry(), entryOperations, requestContext, config.getMedia().getDirectServe()
+            ),
+            config.getMedia().getDirectServe()
         );
     }
 
@@ -113,7 +120,10 @@ public class StoryController {
             StoryInfo storyInfo = StoryInfoUtil.build(
                 story,
                 requestContext.isAdmin(Scope.VIEW_FEEDS),
-                t -> PostingInfoUtil.build(t.getEntry(), entryOperations, requestContext)
+                t -> PostingInfoUtil.build(
+                    t.getEntry(), entryOperations, requestContext, config.getMedia().getDirectServe()
+                ),
+                config.getMedia().getDirectServe()
             );
 
             return Pair.of(story, storyInfo);

@@ -27,11 +27,11 @@ import org.moera.node.friends.SubscribedCache;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
-import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.liberin.model.PostingAddedLiberin;
 import org.moera.node.liberin.model.PostingCommentTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
+import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.AvatarImageUtil;
@@ -144,7 +144,7 @@ public class PostingReceptor extends LiberinReceptorBase {
         );
         if (posting.getCurrentRevision().isUpdateImportant()) {
             AvatarImage ownerAvatar = AvatarImageUtil.build(
-                posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape()
+                posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape(), config.getMedia().getDirectServe()
             );
             send(
                 Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
@@ -253,7 +253,8 @@ public class PostingReceptor extends LiberinReceptorBase {
                 posting.getStories(),
                 MediaAttachmentsProvider.NONE,
                 AccessCheckers.ADMIN,
-                universalContext.getOptions()
+                universalContext.getOptions(),
+                config.getMedia().getDirectServe()
             );
             userListOperations.fillSheriffListMarks(postingInfo);
             currentMentions.stream()

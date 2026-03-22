@@ -4,26 +4,32 @@ import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.AvatarInfo;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.MediaFile;
+import org.moera.node.media.MimeUtils;
+import org.moera.node.util.ExtendedDuration;
+import org.moera.node.util.MediaUtil;
 
 public class AvatarImageUtil {
 
-    public static AvatarImage build(Avatar avatar) {
-        return build(avatar.getMediaFile(), avatar.getShape());
+    public static AvatarImage build(Avatar avatar, DirectServeConfig config) {
+        return build(avatar.getMediaFile(), avatar.getShape(), config);
     }
 
-    public static AvatarImage build(AvatarInfo avatarInfo) {
+    public static AvatarImage build(AvatarInfo avatarInfo, DirectServeConfig config) {
         AvatarImage avatarImage = new AvatarImage();
         avatarImage.setMediaId(avatarInfo.getMediaId());
         avatarImage.setPath(avatarInfo.getPath());
+        avatarImage.setMimeType(avatarInfo.getMimeType());
         avatarImage.setWidth(avatarInfo.getWidth());
         avatarImage.setHeight(avatarInfo.getHeight());
+        fillDirectPath(avatarImage, config);
         avatarImage.setShape(avatarInfo.getShape());
         return avatarImage;
     }
 
-    public static AvatarImage build(MediaFile mediaFile, String shape) {
+    public static AvatarImage build(MediaFile mediaFile, String shape, DirectServeConfig config) {
         AvatarImage avatarImage = new AvatarImage();
         setMediaFile(avatarImage, mediaFile);
         if (mediaFile != null) {
@@ -31,13 +37,23 @@ public class AvatarImageUtil {
             avatarImage.setPath("public/" + mediaFile.getFileName());
             avatarImage.setWidth(mediaFile.getSizeX());
             avatarImage.setHeight(mediaFile.getSizeY());
+            fillDirectPath(avatarImage, config);
         }
         avatarImage.setShape(shape);
         return avatarImage;
     }
 
-    public static AvatarImage build(AvatarDescription avatarDescription, MediaFile mediaFile) {
-        return build(mediaFile, avatarDescription != null ? avatarDescription.getShape() : null);
+    private static void fillDirectPath(AvatarImage info, DirectServeConfig config) {
+        var fileName = MimeUtils.fileName(info.getMediaId(), info.getMimeType());
+        var pu = MediaUtil.presignDirectPath(fileName, info.getMediaId(), ExtendedDuration.ALWAYS, config);
+        info.setDirectPath(pu.url());
+        info.setDirectPathExpiresAt(pu.expires());
+    }
+
+    public static AvatarImage build(
+        AvatarDescription avatarDescription, MediaFile mediaFile, DirectServeConfig config
+    ) {
+        return build(mediaFile, avatarDescription != null ? avatarDescription.getShape() : null, config);
     }
 
     public static MediaFile getMediaFile(AvatarImage avatarImage) {

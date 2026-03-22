@@ -266,7 +266,8 @@ public class CommentController {
                 posting.getTotalChildren(),
                 MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
                 requestContext,
-                blockedOperations
+                blockedOperations,
+                config.getMedia().getDirectServe()
             ));
     }
 
@@ -350,7 +351,8 @@ public class CommentController {
                     CommentInfoUtil.build(
                         comment,
                         MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
-                        requestContext
+                        requestContext,
+                        config.getMedia().getDirectServe()
                     )
                 ),
                 comment.getPosting().getOwnerName()
@@ -735,7 +737,7 @@ public class CommentController {
             ))
             .fetch()
             .stream()
-            .map(c -> CommentInfoUtil.build(c, entryOperations, requestContext))
+            .map(c -> CommentInfoUtil.build(c, entryOperations, requestContext, config.getMedia().getDirectServe()))
             .sorted(Comparator.comparing(CommentInfo::getMoment))
             .collect(Collectors.toList());
 
@@ -842,7 +844,13 @@ public class CommentController {
 
         return withSheriffUserListMarks(withBlockings(withSeniorReaction(
             withClientReaction(
-                CommentInfoUtil.build(comment, entryOperations, includeSet.contains("source"), requestContext)
+                CommentInfoUtil.build(
+                    comment,
+                    entryOperations,
+                    includeSet.contains("source"),
+                    requestContext,
+                    config.getMedia().getDirectServe()
+                )
             ),
             posting.getOwnerName()
         )), posting);
@@ -923,7 +931,9 @@ public class CommentController {
             requestContext.nodeId(), comment.getCurrentRevision().getId()
         );
         return attached.stream()
-            .map(p -> withBlockings(withClientReaction(PostingInfoUtil.build(p, false, requestContext))))
+            .map(p -> withBlockings(withClientReaction(
+                PostingInfoUtil.build(p, false, requestContext, config.getMedia().getDirectServe())
+            )))
             .collect(Collectors.toList());
     }
 

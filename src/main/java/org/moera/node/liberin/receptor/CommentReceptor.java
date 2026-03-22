@@ -150,7 +150,9 @@ public class CommentReceptor extends LiberinReceptorBase {
                 comment.getOwnerName(),
                 comment.getOwnerFullName(),
                 comment.getOwnerGender(),
-                AvatarImageUtil.build(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())
+                AvatarImageUtil.build(
+                    comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), config.getMedia().getDirectServe()
+                )
             )
         );
         send(
@@ -193,7 +195,9 @@ public class CommentReceptor extends LiberinReceptorBase {
                 comment.getOwnerName(),
                 comment.getOwnerFullName(),
                 comment.getOwnerGender(),
-                AvatarImageUtil.build(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())
+                AvatarImageUtil.build(
+                    comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), config.getMedia().getDirectServe()
+                )
             )
         );
         send(
@@ -218,11 +222,12 @@ public class CommentReceptor extends LiberinReceptorBase {
                 aposting.getStories(),
                 MediaAttachmentsProvider.NONE,
                 AccessCheckers.ADMIN,
-                universalContext.getOptions()
+                universalContext.getOptions(),
+                config.getMedia().getDirectServe()
             );
             userListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = CommentInfoUtil.build(
-                acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN
+                acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, config.getMedia().getDirectServe()
             );
             userListOperations.fillSheriffListMarks(aposting, commentInfo);
             UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
@@ -273,11 +278,12 @@ public class CommentReceptor extends LiberinReceptorBase {
                 aposting.getStories(),
                 MediaAttachmentsProvider.NONE,
                 AccessCheckers.ADMIN,
-                universalContext.getOptions()
+                universalContext.getOptions(),
+                config.getMedia().getDirectServe()
             );
             userListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = CommentInfoUtil.build(
-                acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN
+                acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, config.getMedia().getDirectServe()
             );
             userListOperations.fillSheriffListMarks(aposting, commentInfo);
             send(
@@ -320,7 +326,9 @@ public class CommentReceptor extends LiberinReceptorBase {
                 comment.getOwnerName(),
                 comment.getOwnerFullName(),
                 comment.getOwnerGender(),
-                AvatarImageUtil.build(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())
+                AvatarImageUtil.build(
+                    comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), config.getMedia().getDirectServe()
+                )
             )
         );
     }
@@ -337,7 +345,8 @@ public class CommentReceptor extends LiberinReceptorBase {
                 aposting.getStories(),
                 MediaAttachmentsProvider.NONE,
                 AccessCheckers.ADMIN,
-                universalContext.getOptions()
+                universalContext.getOptions(),
+                config.getMedia().getDirectServe()
             );
             userListOperations.fillSheriffListMarks(postingInfo);
             send(
@@ -383,11 +392,12 @@ public class CommentReceptor extends LiberinReceptorBase {
                 posting.getStories(),
                 MediaAttachmentsProvider.NONE,
                 AccessCheckers.ADMIN,
-                universalContext.getOptions()
+                universalContext.getOptions(),
+                config.getMedia().getDirectServe()
             );
             userListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = CommentInfoUtil.build(
-                comment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN
+                comment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, config.getMedia().getDirectServe()
             );
             userListOperations.fillSheriffListMarks(posting, commentInfo);
             currentMentions.stream()

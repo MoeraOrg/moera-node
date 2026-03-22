@@ -13,6 +13,7 @@ import org.moera.lib.node.types.ActivityReactionInfo;
 import org.moera.lib.node.types.RemotePosting;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.auth.Admin;
+import org.moera.node.config.Config;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.global.ApiController;
@@ -31,6 +32,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class ActivityReactionController {
 
     private static final Logger log = LoggerFactory.getLogger(ActivityReactionController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -58,7 +62,7 @@ public class ActivityReactionController {
         Set<RemotePosting> postingSet = new HashSet<>(filter.getPostings());
         return ownReactions.stream()
             .filter(r -> postingSet.contains(r.getRemotePosting()))
-            .map(ActivityReactionInfoUtil::build)
+            .map(r -> ActivityReactionInfoUtil.build(r, config.getMedia().getDirectServe()))
             .collect(Collectors.toList());
     }
 

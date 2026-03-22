@@ -5,6 +5,7 @@ import org.moera.lib.node.types.ContactOperations;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.Contact;
@@ -16,14 +17,14 @@ import org.moera.node.option.Options;
 
 public class ContactInfoUtil {
 
-    public static ContactInfo build(Contact contact, Options options) {
+    public static ContactInfo build(Contact contact, Options options, DirectServeConfig config) {
         ContactInfo contactInfo = new ContactInfo();
         contactInfo.setNodeName(contact.getRemoteNodeName());
         contactInfo.setFullName(contact.getRemoteFullName());
         contactInfo.setGender(contact.getRemoteGender());
         if (contact.getRemoteAvatarMediaFile() != null) {
             contactInfo.setAvatar(
-                AvatarImageUtil.build(contact.getRemoteAvatarMediaFile(), contact.getRemoteAvatarShape())
+                AvatarImageUtil.build(contact.getRemoteAvatarMediaFile(), contact.getRemoteAvatarShape(), config)
             );
         }
         contactInfo.setDistance(contact.getDistance());
@@ -61,8 +62,10 @@ public class ContactInfoUtil {
         return contactInfo;
     }
 
-    public static ContactInfo build(Contact contact, Options options, AccessChecker accessChecker) {
-        ContactInfo contactInfo = build(contact, options);
+    public static ContactInfo build(
+        Contact contact, Options options, AccessChecker accessChecker, DirectServeConfig config
+    ) {
+        ContactInfo contactInfo = build(contact, options, config);
         protect(contactInfo, accessChecker);
         return contactInfo;
     }

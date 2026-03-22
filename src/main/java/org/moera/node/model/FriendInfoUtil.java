@@ -6,24 +6,29 @@ import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.FriendGroupDetails;
 import org.moera.lib.node.types.FriendInfo;
 import org.moera.lib.node.types.principal.AccessChecker;
+import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Contact;
 import org.moera.node.data.Friend;
 import org.moera.node.option.Options;
 
 public class FriendInfoUtil {
 
-    public static FriendInfo build(Contact contact, Options options, AccessChecker accessChecker) {
+    public static FriendInfo build(
+        Contact contact, Options options, AccessChecker accessChecker, DirectServeConfig config
+    ) {
         return build(
             contact.getRemoteNodeName(),
-            ContactInfoUtil.build(contact, options, accessChecker),
+            ContactInfoUtil.build(contact, options, accessChecker, config),
             null
         );
     }
 
-    public static FriendInfo build(Friend friend, Options options, AccessChecker accessChecker) {
+    public static FriendInfo build(
+        Friend friend, Options options, AccessChecker accessChecker, DirectServeConfig config
+    ) {
         return build(
             friend.getRemoteNodeName(),
-            ContactInfoUtil.build(friend.getContact(), options, accessChecker),
+            ContactInfoUtil.build(friend.getContact(), options, accessChecker, config),
             null
         );
     }

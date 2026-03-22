@@ -14,6 +14,7 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SubscriberInfo;
 import org.moera.lib.node.types.SubscriptionInfo;
 import org.moera.lib.node.types.SubscriptionType;
+import org.moera.node.config.Config;
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.data.BlockedUserRepository;
 import org.moera.node.data.FriendOfRepository;
@@ -41,6 +42,9 @@ public class PeopleUiController {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private Config config;
 
     @Inject
     private TitleBuilder titleBuilder;
@@ -90,7 +94,9 @@ public class PeopleUiController {
             subscribers = subscriberRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED).stream()
                 .sorted(comparator)
                 .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
-                .map(s -> SubscriberInfoUtil.build(s, requestContext.getOptions(), requestContext))
+                .map(s -> SubscriberInfoUtil.build(
+                    s, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                ))
                 .collect(Collectors.toList());
         }
 
@@ -128,7 +134,9 @@ public class PeopleUiController {
                 .stream()
                 .sorted(comparator)
                 .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
-                .map(s -> SubscriptionInfoUtil.build(s, requestContext.getOptions(), requestContext))
+                .map(s -> SubscriptionInfoUtil.build(
+                    s, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                ))
                 .collect(Collectors.toList());
         }
 

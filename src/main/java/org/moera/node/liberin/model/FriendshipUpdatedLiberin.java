@@ -49,7 +49,10 @@ public class FriendshipUpdatedLiberin extends Liberin {
         super.toModel(model);
         model.put("friendNodeName", friendNodeName);
         model.put("friendGroups", friendGroups);
-        model.put("contact", ContactInfoUtil.build(contact, getPluginContext().getOptions()));
+        model.put(
+            "contact",
+            ContactInfoUtil.build(contact, getPluginContext().getOptions(), getConfig().getMedia().getDirectServe())
+        );
     }
 
 }

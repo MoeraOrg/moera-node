@@ -11,6 +11,7 @@ import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.config.Config;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -45,6 +46,9 @@ public class ProfileController {
     private static final Logger log = LoggerFactory.getLogger(ProfileController.class);
 
     @Inject
+    private Config config;
+
+    @Inject
     private RequestContext requestContext;
 
     @Inject
@@ -64,7 +68,7 @@ public class ProfileController {
 
         requestContext.send(new ProfileReadLiberin());
 
-        return ProfileInfoUtil.build(requestContext, includeSet.contains("source"));
+        return ProfileInfoUtil.build(requestContext, includeSet.contains("source"), config.getMedia().getDirectServe());
     }
 
     @PutMapping
@@ -96,7 +100,7 @@ public class ProfileController {
             )
         );
 
-        return ProfileInfoUtil.build(requestContext, true);
+        return ProfileInfoUtil.build(requestContext, true, config.getMedia().getDirectServe());
     }
 
     @PostMapping("/email/verify")

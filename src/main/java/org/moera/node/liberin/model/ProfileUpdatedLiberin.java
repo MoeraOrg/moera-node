@@ -59,7 +59,7 @@ public class ProfileUpdatedLiberin extends Liberin {
         super.toModel(model);
         model.put("nodeName", nodeName);
         model.put("profile", ProfileInfoUtil.build(options));
-        model.put("avatar", AvatarInfoUtil.build(avatar));
+        model.put("avatar", AvatarInfoUtil.build(avatar, getConfig().getMedia().getDirectServe()));
         model.put("prevEmail", prevEmail);
     }
 

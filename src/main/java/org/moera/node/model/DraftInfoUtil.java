@@ -37,7 +37,7 @@ public class DraftInfoUtil {
 
         if (draft.getOwnerAvatarMediaFile() != null) {
             draftInfo.setOwnerAvatar(
-                AvatarImageUtil.build(draft.getOwnerAvatarMediaFile(), draft.getOwnerAvatarShape())
+                AvatarImageUtil.build(draft.getOwnerAvatarMediaFile(), draft.getOwnerAvatarShape(), config)
             );
         }
 

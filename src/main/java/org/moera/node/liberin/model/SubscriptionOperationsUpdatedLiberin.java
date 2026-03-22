@@ -36,7 +36,14 @@ public class SubscriptionOperationsUpdatedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("subscription", SubscriptionInfoUtil.build(subscription, getPluginContext().getOptions()));
+        model.put(
+            "subscription",
+            SubscriptionInfoUtil.build(
+                subscription,
+                getPluginContext().getOptions(),
+                getConfig().getMedia().getDirectServe()
+            )
+        );
         model.put("latestViewPrincipal", latestViewPrincipal);
     }
 

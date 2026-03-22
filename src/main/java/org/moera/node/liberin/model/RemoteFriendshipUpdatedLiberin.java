@@ -58,7 +58,9 @@ public class RemoteFriendshipUpdatedLiberin extends Liberin {
 
     private List<FriendOfInfo> toFriendOfInfos(List<FriendOf> friendOfs) {
         return friendOfs.stream()
-                .map(fo -> FriendOfInfoUtil.build(fo, getPluginContext().getOptions()))
+                .map(fo -> FriendOfInfoUtil.build(
+                    fo, getPluginContext().getOptions(), getConfig().getMedia().getDirectServe()
+                ))
                 .collect(Collectors.toList());
     }
 

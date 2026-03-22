@@ -155,8 +155,11 @@ public class MoeraHelperSource {
             buf.append(shortName.length() > 2 ? shortName.substring(0, 2).toUpperCase() : shortName.toUpperCase());
             buf.append("</div>");
         } else {
-            AvatarImage avatarImage = avatar instanceof AvatarInfo
-                ? AvatarImageUtil.build((AvatarInfo) avatar) : (AvatarImage) avatar;
+            AvatarImage avatarImage = switch (avatar) {
+                case AvatarInfo info -> AvatarImageUtil.build(info, config.getMedia().getDirectServe());
+                case AvatarImage image -> image;
+                default -> throw new TypeMismatchException("avatar", "AvatarImage", avatar);
+            };
 
             buf.append("<img");
             HelperUtil.appendAttr(buf, "src", "/moera/media/" + avatarImage.getPath());

@@ -19,6 +19,7 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.config.Config;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.Friend;
@@ -56,6 +57,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class FriendController {
 
     private static final Logger log = LoggerFactory.getLogger(FriendController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -103,7 +107,9 @@ public class FriendController {
                 groups = null;
             }
             if (groups == null) {
-                FriendInfo info = FriendInfoUtil.build(friend, requestContext.getOptions(), requestContext);
+                FriendInfo info = FriendInfoUtil.build(
+                    friend, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                );
                 if (groupId == null) {
                     groups = new ArrayList<>();
                     info.setGroups(groups);
@@ -139,7 +145,11 @@ public class FriendController {
         }
 
         ContactInfo contact = contactRepository.findByRemoteNode(requestContext.nodeId(), nodeName)
-            .map(c -> ContactInfoUtil.build(c, requestContext.getOptions(), requestContext))
+            .map(c ->
+                ContactInfoUtil.build(
+                    c, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                )
+            )
             .orElse(null);
 
         boolean privileged =
@@ -169,7 +179,9 @@ public class FriendController {
             friendDescription.validate();
 
             Contact contact = contactOperations.find(friendDescription.getNodeName());
-            FriendInfo friendInfo = FriendInfoUtil.build(contact, requestContext.getOptions(), requestContext);
+            FriendInfo friendInfo = FriendInfoUtil.build(
+                contact, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+            );
             result.add(friendInfo);
 
             Map<UUID, Pair<FriendGroupAssignment, Friend>> targetGroups = new HashMap<>();
@@ -226,7 +238,11 @@ public class FriendController {
                 friendInfo.getGroups().add(FriendGroupDetailsUtil.build(friend, true));
             }
 
-            friendInfo.setContact(ContactInfoUtil.build(contact, requestContext.getOptions(), requestContext));
+            friendInfo.setContact(
+                ContactInfoUtil.build(
+                    contact, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                )
+            );
 
             requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS, friendDescription.getNodeName());
             requestContext.send(

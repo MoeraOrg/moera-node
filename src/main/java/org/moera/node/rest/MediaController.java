@@ -143,7 +143,7 @@ public class MediaController {
             );
             mediaFile = mediaFileRepository.save(mediaFile);
 
-            return PublicMediaFileInfoUtil.build(mediaFile);
+            return PublicMediaFileInfoUtil.build(mediaFile, config.getMedia().getDirectServe());
         } catch (InvalidImageException e) {
             throw new ValidationFailure("media.image-invalid");
         } catch (ThresholdReachedException e) {
@@ -250,7 +250,7 @@ public class MediaController {
     public PublicMediaFileInfo getInfoPublic(@PathVariable String id) {
         log.info("GET /media/public/{id}/info (id = {})", LogUtil.format(id));
 
-        return PublicMediaFileInfoUtil.build(getMediaFile(id));
+        return PublicMediaFileInfoUtil.build(getMediaFile(id), config.getMedia().getDirectServe());
     }
 
     @GetMapping("/private/{id}/info")
@@ -295,12 +295,31 @@ public class MediaController {
         List<EntryInfo> parents = new ArrayList<>();
         for (Entry entry : entries) {
             EntryInfo info = new EntryInfo();
-            if (entry instanceof Posting posting) {
-                info.setPosting(PostingInfoUtil.build(posting, entryOperations, requestContext));
-            } else if (entry instanceof Comment comment) {
-                info.setComment(CommentInfoUtil.build(comment, entryOperations, requestContext));
-            } else {
-                continue;
+            switch (entry) {
+                case Posting posting:
+                    info.setPosting(
+                        PostingInfoUtil.build(
+                            posting,
+                            entryOperations,
+                            requestContext,
+                            config.getMedia().getDirectServe()
+                        )
+                    );
+                    break;
+
+                case Comment comment:
+                    info.setComment(
+                        CommentInfoUtil.build(
+                            comment,
+                            entryOperations,
+                            requestContext,
+                            config.getMedia().getDirectServe()
+                        )
+                    );
+                    break;
+
+                default:
+                    continue;
             }
             parents.add(info);
         }

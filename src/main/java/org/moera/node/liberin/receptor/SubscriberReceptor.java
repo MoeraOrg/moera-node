@@ -55,7 +55,12 @@ public class SubscriberReceptor extends LiberinReceptorBase {
             send(
                 liberin,
                 new SubscriberAddedEvent(
-                    SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
+                    SubscriberInfoUtil.build(
+                        subscriber,
+                        universalContext.getOptions(),
+                        AccessCheckers.PUBLIC,
+                        config.getMedia().getDirectServe()
+                    ),
                     visibilityFilter(universalContext.getOptions(), subscriber
                 )
             ));
@@ -65,7 +70,8 @@ public class SubscriberReceptor extends LiberinReceptorBase {
                     SubscriberInfoUtil.build(
                         subscriber,
                         universalContext.getOptions(),
-                        AccessCheckers.node(subscriber.getRemoteNodeName())
+                        AccessCheckers.node(subscriber.getRemoteNodeName()),
+                        config.getMedia().getDirectServe()
                     ),
                     Principal.ofNode(subscriber.getRemoteNodeName())
                 )
@@ -90,7 +96,12 @@ public class SubscriberReceptor extends LiberinReceptorBase {
         send(
             liberin,
             new SubscriberAddedEvent(
-                SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
+                SubscriberInfoUtil.build(
+                    subscriber,
+                    universalContext.getOptions(),
+                    AccessCheckers.PUBLIC,
+                    config.getMedia().getDirectServe()
+                ),
                 addedFilter
             )
         );
@@ -101,7 +112,12 @@ public class SubscriberReceptor extends LiberinReceptorBase {
         send(
             liberin,
             new SubscriberUpdatedEvent(
-                SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
+                SubscriberInfoUtil.build(
+                    subscriber,
+                    universalContext.getOptions(),
+                    AccessCheckers.PUBLIC,
+                    config.getMedia().getDirectServe()
+                ),
                 updatedFilter
             )
         );
@@ -109,7 +125,8 @@ public class SubscriberReceptor extends LiberinReceptorBase {
             SubscriberInfoUtil.build(
                 subscriber,
                 universalContext.getOptions(),
-                AccessCheckers.node(subscriber.getRemoteNodeName())
+                AccessCheckers.node(subscriber.getRemoteNodeName()),
+                config.getMedia().getDirectServe()
             ),
             Principal.ofNode(subscriber.getRemoteNodeName())
         ));
@@ -120,7 +137,12 @@ public class SubscriberReceptor extends LiberinReceptorBase {
         send(
             liberin,
             new SubscriberDeletedEvent(
-                SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
+                SubscriberInfoUtil.build(
+                    subscriber,
+                    universalContext.getOptions(),
+                    AccessCheckers.PUBLIC,
+                    config.getMedia().getDirectServe()
+                ),
                 deletedFilter
             )
         );
@@ -132,14 +154,20 @@ public class SubscriberReceptor extends LiberinReceptorBase {
 
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
             send(liberin, new SubscriberDeletedEvent(
-                SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
+                SubscriberInfoUtil.build(
+                    subscriber,
+                    universalContext.getOptions(),
+                    AccessCheckers.PUBLIC,
+                    config.getMedia().getDirectServe()
+                ),
                 visibilityFilter(universalContext.getOptions(), subscriber)
             ));
             send(liberin, new SubscriberDeletedEvent(
                 SubscriberInfoUtil.build(
                     subscriber,
                     universalContext.getOptions(),
-                    AccessCheckers.node(subscriber.getRemoteNodeName())
+                    AccessCheckers.node(subscriber.getRemoteNodeName()),
+                    config.getMedia().getDirectServe()
                 ),
                 Principal.ofNode(subscriber.getRemoteNodeName())
             ));

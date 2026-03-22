@@ -33,21 +33,24 @@ public class CommentInfoUtil {
             comment.getCurrentRevision(),
             MediaAttachmentsProvider.relations(config),
             false,
-            accessChecker
+            accessChecker,
+            config
         );
     }
 
     public static CommentInfo build(
         Comment comment,
         MediaAttachmentsProvider mediaAttachmentsProvider,
-        AccessChecker accessChecker
+        AccessChecker accessChecker,
+        DirectServeConfig config
     ) {
         return build(
             comment,
             comment.getCurrentRevision(),
             mediaAttachmentsProvider,
             false,
-            accessChecker
+            accessChecker,
+            config
         );
     }
 
@@ -55,14 +58,16 @@ public class CommentInfoUtil {
         Comment comment,
         MediaAttachmentsProvider mediaAttachmentsProvider,
         boolean includeSource,
-        AccessChecker accessChecker
+        AccessChecker accessChecker,
+        DirectServeConfig config
     ) {
         return build(
             comment,
             comment.getCurrentRevision(),
             mediaAttachmentsProvider,
             includeSource,
-            accessChecker
+            accessChecker,
+            config
         );
     }
 
@@ -71,10 +76,11 @@ public class CommentInfoUtil {
         EntryRevision revision,
         MediaAttachmentsProvider mediaAttachmentsProvider,
         boolean includeSource,
-        AccessChecker accessChecker
+        AccessChecker accessChecker,
+        DirectServeConfig config
     ) {
         CommentInfo commentInfo = new CommentInfo();
-        buildTo(commentInfo, comment, revision, mediaAttachmentsProvider, includeSource, accessChecker);
+        buildTo(commentInfo, comment, revision, mediaAttachmentsProvider, includeSource, accessChecker, config);
         return commentInfo;
     }
 
@@ -84,7 +90,8 @@ public class CommentInfoUtil {
         EntryRevision revision,
         MediaAttachmentsProvider mediaAttachmentsProvider,
         boolean includeSource,
-        AccessChecker accessChecker
+        AccessChecker accessChecker,
+        DirectServeConfig config
     ) {
         commentInfo.setId(comment.getId().toString());
         commentInfo.setOwnerName(comment.getOwnerName());
@@ -92,7 +99,7 @@ public class CommentInfoUtil {
         commentInfo.setOwnerGender(comment.getOwnerGender());
         if (comment.getOwnerAvatarMediaFile() != null) {
             commentInfo.setOwnerAvatar(
-                AvatarImageUtil.build(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())
+                AvatarImageUtil.build(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), config)
             );
         }
         commentInfo.setPostingId(comment.getPosting().getId().toString());
@@ -111,7 +118,7 @@ public class CommentInfoUtil {
         commentInfo.setHeading(revision.getHeading());
         commentInfo.setDescription(revision.getDescription());
         if (comment.getRepliedTo() != null) {
-            commentInfo.setRepliedTo(RepliedToUtil.build(comment));
+            commentInfo.setRepliedTo(RepliedToUtil.build(comment, config));
         }
         commentInfo.setMoment(comment.getMoment());
         commentInfo.setCreatedAt(Util.toEpochSecond(comment.getCreatedAt()));
@@ -207,10 +214,14 @@ public class CommentInfoUtil {
         commentInfo.setReactions(ReactionTotalsInfoUtil.build(comment.getReactionTotals(), comment, accessChecker));
     }
 
-    public static CommentUiInfo buildForUi(Comment comment, MediaAttachmentsProvider mediaAttachmentsProvider) {
+    public static CommentUiInfo buildForUi(
+        Comment comment, MediaAttachmentsProvider mediaAttachmentsProvider, DirectServeConfig config
+    ) {
         CommentUiInfo info = new CommentUiInfo();
 
-        buildTo(info, comment, comment.getCurrentRevision(), mediaAttachmentsProvider, false, AccessCheckers.PUBLIC);
+        buildTo(
+            info, comment, comment.getCurrentRevision(), mediaAttachmentsProvider, false, AccessCheckers.PUBLIC, config
+        );
         String saneBodyPreview = comment.getCurrentRevision().getSaneBodyPreview();
         setSaneBodyPreview(info, saneBodyPreview != null ? saneBodyPreview : info.getBodyPreview().getText());
         String saneBody = comment.getCurrentRevision().getSaneBody();

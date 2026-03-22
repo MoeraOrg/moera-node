@@ -25,6 +25,7 @@ import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.UserBlockedException;
+import org.moera.node.config.Config;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
@@ -69,6 +70,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class PostingReactionController {
 
     private static final Logger log = LoggerFactory.getLogger(PostingReactionController.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -149,7 +153,9 @@ public class PostingReactionController {
 
         return ResponseEntity
             .created(URI.create("/postings/" + posting.getId() + "/reactions" + reaction.getId()))
-            .body(ReactionCreatedUtil.build(reaction, totalsInfo.getClientInfo(), requestContext));
+            .body(ReactionCreatedUtil.build(
+                reaction, totalsInfo.getClientInfo(), requestContext, config.getMedia().getDirectServe()
+            ));
     }
 
     private ResponseEntity<ReactionCreated> postToPickedAtHome(
@@ -166,7 +172,9 @@ public class PostingReactionController {
         var totalsInfo = reactionTotalOperations.getInfo(posting);
         return ResponseEntity
             .created(URI.create("/postings/" + posting.getId() + "/reactions"))
-            .body(ReactionCreatedUtil.build(null, totalsInfo.getClientInfo(), requestContext));
+            .body(ReactionCreatedUtil.build(
+                null, totalsInfo.getClientInfo(), requestContext, config.getMedia().getDirectServe()
+            ));
     }
 
     private ResponseEntity<ReactionCreated> postToPicked(ReactionDescription reactionDescription, Posting posting) {
@@ -177,7 +185,9 @@ public class PostingReactionController {
         var totalsInfo = reactionTotalOperations.getInfo(posting);
         return ResponseEntity
             .created(URI.create("/postings/" + posting.getId() + "/reactions"))
-            .body(ReactionCreatedUtil.build(null, totalsInfo.getClientInfo(), requestContext));
+            .body(ReactionCreatedUtil.build(
+                null, totalsInfo.getClientInfo(), requestContext, config.getMedia().getDirectServe()
+            ));
     }
 
     @PutMapping("/{postingId}/reactions/{ownerName}")
@@ -233,7 +243,7 @@ public class PostingReactionController {
 
         requestContext.send(new PostingReactionOperationsUpdatedLiberin(posting, reaction));
 
-        return ReactionInfoUtil.build(reaction, requestContext);
+        return ReactionInfoUtil.build(reaction, requestContext, config.getMedia().getDirectServe());
     }
 
     @GetMapping("/{postingId}/reactions")
@@ -302,7 +312,7 @@ public class PostingReactionController {
             return ReactionInfoUtil.ofPosting(postingId); // FIXME ugly, return 404
         }
 
-        return ReactionInfoUtil.build(reaction, requestContext);
+        return ReactionInfoUtil.build(reaction, requestContext, config.getMedia().getDirectServe());
     }
 
     @PostMapping("/reactions/search")
@@ -337,7 +347,7 @@ public class PostingReactionController {
                     Scope.VIEW_CONTENT
                 )
             )
-            .map(r -> ReactionInfoUtil.build(r, requestContext))
+            .map(r -> ReactionInfoUtil.build(r, requestContext, config.getMedia().getDirectServe()))
             .collect(Collectors.toList());
     }
 

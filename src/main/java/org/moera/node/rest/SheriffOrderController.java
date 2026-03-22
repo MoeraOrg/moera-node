@@ -17,6 +17,7 @@ import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.IncorrectSignatureException;
+import org.moera.node.config.Config;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
@@ -51,6 +52,9 @@ public class SheriffOrderController {
     private static final Logger log = LoggerFactory.getLogger(SheriffOrderController.class);
 
     private static final Duration CREATED_AT_MARGIN = Duration.ofMinutes(10);
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -171,7 +175,8 @@ public class SheriffOrderController {
             sheriffOrderDetails.getSheriffName(),
             AvatarImageUtil.build(
                 sheriffOrderDetails.getSheriffAvatar(),
-                AvatarDescriptionUtil.getMediaFile(sheriffOrderDetails.getSheriffAvatar())
+                AvatarDescriptionUtil.getMediaFile(sheriffOrderDetails.getSheriffAvatar()),
+                config.getMedia().getDirectServe()
             ),
             sheriffOrderDetails.getId()
         ));

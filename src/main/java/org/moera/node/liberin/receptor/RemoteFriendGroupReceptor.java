@@ -34,7 +34,9 @@ public class RemoteFriendGroupReceptor extends LiberinReceptorBase {
                 .filter(fo -> !ObjectUtils.isEmpty(fo.getRemoteGroupTitle()))
                 .forEach(fo -> friendInstants.deleted(fo));
 
-        ContactInfo contactInfo = ContactInfoUtil.build(liberin.getContact(), universalContext.getOptions());
+        ContactInfo contactInfo = ContactInfoUtil.build(
+            liberin.getContact(), universalContext.getOptions(), config.getMedia().getDirectServe()
+        );
         List<FriendGroupDetails> groups = liberin.getCurrent().stream()
                 .map(FriendGroupDetailsUtil::build)
                 .collect(Collectors.toList());

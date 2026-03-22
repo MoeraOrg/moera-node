@@ -24,7 +24,7 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
     public void added(BlockedUserAddedLiberin liberin) {
         BlockedUser blockedUser = liberin.getBlockedUser();
         send(liberin, new BlockedUserAddedEvent(
-            BlockedUserInfoUtil.build(blockedUser, universalContext.getOptions()),
+            BlockedUserInfoUtil.build(blockedUser, universalContext.getOptions(), config.getMedia().getDirectServe()),
             BlockedUser.getViewAllE(universalContext.getOptions())
         ));
         if (
@@ -83,7 +83,7 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
             );
         }
         send(liberin, new BlockedUserDeletedEvent(
-            BlockedUserInfoUtil.build(blockedUser, universalContext.getOptions()),
+            BlockedUserInfoUtil.build(blockedUser, universalContext.getOptions(), config.getMedia().getDirectServe()),
             BlockedUser.getViewAllE(universalContext.getOptions())
         ));
         if (
