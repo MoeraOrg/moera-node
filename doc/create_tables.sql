@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict TeUrxl6MHvNpMTSevwJq2AjlQ49311nnco08fCwKrMAdwruClmEkBiKpnhRGYfM
+\restrict OAdceM16PGLxGnO2lhygaBDSTbQo6Xh39wNp2SAVnnHRPXsx8kTzGKtGocnfZ1q
 
 -- Dumped from database version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
@@ -1316,10 +1316,7 @@ CREATE TABLE public.media_file_owners (
     deadline timestamp without time zone,
     view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     usage_updated_at timestamp without time zone DEFAULT now() NOT NULL,
-    permissions_updated_at timestamp without time zone DEFAULT now() NOT NULL,
-    nonce character varying(32),
-    prev_nonce character varying(32),
-    nonce_deadline timestamp without time zone
+    permissions_updated_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
@@ -3056,13 +3053,6 @@ CREATE INDEX media_file_owners_node_id_owner_name_media_file_id_idx ON public.me
 
 
 --
--- Name: media_file_owners_nonce_deadline_view_principal_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE INDEX media_file_owners_nonce_deadline_view_principal_idx ON public.media_file_owners USING btree (nonce_deadline, view_principal);
-
-
---
 -- Name: media_file_previews_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -4330,5 +4320,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict TeUrxl6MHvNpMTSevwJq2AjlQ49311nnco08fCwKrMAdwruClmEkBiKpnhRGYfM
+\unrestrict OAdceM16PGLxGnO2lhygaBDSTbQo6Xh39wNp2SAVnnHRPXsx8kTzGKtGocnfZ1q
 

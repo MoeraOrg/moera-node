@@ -11,16 +11,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Timestamp;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -57,7 +51,6 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
-import org.moera.node.config.DirectServeSource;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Draft;
 import org.moera.node.data.Entry;
@@ -80,17 +73,13 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.operations.OcrJob;
 import org.moera.node.task.Jobs;
-import org.moera.node.task.JobsManagerInitializedEvent;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -104,11 +93,7 @@ import org.springframework.util.ObjectUtils;
 @Component
 public class MediaOperations {
 
-    public static final Duration NONCE_REFRESH_INTERVAL = Duration.of(120, ChronoUnit.DAYS);
-
     public static final String TMP_DIR = "tmp";
-    private static final String PUBLIC_DIR = "public";
-    private static final String PRIVATE_DIR = "private";
 
     private static final Logger log = LoggerFactory.getLogger(MediaOperations.class);
 
@@ -171,47 +156,6 @@ public class MediaOperations {
 
     public Path getPath(MediaFile mediaFile) {
         return FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
-    }
-
-    private Path getPublicServingPath() {
-        return FileSystems.getDefault().getPath(config.getMedia().getPath(), PUBLIC_DIR);
-    }
-
-    private Path getPublicServingPath(MediaFile mediaFile) {
-        return getPublicServingPath().resolve(mediaFile.getFileName());
-    }
-
-    public void createPublicServingLink(MediaFile mediaFile) throws IOException {
-        Path servingPath = getPublicServingPath(mediaFile);
-        if (!Files.exists(servingPath, LinkOption.NOFOLLOW_LINKS)) {
-            Files.createSymbolicLink(servingPath, Paths.get("..", mediaFile.getFileName()));
-        }
-    }
-
-    private Path getPrivateServingPath() {
-        return FileSystems.getDefault().getPath(config.getMedia().getPath(), PRIVATE_DIR);
-    }
-
-    private Path getPrivateServingPath(MediaFileOwner mediaFileOwner) {
-        return getPrivateServingPath().resolve(mediaFileOwner.getDirectFileName());
-    }
-
-    private Path getPrivateServingPath(MediaFilePreview mediaFilePreview, String originalFileName) {
-        return getPrivateServingPath().resolve(mediaFilePreview.getDirectFileName(originalFileName));
-    }
-
-    public void createPrivateServingLink(MediaFileOwner mediaFileOwner) throws IOException {
-        Path servingPath = getPrivateServingPath(mediaFileOwner);
-        if (!Files.exists(servingPath, LinkOption.NOFOLLOW_LINKS)) {
-            Files.createSymbolicLink(servingPath, Paths.get("..", mediaFileOwner.getMediaFile().getFileName()));
-        }
-    }
-
-    public void createPrivateServingLink(MediaFilePreview mediaFilePreview, String originalFileName) throws IOException {
-        Path servingPath = getPrivateServingPath(mediaFilePreview, originalFileName);
-        if (!Files.exists(servingPath, LinkOption.NOFOLLOW_LINKS)) {
-            Files.createSymbolicLink(servingPath, Paths.get("..", mediaFilePreview.getMediaFile().getFileName()));
-        }
     }
 
     public static DigestingOutputStream transfer(
@@ -291,15 +235,8 @@ public class MediaOperations {
             mediaFile.setDigest(digest);
             mediaFile.setExposed(exposed);
             mediaFile = mediaFileRepository.save(mediaFile);
-
-            if (config.getMedia().getDirectServe().getSource() == DirectServeSource.FILESYSTEM && exposed) {
-                createPublicServingLink(mediaFile);
-            }
         } else if (exposed && !mediaFile.isExposed()) {
             mediaFile.setExposed(exposed);
-            if (config.getMedia().getDirectServe().getSource() == DirectServeSource.FILESYSTEM) {
-                createPublicServingLink(mediaFile);
-            }
         }
         return mediaFile;
     }
@@ -448,16 +385,6 @@ public class MediaOperations {
         mediaFileOwner.setMediaFile(mediaFile);
 
         mediaFileOwner = mediaFileOwnerRepository.save(mediaFileOwner);
-
-        if (config.getMedia().getDirectServe().getSource() == DirectServeSource.FILESYSTEM) {
-            mediaFileOwner.setNonce(MediaFileOwner.generateNonce());
-            Timestamp deadline = Timestamp.from(Instant.now().plus(MediaOperations.NONCE_REFRESH_INTERVAL));
-            mediaFileOwner.setNonceDeadline(deadline);
-            createPrivateServingLink(mediaFileOwner);
-            for (var preview : mediaFile.getPreviews()) {
-                createPrivateServingLink(preview, mediaFileOwner.getDirectFileName());
-            }
-        }
 
         return mediaFileOwner;
     }
@@ -728,30 +655,6 @@ public class MediaOperations {
                 } catch (IOException e) {
                     log.warn("Error deleting {}: {}", path, e.getMessage());
                 }
-                if (
-                    config.getMedia().getDirectServe().getSource() == DirectServeSource.FILESYSTEM
-                    && mediaFile.isExposed()
-                ) {
-                    Path publicPath = getPublicServingPath(mediaFile);
-                    try {
-                        Files.deleteIfExists(publicPath);
-                    } catch (IOException e) {
-                        log.warn("Error deleting {}: {}", publicPath, e.getMessage());
-                    }
-                }
-            }
-
-            try (DirectoryStream<Path> directory = Files.newDirectoryStream(getPrivateServingPath())) {
-                for (Path path : directory) {
-                    if (Files.isSymbolicLink(path)) {
-                        Path target = Files.readSymbolicLink(path);
-                        if (!Files.exists(path.resolveSibling(target))) {
-                            Files.delete(path);
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                log.warn("Error deleting stale symlinks: {}", e.getMessage());
             }
         }
     }
@@ -776,91 +679,6 @@ public class MediaOperations {
                     break;
                 }
             }
-        }
-    }
-
-    @EventListener(JobsManagerInitializedEvent.class)
-    public void prepareDirectServing() throws IOException {
-        if (config.getMedia().getDirectServe().getSource() != DirectServeSource.FILESYSTEM) {
-            return;
-        }
-        Path publicDir = getPublicServingPath();
-        if (!Files.exists(publicDir)) {
-            Files.createDirectory(publicDir);
-            jobs.run(PreparePublicDirectServingJob.class, new PreparePublicDirectServingJob.Parameters());
-        }
-        Path privateDir = getPrivateServingPath();
-        if (!Files.exists(privateDir)) {
-            Files.createDirectory(privateDir);
-            jobs.run(PreparePrivateDirectServingJob.class, new PreparePrivateDirectServingJob.Parameters());
-        }
-    }
-
-    @Scheduled(fixedDelayString = "PT3H")
-    public void refreshNonce() {
-        if (config.getMedia().getDirectServe().getSource() != DirectServeSource.FILESYSTEM) {
-            return;
-        }
-
-        try (var ignored = requestCounter.allot()) {
-            log.info("Changing direct serving names of private media files");
-
-            Timestamp deadline = Timestamp.from(Instant.now().plus(MediaOperations.NONCE_REFRESH_INTERVAL));
-
-            Pageable pageable = PageRequest.of(0, 100);
-            Page<MediaFileOwner> page;
-            do {
-                page = tx.executeRead(() -> mediaFileOwnerRepository.findOutdatedNonce(Util.now(), pageable));
-                for (MediaFileOwner mediaFileOwner : page.getContent()) {
-                    String prevNonce = mediaFileOwner.getPrevNonce();
-                    String nonce = MediaFileOwner.generateNonce();
-                    tx.executeWrite(() -> {
-                        mediaFileOwnerRepository.replaceNonce(mediaFileOwner.getId(), nonce, deadline);
-                        entryRevisionRepository.clearAttachmentsCache(mediaFileOwner.getId());
-                    });
-
-                    if (prevNonce != null) {
-                        Path prevPath = getPrivateServingPath().resolve(mediaFileOwner.getPrevDirectFileName());
-                        try {
-                            Files.deleteIfExists(prevPath);
-                        } catch (IOException e) {
-                            log.error("Cannot remove existing link {}: {}", prevPath, e.getMessage());
-                        }
-                    }
-                    mediaFileOwner.setNonce(nonce);
-                    try {
-                        createPrivateServingLink(mediaFileOwner);
-                    } catch (IOException e) {
-                        log.error(
-                            "Could not create a link for {}: {}",
-                            mediaFileOwner.getDirectFileName(), e.getMessage()
-                        );
-                    }
-
-                    Collection<MediaFilePreview> previews =
-                        mediaFilePreviewRepository.findByOriginalId(mediaFileOwner.getMediaFile().getId());
-                    for (MediaFilePreview preview : previews) {
-                        if (prevNonce != null) {
-                            Path prevPath = getPrivateServingPath().resolve(
-                                preview.getDirectFileName(mediaFileOwner.getPrevDirectFileName())
-                            );
-                            try {
-                                Files.deleteIfExists(prevPath);
-                            } catch (IOException e) {
-                                log.error("Cannot remove existing link {}: {}", prevPath, e.getMessage());
-                            }
-                        }
-                        try {
-                            createPrivateServingLink(preview, mediaFileOwner.getDirectFileName());
-                        } catch (IOException e) {
-                            log.error(
-                                "Could not create a link for preview {} {}w: {}",
-                                mediaFileOwner.getDirectFileName(), preview.getWidth(), e.getMessage()
-                            );
-                        }
-                    }
-                }
-            } while (!page.isEmpty());
         }
     }
 

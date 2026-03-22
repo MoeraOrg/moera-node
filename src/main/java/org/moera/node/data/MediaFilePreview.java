@@ -9,8 +9,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 
-import org.moera.node.util.MediaUtil;
-
 @Entity
 @Table(name = "media_file_previews")
 public class MediaFilePreview {
@@ -63,22 +61,6 @@ public class MediaFilePreview {
     @Transient
     public boolean isOriginal() {
         return mediaFile != null && mediaFile.getId().equals(originalMediaFile.getId());
-    }
-
-    public String getDirectFileName(String originalDirectFileName) {
-        if (originalDirectFileName != null) {
-            return isOriginal() ? originalDirectFileName : MediaUtil.mediaPreviewDirect(originalDirectFileName, width);
-        } else {
-            return null;
-        }
-    }
-
-    public String getDirectPath(String originalDirectPath) {
-        if (originalDirectPath != null) {
-            return isOriginal() ? originalDirectPath : MediaUtil.mediaPreviewDirect(originalDirectPath, width);
-        } else {
-            return null;
-        }
     }
 
 }
