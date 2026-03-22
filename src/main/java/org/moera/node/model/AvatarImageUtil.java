@@ -35,6 +35,7 @@ public class AvatarImageUtil {
         if (mediaFile != null) {
             avatarImage.setMediaId(mediaFile.getId());
             avatarImage.setPath("public/" + mediaFile.getFileName());
+            avatarImage.setMimeType(mediaFile.getMimeType());
             avatarImage.setWidth(mediaFile.getSizeX());
             avatarImage.setHeight(mediaFile.getSizeY());
             fillDirectPath(avatarImage, config);
