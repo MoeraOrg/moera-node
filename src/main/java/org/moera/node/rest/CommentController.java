@@ -683,7 +683,7 @@ public class CommentController {
             priv.and(viewPrincipal.eq(Principal.PRIVATE));
             priv.and(comment.ownerName.eq(clientName));
             visibility.or(priv);
-        } else {
+        } else if (requestContext.getSessionId() != null) {
             BooleanBuilder priv = new BooleanBuilder();
             priv.and(viewPrincipal.eq(Principal.PRIVATE));
             priv.and(comment.ownerName.eq(Rules.ANONYMOUS_NODE_NAME));
