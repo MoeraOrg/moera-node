@@ -41,7 +41,7 @@
         <handlebars.version>4.5.0</handlebars.version>
         <handlebars-springmvc.version>4.5.0</handlebars-springmvc.version>
         <hypersistence-utils-hibernate-71.version>3.15.2</hypersistence-utils-hibernate-71.version>
-        <icu4j.version>78.2</icu4j.version>
+        <icu4j.version>78.3</icu4j.version>
         <jakarta.inject.version>2.0.1.MR</jakarta.inject.version>
         <jakarta.validation.version>3.1.1</jakarta.validation.version>
         <janino.version>3.1.12</janino.version>
