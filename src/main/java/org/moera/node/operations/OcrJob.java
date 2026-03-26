@@ -3,8 +3,11 @@ package org.moera.node.operations;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
@@ -121,9 +124,11 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
         for (var owner : owners) {
             universalContext.associate(owner.getNodeId());
 
+            entryRevisionRepository.clearAttachmentsCache(owner.getId());
+
+            Set<UUID> updatedEntries = new HashSet<>();
             var revisions = entryRevisionRepository.findByMedia(owner.getId());
             for (var revision : revisions) {
-                revision.setAttachmentsCache(null);
                 Entry entry = revision.getEntry();
                 boolean collapseQuotations = entry.getEntryType() == EntryType.COMMENT;
                 List<MediaFileOwner> media = revision.getAttachments().stream()
@@ -132,12 +137,17 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
                 String oldHeading = revision.getHeading();
                 String oldDescription = revision.getDescription();
                 TextConverter.headingToRevision(new Body(revision.getBody()), media, collapseQuotations, revision);
+
+                if (revision.getDeletedAt() != null || !updatedEntries.add(entry.getId())) {
+                    continue;
+                }
+
                 switch (entry.getEntryType()) {
                     case POSTING:
-                        send(new PostingMediaTextUpdatedLiberin(entry.getId(), owner.getId(), text));
+                        send(new PostingMediaTextUpdatedLiberin(entry.getId(), owner.getId(), null, text));
                         break;
                     case COMMENT:
-                        send(new CommentMediaTextUpdatedLiberin(entry.getId(), owner.getId(), text));
+                        send(new CommentMediaTextUpdatedLiberin(entry.getId(), owner.getId(), null, text));
                         break;
                 }
                 if (

@@ -336,7 +336,7 @@ public class PostingReceptor extends LiberinReceptorBase {
         send(
             Directions.postingSubscribers(posting.getNodeId(), posting.getId(), posting.getViewE()),
             PostingMediaTextUpdatedNotificationUtil.build(
-                posting.getId(), liberin.getMediaId(), liberin.getTextContent()
+                posting.getId(), liberin.getMediaId(), liberin.getTitle(), liberin.getTextContent()
             )
         );
         if (posting.isOriginal()) {

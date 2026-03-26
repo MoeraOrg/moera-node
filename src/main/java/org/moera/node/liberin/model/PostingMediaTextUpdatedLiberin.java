@@ -9,11 +9,13 @@ public class PostingMediaTextUpdatedLiberin extends Liberin {
 
     private UUID postingId;
     private UUID mediaId;
+    private String title;
     private String textContent;
 
-    public PostingMediaTextUpdatedLiberin(UUID postingId, UUID mediaId, String textContent) {
+    public PostingMediaTextUpdatedLiberin(UUID postingId, UUID mediaId, String title, String textContent) {
         this.postingId = postingId;
         this.mediaId = mediaId;
+        this.title = title;
         this.textContent = textContent;
     }
 
@@ -33,6 +35,14 @@ public class PostingMediaTextUpdatedLiberin extends Liberin {
         this.mediaId = mediaId;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public String getTextContent() {
         return textContent;
     }
@@ -46,6 +56,7 @@ public class PostingMediaTextUpdatedLiberin extends Liberin {
         super.toModel(model);
         model.put("postingId", postingId);
         model.put("mediaId", mediaId);
+        model.put("title", title);
         model.put("textContent", textContent);
     }
 

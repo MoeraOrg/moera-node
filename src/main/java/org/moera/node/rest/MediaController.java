@@ -16,6 +16,7 @@ import jakarta.transaction.Transactional;
 
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.EntryInfo;
+import org.moera.lib.node.types.PrivateMediaFileAttributes;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.PublicMediaFileInfo;
 import org.moera.lib.node.types.Scope;
@@ -61,9 +62,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.util.ObjectUtils;
 
 @ApiController
 @RequestMapping("/moera/api/media")
@@ -203,7 +207,7 @@ public class MediaController {
             );
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
-            MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, clientName);
+            MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, clientName, null);
             mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
             if (isSuitableForOcr(mediaFile)) {
                 mediaFile.setRecognizeAt(Util.now());
@@ -268,6 +272,39 @@ public class MediaController {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
 
         return PrivateMediaFileInfoUtil.build(getMediaFileOwner(id), null, config.getMedia().getDirectServe());
+    }
+
+    @PutMapping("/private/{id}/info")
+    @Transactional
+    public PrivateMediaFileInfo updatePrivateMediaInfo(
+        @PathVariable UUID id,
+        @RequestBody PrivateMediaFileAttributes attributes
+    ) {
+        log.info("PUT /media/private/{id}/info (id = {})", LogUtil.format(id));
+
+        attributes.validate();
+
+        MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
+            .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+        if (!canEdit(mediaFileOwner)) {
+            throw new AuthenticationException();
+        }
+
+        if (attributes.getTitle() != null) {
+            mediaFileOwner.setTitle(attributes.getTitle().isEmpty() ? null : attributes.getTitle());
+            mediaOperations.mediaTextUpdated(mediaFileOwner);
+        }
+
+        return PrivateMediaFileInfoUtil.build(mediaFileOwner, null, config.getMedia().getDirectServe());
+    }
+
+    private boolean canEdit(MediaFileOwner mediaFileOwner) {
+        if (ObjectUtils.isEmpty(mediaFileOwner.getOwnerName())) {
+            return requestContext.isAdmin(Scope.UPLOAD_PRIVATE_MEDIA);
+        }
+        return requestContext.isClient(mediaFileOwner.getOwnerName(), Scope.UPLOAD_PRIVATE_MEDIA)
+            || mediaFileOwner.getOwnerName().equals(requestContext.nodeName())
+                && requestContext.isAdmin(Scope.UPLOAD_PRIVATE_MEDIA);
     }
 
     @GetMapping("/public/{id}/data")

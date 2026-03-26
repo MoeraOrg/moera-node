@@ -6,10 +6,13 @@ import org.moera.lib.node.types.notifications.PostingMediaTextUpdatedNotificatio
 
 public class PostingMediaTextUpdatedNotificationUtil {
 
-    public static PostingMediaTextUpdatedNotification build(UUID postingId, UUID mediaId, String textContent) {
+    public static PostingMediaTextUpdatedNotification build(
+        UUID postingId, UUID mediaId, String title, String textContent
+    ) {
         PostingMediaTextUpdatedNotification notification = new PostingMediaTextUpdatedNotification();
         notification.setPostingId(postingId.toString());
         notification.setMediaId(mediaId.toString());
+        notification.setTitle(title);
         notification.setTextContent(textContent);
         return notification;
     }

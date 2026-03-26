@@ -28,6 +28,7 @@ public class PrivateMediaFileInfoUtil {
         info.setHeight(mediaFileOwner.getMediaFile().getSizeY());
         info.setOrientation(mediaFileOwner.getMediaFile().getOrientation());
         info.setSize(mediaFileOwner.getMediaFile().getFileSize());
+        info.setTitle(mediaFileOwner.getTitle());
         info.setTextContent(mediaFileOwner.getMediaFile().getRecognizedText());
         fillDirectPath(info, config);
 

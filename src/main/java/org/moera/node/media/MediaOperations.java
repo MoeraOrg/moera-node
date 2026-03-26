@@ -53,8 +53,10 @@ import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Draft;
+import org.moera.node.data.DraftRepository;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachmentRepository;
+import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntryRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
@@ -67,6 +69,9 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.liberin.model.CommentMediaTextUpdatedLiberin;
+import org.moera.node.liberin.model.DraftUpdatedLiberin;
+import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingFeaturesUtil;
@@ -123,10 +128,16 @@ public class MediaOperations {
     private EntryAttachmentRepository entryAttachmentRepository;
 
     @Inject
+    private EntryRevisionRepository entryRevisionRepository;
+
+    @Inject
     private EntryRepository entryRepository;
 
     @Inject
     private StoryRepository storyRepository;
+
+    @Inject
+    private DraftRepository draftRepository;
 
     @Inject
     private Transaction tx;
@@ -372,7 +383,7 @@ public class MediaOperations {
         original.addPreview(preview);
     }
 
-    public MediaFileOwner own(MediaFile mediaFile, String ownerName) throws IOException {
+    public MediaFileOwner own(MediaFile mediaFile, String ownerName, String title) throws IOException {
         MediaFile croppedFile = cropOriginal(mediaFile);
         for (int size : PREVIEW_SIZES) {
             createPreview(mediaFile, croppedFile, size);
@@ -382,6 +393,7 @@ public class MediaOperations {
         mediaFileOwner.setId(UUID.randomUUID());
         mediaFileOwner.setNodeId(universalContext.nodeId());
         mediaFileOwner.setOwnerName(ownerName);
+        mediaFileOwner.setTitle(title);
         mediaFileOwner.setMediaFile(mediaFile);
 
         mediaFileOwner = mediaFileOwnerRepository.save(mediaFileOwner);
@@ -481,6 +493,33 @@ public class MediaOperations {
         if (entry.getCurrentRevision() != null) {
             entry.getCurrentRevision().getAttachments().forEach(ea -> updatePermissions(ea.getMediaFileOwner()));
         }
+    }
+
+    public void mediaTextUpdated(MediaFileOwner mediaFileOwner) {
+        entryRevisionRepository.clearAttachmentsCache(mediaFileOwner.getId());
+
+        Set<UUID> updatedEntries = new HashSet<>();
+        entryRevisionRepository.findByMedia(mediaFileOwner.getId()).forEach(revision -> {
+            Entry entry = revision.getEntry();
+
+            if (revision.getDeletedAt() != null || !updatedEntries.add(entry.getId())) {
+                return;
+            }
+
+            switch (entry.getEntryType()) {
+                case POSTING ->
+                    universalContext.send(new PostingMediaTextUpdatedLiberin(
+                        entry.getId(), mediaFileOwner.getId(), mediaFileOwner.getTitle(), null
+                    ));
+                case COMMENT ->
+                    universalContext.send(new CommentMediaTextUpdatedLiberin(
+                        entry.getId(), mediaFileOwner.getId(), mediaFileOwner.getTitle(), null
+                    ));
+            }
+        });
+
+        draftRepository.findByMedia(mediaFileOwner.getId())
+            .forEach(draft -> universalContext.send(new DraftUpdatedLiberin(draft)));
     }
 
     public ResponseEntity<Resource> serve(MediaFile mediaFile, boolean download) {

@@ -32,6 +32,9 @@ public class MediaFileOwner {
     @Size(max = 63)
     private String ownerName;
 
+    @Size(max = 255)
+    private String title;
+
     @ManyToOne
     @NotNull
     private MediaFile mediaFile;
@@ -84,6 +87,14 @@ public class MediaFileOwner {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public MediaFile getMediaFile() {

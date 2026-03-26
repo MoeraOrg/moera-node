@@ -339,7 +339,8 @@ public class MediaManager {
     }
 
     public MediaFileOwner downloadPrivateMedia(
-        String nodeName, String carte, String id, String mediaFileId, String textContent, int maxSize, UUID entryId
+        String nodeName, String carte, String id, String mediaFileId, String title, String textContent,
+        int maxSize, UUID entryId
     ) throws MoeraNodeException {
         if (id == null) {
             return null;
@@ -366,7 +367,7 @@ public class MediaManager {
                 // for MediaFileOwner
 
                 mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
-                mediaFileOwner = mediaOperations.own(mediaFile, null);
+                mediaFileOwner = mediaOperations.own(mediaFile, null, title);
 
                 return mediaFileOwner;
             } catch (IOException e) {
@@ -382,7 +383,7 @@ public class MediaManager {
     ) throws MoeraNodeException {
         int maxSize = PostingFeaturesUtil.build(universalContext.getOptions(), AccessCheckers.ADMIN).getMediaMaxSize();
         return downloadPrivateMedia(
-            nodeName, carte, info.getId(), info.getHash(), info.getTextContent(), maxSize, entryId
+            nodeName, carte, info.getId(), info.getHash(), info.getTitle(), info.getTextContent(), maxSize, entryId
         );
     }
 

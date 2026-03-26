@@ -309,16 +309,23 @@ public class PostingOperations {
         }
     }
 
-    public void updatePickedMediaText(UUID postingId, String remoteMediaId, String text) {
+    public void updatePickedMediaText(UUID postingId, String remoteMediaId, String title, String text) {
         MediaFileOwner mediaFileOwner = postingRepository
             .findAttachedMediaByRemoteId(universalContext.nodeId(), postingId, remoteMediaId)
             .orElse(null);
         if (mediaFileOwner == null) {
             return;
         }
-        mediaFileOwner.getMediaFile().setRecognizedText(text);
-        mediaFileOwner.getMediaFile().setRecognizeAt(Util.now());
-        universalContext.send(new PostingMediaTextUpdatedLiberin(postingId, mediaFileOwner.getId(), text));
+        if (title != null) {
+            mediaFileOwner.setTitle(title.isEmpty() ? null : title);
+        }
+        if (text != null) {
+            mediaFileOwner.getMediaFile().setRecognizedText(text.isEmpty() ? null : text);
+            mediaFileOwner.getMediaFile().setRecognizeAt(Util.now());
+        }
+        universalContext.send(
+            new PostingMediaTextUpdatedLiberin(postingId, mediaFileOwner.getId(), title, text)
+        );
     }
 
     public void updatePickedHeading(UUID postingId, String receiverRevisionId, String heading, String description) {
