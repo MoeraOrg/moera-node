@@ -3,6 +3,9 @@ package org.moera.node.media;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.tika.mime.MimeTypeException;
+import org.apache.tika.mime.MimeTypes;
+
 public class MimeUtils {
 
     public static class ThumbnailFormat {
@@ -17,33 +20,10 @@ public class MimeUtils {
 
     }
 
-    private static final Map<String, String> MIME_EXTENSIONS = new HashMap<>();
+    private static final MimeTypes MIME_TYPES = MimeTypes.getDefaultMimeTypes();
     private static final Map<String, ThumbnailFormat> THUMBNAIL_FORMATS = new HashMap<>();
 
     static {
-        MIME_EXTENSIONS.put("image/avif", "avif");
-        MIME_EXTENSIONS.put("image/gif", "gif");
-        MIME_EXTENSIONS.put("image/jp2", "jp2");
-        MIME_EXTENSIONS.put("image/jpeg", "jpg");
-        MIME_EXTENSIONS.put("image/pcx", "pcx");
-        MIME_EXTENSIONS.put("image/pjpeg", "jpg");
-        MIME_EXTENSIONS.put("image/png", "png");
-        MIME_EXTENSIONS.put("image/x-png", "png");
-        MIME_EXTENSIONS.put("image/svg+xml", "svg");
-        MIME_EXTENSIONS.put("image/tiff", "tiff");
-        MIME_EXTENSIONS.put("image/vnd.djvu", "djvu");
-        MIME_EXTENSIONS.put("image/vnd.microsoft.icon", "ico");
-        MIME_EXTENSIONS.put("image/vnd.wap.wbmp", "wbmp");
-        MIME_EXTENSIONS.put("image/webp", "webp");
-        MIME_EXTENSIONS.put("image/x-ms-bmp", "bmp");
-        MIME_EXTENSIONS.put("image/x-portable-anymap", "pnm");
-        MIME_EXTENSIONS.put("image/x-portable-bitmap", "pbm");
-        MIME_EXTENSIONS.put("image/x-portable-graymap", "pgm");
-        MIME_EXTENSIONS.put("image/x-portable-pixmap", "ppm");
-        MIME_EXTENSIONS.put("image/x-xbitmap", "xbm");
-        MIME_EXTENSIONS.put("image/x-xpixmap", "xpm");
-        MIME_EXTENSIONS.put("application/zip", "zip");
-
         var lossy = new ThumbnailFormat("image/jpeg", "JPEG");
         var lossless = new ThumbnailFormat("image/png", "PNG");
         THUMBNAIL_FORMATS.put("image/avif", lossy);
@@ -69,11 +49,20 @@ public class MimeUtils {
     }
 
     public static String extension(String mimeType) {
-        return MIME_EXTENSIONS.getOrDefault(mimeType, "");
+        try {
+            var extension = MIME_TYPES.forName(mimeType).getExtension();
+            return extension.startsWith(".") ? extension.substring(1) : extension;
+        } catch (MimeTypeException e) {
+            return "";
+        }
     }
 
     public static String fileName(String name, String mimeType) {
         return name + "." + extension(mimeType);
+    }
+
+    public static boolean isSupportedImage(String mimeType) {
+        return THUMBNAIL_FORMATS.containsKey(mimeType);
     }
 
     public static ThumbnailFormat thumbnail(String mimeType) {

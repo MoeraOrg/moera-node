@@ -24,6 +24,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.linkpreviewnet.LinkPreviewNet;
 import org.moera.node.linkpreviewnet.LinkPreviewNetException;
 import org.moera.node.linkpreviewnet.LinkPreviewNetInfo;
+import org.moera.node.media.MimeUtils;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.slf4j.Logger;
@@ -59,43 +60,50 @@ public class ProxyController {
     public ResponseEntity<Resource> getMedia(@RequestParam String url) {
         log.info("GET /proxy/media, (url = {})", LogUtil.format(url));
 
-        HttpClient client = HttpClient.newBuilder()
+        try (HttpClient client = buildClient()) {
+            HttpRequest request;
+            try {
+                request = HttpRequest.newBuilder()
+                    .header("User-Agent", config.getUserAgent())
+                    .GET()
+                    .uri(URI.create(url))
+                    .timeout(REQUEST_TIMEOUT)
+                    .build();
+            } catch (IllegalArgumentException e) {
+                throw new ValidationFailure("proxy.url.invalid");
+            }
+            HttpResponse<InputStream> response;
+            try {
+                response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            } catch (IOException | InterruptedException e) {
+                throw new OperationFailure("proxy.request-failed");
+            }
+
+            if (response.statusCode() != HttpStatus.OK.value()) {
+                if (response.statusCode() == HttpStatus.NOT_FOUND.value()) {
+                    throw new ObjectNotFoundFailure("proxy.resource-not-found");
+                } else {
+                    throw new OperationFailure("proxy.error-status");
+                }
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            String contentType = response.headers().firstValue("Content-Type").orElse(null);
+            ValidationUtil.assertion(
+                contentType != null && !MimeUtils.isSupportedImage(contentType), "proxy.resource-not-media");
+            headers.setContentType(MediaType.valueOf(contentType));
+            response.headers().firstValueAsLong("Content-Length").ifPresent(headers::setContentLength);
+
+            return new ResponseEntity<>(new InputStreamResource(response.body()), headers, HttpStatus.OK);
+        }
+    }
+
+    private static HttpClient buildClient() {
+        return HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
             .followRedirects(HttpClient.Redirect.NORMAL)
             .connectTimeout(CONNECTION_TIMEOUT)
             .build();
-        HttpRequest request;
-        try {
-            request = HttpRequest.newBuilder()
-                .header("User-Agent", config.getUserAgent())
-                .GET()
-                .uri(URI.create(url))
-                .timeout(REQUEST_TIMEOUT)
-                .build();
-        } catch (IllegalArgumentException e) {
-            throw new ValidationFailure("proxy.url.invalid");
-        }
-        HttpResponse<InputStream> response;
-        try {
-            response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
-        } catch (IOException | InterruptedException e) {
-            throw new OperationFailure("proxy.request-failed");
-        }
-
-        if (response.statusCode() != HttpStatus.OK.value()) {
-            if (response.statusCode() == HttpStatus.NOT_FOUND.value()) {
-                throw new ObjectNotFoundFailure("proxy.resource-not-found");
-            } else {
-                throw new OperationFailure("proxy.error-status");
-            }
-        }
-
-        HttpHeaders headers = new HttpHeaders();
-        String contentType = response.headers().firstValue("Content-Type").orElse(null);
-        ValidationUtil.assertion(contentType != null && contentType.startsWith("image/"), "proxy.resource-not-media");
-        headers.setContentType(MediaType.valueOf(contentType));
-        response.headers().firstValueAsLong("Content-Length").ifPresent(headers::setContentLength);
-        return new ResponseEntity<>(new InputStreamResource(response.body()), headers, HttpStatus.OK);
     }
 
     @GetMapping("/link-preview")
@@ -112,13 +120,13 @@ public class ProxyController {
             if (!host.matches(domain)) {
                 continue;
             }
-            switch (config.getLinkPreview().getService()) {
-                case "linkpreviewnet":
-                    return queryLinkPreviewNet(url);
-                default:
+            return switch (config.getLinkPreview().getService()) {
+                case "linkpreviewnet" -> queryLinkPreviewNet(url);
+                default -> {
                     log.error("Unknown link preview service: " + LogUtil.format(config.getLinkPreview().getService()));
                     throw new OperationFailure("server.misconfiguration");
-            }
+                }
+            };
         }
 
         return queryDirectly(url);

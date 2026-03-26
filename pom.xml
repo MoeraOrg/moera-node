@@ -5,7 +5,7 @@
 
     <groupId>org.moera</groupId>
     <artifactId>moera-node</artifactId>
-    <version>0.18.2</version>
+    <version>0.18.3-SNAPSHOT</version>
     <name>moera-node</name>
     <description>Moera node</description>
     <packaging>jar</packaging>
@@ -61,6 +61,7 @@
         <slugify.version>3.0.7</slugify.version>
         <springdoc-openapi-ui.version>1.8.0</springdoc-openapi-ui.version>
         <thumbnailator.version>0.4.21</thumbnailator.version>
+        <tika.version>3.2.3</tika.version>
         <twelvemonkeys.version>3.13.1</twelvemonkeys.version>
     </properties>
 
@@ -226,6 +227,11 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>${commons-io.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>${tika.version}</version>
         </dependency>
         <dependency>
             <groupId>com.twelvemonkeys.imageio</groupId>

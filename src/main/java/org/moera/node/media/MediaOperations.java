@@ -56,7 +56,6 @@ import org.moera.node.data.Draft;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRepository;
-import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -125,9 +124,6 @@ public class MediaOperations {
 
     @Inject
     private EntryRepository entryRepository;
-
-    @Inject
-    private EntryRevisionRepository entryRevisionRepository;
 
     @Inject
     private StoryRepository storyRepository;
@@ -212,10 +208,14 @@ public class MediaOperations {
             if (digest == null) {
                 digest = digest(tmpPath);
             }
+            // image type may be wrong, autodetection will give more accurate result
             if (contentType == null || contentType.startsWith("image/")) {
                 contentType = detectContentType(tmpPath, contentType);
             }
             if (contentType == null) {
+                contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+            }
+            if (exposed && !MimeUtils.isSupportedImage(contentType)) {
                 throw new InvalidImageException();
             }
 
@@ -227,10 +227,10 @@ public class MediaOperations {
             mediaFile = new MediaFile();
             mediaFile.setId(id);
             mediaFile.setMimeType(contentType);
-            if (contentType.startsWith("image/")) {
+            if (MimeUtils.isSupportedImage(contentType)) {
                 mediaFile.setDimension(getImageDimension(contentType, mediaPath));
+                mediaFile.setOrientation(getImageOrientation(mediaPath));
             }
-            mediaFile.setOrientation(getImageOrientation(mediaPath));
             mediaFile.setFileSize(Files.size(mediaPath));
             mediaFile.setDigest(digest);
             mediaFile.setExposed(exposed);

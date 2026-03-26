@@ -37,6 +37,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.InvalidImageException;
 import org.moera.node.media.MediaOperations;
+import org.moera.node.media.MimeUtils;
 import org.moera.node.media.ThresholdReachedException;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -104,6 +105,7 @@ public class MediaController {
     @PersistenceContext
     private EntityManager entityManager;
 
+    // like mediaType.toString(), but without charset or any other parameter
     private String toContentType(MediaType mediaType) {
         return mediaType.getType() + "/" + mediaType.getSubtype();
     }
@@ -168,7 +170,7 @@ public class MediaController {
     public PrivateMediaFileInfo postPrivate(
         @RequestHeader("Content-Type") MediaType mediaType,
         @RequestHeader(value = "Content-Length", required = false) Long contentLength,
-        @PathVariable String clientName,
+        @PathVariable(required = false) String clientName,
         InputStream in
     ) throws IOException {
         log.info(
@@ -203,7 +205,7 @@ public class MediaController {
             mediaFile = entityManager.merge(mediaFile);
             MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, clientName);
             mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
-            if (mediaFile.getFileSize() < OcrSpace.MAX_FILE_SIZE) {
+            if (isSuitableForOcr(mediaFile)) {
                 mediaFile.setRecognizeAt(Util.now());
             }
 
@@ -217,6 +219,13 @@ public class MediaController {
         } finally {
             Files.deleteIfExists(tmp.path());
         }
+    }
+
+    private boolean isSuitableForOcr(MediaFile mediaFile) {
+        return (
+            MimeUtils.isSupportedImage(mediaFile.getMimeType())
+            || MediaType.APPLICATION_PDF_VALUE.equals(mediaFile.getMimeType())
+        ) && mediaFile.getFileSize() < OcrSpace.MAX_FILE_SIZE;
     }
 
     private MediaFile getMediaFile(String id) {
