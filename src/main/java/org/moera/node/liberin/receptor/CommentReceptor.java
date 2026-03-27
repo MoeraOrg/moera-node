@@ -480,7 +480,11 @@ public class CommentReceptor extends LiberinReceptorBase {
         send(
             Directions.searchSubscribers(liberin.getNodeId(), visibilityFilter(comment.getPosting(), comment)),
             SearchContentUpdatedNotificationUtil.buildCommentMediaTextUpdate(
-                comment.getPosting().getId(), comment.getId(), liberin.getMediaId(), liberin.getTextContent()
+                comment.getPosting().getId(),
+                comment.getId(),
+                liberin.getMediaId(),
+                liberin.getTitle(),
+                liberin.getTextContent()
             )
         );
     }

@@ -161,20 +161,21 @@ public class SearchContentUpdatedNotificationUtil {
     }
 
     public static SearchContentUpdatedNotification buildPostingMediaTextUpdate(
-        UUID postingId, UUID mediaId, String textContent
+        UUID postingId, UUID mediaId, String title, String textContent
     ) {
         var notification = new SearchContentUpdatedNotification();
         notification.setUpdateType(SearchContentUpdateType.POSTING_UPDATE_MEDIA_TEXT);
         var details = new SearchPostingMediaTextUpdate();
         details.setPostingId(postingId.toString());
         details.setMediaId(mediaId.toString());
+        details.setTitle(title);
         details.setTextContent(textContent);
         notification.setPostingMediaTextUpdate(details);
         return notification;
     }
 
     public static SearchContentUpdatedNotification buildCommentMediaTextUpdate(
-        UUID postingId, UUID commentId, UUID mediaId, String textContent
+        UUID postingId, UUID commentId, UUID mediaId, String title, String textContent
     ) {
         var notification = new SearchContentUpdatedNotification();
         notification.setUpdateType(SearchContentUpdateType.COMMENT_UPDATE_MEDIA_TEXT);
@@ -182,6 +183,7 @@ public class SearchContentUpdatedNotificationUtil {
         details.setPostingId(postingId.toString());
         details.setCommentId(commentId.toString());
         details.setMediaId(mediaId.toString());
+        details.setTitle(title);
         details.setTextContent(textContent);
         notification.setCommentMediaTextUpdate(details);
         return notification;
