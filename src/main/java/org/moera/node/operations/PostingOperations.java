@@ -323,6 +323,7 @@ public class PostingOperations {
             mediaFileOwner.getMediaFile().setRecognizedText(text.isEmpty() ? null : text);
             mediaFileOwner.getMediaFile().setRecognizeAt(Util.now());
         }
+        entryRevisionRepository.clearAttachmentsCache(mediaFileOwner.getId());
         universalContext.send(
             new PostingMediaTextUpdatedLiberin(postingId, mediaFileOwner.getId(), title, text)
         );
