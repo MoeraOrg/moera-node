@@ -57,8 +57,10 @@ import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -111,7 +113,20 @@ public class MediaController {
 
     // like mediaType.toString(), but without charset or any other parameter
     private String toContentType(MediaType mediaType) {
-        return mediaType.getType() + "/" + mediaType.getSubtype();
+        return mediaType != null ? mediaType.getType() + "/" + mediaType.getSubtype() : null;
+    }
+
+    private String uploadedFileName(String contentDisposition) {
+        if (contentDisposition == null) {
+            return null;
+        }
+
+        try {
+            String filename = ContentDisposition.parse(contentDisposition).getFilename();
+            return filename != null ? StringUtils.stripFilenameExtension(StringUtils.getFilename(filename)) : null;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private DigestingOutputStream transfer(InputStream in, OutputStream out, Long contentLength) throws IOException {
@@ -172,14 +187,15 @@ public class MediaController {
     @PostMapping({"/private", "/private/{clientName}"})
     @Transactional
     public PrivateMediaFileInfo postPrivate(
-        @RequestHeader("Content-Type") MediaType mediaType,
+        @RequestHeader(value = "Content-Type", required = false) MediaType mediaType,
         @RequestHeader(value = "Content-Length", required = false) Long contentLength,
+        @RequestHeader(value = "Content-Disposition", required = false) String contentDisposition,
         @PathVariable(required = false) String clientName,
         InputStream in
     ) throws IOException {
         log.info(
             "POST /media/private (Content-Type: {}, Content-Length: {})",
-            LogUtil.format(mediaType.toString()), LogUtil.format(contentLength)
+            LogUtil.format(Objects.toString(mediaType, null)), LogUtil.format(contentLength)
         );
 
         if (Objects.equals(clientName, requestContext.nodeName())) {
@@ -207,7 +223,9 @@ public class MediaController {
             );
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
-            MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, clientName, null);
+            MediaFileOwner mediaFileOwner = mediaOperations.own(
+                mediaFile, clientName, uploadedFileName(contentDisposition)
+            );
             mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
             if (isSuitableForOcr(mediaFile)) {
                 mediaFile.setRecognizeAt(Util.now());
