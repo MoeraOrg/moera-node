@@ -42,6 +42,8 @@ public class PrivateMediaFileInfoUtil {
                 .collect(Collectors.toList())
         );
 
+        info.setAttachment(!MimeUtils.isSupportedImage(mediaFileOwner.getMediaFile().getMimeType()));
+
         PrivateMediaFileOperations operations = new PrivateMediaFileOperations();
         operations.setView(mediaFileOwner.getViewPrincipal(), Principal.PUBLIC);
         info.setOperations(operations);
