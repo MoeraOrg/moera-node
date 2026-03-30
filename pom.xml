@@ -32,7 +32,7 @@
         <bootstrap.version>5.3.8</bootstrap.version>
         <bouncycastle.bcprov-lts8on.version>2.73.10</bouncycastle.bcprov-lts8on.version>
         <bucket4j.version>8.17.0</bucket4j.version>
-        <checkstyle.version>12.3.1</checkstyle.version>
+        <checkstyle.version>13.4.0</checkstyle.version>
         <commons-io.version>2.21.0</commons-io.version>
         <flexmark.version>0.64.8</flexmark.version>
         <flyway.version>12.1.0</flyway.version>
