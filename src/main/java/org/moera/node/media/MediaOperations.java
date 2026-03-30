@@ -522,11 +522,15 @@ public class MediaOperations {
             .forEach(draft -> universalContext.send(new DraftUpdatedLiberin(draft)));
     }
 
-    public ResponseEntity<Resource> serve(MediaFile mediaFile, boolean download) {
+    public ResponseEntity<Resource> serve(MediaFile mediaFile, String title, boolean download) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(mediaFile.getMimeType()));
         if (download) {
-            headers.setContentDisposition(ContentDisposition.attachment().build());
+            var builder = ContentDisposition.attachment();
+            if (!ObjectUtils.isEmpty(title)) {
+                builder.filename(title + "." + MimeUtils.extension(mediaFile.getMimeType()));
+            }
+            headers.setContentDisposition(builder.build());
         }
         headers.setAccessControlAllowOrigin("*");
 
@@ -550,14 +554,14 @@ public class MediaOperations {
         }
     }
 
-    public ResponseEntity<Resource> serve(MediaFile mediaFile, Integer width, Boolean download) {
+    public ResponseEntity<Resource> serve(MediaFile mediaFile, Integer width, String title, Boolean download) {
         download = download != null ? download : false;
         if (width == null) {
-            return serve(mediaFile, download);
+            return serve(mediaFile, title, download);
         }
 
         MediaFilePreview preview = mediaFile.findLargerPreview(width);
-        return serve(preview != null ? preview.getMediaFile() : mediaFile, download);
+        return serve(preview != null ? preview.getMediaFile() : mediaFile, null, download);
     }
 
     public void validateAvatar(AvatarDescription avatar) {

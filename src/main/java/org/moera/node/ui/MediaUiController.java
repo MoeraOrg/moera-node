@@ -75,7 +75,7 @@ public class MediaUiController {
         if (mediaFile == null || !mediaFile.isExposed()) {
             throw new PageNotFoundException();
         }
-        return mediaOperations.serve(mediaFile, width, download);
+        return mediaOperations.serve(mediaFile, width, null, download);
     }
 
     private boolean includesAdmin(Principal viewPrincipal) {
@@ -108,7 +108,7 @@ public class MediaUiController {
         ) {
             throw new PageNotFoundException();
         }
-        return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, download);
+        return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, mediaFileOwner.getTitle(), download);
     }
 
     @GetMapping(path = "/private/{id}/caption", produces = "text/html")

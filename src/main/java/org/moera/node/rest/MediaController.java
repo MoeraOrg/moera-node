@@ -334,7 +334,7 @@ public class MediaController {
     ) {
         log.info("GET /media/public/{id}/data (id = {})", LogUtil.format(id));
 
-        return mediaOperations.serve(getMediaFile(id), width, download);
+        return mediaOperations.serve(getMediaFile(id), width, null, download);
     }
 
     @GetMapping("/private/{id}/data")
@@ -346,7 +346,9 @@ public class MediaController {
     ) {
         log.info("GET /media/private/{id}/data (id = {})", LogUtil.format(id));
 
-        return mediaOperations.serve(getMediaFileOwner(id).getMediaFile(), width, download);
+        MediaFileOwner mediaFileOwner = getMediaFileOwner(id);
+
+        return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, mediaFileOwner.getTitle(), download);
     }
 
     @GetMapping("/private/{id}/parent")
