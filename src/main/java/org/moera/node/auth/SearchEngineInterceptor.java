@@ -116,7 +116,8 @@ public class SearchEngineInterceptor implements HandlerInterceptor {
                         searchEngineStatistics.setMediaId(mediaS);
                         if (searchEngineStatistics.getHeading() != null) {
                             searchEngineStatistics.setHeading(
-                                    HeadingExtractor.EMOJI_PICTURE + ": " + searchEngineStatistics.getHeading());
+                                HeadingExtractor.EMOJI_PICTURE + ": " + searchEngineStatistics.getHeading()
+                            );
                         } else {
                             searchEngineStatistics.setHeading(HeadingExtractor.EMOJI_PICTURE);
                         }
