@@ -82,6 +82,10 @@ public class MediaFile {
         this.mimeType = mimeType;
     }
 
+    public boolean isImage() {
+        return MimeUtils.isSupportedImage(mimeType);
+    }
+
     public String getFileName() {
         return MimeUtils.fileName(id, mimeType);
     }

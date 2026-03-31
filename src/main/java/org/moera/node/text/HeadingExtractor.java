@@ -13,6 +13,7 @@ import org.jsoup.select.NodeFilter;
 import org.moera.lib.node.types.body.Body;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
+import org.moera.node.media.MimeUtils;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 
@@ -22,6 +23,7 @@ public class HeadingExtractor {
     public static final String EMOJI_SCROLL = Character.toString(0x1f4dc);
     public static final String EMOJI_CHAIN = Character.toString(0x1f517);
     public static final String EMOJI_MOVIE = Character.toString(0x1f4fd);
+    public static final String EMOJI_FILE = Character.toString(0x1f4c4);
 
     private static final int HEADING_LENGTH = 80;
     private static final int DESCRIPTION_LENGTH = 200;
@@ -186,20 +188,34 @@ public class HeadingExtractor {
 
         StringBuilder heading = new StringBuilder();
         boolean hasGallery = false;
+        boolean hasAttachedFiles = false;
         Set<String> linkIds = MediaExtractor.extractMediaFileIds(body.getLinkPreviews());
         for (MediaFileOwner mediaFileOwner : media) {
             MediaFile mediaFile = mediaFileOwner.getMediaFile();
             if (mediaFile == null || linkIds.contains(mediaFile.getId())) {
                 continue;
             }
-            if (mediaFile.getRecognizedText() == null) {
-                hasGallery = true;
-                continue;
+            if (mediaFile.isImage()) {
+                if (mediaFile.getRecognizedText() == null) {
+                    hasGallery = true;
+                    continue;
+                }
+            } else {
+                if (ObjectUtils.isEmpty(mediaFileOwner.getTitle())) {
+                    hasAttachedFiles = true;
+                    continue;
+                }
             }
             if (!heading.isEmpty()) {
                 heading.append(' ');
             }
-            heading.append(mediaFile.getRecognizedText());
+            if (mediaFile.isImage()) {
+                heading.append(mediaFile.getRecognizedText());
+            } else {
+                heading.append(mediaFileOwner.getTitle());
+                heading.append('.');
+                heading.append(MimeUtils.extension(mediaFile.getMimeType()));
+            }
             if (heading.length() >= len) {
                 Util.ellipsize(heading, len);
                 break;
@@ -207,6 +223,9 @@ public class HeadingExtractor {
         }
         if (heading.length() < len && hasGallery) {
             heading.append(EMOJI_PICTURE);
+        }
+        if (heading.length() < len && hasAttachedFiles) {
+            heading.append(EMOJI_FILE);
         }
         return heading.toString();
     }

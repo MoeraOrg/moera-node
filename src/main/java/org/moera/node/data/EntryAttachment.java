@@ -36,6 +36,13 @@ public class EntryAttachment {
     private byte[] remoteMediaDigest;
 
     @NotNull
+    @Size(max = 80)
+    private String remoteMediaMimeType = "image/jpeg";
+
+    @NotNull
+    private boolean remoteMediaAttachment;
+
+    @NotNull
     private int ordinal;
 
     @NotNull
@@ -64,6 +71,10 @@ public class EntryAttachment {
         this.remoteMediaId = remoteMedia.getId();
         this.remoteMediaHash = remoteMedia.getHash();
         this.remoteMediaDigest = Util.base64decode(remoteMedia.getDigest());
+        this.remoteMediaMimeType = remoteMedia.getMimeType() != null
+            ? remoteMedia.getMimeType()
+            : this.remoteMediaMimeType;
+        this.remoteMediaAttachment = remoteMedia.getAttachment() != null ? remoteMedia.getAttachment() : false;
         this.ordinal = ordinal;
     }
 
@@ -121,6 +132,22 @@ public class EntryAttachment {
 
     public void setRemoteMediaDigest(byte[] remoteMediaDigest) {
         this.remoteMediaDigest = remoteMediaDigest;
+    }
+
+    public String getRemoteMediaMimeType() {
+        return remoteMediaMimeType;
+    }
+
+    public void setRemoteMediaMimeType(String remoteMediaMimeType) {
+        this.remoteMediaMimeType = remoteMediaMimeType;
+    }
+
+    public boolean isRemoteMediaAttachment() {
+        return remoteMediaAttachment;
+    }
+
+    public void setRemoteMediaAttachment(boolean remoteMediaAttachment) {
+        this.remoteMediaAttachment = remoteMediaAttachment;
     }
 
     public int getOrdinal() {

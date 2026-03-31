@@ -11,6 +11,8 @@ public class RemoteMediaInfoUtil {
         remoteMediaInfo.setId(attachment.getRemoteMediaId());
         remoteMediaInfo.setHash(attachment.getRemoteMediaHash());
         remoteMediaInfo.setDigest(Util.base64encode(attachment.getRemoteMediaDigest()));
+        remoteMediaInfo.setMimeType(attachment.getRemoteMediaMimeType());
+        remoteMediaInfo.setAttachment(attachment.isRemoteMediaAttachment());
         return remoteMediaInfo;
     }
 

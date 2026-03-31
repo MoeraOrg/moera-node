@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import java.util.List;
+import java.util.Set;
 
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.DraftText;
@@ -68,10 +69,7 @@ public class DraftTextUtil {
                 draft.setBodyFormat(BodyFormat.MESSAGE.getValue());
                 String heading = HeadingExtractor.extractHeading(body, null, true);
                 if (ObjectUtils.isEmpty(heading)) {
-                    boolean hasGallery = hasAttachedGallery(body, draftText.getMedia());
-                    if (hasGallery) {
-                        heading = HeadingExtractor.EMOJI_PICTURE;
-                    }
+                    heading = getAttachmentIcons(body, draftText.getMedia());
                 }
                 draft.setHeading(heading);
             } else {
@@ -111,12 +109,38 @@ public class DraftTextUtil {
         }
     }
 
-    private static boolean hasAttachedGallery(Body body, List<RemoteMedia> media) {
+    private static String getAttachmentIcons(Body body, List<RemoteMedia> media) {
         if (ObjectUtils.isEmpty(media)) {
-            return false;
+            return null;
         }
-        int embeddedCount = MediaExtractor.extractMediaFileIds(body).size();
-        return media.size() > embeddedCount;
+
+        Set<String> embeds = MediaExtractor.extractMediaFileIds(body);
+        if (media.size() <= embeds.size()) {
+            return null;
+        }
+
+        boolean hasGallery = false;
+        boolean hasAttachedFiles = false;
+        for (RemoteMedia item : media) {
+            if (embeds.contains(item.getHash())) {
+                continue;
+            }
+            if (Boolean.TRUE.equals(item.getAttachment())) {
+                hasAttachedFiles = true;
+            } else {
+                hasGallery = true;
+            }
+        }
+
+        String icons = "";
+        if (hasAttachedFiles) {
+            icons += HeadingExtractor.EMOJI_FILE;
+        }
+        if (hasGallery) {
+            icons += HeadingExtractor.EMOJI_PICTURE;
+        }
+
+        return icons;
     }
 
 }

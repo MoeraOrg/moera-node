@@ -38,7 +38,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.InvalidImageException;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.media.MimeUtils;
 import org.moera.node.media.ThresholdReachedException;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -60,6 +59,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -69,7 +69,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.util.ObjectUtils;
 
 @ApiController
 @RequestMapping("/moera/api/media")
@@ -244,10 +243,8 @@ public class MediaController {
     }
 
     private boolean isSuitableForOcr(MediaFile mediaFile) {
-        return (
-            MimeUtils.isSupportedImage(mediaFile.getMimeType())
-            || MediaType.APPLICATION_PDF_VALUE.equals(mediaFile.getMimeType())
-        ) && mediaFile.getFileSize() < OcrSpace.MAX_FILE_SIZE;
+        return (mediaFile.isImage() || MediaType.APPLICATION_PDF_VALUE.equals(mediaFile.getMimeType()))
+            && mediaFile.getFileSize() < OcrSpace.MAX_FILE_SIZE;
     }
 
     private MediaFile getMediaFile(String id) {
