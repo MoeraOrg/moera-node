@@ -43,6 +43,7 @@ import com.drew.metadata.Metadata;
 import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifIFD0Directory;
 import org.apache.commons.io.input.BoundedInputStream;
+import org.apache.tika.Tika;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.PostingFeatures;
@@ -222,6 +223,9 @@ public class MediaOperations {
             // image type may be wrong, autodetection will give more accurate result
             if (contentType == null || contentType.startsWith("image/")) {
                 contentType = detectContentType(tmpPath, contentType);
+            }
+            if (contentType == null) {
+                contentType = new Tika().detect(tmpPath);
             }
             if (contentType == null) {
                 contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
