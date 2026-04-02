@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict OAdceM16PGLxGnO2lhygaBDSTbQo6Xh39wNp2SAVnnHRPXsx8kTzGKtGocnfZ1q
+\restrict 908a6kU9RJLW7gqy7Pg8qI7CV9V2tqiOklZWfraPPPLGsFvrEutJaOte4MWLOVj
 
 -- Dumped from database version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
@@ -1103,7 +1103,9 @@ CREATE TABLE public.entry_attachments (
     embedded boolean DEFAULT true NOT NULL,
     remote_media_id character varying(40),
     remote_media_hash character varying(40),
-    remote_media_digest bytea
+    remote_media_digest bytea,
+    remote_media_mime_type character varying(80) DEFAULT 'image/jpeg'::character varying NOT NULL,
+    remote_media_attachment boolean DEFAULT false NOT NULL
 );
 
 
@@ -1316,7 +1318,8 @@ CREATE TABLE public.media_file_owners (
     deadline timestamp without time zone,
     view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     usage_updated_at timestamp without time zone DEFAULT now() NOT NULL,
-    permissions_updated_at timestamp without time zone DEFAULT now() NOT NULL
+    permissions_updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    title character varying(255)
 );
 
 
@@ -4320,5 +4323,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict OAdceM16PGLxGnO2lhygaBDSTbQo6Xh39wNp2SAVnnHRPXsx8kTzGKtGocnfZ1q
+\unrestrict 908a6kU9RJLW7gqy7Pg8qI7CV9V2tqiOklZWfraPPPLGsFvrEutJaOte4MWLOVj
 
