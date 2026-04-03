@@ -320,16 +320,16 @@ public class MediaManager {
         return mediaFile;
     }
 
-    public MediaFile downloadPrivateMediaForCaching(
+    public void downloadPrivateMediaForCaching(
         String nodeName, String carte, String id, String mediaFileId, String textContent, int maxSize
     ) throws MoeraNodeException {
         if (id == null) {
-            return null;
+            return;
         }
 
         try (var ignored = mediaFileLocks.lock(mediaFileId)) {
             try {
-                return getCachedPrivateMedia(nodeName, carte, id, mediaFileId, textContent, maxSize);
+                getCachedPrivateMedia(nodeName, carte, id, mediaFileId, textContent, maxSize);
             } catch (IOException e) {
                 throw new MoeraNodeLocalStorageException(
                     "Error storing private media %s: %s".formatted(id, e.getMessage())
@@ -440,6 +440,21 @@ public class MediaManager {
     ) {
         try {
             tx.executeWrite(() -> {
+                var deadline = Timestamp.from(Instant.now().plus(REMOTE_MEDIA_CACHE_TTL, ChronoUnit.DAYS));
+
+                var cached = nodeId != null
+                    ? remoteMediaCacheRepository.findByMediaAndNode(nodeId, remoteNodeName, remoteMediaId)
+                    : remoteMediaCacheRepository.findByMediaWithoutNode(remoteNodeName, remoteMediaId);
+                if (!cached.isEmpty()) {
+                    cached.forEach(cache -> {
+                        if (mediaFile != null) {
+                            cache.setMediaFile(mediaFile);
+                        }
+                        cache.setDeadline(Util.latest(cache.getDeadline(), deadline));
+                    });
+                    return;
+                }
+
                 RemoteMediaCache cache = new RemoteMediaCache();
                 cache.setId(UUID.randomUUID());
                 cache.setNodeId(nodeId);
@@ -447,7 +462,7 @@ public class MediaManager {
                 cache.setRemoteMediaId(remoteMediaId);
                 cache.setDigest(digest);
                 cache.setMediaFile(mediaFile);
-                cache.setDeadline(Timestamp.from(Instant.now().plus(REMOTE_MEDIA_CACHE_TTL, ChronoUnit.DAYS)));
+                cache.setDeadline(deadline);
                 remoteMediaCacheRepository.save(cache);
             });
         } catch (DataIntegrityViolationException e) {

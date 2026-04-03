@@ -172,13 +172,15 @@ public class MediaOperations {
         DigestingOutputStream digestingStream = new DigestingOutputStream(out);
 
         out = digestingStream;
-        if (contentLength != null) {
-            if (contentLength > maxSize) {
-                throw new ThresholdReachedException();
+        if (maxSize > 0) {
+            if (contentLength != null) {
+                if (contentLength > maxSize) {
+                    throw new ThresholdReachedException();
+                }
+                in = BoundedInputStream.builder().setInputStream(in).setMaxCount(contentLength).get();
+            } else {
+                out = new BoundedOutputStream(out, maxSize);
             }
-            in = BoundedInputStream.builder().setInputStream(in).setMaxCount(contentLength).get();
-        } else {
-            out = new BoundedOutputStream(out, maxSize);
         }
 
         try {

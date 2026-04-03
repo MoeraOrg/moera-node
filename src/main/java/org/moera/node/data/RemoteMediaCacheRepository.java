@@ -18,6 +18,18 @@ public interface RemoteMediaCacheRepository extends JpaRepository<RemoteMediaCac
     Collection<RemoteMediaCache> findByMedia(UUID nodeId, String remoteNodeName, String remoteMediaId);
 
     @Query(
+        "select rmc from RemoteMediaCache rmc"
+        + " where rmc.nodeId = ?1 and rmc.remoteNodeName = ?2 and rmc.remoteMediaId = ?3"
+    )
+    Collection<RemoteMediaCache> findByMediaAndNode(UUID nodeId, String remoteNodeName, String remoteMediaId);
+
+    @Query(
+        "select rmc from RemoteMediaCache rmc"
+        + " where rmc.nodeId is null and rmc.remoteNodeName = ?1 and rmc.remoteMediaId = ?2"
+    )
+    Collection<RemoteMediaCache> findByMediaWithoutNode(String remoteNodeName, String remoteMediaId);
+
+    @Query(
         "select rmc.mediaFile from RemoteMediaCache rmc"
         + " where rmc.remoteNodeName = ?1 and rmc.remoteMediaId = ?2 and rmc.mediaFile is not null"
     )

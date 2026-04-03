@@ -47,7 +47,12 @@ public class Util {
 
     public static String formatTimestamp(long timestamp) {
         return DateTimeFormatter.ISO_DATE_TIME.format(
-                LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneOffset.UTC));
+            LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneOffset.UTC)
+        );
+    }
+
+    public static Timestamp latest(Timestamp timestamp1, Timestamp timestamp2) {
+        return timestamp1.after(timestamp2) ? timestamp2 : timestamp1;
     }
 
     public static Duration mulPow2(Duration duration, int power) {
