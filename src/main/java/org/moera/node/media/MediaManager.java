@@ -160,7 +160,7 @@ public class MediaManager {
         return result.get();
     }
 
-    public MediaFile downloadPublicMedia(String nodeName, String id, int maxSize) throws MoeraNodeException {
+    private MediaFile downloadPublicMedia(String nodeName, String id, int maxSize) throws MoeraNodeException {
         if (id == null) {
             return null;
         }
@@ -258,23 +258,6 @@ public class MediaManager {
         uploadPublicMedia(nodeName, carte, avatar.getMediaFile());
     }
 
-    private MediaFileOwner findAttachedMedia(String mediaFileId, UUID entryId) {
-        if (entryId != null) {
-            Collection<MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository
-                .findByAdminFile(universalContext.nodeId(), mediaFileId);
-            for (MediaFileOwner mediaFileOwner : mediaFileOwners) {
-                int count = entryAttachmentRepository.countByEntryIdAndMedia(
-                    universalContext.nodeId(), entryId, mediaFileOwner.getId()
-                );
-                if (count > 0) {
-                    return mediaFileOwner;
-                }
-            }
-        }
-
-        return null;
-    }
-
     private TemporaryMediaFile getPrivateMedia(
         String nodeName, String carte, String id, TemporaryFile tmpFile, int maxSize
     ) throws MoeraNodeException {
@@ -320,7 +303,7 @@ public class MediaManager {
         return mediaFile;
     }
 
-    public void downloadPrivateMediaForCaching(
+    private void downloadPrivateMediaForCaching(
         String nodeName, String carte, String id, String mediaFileId, String textContent, int maxSize
     ) throws MoeraNodeException {
         if (id == null) {
@@ -338,7 +321,34 @@ public class MediaManager {
         }
     }
 
-    public MediaFileOwner downloadPrivateMedia(
+    public void downloadPrivateMediaForCaching(
+        String nodeName, String carte, PrivateMediaFileInfo info, int maxSize
+    ) throws MoeraNodeException {
+        downloadPrivateMediaForCaching(
+            nodeName, carte, info.getId(), info.getHash(), info.getTextContent(), maxSize
+        );
+    }
+
+    private MediaFileOwner findAttachedMedia(String mediaFileId, UUID entryId) {
+        Collection<MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository
+            .findByAdminFile(universalContext.nodeId(), mediaFileId);
+        for (MediaFileOwner mediaFileOwner : mediaFileOwners) {
+            if (entryId != null) {
+                int count = entryAttachmentRepository.countByEntryIdAndMedia(
+                    universalContext.nodeId(), entryId, mediaFileOwner.getId()
+                );
+                if (count > 0) {
+                    return mediaFileOwner;
+                }
+            } else {
+                return mediaFileOwner;
+            }
+        }
+
+        return null;
+    }
+
+    private MediaFileOwner downloadPrivateMedia(
         String nodeName, String carte, String id, String mediaFileId, String title, String textContent,
         int maxSize, UUID entryId
     ) throws MoeraNodeException {

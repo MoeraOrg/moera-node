@@ -115,10 +115,7 @@ public class FetchInitialRecommendationsJob
                 .at(nodeName)
                 .getPosting(postingId, false);
             for (MediaAttachment attach : postingInfo.getMedia()) {
-                PrivateMediaFileInfo info = attach.getMedia();
-                mediaManager.downloadPrivateMediaForCaching(
-                    nodeName, null, info.getId(), info.getHash(), info.getTextContent(), maxSize
-                );
+                mediaManager.downloadPrivateMediaForCaching(nodeName, null, attach.getMedia(), maxSize);
             }
 
             record = new InitialRecommendation();
