@@ -6,9 +6,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.UUID;
@@ -17,7 +14,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
 
 import okhttp3.ResponseBody;
 import org.moera.lib.node.exception.MoeraNodeException;
@@ -37,18 +33,13 @@ import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.RemoteMediaCache;
 import org.moera.node.data.RemoteMediaError;
 import org.moera.node.data.RemoteMediaCacheRepository;
-import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.ParametrizedLock;
-import org.moera.node.util.Transaction;
-import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
@@ -57,14 +48,8 @@ public class MediaManager {
 
     private static final Logger log = LoggerFactory.getLogger(MediaManager.class);
 
-    private static final int REMOTE_MEDIA_CACHE_TTL = 60; // days
-    private static final int REMOTE_MEDIA_CACHE_ERROR_TTL = 1; // hour
-
     @Inject
     private Config config;
-
-    @Inject
-    private RequestCounter requestCounter;
 
     @Inject
     private UniversalContext universalContext;
@@ -88,7 +73,7 @@ public class MediaManager {
     private MediaOperations mediaOperations;
 
     @Inject
-    private Transaction tx;
+    private RemoteMediaCacheOperations remoteMediaCacheOperations;
 
     @Inject
     @PersistenceContext
@@ -272,7 +257,7 @@ public class MediaManager {
 
     private MediaFile getCachedPrivateMedia(
         String nodeName, String carte, String id, String mediaFileId, String textContent, int maxSize
-    ) throws IOException {
+    ) throws MoeraNodeException, IOException {
         Collection<RemoteMediaCache> caches = remoteMediaCacheRepository.findByMediaWithoutNode(nodeName, id);
 
         MediaFile mediaFile = caches.stream()
@@ -297,14 +282,17 @@ public class MediaManager {
             var tmpMedia = getPrivateMedia(nodeName, carte, id, tmp, maxSize);
             if (!tmpMedia.mediaFileId().equals(mediaFileId)) {
                 log.warn("Media {} has hash {} instead of {}", id, tmpMedia.mediaFileId(), mediaFileId);
-                cacheRemoteMediaError(null, nodeName, id, RemoteMediaError.DIGEST_INCORRECT);
+                remoteMediaCacheOperations.error(null, nodeName, id, RemoteMediaError.DIGEST_INCORRECT);
                 return null;
             }
             mediaFile = mediaOperations.putInPlace(mediaFileId, tmpMedia.contentType(), tmp.path(), null, false);
             mediaFile.setRecognizedText(textContent);
         } catch (MoeraNodeException e) {
-            cacheRemoteMediaError(null, nodeName, id, RemoteMediaError.DOWNLOAD_FAILED);
-            return null;
+            remoteMediaCacheOperations.error(null, nodeName, id, RemoteMediaError.DOWNLOAD_FAILED);
+            throw e;
+        } catch (IOException e) {
+            remoteMediaCacheOperations.error(null, nodeName, id, RemoteMediaError.STORAGE_ERROR);
+            throw e;
         } finally {
             try {
                 Files.deleteIfExists(tmp.path());
@@ -312,7 +300,7 @@ public class MediaManager {
                 log.warn("Error removing temporary media file {}: {}", tmp.path(), e.getMessage());
             }
         }
-        cacheRemoteMedia(null, nodeName, id, mediaFile.getDigest(), mediaFile);
+        remoteMediaCacheOperations.store(null, nodeName, id, mediaFile.getDigest(), mediaFile);
 
         return mediaFile;
     }
@@ -429,7 +417,7 @@ public class MediaManager {
         if (hash != null) {
             MediaFile mediaFile = mediaFileRepository.findById(hash).orElse(null);
             if (mediaFile != null) {
-                cacheRemoteMedia(null, nodeName, id, mediaFile.getDigest(), mediaFile);
+                remoteMediaCacheOperations.store(null, nodeName, id, mediaFile.getDigest(), mediaFile);
                 return mediaFile.getDigest();
             }
         }
@@ -443,7 +431,7 @@ public class MediaManager {
             var tmpMedia = getPrivateMedia(
                 nodeName, carte, id, tmp, universalContext.getOptions().getInt("media.verification.max-size")
             );
-            cacheRemoteMedia(null, nodeName, id, tmpMedia.digest(), null);
+            remoteMediaCacheOperations.store(null, nodeName, id, tmpMedia.digest(), null);
             return tmpMedia.digest();
         } catch (MoeraNodeException e) {
             return null; // TODO need more graceful approach
@@ -462,86 +450,9 @@ public class MediaManager {
             .stream()
             .anyMatch(cache -> cache.getDigest() != null);
         if (!cached) {
-            cacheRemoteMedia(universalContext.nodeId(), remoteNodeName, remoteMediaId, digest, null);
-        }
-    }
-
-    private void cacheRemoteMedia(
-        UUID nodeId, String remoteNodeName, String remoteMediaId, byte[] digest, MediaFile mediaFile
-    ) {
-        try {
-            tx.executeWrite(() -> {
-                var deadline = Timestamp.from(Instant.now().plus(REMOTE_MEDIA_CACHE_TTL, ChronoUnit.DAYS));
-
-                var cached = nodeId != null
-                    ? remoteMediaCacheRepository.findByMediaAndNode(nodeId, remoteNodeName, remoteMediaId)
-                    : remoteMediaCacheRepository.findByMediaWithoutNode(remoteNodeName, remoteMediaId);
-                if (!cached.isEmpty()) {
-                    cached.forEach(cache -> {
-                        cache.setDigest(digest);
-                        cache.setError(null);
-                        if (mediaFile != null) {
-                            cache.setMediaFile(mediaFile);
-                        }
-                        cache.setDeadline(Util.latest(cache.getDeadline(), deadline));
-                    });
-                    return;
-                }
-
-                RemoteMediaCache cache = new RemoteMediaCache();
-                cache.setId(UUID.randomUUID());
-                cache.setNodeId(nodeId);
-                cache.setRemoteNodeName(remoteNodeName);
-                cache.setRemoteMediaId(remoteMediaId);
-                cache.setDigest(digest);
-                cache.setMediaFile(mediaFile);
-                cache.setDeadline(deadline);
-                remoteMediaCacheRepository.save(cache);
-            });
-        } catch (DataIntegrityViolationException e) {
-            // already created in another thread, ignore
-        } catch (Throwable e) {
-            log.error("Unexpected error occured while creating RemoteMediaCache: {}", e.getMessage());
-        }
-    }
-
-    private void cacheRemoteMediaError(
-        UUID nodeId, String remoteNodeName, String remoteMediaId, RemoteMediaError error
-    ) {
-        try {
-            tx.executeWrite(() -> {
-                var deadline = Timestamp.from(Instant.now().plus(REMOTE_MEDIA_CACHE_ERROR_TTL, ChronoUnit.HOURS));
-
-                var cached = nodeId != null
-                    ? remoteMediaCacheRepository.findByMediaAndNode(nodeId, remoteNodeName, remoteMediaId)
-                    : remoteMediaCacheRepository.findByMediaWithoutNode(remoteNodeName, remoteMediaId);
-                if (!cached.isEmpty()) {
-                    return;
-                }
-
-                RemoteMediaCache cache = new RemoteMediaCache();
-                cache.setId(UUID.randomUUID());
-                cache.setNodeId(nodeId);
-                cache.setRemoteNodeName(remoteNodeName);
-                cache.setRemoteMediaId(remoteMediaId);
-                cache.setError(error);
-                cache.setDeadline(deadline);
-                remoteMediaCacheRepository.save(cache);
-            });
-        } catch (DataIntegrityViolationException e) {
-            // already created in another thread, ignore
-        } catch (Throwable e) {
-            log.error("Unexpected error occured while creating RemoteMediaCache: {}", e.getMessage());
-        }
-    }
-
-    @Scheduled(fixedDelayString = "P1D")
-    @Transactional
-    public void purgeExpiredRemoteMedia() {
-        try (var ignored = requestCounter.allot()) {
-            log.info("Purging remote media cache");
-
-            remoteMediaCacheRepository.deleteExpired(Util.now());
+            remoteMediaCacheOperations.store(
+                universalContext.nodeId(), remoteNodeName, remoteMediaId, digest, null
+            );
         }
     }
 

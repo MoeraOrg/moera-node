@@ -9,7 +9,6 @@ import jakarta.inject.Inject;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.PostingInfo;
-import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.RecommendedPostingInfo;
 import org.moera.node.data.InitialRecommendation;
 import org.moera.node.data.InitialRecommendationRepository;
