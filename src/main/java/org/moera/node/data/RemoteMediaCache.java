@@ -3,6 +3,7 @@ package org.moera.node.data;
 import java.sql.Timestamp;
 import java.util.UUID;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -23,8 +24,10 @@ public class RemoteMediaCache {
     @NotNull
     private String remoteMediaId;
 
-    @NotNull
     private byte[] digest;
+
+    @Enumerated
+    private RemoteMediaError error;
 
     @ManyToOne
     private MediaFile mediaFile;
@@ -70,6 +73,14 @@ public class RemoteMediaCache {
 
     public void setDigest(byte[] digest) {
         this.digest = digest;
+    }
+
+    public RemoteMediaError getError() {
+        return error;
+    }
+
+    public void setError(RemoteMediaError error) {
+        this.error = error;
     }
 
     public MediaFile getMediaFile() {
