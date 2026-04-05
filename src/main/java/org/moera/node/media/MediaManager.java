@@ -363,6 +363,9 @@ public class MediaManager {
             return mediaFileOwner;
         }
 
+        // FIXME If long download is needed, other threads waiting for the same media will be locked and will occupy
+        // the thread for a long time. However, it will not be a problem with virtual threads. But DB transaction held
+        // at the same time is a real problem.
         try (var ignored = mediaFileLocks.lock(mediaFileId)) {
             // Could appear in the meantime
             mediaFileOwner = findAttachedMedia(mediaFileId, entryId);
@@ -396,6 +399,14 @@ public class MediaManager {
         int maxSize = PostingFeaturesUtil.build(universalContext.getOptions(), AccessCheckers.ADMIN).getMediaMaxSize();
         return downloadPrivateMedia(
             nodeName, carte, info.getId(), info.getHash(), info.getTitle(), info.getTextContent(), maxSize, entryId
+        );
+    }
+
+    public MediaFileOwner downloadPrivateMediaNoLimits(
+        String nodeName, String carte, PrivateMediaFileInfo info
+    ) throws MoeraNodeException {
+        return downloadPrivateMedia(
+            nodeName, carte, info.getId(), info.getHash(), info.getTitle(), info.getTextContent(), -1, null
         );
     }
 

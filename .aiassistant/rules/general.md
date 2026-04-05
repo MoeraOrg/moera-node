@@ -6,3 +6,4 @@ apply: always
 2. @Column is not needed if the column name is the same as the field name, just converted to snake case. This conversion
    is done automatically.
 3. Setters and getters should not contain any logic besides copying values.
+4. If a lambda can be replaced with a method reference, replace it.

@@ -11,6 +11,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import jakarta.inject.Inject;
 
 import org.moera.lib.util.LogUtil;
@@ -95,14 +97,7 @@ public class Jobs {
             throw new JobsManagerNotInitializedException();
         }
 
-        T job = null;
-        try {
-            job = klass.getConstructor().newInstance();
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            log.error("Cannot create a job", e);
-        } catch (NoSuchMethodException e) {
-            log.error("Cannot find a job constructor", e);
-        }
+        T job = createJob(klass);
         if (job == null) {
             return;
         }
@@ -134,6 +129,15 @@ public class Jobs {
         return tx.executeRead(() -> pendingJobRepository.countByType(klass.getCanonicalName())) > 0;
     }
 
+    public <P, T extends Job<P, ?>> boolean isRunning(Class<T> klass, Predicate<P> filter) {
+        return isRunning(klass, (nodeId, parameters) -> filter.test(parameters));
+    }
+
+    public <P, T extends Job<P, ?>> boolean isRunning(Class<T> klass, BiPredicate<UUID, P> filter) {
+        return tx.executeRead(() -> pendingJobRepository.findByType(klass.getCanonicalName()).stream()
+                .anyMatch(pendingJob -> matchesParameters(klass, pendingJob, filter)));
+    }
+
     @Scheduled(fixedDelayString = "PT1H")
     public void load() {
         if (!initialized) {
@@ -153,16 +157,7 @@ public class Jobs {
             return;
         }
 
-        Job<?, ?> job = null;
-        try {
-            job = (Job<?, ?>) Class.forName(pendingJob.getJobType()).getConstructor().newInstance();
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            log.error("Cannot create a job", e);
-        } catch (NoSuchMethodException e) {
-            log.error("Cannot find a job constructor", e);
-        } catch (ClassNotFoundException e) {
-            log.error("Cannot find a job class", e);
-        }
+        Job<?, ?> job = createJob(pendingJob.getJobType());
         if (job == null) {
             return;
         }
@@ -214,6 +209,43 @@ public class Jobs {
             },
             e -> log.error("Error storing job", e)
         );
+    }
+
+    private <P, T extends Job<P, ?>> boolean matchesParameters(
+        Class<T> klass, PendingJob pendingJob, BiPredicate<UUID, P> filter
+    ) {
+        T job = createJob(klass);
+        if (job == null) {
+            return false;
+        }
+
+        try {
+            job.setParameters(pendingJob.getParameters(), objectMapper);
+            return filter.test(pendingJob.getNodeId(), job.getParameters());
+        } catch (JacksonException e) {
+            log.error("Cannot load a job", e);
+            return false;
+        }
+    }
+
+    private <T extends Job<?, ?>> T createJob(Class<T> klass) {
+        try {
+            return klass.getConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            log.error("Cannot create a job", e);
+        } catch (NoSuchMethodException e) {
+            log.error("Cannot find a job constructor", e);
+        }
+        return null;
+    }
+
+    private Job<?, ?> createJob(String className) {
+        try {
+            return createJob((Class<? extends Job<?, ?>>) Class.forName(className));
+        } catch (ClassNotFoundException e) {
+            log.error("Cannot find a job class", e);
+            return null;
+        }
     }
 
     private void update(Job<?, ?> job) {
