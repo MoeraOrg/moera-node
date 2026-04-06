@@ -1,4 +1,4 @@
-package org.moera.node.data;
+package org.moera.node.userlist;
 
 import java.util.Objects;
 

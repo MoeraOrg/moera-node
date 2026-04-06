@@ -1,4 +1,4 @@
-package org.moera.node.operations;
+package org.moera.node.userlist;
 
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -32,7 +32,6 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.data.RemoteUserListItem;
 import org.moera.node.data.RemoteUserListItemRepository;
 import org.moera.node.data.Story;
-import org.moera.node.data.UserList;
 import org.moera.node.data.UserListItem;
 import org.moera.node.data.UserListItemRepository;
 import org.moera.node.data.UserSubscriptionRepository;
@@ -41,10 +40,10 @@ import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.PostingInfoUtil;
+import org.moera.node.operations.FeedOperations;
+import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
-import org.moera.node.rest.task.RemoteUserListItemFetchJob;
-import org.moera.node.rest.task.UserListUpdateJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Util;

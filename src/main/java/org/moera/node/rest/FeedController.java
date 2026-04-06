@@ -67,7 +67,7 @@ import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
-import org.moera.node.operations.UserListOperations;
+import org.moera.node.userlist.UserListOperations;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;

@@ -26,6 +26,7 @@ import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.model.FeedStatusUtil;
 import org.moera.node.model.StoryAttributesUtil;
+import org.moera.node.userlist.UserListOperations;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;

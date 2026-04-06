@@ -2,8 +2,8 @@ package org.moera.node.liberin.model;
 
 import java.util.Map;
 
-import org.moera.node.data.UserListItem;
 import org.moera.node.liberin.Liberin;
+import org.moera.node.data.UserListItem;
 import org.moera.node.model.UserListItemInfoUtil;
 
 public class UserListItemAddedLiberin extends Liberin {

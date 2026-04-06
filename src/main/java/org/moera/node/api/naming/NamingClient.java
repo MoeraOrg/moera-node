@@ -26,7 +26,7 @@ import org.moera.node.liberin.model.NodeNameChangedLiberin;
 import org.moera.node.liberin.model.RegisteredNameOperationStatusLiberin;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.operations.SubscriptionOperations;
-import org.moera.node.operations.UserListOperations;
+import org.moera.node.userlist.UserListOperations;
 import org.moera.node.option.Options;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;

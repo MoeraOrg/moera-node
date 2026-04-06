@@ -1,4 +1,4 @@
-package org.moera.node.rest.task;
+package org.moera.node.userlist;
 
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -13,8 +13,6 @@ import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRepository;
 import org.moera.node.data.RemoteUserListItem;
 import org.moera.node.data.RemoteUserListItemRepository;
-import org.moera.node.data.UserList;
-import org.moera.node.operations.UserListOperations;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

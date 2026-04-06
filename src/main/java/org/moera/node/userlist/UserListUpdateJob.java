@@ -1,4 +1,4 @@
-package org.moera.node.rest.task;
+package org.moera.node.userlist;
 
 import java.util.List;
 import jakarta.inject.Inject;
@@ -8,7 +8,6 @@ import org.moera.lib.node.types.UserListSliceInfo;
 import org.moera.node.data.EntryRepository;
 import org.moera.node.data.RemoteUserListItem;
 import org.moera.node.data.RemoteUserListItemRepository;
-import org.moera.node.operations.UserListOperations;
 import org.moera.node.task.Job;
 import org.moera.node.util.SafeInteger;
 import org.slf4j.Logger;

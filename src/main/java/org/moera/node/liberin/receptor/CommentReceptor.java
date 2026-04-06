@@ -51,8 +51,8 @@ import org.moera.node.model.notification.ReplyCommentDeletedNotificationUtil;
 import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.MediaAttachmentsProvider;
-import org.moera.node.operations.UserListOperations;
 import org.moera.node.text.MentionsExtractor;
+import org.moera.node.userlist.UserListOperations;
 import org.moera.node.util.Transaction;
 
 @LiberinReceptor
