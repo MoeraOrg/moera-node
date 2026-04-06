@@ -507,10 +507,10 @@ public class UserListOperations {
     }
 
     private void unsubscribeFromSheriffList(String sheriffName, List<String> feedNames) {
-        userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
+        var userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
             universalContext.nodeId(), SubscriptionType.USER_LIST, sheriffName, UserList.SHERIFF_HIDE
-        )
-            .forEach(us -> userSubscriptionRepository.delete(us));
+        );
+        userSubscriptionRepository.deleteAll(userSubscriptions);
 
         jobs.run(
             UserListUpdateJob.class,

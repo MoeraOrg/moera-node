@@ -170,7 +170,7 @@ public class SubscriptionOperations {
                 break;
         }
         if (userSubscriptions != null) {
-            userSubscriptions.forEach(us -> userSubscriptionRepository.delete(us));
+            userSubscriptionRepository.deleteAll(userSubscriptions);
         }
     }
 
