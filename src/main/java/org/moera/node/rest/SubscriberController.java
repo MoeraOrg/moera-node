@@ -241,10 +241,7 @@ public class SubscriberController {
                 break;
             case USER_LIST:
                 ValidationUtil.notBlank(description.getFeedName(), "subscriber.feed-name.blank");
-                ValidationUtil.assertion(UserList.isKnown(description.getFeedName()), "feed.not-found");
-                if (!UserList.isKnown(description.getFeedName())) {
-                    throw new ObjectNotFoundFailure("user-list.not-found");
-                }
+                ValidationUtil.assertion(UserList.isKnown(description.getFeedName()), "user-list.not-found");
                 break;
         }
 
