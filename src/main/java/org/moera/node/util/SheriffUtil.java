@@ -64,13 +64,14 @@ public class SheriffUtil {
         return Optional.empty();
     }
 
-    public static void updateSheriffMarks(String sheriffName, boolean isDelete,
-                                          Supplier<String> getter, Consumer<String> setter) {
+    public static void updateSheriffMarks(
+        String sheriffName, boolean isDelete, Supplier<String> getter, Consumer<String> setter
+    ) {
         List<SheriffMark> sheriffMarks = SheriffUtil.deserializeSheriffMarks(getter.get())
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(mark -> !mark.getSheriffName().equals(sheriffName))
-                .collect(Collectors.toList());
+            .orElse(Collections.emptyList())
+            .stream()
+            .filter(mark -> !mark.getSheriffName().equals(sheriffName))
+            .collect(Collectors.toList());
         if (!isDelete) {
             sheriffMarks.add(SheriffMarkUtil.build(sheriffName));
         }
