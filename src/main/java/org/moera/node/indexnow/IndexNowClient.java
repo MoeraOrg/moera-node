@@ -101,6 +101,21 @@ public class IndexNowClient {
 
     }
 
+    private void flushEntries(UUID nodeId, List<Entry> entries, Set<UUID> ids) throws IndexNowException {
+        if (entries.isEmpty()) {
+            return;
+        }
+        String domainName = domains.getDomainDnsName(nodeId);
+        sendRequest(domainName, entries.stream().map(entry -> getEntryUrl(entry, domainName)).toList());
+        tx.executeWriteQuietly(() -> entryRepository.indexedNow(ids, Util.now()));
+    }
+
+    private static String getEntryUrl(Entry entry, String domainName) {
+        return entry.getEntryType() == EntryType.COMMENT
+            ? String.format("https://%s/post/%s?comment=%s", domainName, entry.getParent().getId(), entry.getId())
+            : String.format("https://%s/post/%s", domainName, entry.getId());
+    }
+
     private void sendRequest(List<Entry> entries) {
         entries.sort(Comparator.comparing(Entry::getNodeId));
 
@@ -110,11 +125,7 @@ public class IndexNowClient {
             Set<UUID> ids = new HashSet<>();
             for (Entry entry : entries) {
                 if (nodeId == null || !nodeId.equals(entry.getNodeId())) {
-                    if (!entryList.isEmpty()) {
-                        String domainName = domains.getDomainDnsName(nodeId);
-                        sendRequest(domainName, entryList.stream().map(e -> getEntryUrl(e, domainName)).toList());
-                        tx.executeWriteQuietly(() -> entryRepository.indexedNow(ids, Util.now()));
-                    }
+                    flushEntries(nodeId, entryList, ids);
                     entryList.clear();
                     ids.clear();
                     nodeId = entry.getNodeId();
@@ -122,15 +133,10 @@ public class IndexNowClient {
                 entryList.add(entry);
                 ids.add(entry.getId());
             }
+            flushEntries(nodeId, entryList, ids);
         } catch (IndexNowException e) {
             log.error(e.getMessage(), e.getCause());
         }
-    }
-
-    private static String getEntryUrl(Entry entry, String domainName) {
-        return entry.getEntryType() == EntryType.COMMENT
-            ? String.format("https://%s/post/%s?comment=%s", domainName, entry.getParent().getId(), entry.getId())
-            : String.format("https://%s/post/%s", domainName, entry.getId());
     }
 
     @Scheduled(fixedDelayString = "PT1H")
@@ -153,10 +159,12 @@ public class IndexNowClient {
                 }
 
                 for (Entry entry : entries) {
+                    UUID nodeId = entry.getNodeId();
                     if (
                         !entry.isOriginal()
                         || !entry.getViewE().isPublic()
                         || entry.getParent() != null && !entry.getParent().getViewE().isPublic()
+                        || !domains.getDomainOptions(nodeId).getBool("webui.allow-indexing")
                     ) {
                         extraIds.add(entry.getId());
                     } else {
