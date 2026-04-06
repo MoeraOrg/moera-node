@@ -116,9 +116,10 @@ public class RemoteUserListItemFetchJob
     @Override
     protected void started() {
         super.started();
-        log.info("Fetching user list item {}/{}/{}, entry {}",
-                parameters.sheriffName, UserList.SHERIFF_HIDE, parameters.ownerName,
-                LogUtil.format(parameters.entryId));
+        log.info(
+            "Fetching user list item {}/{}/{}, entry {}",
+            parameters.sheriffName, UserList.SHERIFF_HIDE, parameters.ownerName, LogUtil.format(parameters.entryId)
+        );
     }
 
     @Override
@@ -180,9 +181,14 @@ public class RemoteUserListItemFetchJob
     @Override
     protected void succeeded() {
         super.succeeded();
-        log.info("Fetched user list item {}/{}/{}, entry {}: {}",
-                parameters.sheriffName, UserList.SHERIFF_HIDE, parameters.ownerName,
-                LogUtil.format(parameters.entryId), state.absent ? "absent" : "present");
+        log.info(
+            "Fetched user list item {}/{}/{}, entry {}: {}",
+            parameters.sheriffName,
+            UserList.SHERIFF_HIDE,
+            parameters.ownerName,
+            LogUtil.format(parameters.entryId),
+            state.absent ? "absent" : "present"
+        );
     }
 
 }
