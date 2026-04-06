@@ -154,7 +154,9 @@ public class RemoteUserListItemFetchJob
             item.setListName(UserList.SHERIFF_HIDE);
             item.setNodeName(parameters.ownerName);
             item.setAbsent(state.absent);
-            Duration ttl = item.isAbsent() ? UserListOperations.ABSENT_TTL : UserListOperations.PRESENT_TTL;
+            Duration ttl = item.isAbsent()
+                ? SheriffUserListOperations.ABSENT_TTL
+                : SheriffUserListOperations.PRESENT_TTL;
             item.setDeadline(Timestamp.from(Instant.now().plus(ttl)));
             remoteUserListItemRepository.save(item);
         });

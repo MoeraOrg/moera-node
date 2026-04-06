@@ -54,12 +54,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 @Component
-public class UserListOperations {
+public class SheriffUserListOperations {
 
     public static final Duration ABSENT_TTL = Duration.ofDays(3);
     public static final Duration PRESENT_TTL = Duration.ofDays(30);
 
-    private static final Logger log = LoggerFactory.getLogger(UserListOperations.class);
+    private static final Logger log = LoggerFactory.getLogger(SheriffUserListOperations.class);
 
     @Inject
     private RequestCounter requestCounter;

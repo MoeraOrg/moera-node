@@ -67,7 +67,7 @@ import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
-import org.moera.node.userlist.UserListOperations;
+import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -120,7 +120,7 @@ public class FeedController {
     private BlockedByUserOperations blockedByUserOperations;
 
     @Inject
-    private UserListOperations userListOperations;
+    private SheriffUserListOperations sheriffUserListOperations;
 
     @Inject
     private Transaction tx;
@@ -358,7 +358,7 @@ public class FeedController {
             fillOwnInfo(stories, postingMap);
         }
 
-        userListOperations.fillSheriffListMarks(feedName, stories);
+        sheriffUserListOperations.fillSheriffListMarks(feedName, stories);
 
         sliceInfo.getStories().addAll(stories);
     }

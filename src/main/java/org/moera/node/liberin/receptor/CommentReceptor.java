@@ -52,7 +52,7 @@ import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.text.MentionsExtractor;
-import org.moera.node.userlist.UserListOperations;
+import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.Transaction;
 
 @LiberinReceptor
@@ -71,7 +71,7 @@ public class CommentReceptor extends LiberinReceptorBase {
     private SubscribedCache subscribedCache;
 
     @Inject
-    private UserListOperations userListOperations;
+    private SheriffUserListOperations sheriffUserListOperations;
 
     @Inject
     private Transaction tx;
@@ -225,11 +225,11 @@ public class CommentReceptor extends LiberinReceptorBase {
                 universalContext.getOptions(),
                 config.getMedia().getDirectServe()
             );
-            userListOperations.fillSheriffListMarks(postingInfo);
+            sheriffUserListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = CommentInfoUtil.build(
                 acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, config.getMedia().getDirectServe()
             );
-            userListOperations.fillSheriffListMarks(aposting, commentInfo);
+            sheriffUserListOperations.fillSheriffListMarks(aposting, commentInfo);
             UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
             send(
                 Directions.postingCommentsSubscribers(
@@ -281,11 +281,11 @@ public class CommentReceptor extends LiberinReceptorBase {
                 universalContext.getOptions(),
                 config.getMedia().getDirectServe()
             );
-            userListOperations.fillSheriffListMarks(postingInfo);
+            sheriffUserListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = CommentInfoUtil.build(
                 acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, config.getMedia().getDirectServe()
             );
-            userListOperations.fillSheriffListMarks(aposting, commentInfo);
+            sheriffUserListOperations.fillSheriffListMarks(aposting, commentInfo);
             send(
                 Directions.single(
                     acomment.getNodeId(), acomment.getRepliedToName(), visibilityFilter(aposting, acomment)
@@ -348,7 +348,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 universalContext.getOptions(),
                 config.getMedia().getDirectServe()
             );
-            userListOperations.fillSheriffListMarks(postingInfo);
+            sheriffUserListOperations.fillSheriffListMarks(postingInfo);
             send(
                 Directions.single(comment.getNodeId(), comment.getOwnerName()),
                 PremoderatedCommentDecidedNotificationUtil.build(
@@ -395,11 +395,11 @@ public class CommentReceptor extends LiberinReceptorBase {
                 universalContext.getOptions(),
                 config.getMedia().getDirectServe()
             );
-            userListOperations.fillSheriffListMarks(postingInfo);
+            sheriffUserListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = CommentInfoUtil.build(
                 comment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, config.getMedia().getDirectServe()
             );
-            userListOperations.fillSheriffListMarks(posting, commentInfo);
+            sheriffUserListOperations.fillSheriffListMarks(posting, commentInfo);
             currentMentions.stream()
                 .filter(m -> !latestMentions.contains(m))
                 .map(m -> Directions.single(posting.getNodeId(), m))

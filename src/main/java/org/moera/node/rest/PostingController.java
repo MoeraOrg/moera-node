@@ -64,7 +64,7 @@ import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.text.TextConverter;
-import org.moera.node.userlist.UserListOperations;
+import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,7 +138,7 @@ public class PostingController {
     private FeedOperations feedOperations;
 
     @Inject
-    private UserListOperations userListOperations;
+    private SheriffUserListOperations sheriffUserListOperations;
 
     @Inject
     private TextConverter textConverter;
@@ -536,7 +536,7 @@ public class PostingController {
     }
 
     private PostingInfo withSheriffUserListMarks(PostingInfo postingInfo) {
-        userListOperations.fillSheriffListMarks(postingInfo);
+        sheriffUserListOperations.fillSheriffListMarks(postingInfo);
         return postingInfo;
     }
 

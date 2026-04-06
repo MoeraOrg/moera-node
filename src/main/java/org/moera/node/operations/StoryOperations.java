@@ -26,7 +26,7 @@ import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.model.FeedStatusUtil;
 import org.moera.node.model.StoryAttributesUtil;
-import org.moera.node.userlist.UserListOperations;
+import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
@@ -60,7 +60,7 @@ public class StoryOperations {
     private MediaFileOwnerRepository mediaFileOwnerRepository;
 
     @Inject
-    private UserListOperations userListOperations;
+    private SheriffUserListOperations sheriffUserListOperations;
 
     @Inject
     @Lazy
@@ -106,7 +106,7 @@ public class StoryOperations {
             story = storyRepository.saveAndFlush(story);
             posting.addStory(story);
 
-            userListOperations.sheriffListReference(story);
+            sheriffUserListOperations.sheriffListReference(story);
 
             liberinSender.accept(new StoryAddedLiberin(story).withNodeId(nodeId));
         }

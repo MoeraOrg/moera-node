@@ -111,7 +111,7 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
     private EntryRepository entryRepository;
 
     @Inject
-    private UserListOperations userListOperations;
+    private SheriffUserListOperations sheriffUserListOperations;
 
     public UserListUpdateJob() {
         state = new State();
@@ -182,7 +182,7 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
             var items = slice.getItems();
             tx.executeWrite(() ->
                 items.forEach(item ->
-                    userListOperations.addToList(
+                    sheriffUserListOperations.addToList(
                         parameters.listNodeName,
                         parameters.listName,
                         item.getNodeName()
@@ -204,7 +204,7 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
                         universalContext.nodeId(), parameters.listNodeName, parameters.listName, pageable
                     );
                     page.forEach(item ->
-                        userListOperations.deleteFromList(
+                        sheriffUserListOperations.deleteFromList(
                             parameters.listNodeName,
                             parameters.listName,
                             parameters.sheriffFeedNames,
@@ -219,13 +219,13 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
 
     private void addListItem() {
         tx.executeWrite(
-            () -> userListOperations.addToList(parameters.listNodeName, parameters.listName, parameters.nodeName)
+            () -> sheriffUserListOperations.addToList(parameters.listNodeName, parameters.listName, parameters.nodeName)
         );
     }
 
     private void deleteListItem() {
         tx.executeWrite(
-            () -> userListOperations.deleteFromList(
+            () -> sheriffUserListOperations.deleteFromList(
                 parameters.listNodeName,
                 parameters.listName,
                 parameters.sheriffFeedNames,

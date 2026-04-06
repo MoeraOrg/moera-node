@@ -88,7 +88,7 @@ import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.text.TextConverter;
-import org.moera.node.userlist.UserListOperations;
+import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -166,7 +166,7 @@ public class CommentController {
     private FeedOperations feedOperations;
 
     @Inject
-    private UserListOperations userListOperations;
+    private SheriffUserListOperations sheriffUserListOperations;
 
     @Inject
     private TextConverter textConverter;
@@ -778,7 +778,7 @@ public class CommentController {
         var blockedOperations = blockedUserOperations.findBlockedOperations(posting.getId());
         comments.forEach(c -> CommentInfoUtil.putBlockedOperations(c, blockedOperations));
 
-        userListOperations.fillSheriffListMarks(posting, comments);
+        sheriffUserListOperations.fillSheriffListMarks(posting, comments);
 
         sliceInfo.setComments(comments);
     }
@@ -996,7 +996,7 @@ public class CommentController {
     }
 
     private CommentInfo withSheriffUserListMarks(CommentInfo commentInfo, Entry posting) {
-        userListOperations.fillSheriffListMarks(posting, commentInfo);
+        sheriffUserListOperations.fillSheriffListMarks(posting, commentInfo);
         return commentInfo;
     }
 

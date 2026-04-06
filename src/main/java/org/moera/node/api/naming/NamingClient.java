@@ -26,8 +26,8 @@ import org.moera.node.liberin.model.NodeNameChangedLiberin;
 import org.moera.node.liberin.model.RegisteredNameOperationStatusLiberin;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.operations.SubscriptionOperations;
-import org.moera.node.userlist.UserListOperations;
 import org.moera.node.option.Options;
+import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ public class NamingClient {
     private SubscriptionOperations subscriptionOperations;
 
     @Inject
-    private UserListOperations userListOperations;
+    private SheriffUserListOperations sheriffUserListOperations;
 
     @Inject
     private TaskScheduler taskScheduler;
@@ -211,7 +211,7 @@ public class NamingClient {
             log.error("Error automatically subscribing the node", e);
         }
         try {
-            userListOperations.autoSubscribe();
+            sheriffUserListOperations.autoSubscribe();
         } catch (Throwable e) {
             log.error("Error automatically subscribing to the Google Play sheriff's list", e);
         }

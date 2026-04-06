@@ -54,7 +54,7 @@ import org.moera.node.model.notification.StoryAddedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.text.MentionsExtractor;
-import org.moera.node.userlist.UserListOperations;
+import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.ExtendedDuration;
 
 @LiberinReceptor
@@ -73,7 +73,7 @@ public class PostingReceptor extends LiberinReceptorBase {
     private SubscribedCache subscribedCache;
 
     @Inject
-    private UserListOperations userListOperations;
+    private SheriffUserListOperations sheriffUserListOperations;
 
     @LiberinMapping
     public void added(PostingAddedLiberin liberin) {
@@ -256,7 +256,7 @@ public class PostingReceptor extends LiberinReceptorBase {
                 universalContext.getOptions(),
                 config.getMedia().getDirectServe()
             );
-            userListOperations.fillSheriffListMarks(postingInfo);
+            sheriffUserListOperations.fillSheriffListMarks(postingInfo);
             currentMentions.stream()
                 .filter(m -> !latestMentions.contains(m))
                 .map(m -> Directions.single(posting.getNodeId(), m))

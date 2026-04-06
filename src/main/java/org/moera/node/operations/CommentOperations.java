@@ -42,7 +42,7 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.CommentTextUtil;
 import org.moera.node.text.MediaExtractor;
-import org.moera.node.userlist.UserListOperations;
+import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Transaction;
@@ -82,7 +82,7 @@ public class CommentOperations {
     private MediaOperations mediaOperations;
 
     @Inject
-    private UserListOperations userListOperations;
+    private SheriffUserListOperations sheriffUserListOperations;
 
     @Inject
     private Transaction tx;
@@ -156,7 +156,7 @@ public class CommentOperations {
             )
         );
 
-        userListOperations.sheriffListReference(comment);
+        sheriffUserListOperations.sheriffListReference(comment);
 
         log.debug(
             "Total comments for posting {} = {} + 1: new comment {}",
