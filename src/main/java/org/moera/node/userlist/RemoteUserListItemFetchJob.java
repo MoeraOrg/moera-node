@@ -8,40 +8,44 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
 import org.moera.lib.node.exception.MoeraNodeException;
-import org.moera.lib.util.LogUtil;
-import org.moera.node.data.Entry;
-import org.moera.node.data.EntryRepository;
 import org.moera.node.data.RemoteUserListItem;
 import org.moera.node.data.RemoteUserListItemRepository;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tools.jackson.databind.ObjectMapper;
 
-public class RemoteUserListItemFetchJob
-        extends Job<RemoteUserListItemFetchJob.Parameters, RemoteUserListItemFetchJob.State> {
+public abstract class RemoteUserListItemFetchJob
+    <P extends RemoteUserListItemFetchJob.Parameters, S extends RemoteUserListItemFetchJob.State> extends Job<P, S> {
 
     public static class Parameters {
 
-        private String sheriffName;
-        private String ownerName;
-        private UUID entryId;
+        protected String listNodeName;
+        protected String listName;
+        protected String ownerName;
 
-        public Parameters() {
+        protected Parameters() {
         }
 
-        public Parameters(String sheriffName, String ownerName, UUID entryId) {
-            this.sheriffName = sheriffName;
+        public Parameters(String listNodeName, String listName, String ownerName) {
+            this.listNodeName = listNodeName;
+            this.listName = listName;
             this.ownerName = ownerName;
-            this.entryId = entryId;
         }
 
-        public String getSheriffName() {
-            return sheriffName;
+        public String getListNodeName() {
+            return listNodeName;
         }
 
-        public void setSheriffName(String sheriffName) {
-            this.sheriffName = sheriffName;
+        public void setListNodeName(String listNodeName) {
+            this.listNodeName = listNodeName;
+        }
+
+        public String getListName() {
+            return listName;
+        }
+
+        public void setListName(String listName) {
+            this.listName = listName;
         }
 
         public String getOwnerName() {
@@ -52,20 +56,12 @@ public class RemoteUserListItemFetchJob
             this.ownerName = ownerName;
         }
 
-        public UUID getEntryId() {
-            return entryId;
-        }
-
-        public void setEntryId(UUID entryId) {
-            this.entryId = entryId;
-        }
-
     }
 
     public static class State {
 
-        private Boolean absent = null;
-        private boolean saved;
+        protected Boolean absent = null;
+        protected boolean saved;
 
         public State() {
         }
@@ -93,30 +89,16 @@ public class RemoteUserListItemFetchJob
     @Inject
     private RemoteUserListItemRepository remoteUserListItemRepository;
 
-    @Inject
-    private EntryRepository entryRepository;
-
     public RemoteUserListItemFetchJob() {
-        state = new State();
         retryCount(5, "PT10S");
-    }
-
-    @Override
-    protected void setParameters(String parameters, ObjectMapper objectMapper) {
-        this.parameters = objectMapper.readValue(parameters, Parameters.class);
-    }
-
-    @Override
-    protected void setState(String state, ObjectMapper objectMapper) {
-        this.state = objectMapper.readValue(state, State.class);
     }
 
     @Override
     protected void started() {
         super.started();
         log.info(
-            "Fetching user list item {}/{}/{}, entry {}",
-            parameters.sheriffName, UserList.SHERIFF_HIDE, parameters.ownerName, LogUtil.format(parameters.entryId)
+            "Fetching user list item {}/{}/{}",
+            parameters.listNodeName, parameters.listName, parameters.ownerName
         );
     }
 
@@ -125,8 +107,8 @@ public class RemoteUserListItemFetchJob
         if (state.absent == null) {
             try {
                 state.absent = nodeApi
-                    .at(parameters.sheriffName)
-                    .getUserListItem(UserList.SHERIFF_HIDE, parameters.ownerName) == null;
+                    .at(parameters.listNodeName)
+                    .getUserListItem(parameters.listName, parameters.ownerName) == null;
             } catch (MoeraNodeApiNotFoundException e) {
                 state.absent = true;
             }
@@ -140,7 +122,7 @@ public class RemoteUserListItemFetchJob
         }
 
         if (!state.absent) {
-            updateEntry();
+            itemPresent();
         }
     }
 
@@ -150,43 +132,34 @@ public class RemoteUserListItemFetchJob
             RemoteUserListItem item = new RemoteUserListItem();
             item.setId(UUID.randomUUID());
             item.setNodeId(getNodeId());
-            item.setListNodeName(parameters.sheriffName);
-            item.setListName(UserList.SHERIFF_HIDE);
+            item.setListNodeName(parameters.listNodeName);
+            item.setListName(parameters.listName);
             item.setNodeName(parameters.ownerName);
             item.setAbsent(state.absent);
-            Duration ttl = item.isAbsent()
-                ? SheriffUserListOperations.ABSENT_TTL
-                : SheriffUserListOperations.PRESENT_TTL;
+            Duration ttl = item.isAbsent() ? UserListOperations.ABSENT_TTL : UserListOperations.PRESENT_TTL;
             item.setDeadline(Timestamp.from(Instant.now().plus(ttl)));
             remoteUserListItemRepository.save(item);
         });
     }
 
-    private void updateEntry() {
-        Boolean success = tx.executeWriteQuietly(() -> {
-            Entry liveEntry = entryRepository.findByNodeIdAndId(universalContext.nodeId(), parameters.entryId)
-                    .orElse(null);
-            if (liveEntry == null) {
-                return false;
-            }
-            liveEntry.setSheriffUserListReferred(true);
-            return true;
-        });
+    private void itemPresent() {
+        Boolean success = tx.executeWriteQuietly(this::updateObjects);
 
         if (!Boolean.TRUE.equals(success)) {
             retry();
         }
     }
 
+    protected abstract boolean updateObjects();
+
     @Override
     protected void succeeded() {
         super.succeeded();
         log.info(
-            "Fetched user list item {}/{}/{}, entry {}: {}",
-            parameters.sheriffName,
-            UserList.SHERIFF_HIDE,
+            "Fetched user list item {}/{}/{}: {}",
+            parameters.listNodeName,
+            parameters.listName,
             parameters.ownerName,
-            LogUtil.format(parameters.entryId),
             state.absent ? "absent" : "present"
         );
     }

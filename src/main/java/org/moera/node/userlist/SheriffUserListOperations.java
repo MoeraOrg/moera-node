@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
@@ -21,8 +20,6 @@ import org.moera.lib.node.Sheriffs;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.StoryInfo;
-import org.moera.lib.node.types.SubscriptionReason;
-import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
@@ -34,14 +31,12 @@ import org.moera.node.data.RemoteUserListItemRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.UserListItem;
 import org.moera.node.data.UserListItemRepository;
-import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.operations.FeedOperations;
-import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
 import org.moera.node.task.Jobs;
@@ -55,9 +50,6 @@ import org.springframework.util.ObjectUtils;
 
 @Component
 public class SheriffUserListOperations {
-
-    public static final Duration ABSENT_TTL = Duration.ofDays(3);
-    public static final Duration PRESENT_TTL = Duration.ofDays(30);
 
     private static final Logger log = LoggerFactory.getLogger(SheriffUserListOperations.class);
 
@@ -80,13 +72,10 @@ public class SheriffUserListOperations {
     private CommentRepository commentRepository;
 
     @Inject
-    private UserSubscriptionRepository userSubscriptionRepository;
-
-    @Inject
     private FeedOperations feedOperations;
 
     @Inject
-    private SubscriptionOperations subscriptionOperations;
+    private UserListOperations userListOperations;
 
     @Inject
     private Jobs jobs;
@@ -121,13 +110,13 @@ public class SheriffUserListOperations {
             ).orElse(null);
             if (item == null) {
                 jobs.run(
-                    RemoteUserListItemFetchJob.class,
-                    new RemoteUserListItemFetchJob.Parameters(sheriffName, entry.getOwnerName(), entry.getId()),
+                    RemoteSheriffUserListItemFetchJob.class,
+                    new RemoteSheriffUserListItemFetchJob.Parameters(sheriffName, entry.getOwnerName(), entry.getId()),
                     universalContext.nodeId()
                 );
                 return;
             }
-            Duration ttl = item.isAbsent() ? ABSENT_TTL : PRESENT_TTL;
+            Duration ttl = item.isAbsent() ? UserListOperations.ABSENT_TTL : UserListOperations.PRESENT_TTL;
             item.setDeadline(Timestamp.from(Instant.now().plus(ttl)));
             included = !item.isAbsent();
         }
@@ -293,35 +282,9 @@ public class SheriffUserListOperations {
         }
     }
 
-    public void addToList(String listNodeName, String listName, String nodeName) {
-        RemoteUserListItem item = remoteUserListItemRepository
-            .findByListAndNodeName(universalContext.nodeId(), listNodeName, listName, nodeName)
-            .orElse(null);
-        if (item != null) {
-            if (!item.isAbsent()) {
-                return;
-            } else {
-                item.setAbsent(false);
-                item.setDeadline(Timestamp.from(Instant.now().plus(PRESENT_TTL)));
-            }
-        } else {
-            item = new RemoteUserListItem();
-            item.setId(UUID.randomUUID());
-            item.setNodeId(universalContext.nodeId());
-            item.setListNodeName(listNodeName);
-            item.setListName(listName);
-            item.setNodeName(nodeName);
-            item.setAbsent(false);
-            item.setDeadline(Timestamp.from(Instant.now().plus(PRESENT_TTL)));
-            remoteUserListItemRepository.save(item);
-        }
+    public void addToList(String sheriffName, String nodeName) {
+        userListOperations.addToList(sheriffName, UserList.SHERIFF_HIDE, nodeName);
 
-        if (UserList.SHERIFF_HIDE.equals(listName)) {
-            addToSheriffList(listNodeName, nodeName);
-        }
-    }
-
-    private void addToSheriffList(String sheriffName, String nodeName) {
         // TODO not optimized for large lists of postings/comments
         List<String> feeds = feedOperations.getSheriffFeeds(sheriffName);
         for (String feedName : feeds) {
@@ -344,22 +307,9 @@ public class SheriffUserListOperations {
         }
     }
 
-    public void deleteFromList(String listNodeName, String listName, List<String> sheriffFeeds, String nodeName) {
-        RemoteUserListItem item = remoteUserListItemRepository
-            .findByListAndNodeName(universalContext.nodeId(), listNodeName, listName, nodeName)
-            .orElse(null);
-        if (item == null || item.isAbsent()) {
-            return;
-        }
-        item.setAbsent(true);
-        item.setDeadline(Timestamp.from(Instant.now().plus(ABSENT_TTL)));
+    public void deleteFromList(String sheriffName, List<String> sheriffFeeds, String nodeName) {
+        userListOperations.deleteFromList(sheriffName, UserList.SHERIFF_HIDE, nodeName);
 
-        if (UserList.SHERIFF_HIDE.equals(listName)) {
-            deleteFromSheriffList(listNodeName, sheriffFeeds, nodeName);
-        }
-    }
-
-    private void deleteFromSheriffList(String sheriffName, List<String> sheriffFeeds, String nodeName) {
         // TODO not optimized for large lists of postings/comments
         Set<String> otherFeeds = new HashSet<>();
         // feeds, where nodeName is still hidden by other sheriffs
@@ -467,12 +417,14 @@ public class SheriffUserListOperations {
             .orElse(Collections.emptyList());
         for (String sheriffName : sheriffs) {
             if (!prevSheriffs.contains(sheriffName)) {
-                subscribeToSheriffList(sheriffName, feedOperations.getSheriffFeeds(sheriffName));
+                List<String> feedNames = feedOperations.getSheriffFeeds(sheriffName);
+                userListOperations.subscribeToList(sheriffName, UserList.SHERIFF_HIDE, feedNames);
             }
         }
         for (String sheriffName : prevSheriffs) {
             if (!sheriffs.contains(sheriffName) && !sheriffName.equals(Sheriffs.GOOGLE_PLAY_TIMELINE)) {
-                unsubscribeFromSheriffList(sheriffName, FeedOperations.getSheriffFeeds(prevOptions, sheriffName));
+                List<String> feedNames = FeedOperations.getSheriffFeeds(prevOptions, sheriffName);
+                userListOperations.unsubscribeFromList(sheriffName, UserList.SHERIFF_HIDE, feedNames);
             }
         }
     }
@@ -480,48 +432,10 @@ public class SheriffUserListOperations {
     public void autoSubscribe() {
         List<String> sheriffs = feedOperations.getFeedSheriffs(Feed.TIMELINE).orElse(Collections.emptyList());
         if (!sheriffs.contains(Sheriffs.GOOGLE_PLAY_TIMELINE)) {
-            subscribeToSheriffList(Sheriffs.GOOGLE_PLAY_TIMELINE, List.of(Feed.TIMELINE));
+            userListOperations.subscribeToList(
+                Sheriffs.GOOGLE_PLAY_TIMELINE, UserList.SHERIFF_HIDE, List.of(Feed.TIMELINE)
+            );
         }
-    }
-
-    private void subscribeToSheriffList(String sheriffName, List<String> feedNames) {
-        subscriptionOperations.subscribe(subscription -> {
-            subscription.setSubscriptionType(SubscriptionType.USER_LIST);
-            subscription.setRemoteNodeName(sheriffName);
-            subscription.setRemoteFeedName(UserList.SHERIFF_HIDE);
-            subscription.setReason(SubscriptionReason.USER);
-        });
-
-        jobs.run(
-            UserListUpdateJob.class,
-            new UserListUpdateJob.Parameters(
-                sheriffName,
-                UserList.SHERIFF_HIDE,
-                feedNames,
-                null,
-                false
-            ),
-            universalContext.nodeId()
-        );
-    }
-
-    private void unsubscribeFromSheriffList(String sheriffName, List<String> feedNames) {
-        var userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
-            universalContext.nodeId(), SubscriptionType.USER_LIST, sheriffName, UserList.SHERIFF_HIDE
-        );
-        userSubscriptionRepository.deleteAll(userSubscriptions);
-
-        jobs.run(
-            UserListUpdateJob.class,
-            new UserListUpdateJob.Parameters(
-                sheriffName,
-                UserList.SHERIFF_HIDE,
-                feedNames,
-                null,
-                true
-            ),
-            universalContext.nodeId()
-        );
     }
 
 }

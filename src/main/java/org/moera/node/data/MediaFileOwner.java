@@ -61,6 +61,9 @@ public class MediaFileOwner {
     @NotNull
     private Timestamp permissionsUpdatedAt = Util.now();
 
+    @NotNull
+    private String malwareMarks = "";
+
     public UUID getId() {
         return id;
     }
@@ -168,6 +171,14 @@ public class MediaFileOwner {
 
     public void setPermissionsUpdatedAt(Timestamp permissionsUpdatedAt) {
         this.permissionsUpdatedAt = permissionsUpdatedAt;
+    }
+
+    public String getMalwareMarks() {
+        return malwareMarks;
+    }
+
+    public void setMalwareMarks(String malwareMarks) {
+        this.malwareMarks = malwareMarks;
     }
 
 }

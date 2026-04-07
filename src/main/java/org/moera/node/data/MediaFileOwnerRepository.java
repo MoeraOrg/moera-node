@@ -27,6 +27,9 @@ public interface MediaFileOwnerRepository extends JpaRepository<MediaFileOwner, 
     @Query("select mo from MediaFileOwner mo where mo.nodeId = ?1 and mo.ownerName = ?2 and mo.mediaFile.id = ?3")
     Collection<MediaFileOwner> findByFile(UUID nodeId, String ownerName, String mediaFileId);
 
+    @Query("select mo from MediaFileOwner mo where mo.nodeId = ?1 and mo.mediaFile.id = ?2")
+    Collection<MediaFileOwner> findByAnyFile(UUID nodeId, String mediaFileId);
+
     @Query("select mo from MediaFileOwner mo where mo.mediaFile.id = ?1")
     Collection<MediaFileOwner> findAllByFile(String mediaFileId);
 

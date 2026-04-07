@@ -113,6 +113,10 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
     @Inject
     private SheriffUserListOperations sheriffUserListOperations;
 
+    @Inject
+    private MalwareListOperations malwareListOperations;
+
+    @Inject
     public UserListUpdateJob() {
         state = new State();
     }
@@ -161,9 +165,9 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
             }
         } else {
             if (!parameters.delete) {
-                addListItem();
+                tx.executeWrite(() -> addListItem(parameters.nodeName));
             } else {
-                deleteListItem();
+                tx.executeWrite(() -> deleteListItem(parameters.nodeName));
             }
         }
     }
@@ -180,15 +184,7 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
         do {
             slice = nodeApi.at(parameters.listNodeName).getUserListSlice(parameters.listName, null, state.before, null);
             var items = slice.getItems();
-            tx.executeWrite(() ->
-                items.forEach(item ->
-                    sheriffUserListOperations.addToList(
-                        parameters.listNodeName,
-                        parameters.listName,
-                        item.getNodeName()
-                    )
-                )
-            );
+            tx.executeWrite(() -> items.forEach(item -> addListItem(item.getNodeName())));
             state.before = slice.getAfter();
             checkpoint();
         } while (slice.getTotalInPast() > 0);
@@ -203,35 +199,39 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
                     page = remoteUserListItemRepository.findNotAbsentByList(
                         universalContext.nodeId(), parameters.listNodeName, parameters.listName, pageable
                     );
-                    page.forEach(item ->
-                        sheriffUserListOperations.deleteFromList(
-                            parameters.listNodeName,
-                            parameters.listName,
-                            parameters.sheriffFeedNames,
-                            item.getNodeName()
-                        )
-                    );
+                    page.forEach(item -> deleteListItem(item.getNodeName()));
                     pageable = pageable.next();
                 } while (page.hasNext());
             }
         );
     }
 
-    private void addListItem() {
-        tx.executeWrite(
-            () -> sheriffUserListOperations.addToList(parameters.listNodeName, parameters.listName, parameters.nodeName)
-        );
+    private void addListItem(String nodeName) {
+        switch (parameters.listName) {
+            case UserList.SHERIFF_HIDE:
+                sheriffUserListOperations.addToList(parameters.listNodeName, nodeName);
+                break;
+            case UserList.MALWARE:
+                malwareListOperations.addToList(parameters.listNodeName, nodeName);
+                break;
+            default:
+                log.warn("Unknown user list {}", parameters.listName);
+                break;
+        }
     }
 
-    private void deleteListItem() {
-        tx.executeWrite(
-            () -> sheriffUserListOperations.deleteFromList(
-                parameters.listNodeName,
-                parameters.listName,
-                parameters.sheriffFeedNames,
-                parameters.nodeName
-            )
-        );
+    private void deleteListItem(String nodeName) {
+        switch (parameters.listName) {
+            case UserList.SHERIFF_HIDE:
+                sheriffUserListOperations.deleteFromList(parameters.listNodeName, parameters.sheriffFeedNames, nodeName);
+                break;
+            case UserList.MALWARE:
+                malwareListOperations.deleteFromList(parameters.listNodeName, nodeName);
+                break;
+            default:
+                log.warn("Unknown user list {}", parameters.listName);
+                break;
+        }
     }
 
 }

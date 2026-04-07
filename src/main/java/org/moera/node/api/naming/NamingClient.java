@@ -27,6 +27,7 @@ import org.moera.node.liberin.model.RegisteredNameOperationStatusLiberin;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.option.Options;
+import org.moera.node.userlist.MalwareListOperations;
 import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -55,6 +56,9 @@ public class NamingClient {
 
     @Inject
     private SheriffUserListOperations sheriffUserListOperations;
+
+    @Inject
+    private MalwareListOperations malwareListOperations;
 
     @Inject
     private TaskScheduler taskScheduler;
@@ -214,6 +218,11 @@ public class NamingClient {
             sheriffUserListOperations.autoSubscribe();
         } catch (Throwable e) {
             log.error("Error automatically subscribing to the Google Play sheriff's list", e);
+        }
+        try {
+            malwareListOperations.autoSubscribe();
+        } catch (Throwable e) {
+            log.error("Error automatically subscribing to the malware list", e);
         }
     }
 

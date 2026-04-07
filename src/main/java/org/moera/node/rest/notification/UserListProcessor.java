@@ -16,6 +16,7 @@ import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.task.Jobs;
+import org.moera.node.userlist.UserList;
 import org.moera.node.userlist.UserListUpdateJob;
 
 @NotificationProcessor
@@ -47,8 +48,8 @@ public class UserListProcessor {
 
     private void updated(SubscriberNotification notification, boolean delete, String nodeName, String listName) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
-            universalContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId())
-        .orElse(null);
+            universalContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()
+        ).orElse(null);
         if (
             subscription == null
             || subscription.getSubscriptionType() != SubscriptionType.USER_LIST
@@ -62,7 +63,9 @@ public class UserListProcessor {
             new UserListUpdateJob.Parameters(
                 notification.getSenderNodeName(),
                 listName,
-                feedOperations.getSheriffFeeds(notification.getSenderNodeName()),
+                UserList.SHERIFF_HIDE.equals(listName)
+                    ? feedOperations.getSheriffFeeds(notification.getSenderNodeName())
+                    : null,
                 nodeName,
                 delete
             ),

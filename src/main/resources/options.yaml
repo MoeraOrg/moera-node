@@ -759,3 +759,8 @@
         value: ru
       - title: Українська
         value: uk
+
+- name: malware.sources
+  type: string
+  defaultValue: ""
+  title: Nodes serving as malware detection services
