@@ -30,7 +30,11 @@ public class PrivateMediaFileInfoUtil {
         info.setSize(mediaFileOwner.getMediaFile().getFileSize());
         info.setTitle(mediaFileOwner.getTitle());
         info.setTextContent(mediaFileOwner.getMediaFile().getRecognizedText());
-        fillDirectPath(info, config);
+        if (mediaFileOwner.getMalwareMarks().isEmpty()) {
+            fillDirectPath(info, config);
+        } else {
+            info.setMalware(true);
+        }
 
         Posting posting = mediaFileOwner.getPosting(receiverName);
         info.setPostingId(posting != null ? posting.getId().toString() : null);

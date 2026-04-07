@@ -78,6 +78,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.operations.OcrJob;
 import org.moera.node.task.Jobs;
+import org.moera.node.userlist.MalwareListOperations;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -139,6 +140,9 @@ public class MediaOperations {
 
     @Inject
     private DraftRepository draftRepository;
+
+    @Inject
+    private MalwareListOperations malwareListOperations;
 
     @Inject
     private Transaction tx;
@@ -402,9 +406,11 @@ public class MediaOperations {
         mediaFileOwner.setTitle(title);
         mediaFileOwner.setMediaFile(mediaFile);
 
-        mediaFileOwner = mediaFileOwnerRepository.save(mediaFileOwner);
+        if (!mediaFile.isImage()) {
+            malwareListOperations.fillMalwareMarks(mediaFileOwner);
+        }
 
-        return mediaFileOwner;
+        return mediaFileOwnerRepository.save(mediaFileOwner);
     }
 
     private Principal entryViewPrincipal(Entry entry) {

@@ -41,11 +41,11 @@ public interface RemoteUserListItemRepository extends JpaRepository<RemoteUserLi
     )
     Collection<RemoteUserListItem> findByNodeNameNotAbsent(UUID nodeId, String listName, String nodeName);
 
-    @Query("delete from RemoteUserListItem i where i.absent = true and i.deadline < ?1")
+    @Query("delete from RemoteUserListItem i where i.listName = ?1 and i.absent = true and i.deadline < ?2")
     @Modifying
-    void deleteExpiredAbsent(Timestamp deadline);
+    void deleteExpiredAbsent(String listName, Timestamp deadline);
 
-    @Query("select i from RemoteUserListItem i where i.absent = false and i.deadline < ?1")
-    Collection<RemoteUserListItem> findExpiredNotAbsent(Timestamp deadline);
+    @Query("select i from RemoteUserListItem i where i.listName = ?1 and i.absent = false and i.deadline < ?2")
+    Collection<RemoteUserListItem> findExpiredNotAbsent(String listName, Timestamp deadline);
 
 }

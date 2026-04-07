@@ -371,12 +371,13 @@ public class SheriffUserListOperations {
     @Transactional
     public void purgeExpired() {
         try (var ignored = requestCounter.allot()) {
-            log.info("Purging expired user list entries");
+            log.info("Purging expired sheriff user list entries");
 
-            // TODO this is for SHERIFF_HIDE user lists only
-            remoteUserListItemRepository.deleteExpiredAbsent(Util.now());
+            remoteUserListItemRepository.deleteExpiredAbsent(UserList.SHERIFF_HIDE, Util.now());
 
-            Collection<RemoteUserListItem> expired = remoteUserListItemRepository.findExpiredNotAbsent(Util.now());
+            Collection<RemoteUserListItem> expired = remoteUserListItemRepository.findExpiredNotAbsent(
+                UserList.SHERIFF_HIDE, Util.now()
+            );
             for (RemoteUserListItem item : expired) {
                 universalContext.associate(item.getNodeId());
                 List<String> feeds = feedOperations.getSheriffFeeds(item.getListNodeName());
