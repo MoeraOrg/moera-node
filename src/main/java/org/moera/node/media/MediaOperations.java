@@ -47,10 +47,12 @@ import org.apache.tika.Tika;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.PostingFeatures;
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.auth.AuthenticationException;
 import org.moera.node.config.Config;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Draft;
@@ -532,6 +534,15 @@ public class MediaOperations {
 
         draftRepository.findByMedia(mediaFileOwner.getId())
             .forEach(draft -> universalContext.send(new DraftUpdatedLiberin(draft)));
+    }
+
+    public void blockMalware(MediaFileOwner mediaFileOwner, Boolean ignoreMalware) {
+        if (
+            !mediaFileOwner.getMalwareMarks().isEmpty()
+            && !(Boolean.TRUE.equals(ignoreMalware) && universalContext.isAdmin(Scope.VIEW_MEDIA))
+        ) {
+            throw new AuthenticationException();
+        }
     }
 
     public ResponseEntity<Resource> serve(MediaFile mediaFile, String title, boolean download) {

@@ -339,11 +339,13 @@ public class MediaController {
     public ResponseEntity<Resource> getDataPrivate(
         @PathVariable UUID id,
         @RequestParam(required = false) Integer width,
-        @RequestParam(required = false) Boolean download
+        @RequestParam(required = false) Boolean download,
+        @RequestParam(name = "ignoremalware", required = false) Boolean ignoreMalware
     ) {
         log.info("GET /media/private/{id}/data (id = {})", LogUtil.format(id));
 
         MediaFileOwner mediaFileOwner = getMediaFileOwner(id);
+        mediaOperations.blockMalware(mediaFileOwner, ignoreMalware);
 
         return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, mediaFileOwner.getTitle(), download);
     }

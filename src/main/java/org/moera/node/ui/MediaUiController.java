@@ -75,6 +75,7 @@ public class MediaUiController {
         if (mediaFile == null || !mediaFile.isExposed()) {
             throw new PageNotFoundException();
         }
+
         return mediaOperations.serve(mediaFile, width, null, download);
     }
 
@@ -89,7 +90,8 @@ public class MediaUiController {
     public ResponseEntity<Resource> getDataPrivate(
         @PathVariable UUID id,
         @RequestParam(required = false) Integer width,
-        @RequestParam(required = false) Boolean download
+        @RequestParam(required = false) Boolean download,
+        @RequestParam(name = "ignoremalware", required = false) Boolean ignoreMalware
     ) {
         log.info("GET MEDIA /media/private/{id}.ext (id = {})", LogUtil.format(id));
 
@@ -108,6 +110,8 @@ public class MediaUiController {
         ) {
             throw new PageNotFoundException();
         }
+        mediaOperations.blockMalware(mediaFileOwner, ignoreMalware);
+
         return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, mediaFileOwner.getTitle(), download);
     }
 
