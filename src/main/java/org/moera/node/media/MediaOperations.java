@@ -77,6 +77,7 @@ import org.moera.node.liberin.model.DraftUpdatedLiberin;
 import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.operations.OcrJob;
 import org.moera.node.task.Jobs;
@@ -537,11 +538,11 @@ public class MediaOperations {
     }
 
     public void blockMalware(MediaFileOwner mediaFileOwner, Boolean ignoreMalware) {
-        if (
-            !mediaFileOwner.getMalwareMarks().isEmpty()
-            && !(Boolean.TRUE.equals(ignoreMalware) && universalContext.isAdmin(Scope.VIEW_MEDIA))
-        ) {
+        if (Boolean.TRUE.equals(ignoreMalware) && !universalContext.isAdmin(Scope.VIEW_MEDIA)) {
             throw new AuthenticationException();
+        }
+        if (!mediaFileOwner.getMalwareMarks().isEmpty() && !Boolean.TRUE.equals(ignoreMalware)) {
+            throw new OperationFailure("media.malware");
         }
     }
 

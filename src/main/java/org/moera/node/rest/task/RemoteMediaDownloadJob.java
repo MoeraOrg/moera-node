@@ -125,6 +125,12 @@ public class RemoteMediaDownloadJob extends Job<RemoteMediaDownloadJob.Parameter
             state.mediaInfo = nodeApi.at(parameters.nodeName).getPrivateMediaInfo(parameters.id);
             checkpoint();
         }
+        if (Boolean.TRUE.equals(state.mediaInfo.getMalware())) {
+            tx.executeWrite(() ->
+                remoteMediaCacheOperations.error(nodeId, parameters.nodeName, parameters.id, RemoteMediaError.MALWARE)
+            );
+            fail();
+        }
         MediaFileOwner mediaFileOwner = tx.executeWriteWithExceptions(() ->
             mediaManager.downloadPrivateMediaNoLimits(
                 parameters.nodeName,

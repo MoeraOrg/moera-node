@@ -4,7 +4,8 @@ public enum RemoteMediaError {
 
     DIGEST_INCORRECT("media.digest-incorrect"),
     DOWNLOAD_FAILED("media.download-failed"),
-    STORAGE_ERROR("media.storage-error");
+    STORAGE_ERROR("media.storage-error"),
+    MALWARE("media.malware");
 
     private final String errorCode;
 
