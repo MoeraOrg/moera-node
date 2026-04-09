@@ -22,11 +22,14 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.UserListItemAddedLiberin;
 import org.moera.node.liberin.model.UserListItemDeletedLiberin;
+import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.OperationFailure;
 import org.moera.node.model.UserListInfoUtil;
 import org.moera.node.model.UserListItemInfoUtil;
 import org.moera.node.model.UserListSliceInfoUtil;
-import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.OperationFailure;
+import org.moera.node.userlist.MalwareListOperations;
+import org.moera.node.userlist.UserList;
+import org.moera.node.util.MalwareUtil;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Util;
@@ -59,6 +62,9 @@ public class UserListController {
 
     @Inject
     private UserListItemRepository userListItemRepository;
+
+    @Inject
+    private MalwareListOperations malwareListOperations;
 
     private final MomentFinder momentFinder = new MomentFinder();
 
@@ -209,6 +215,9 @@ public class UserListController {
         );
         item = userListItemRepository.save(item);
 
+        if (UserList.MALWARE.equals(listName) && isOwnMalwareSource()) {
+            malwareListOperations.addToOwnList(item.getNodeName());
+        }
         requestContext.send(new UserListItemAddedLiberin(item));
 
         return ResponseEntity
@@ -229,9 +238,18 @@ public class UserListController {
             .orElseThrow(() -> new ObjectNotFoundFailure("user-list-item.not-found"));
         userListItemRepository.delete(item);
 
+        if (UserList.MALWARE.equals(listName) && isOwnMalwareSource()) {
+            malwareListOperations.deleteFromOwnList(item.getNodeName());
+        }
+
         requestContext.send(new UserListItemDeletedLiberin(item));
 
         return Result.OK;
+    }
+
+    private boolean isOwnMalwareSource() {
+        return MalwareUtil.deserializeSources(requestContext.getOptions().getString("malware.sources"))
+            .map(sources -> sources.contains(requestContext.nodeName())).orElse(false);
     }
 
 }
