@@ -97,18 +97,35 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
 
             return true;
         } catch (InvalidTokenException e) {
-            handleError(response, HttpStatus.UNAUTHORIZED, "authentication.invalid",
-                    "Bearer realm=\"Node\" error=\"invalid_token\"");
+            handleError(
+                response,
+                HttpStatus.UNAUTHORIZED,
+                "authentication.invalid",
+                "Bearer realm=\"Node\" error=\"invalid_token\""
+            );
             return false;
         } catch (AuthenticationException e) {
-            handleError(response, HttpStatus.FORBIDDEN, "authentication.required",
-                    "Bearer realm=\"Node\"");
+            handleError(
+                response,
+                HttpStatus.FORBIDDEN,
+                "authentication.required",
+                "Bearer realm=\"Node\""
+            );
+            return false;
+        } catch (InvalidCarteException e) {
+            handleError(
+                response,
+                HttpStatus.UNAUTHORIZED,
+                e.getErrorCode(),
+                "Bearer realm=\"Node\" error=\"invalid_token\""
+            );
             return false;
         }
     }
 
-    private void handleError(HttpServletResponse response, HttpStatus status, String errorCode, String wwwAuthHeader)
-            throws IOException {
+    private void handleError(
+        HttpServletResponse response, HttpStatus status, String errorCode, String wwwAuthHeader
+    ) throws IOException {
         response.setHeader(HttpHeaders.WWW_AUTHENTICATE, wwwAuthHeader);
         response.setStatus(status.value());
         String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
