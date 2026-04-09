@@ -17,6 +17,7 @@ import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.StoryInfo;
 import org.moera.node.global.RequestContext;
+import org.moera.node.media.MimeUtils;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
 import org.moera.node.util.MediaUtil;
 import org.moera.node.util.Util;
@@ -162,8 +163,9 @@ public class GalleriesHelperSource {
         boolean directServing = mediaFile.getDirectPath() != null;
         String mediaLocation = "/moera/media/" + (directServing ? mediaFile.getDirectPath() : mediaFile.getPath());
         buf.append("<img");
-        HelperUtil.appendAttr(buf, "src",
-                directServing ? mediaLocation : MediaUtil.mediaPreview(mediaLocation, 900));
+        HelperUtil.appendAttr(
+            buf, "src", directServing ? mediaLocation : MediaUtil.mediaPreview(mediaLocation, 900)
+        );
         HelperUtil.appendAttr(buf, "srcset", MediaUtil.mediaSourcesInfo(mediaLocation, mediaFile.getPreviews()));
         HelperUtil.appendAttr(buf, "sizes", MediaUtil.mediaSizes(mediaFile));
         HelperUtil.appendAttr(buf, "width", imageWidth);
@@ -198,6 +200,7 @@ public class GalleriesHelperSource {
         List<PrivateMediaFileInfo> images = media.stream()
             .filter(ma -> !ma.isEmbedded())
             .map(MediaAttachment::getMedia)
+            .filter(m -> !Boolean.TRUE.equals(m.getAttachment()))
             .collect(Collectors.toList());
         if (images.isEmpty()) {
             return null;
@@ -283,6 +286,45 @@ public class GalleriesHelperSource {
                 buf.append("</div>");
                 buf.append("</div>");
         }
+
+        return new SafeString(buf);
+    }
+
+    public CharSequence entryAttachments(String postingId, String commentId, List<MediaAttachment> media) {
+        if (ObjectUtils.isEmpty(media)) {
+            return null;
+        }
+
+        List<PrivateMediaFileInfo> files = media.stream()
+            .map(MediaAttachment::getMedia)
+            .filter(m -> Boolean.TRUE.equals(m.getAttachment()))
+            .filter(m -> !Boolean.TRUE.equals(m.getMalware()))
+            .toList();
+        if (files.isEmpty()) {
+            return null;
+        }
+
+        StringBuilder buf = new StringBuilder();
+
+        buf.append("<div>");
+        for (PrivateMediaFileInfo file : files) {
+            buf.append("<div class=\"attached-file\">");
+            buf.append("<i class=\"fas fa-download download-icon\"></i>");
+            boolean directServing = file.getDirectPath() != null;
+            String fileLocation = "/moera/media/" + (directServing ? file.getDirectPath() : file.getPath())
+                + "?download=true";
+            buf.append(
+                "<a class=\"file-name\" download href=\"%s\" title=\"Download\">".formatted(Util.he(fileLocation))
+            );
+            String fileName = MimeUtils.fileName(
+                !ObjectUtils.isEmpty(file.getTitle()) ? file.getTitle() : file.getHash(),
+                file.getMimeType()
+            );
+            buf.append(Util.he(fileName));
+            buf.append("</a>");
+            buf.append("</div>");
+        }
+        buf.append("</div>");
 
         return new SafeString(buf);
     }

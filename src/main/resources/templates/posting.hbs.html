@@ -71,6 +71,7 @@
     {{/if}}
     <div class="content">{{{posting.saneBody}}}</div>
     {{> part/entrypreviews linkPreviews=posting.body.linkPreviews media=posting.media small=false noFollow=false}}
+    {{entryAttachments posting.id null posting.media}}
     {{entryGallery posting.id null posting.media}}
     <div class="reactions-line">
         {{reactions posting}}
@@ -148,6 +149,7 @@
                     {{> part/entrypreviews linkPreviews=body.linkPreviews media=posting.media small=true
                                            noFollow=noFollow}}
                     {{entryGallery posting.id id media}}
+                    {{entryAttachments posting.id id media}}
                     <div class="reactions-line">
                         {{reactions this}}
                     </div>
