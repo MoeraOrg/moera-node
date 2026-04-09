@@ -1,7 +1,10 @@
 package org.moera.node.model;
 
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
+@ResponseStatus(HttpStatus.NOT_FOUND)
 public class OperationFailure extends RuntimeException implements MessageSourceResolvable {
 
     private String errorCode;
