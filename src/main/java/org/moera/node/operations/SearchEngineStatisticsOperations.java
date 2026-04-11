@@ -167,9 +167,13 @@ public class SearchEngineStatisticsOperations {
             if (heading == null) {
                 heading = "";
             }
-        }
-        if (clicks.getMediaId() != null) {
-            heading = HeadingExtractor.EMOJI_PICTURE + ": " + heading;
+            if (clicks.getMediaId() != null) {
+                if (!ObjectUtils.isEmpty(heading)) {
+                    heading = HeadingExtractor.EMOJI_PICTURE + ": " + heading;
+                } else {
+                    heading = HeadingExtractor.EMOJI_PICTURE;
+                }
+            }
         }
         return heading;
     }
