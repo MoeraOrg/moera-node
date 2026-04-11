@@ -19,6 +19,7 @@ import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
+import org.moera.node.media.MimeUtils;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
 import org.springframework.util.ObjectUtils;
 
@@ -92,7 +93,13 @@ public class MediaUtil {
     public record PresignedUrl(String url, Long expires) {
     }
 
-    public static PresignedUrl presignUrl(String location, String id, ExtendedDuration valid, String secret) {
+    private static PresignedUrl presignUrl(
+        String location,
+        String id,
+        ExtendedDuration valid,
+        String userFileName,
+        String secret
+    ) {
         long expires = switch (valid.getZone()) {
             case FIXED -> Instant.now()
                 .plus(valid.getDuration())
@@ -111,6 +118,10 @@ public class MediaUtil {
         mac.update(data, 0, data.length);
         data = Long.toString(expires).getBytes(StandardCharsets.UTF_8);
         mac.update(data, 0, data.length);
+        if (!ObjectUtils.isEmpty(userFileName)) {
+            data = userFileName.getBytes(StandardCharsets.UTF_8);
+            mac.update(data, 0, data.length);
+        }
         byte[] signature = new byte[mac.getMacSize()];
         mac.doFinal(signature, 0);
 
@@ -121,20 +132,37 @@ public class MediaUtil {
     }
 
     public static PresignedUrl presignDirectPath(
-        String location, String id, ExtendedDuration valid, DirectServeConfig config
+        String location,
+        String id,
+        ExtendedDuration valid,
+        String userFileName,
+        DirectServeConfig config
     ) {
         return switch (config.getSource()) {
             case NONE -> new PresignedUrl(null, null);
             case FILESYSTEM ->
-                MediaUtil.presignUrl(location, id, valid, config.getSecret());
+                MediaUtil.presignUrl(location, id, valid, userFileName, config.getSecret());
         };
     }
 
+    public static PresignedUrl presignDirectPath(
+        String location,
+        String id,
+        ExtendedDuration valid,
+        DirectServeConfig config
+    ) {
+        return presignDirectPath(location, id, valid, null, config);
+    }
+
     public static PresignedUrl presignDirectPath(MediaFileOwner mediaFileOwner, DirectServeConfig config) {
+        String userFileName = !ObjectUtils.isEmpty(mediaFileOwner.getTitle())
+            ? MimeUtils.fileName(mediaFileOwner.getTitle(), mediaFileOwner.getMediaFile().getMimeType())
+            : null;
         return presignDirectPath(
             mediaFileOwner.getMediaFile().getFileName(),
             mediaFileOwner.getMediaFile().getId(),
             new ExtendedDuration(Duration.ofDays(3)),
+            userFileName,
             config
         );
     }

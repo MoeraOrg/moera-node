@@ -58,7 +58,8 @@ public class PrivateMediaFileInfoUtil {
     public static void fillDirectPath(PrivateMediaFileInfo info, DirectServeConfig config) {
         var fileName = MimeUtils.fileName(info.getHash(), info.getMimeType());
         ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
-        var pu = MediaUtil.presignDirectPath(fileName, info.getHash(), valid, config);
+        var userFileName = MimeUtils.fileName(info.getTitle(), info.getMimeType());
+        var pu = MediaUtil.presignDirectPath(fileName, info.getHash(), valid, userFileName, config);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }

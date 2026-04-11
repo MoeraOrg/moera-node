@@ -552,7 +552,7 @@ public class MediaOperations {
         if (download) {
             var builder = ContentDisposition.attachment();
             if (!ObjectUtils.isEmpty(title)) {
-                builder.filename(title + "." + MimeUtils.extension(mediaFile.getMimeType()));
+                builder.filename(MimeUtils.fileName(title, mediaFile.getMimeType()));
             }
             headers.setContentDisposition(builder.build());
         }

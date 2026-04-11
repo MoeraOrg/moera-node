@@ -2,6 +2,7 @@ import crypto from 'crypto';
 
 function secure_link(r) {
     const exp = r.args.exp;
+    const fn = r.args.fn != null ? r.args.fn : "";
     const signature = r.args.sig;
 
     if (!exp || !signature) {
@@ -20,10 +21,9 @@ function secure_link(r) {
         return "expired";
     }
 
-    // Подписываем URI + expires, как в твоём примере
     const expected = crypto
         .createHmac("sha256", r.variables.secure_link_secret)
-        .update(r.variables.id + exp)
+        .update(r.variables.id + exp + fn)
         .digest("base64url");
 
     if (expected !== signature) {
