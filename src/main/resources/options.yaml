@@ -762,5 +762,5 @@
 
 - name: malware.sources
   type: string
-  defaultValue: ""
+  defaultValue: "security-guard_0"
   title: Nodes serving as malware detection services

@@ -36,6 +36,7 @@ import org.moera.node.rest.task.upgrade.MediaFileRenamePaddedIdsJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.task.JobsManagerInitializedEvent;
 import org.moera.node.task.TaskAutowire;
+import org.moera.node.userlist.MalwareListOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -91,6 +92,9 @@ public class Updater {
     @Inject
     private Jobs jobs;
 
+    @Inject
+    private MalwareListOperations malwareListOperations;
+
     @EventListener(JobsManagerInitializedEvent.class)
     @Transactional
     public void execute() {
@@ -104,6 +108,16 @@ public class Updater {
         downloadAvatars();
         downloadGenders();
         encryptOptions();
+        autoSubscribeMalwareLists();
+    }
+
+    private void autoSubscribeMalwareLists() {
+        Set<DomainUpgrade> upgrades = domainUpgradeRepository.findPending(UpgradeType.MALWARE_AUTO_SUBSCRIBE);
+        for (DomainUpgrade upgrade : upgrades) {
+            universalContext.associate(upgrade.getNodeId());
+            malwareListOperations.autoSubscribe();
+            domainUpgradeRepository.delete(upgrade);
+        }
     }
 
     private void downloadAvatars() {
