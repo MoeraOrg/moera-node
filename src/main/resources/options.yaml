@@ -220,7 +220,7 @@
 
 - name: posting.media.max-size
   type: int
-  defaultValue: 5242880
+  defaultValue: 8388608
   title: Maximal size of a media attachment in a post
   modifiers:
     format: size
@@ -506,7 +506,7 @@
 - name: media.max-size
   type: int
   privileged: true
-  defaultValue: 5242880
+  defaultValue: 8388608
   title: Maximal size of an uploaded media
   modifiers:
     format: size
