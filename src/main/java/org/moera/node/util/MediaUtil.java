@@ -125,10 +125,13 @@ public class MediaUtil {
         byte[] signature = new byte[mac.getMacSize()];
         mac.doFinal(signature, 0);
 
-        return new PresignedUrl(
-            String.format("%s?exp=%d&sig=%s", location, expires, Util.base64urlencode(signature)),
-            expires
-        );
+        var url = ObjectUtils.isEmpty(userFileName)
+            ? String.format("%s?exp=%d&sig=%s", location, expires, Util.base64urlencode(signature))
+            : String.format(
+                  "%s?exp=%d&fn=%s&sig=%s", location, expires, Util.ue(userFileName), Util.base64urlencode(signature)
+              );
+
+        return new PresignedUrl(url, expires);
     }
 
     public static PresignedUrl presignDirectPath(

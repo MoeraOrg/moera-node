@@ -12,6 +12,7 @@ import org.moera.node.data.Posting;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.MediaUtil;
+import org.springframework.util.ObjectUtils;
 
 public class PrivateMediaFileInfoUtil {
 
@@ -58,7 +59,9 @@ public class PrivateMediaFileInfoUtil {
     public static void fillDirectPath(PrivateMediaFileInfo info, DirectServeConfig config) {
         var fileName = MimeUtils.fileName(info.getHash(), info.getMimeType());
         ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
-        var userFileName = MimeUtils.fileName(info.getTitle(), info.getMimeType());
+        var userFileName = !ObjectUtils.isEmpty(info.getTitle())
+            ? MimeUtils.fileName(info.getTitle(), info.getMimeType())
+            : null;
         var pu = MediaUtil.presignDirectPath(fileName, info.getHash(), valid, userFileName, config);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
