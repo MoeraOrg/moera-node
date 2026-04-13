@@ -60,42 +60,42 @@ public class ProxyController {
     public ResponseEntity<Resource> getMedia(@RequestParam String url) {
         log.info("GET /proxy/media, (url = {})", LogUtil.format(url));
 
-        try (HttpClient client = buildClient()) {
-            HttpRequest request;
-            try {
-                request = HttpRequest.newBuilder()
-                    .header("User-Agent", config.getUserAgent())
-                    .GET()
-                    .uri(URI.create(url))
-                    .timeout(REQUEST_TIMEOUT)
-                    .build();
-            } catch (IllegalArgumentException e) {
-                throw new ValidationFailure("proxy.url.invalid");
-            }
-            HttpResponse<InputStream> response;
-            try {
-                response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
-            } catch (IOException | InterruptedException e) {
-                throw new OperationFailure("proxy.request-failed");
-            }
-
-            if (response.statusCode() != HttpStatus.OK.value()) {
-                if (response.statusCode() == HttpStatus.NOT_FOUND.value()) {
-                    throw new ObjectNotFoundFailure("proxy.resource-not-found");
-                } else {
-                    throw new OperationFailure("proxy.error-status");
-                }
-            }
-
-            HttpHeaders headers = new HttpHeaders();
-            String contentType = response.headers().firstValue("Content-Type").orElse(null);
-            ValidationUtil.assertion(
-                contentType != null && !MimeUtils.isSupportedImage(contentType), "proxy.resource-not-media");
-            headers.setContentType(MediaType.valueOf(contentType));
-            response.headers().firstValueAsLong("Content-Length").ifPresent(headers::setContentLength);
-
-            return new ResponseEntity<>(new InputStreamResource(response.body()), headers, HttpStatus.OK);
+        HttpClient client = buildClient();
+        HttpRequest request;
+        try {
+            request = HttpRequest.newBuilder()
+                .header("User-Agent", config.getUserAgent())
+                .GET()
+                .uri(URI.create(url))
+                .timeout(REQUEST_TIMEOUT)
+                .build();
+        } catch (IllegalArgumentException e) {
+            throw new ValidationFailure("proxy.url.invalid");
         }
+        HttpResponse<InputStream> response;
+        try {
+            response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        } catch (IOException | InterruptedException e) {
+            throw new OperationFailure("proxy.request-failed");
+        }
+
+        if (response.statusCode() != HttpStatus.OK.value()) {
+            if (response.statusCode() == HttpStatus.NOT_FOUND.value()) {
+                throw new ObjectNotFoundFailure("proxy.resource-not-found");
+            } else {
+                throw new OperationFailure("proxy.error-status");
+            }
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        String contentType = response.headers().firstValue("Content-Type").orElse(null);
+        ValidationUtil.assertion(
+            contentType != null && MimeUtils.isSupportedImage(contentType), "proxy.resource-not-media"
+        );
+        headers.setContentType(MediaType.valueOf(contentType));
+        response.headers().firstValueAsLong("Content-Length").ifPresent(headers::setContentLength);
+
+        return new ResponseEntity<>(new InputStreamResource(response.body()), headers, HttpStatus.OK);
     }
 
     private static HttpClient buildClient() {
