@@ -227,7 +227,11 @@ public class CommentReceptor extends LiberinReceptorBase {
             );
             sheriffUserListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = CommentInfoUtil.build(
-                acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, config.getMedia().getDirectServe()
+                acomment,
+                MediaAttachmentsProvider.NONE,
+                AccessCheckers.ADMIN,
+                universalContext.getOptions(),
+                config.getMedia().getDirectServe()
             );
             sheriffUserListOperations.fillSheriffListMarks(aposting, commentInfo);
             UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
@@ -283,7 +287,11 @@ public class CommentReceptor extends LiberinReceptorBase {
             );
             sheriffUserListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = CommentInfoUtil.build(
-                acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, config.getMedia().getDirectServe()
+                acomment,
+                MediaAttachmentsProvider.NONE,
+                AccessCheckers.ADMIN,
+                universalContext.getOptions(),
+                config.getMedia().getDirectServe()
             );
             sheriffUserListOperations.fillSheriffListMarks(aposting, commentInfo);
             send(
@@ -397,7 +405,11 @@ public class CommentReceptor extends LiberinReceptorBase {
             );
             sheriffUserListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = CommentInfoUtil.build(
-                comment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, config.getMedia().getDirectServe()
+                comment,
+                MediaAttachmentsProvider.NONE,
+                AccessCheckers.ADMIN,
+                universalContext.getOptions(),
+                config.getMedia().getDirectServe()
             );
             sheriffUserListOperations.fillSheriffListMarks(posting, commentInfo);
             currentMentions.stream()

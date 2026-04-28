@@ -14,16 +14,19 @@ import org.moera.node.util.MediaUtil;
 public class MediaFilePreviewInfoUtil {
 
     public static MediaFilePreviewInfo build(
-        MediaFilePreview preview, MediaFileOwner original, DirectServeConfig config
+        MediaFilePreview preview,
+        MediaFileOwner original,
+        DirectServeConfig config,
+        MediaGrantGenerator grantGenerator
     ) {
         MediaFilePreviewInfo info = new MediaFilePreviewInfo();
         info.setTargetWidth(preview.getWidth());
         info.setHash(preview.getMediaFile().getId());
-        info.setPath(MediaUtil.privatePath(original, preview.getWidth(), null));
         info.setMimeType(preview.getMediaFile().getMimeType());
         info.setWidth(preview.getMediaFile().getSizeX());
         info.setHeight(preview.getMediaFile().getSizeY());
         info.setOriginal(preview.isOriginal());
+        fillPath(info, original, grantGenerator);
         fillDirectPath(info, config);
         return info;
     }
@@ -36,6 +39,14 @@ public class MediaFilePreviewInfoUtil {
             }
         }
         return larger;
+    }
+
+    public static void fillPath(MediaFilePreviewInfo info, MediaFileOwner original, MediaGrantGenerator grantGenerator) {
+        ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
+        String grant = grantGenerator != null
+            ? grantGenerator.generate(original.getId().toString(), valid, false, null)
+            : null;
+        info.setPath(MediaUtil.privatePath(original, info.getTargetWidth(), grant));
     }
 
     public static void fillDirectPath(MediaFilePreviewInfo info, DirectServeConfig config) {

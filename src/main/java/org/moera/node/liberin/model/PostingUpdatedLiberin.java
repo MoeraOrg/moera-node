@@ -55,14 +55,19 @@ public class PostingUpdatedLiberin extends Liberin {
         posting = entityManager.merge(posting);
         latestRevision = entityManager.merge(latestRevision);
         model.put(
-            "posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+            "posting",
+            PostingInfoUtil.build(
+                posting, AccessCheckers.ADMIN, null, getConfig().getMedia().getDirectServe()
+            )
         );
-        model.put("latestRevision",
+        model.put(
+            "latestRevision",
             PostingRevisionInfoUtil.build(
                 posting,
                 latestRevision,
                 MediaAttachmentsProvider.relations(getConfig().getMedia().getDirectServe()),
                 posting.getReceiverName(),
+                null,
                 AccessCheckers.ADMIN
             )
         );

@@ -30,7 +30,10 @@ public class PostingAddedLiberin extends Liberin {
         super.toModel(model);
         posting = entityManager.merge(posting);
         model.put(
-            "posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+            "posting",
+            PostingInfoUtil.build(
+                posting, AccessCheckers.ADMIN, null, getConfig().getMedia().getDirectServe()
+            )
         );
     }
 

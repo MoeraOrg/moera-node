@@ -81,7 +81,11 @@ public class StoryController {
             story,
             requestContext.isAdmin(Scope.VIEW_FEEDS),
             t -> PostingInfoUtil.build(
-                t.getEntry(), entryOperations, requestContext, config.getMedia().getDirectServe()
+                t.getEntry(),
+                entryOperations,
+                requestContext,
+                requestContext.getOptions(),
+                config.getMedia().getDirectServe()
             ),
             config.getMedia().getDirectServe()
         );
@@ -121,7 +125,11 @@ public class StoryController {
                 story,
                 requestContext.isAdmin(Scope.VIEW_FEEDS),
                 t -> PostingInfoUtil.build(
-                    t.getEntry(), entryOperations, requestContext, config.getMedia().getDirectServe()
+                    t.getEntry(),
+                    entryOperations,
+                    requestContext,
+                    requestContext.getOptions(),
+                    config.getMedia().getDirectServe()
                 ),
                 config.getMedia().getDirectServe()
             );

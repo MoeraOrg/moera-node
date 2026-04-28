@@ -230,7 +230,7 @@ public class MediaController {
                 mediaFile.setRecognizeAt(Util.now());
             }
 
-            return PrivateMediaFileInfoUtil.build(mediaFileOwner, null, config.getMedia().getDirectServe());
+            return PrivateMediaFileInfoUtil.build(mediaFileOwner, null, config.getMedia().getDirectServe(), null);
         } catch (InvalidImageException e) {
             throw new ValidationFailure("media.image-invalid");
         } catch (ThresholdReachedException e) {
@@ -286,7 +286,7 @@ public class MediaController {
     public PrivateMediaFileInfo getInfoPrivate(@PathVariable UUID id) {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
 
-        return PrivateMediaFileInfoUtil.build(getMediaFileOwner(id), null, config.getMedia().getDirectServe());
+        return PrivateMediaFileInfoUtil.build(getMediaFileOwner(id), null, config.getMedia().getDirectServe(), null);
     }
 
     @PutMapping("/private/{id}/info")
@@ -310,7 +310,7 @@ public class MediaController {
             mediaOperations.mediaTextUpdated(mediaFileOwner);
         }
 
-        return PrivateMediaFileInfoUtil.build(mediaFileOwner, null, config.getMedia().getDirectServe());
+        return PrivateMediaFileInfoUtil.build(mediaFileOwner, null, config.getMedia().getDirectServe(), null);
     }
 
     private boolean canEdit(MediaFileOwner mediaFileOwner) {
@@ -367,6 +367,7 @@ public class MediaController {
                             posting,
                             entryOperations,
                             requestContext,
+                            requestContext.getOptions(),
                             config.getMedia().getDirectServe()
                         )
                     );
@@ -378,6 +379,7 @@ public class MediaController {
                             comment,
                             entryOperations,
                             requestContext,
+                            requestContext.getOptions(),
                             config.getMedia().getDirectServe()
                         )
                     );

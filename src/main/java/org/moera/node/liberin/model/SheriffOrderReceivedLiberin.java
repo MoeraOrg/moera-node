@@ -97,14 +97,24 @@ public class SheriffOrderReceivedLiberin extends Liberin {
             posting = entityManager.merge(posting);
             model.put(
                 "posting",
-                PostingInfoUtil.build(posting, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+                PostingInfoUtil.build(
+                    posting,
+                    AccessCheckers.ADMIN,
+                    null,
+                    getConfig().getMedia().getDirectServe()
+                )
             );
         }
         if (comment != null) {
             comment = entityManager.merge(comment);
             model.put(
                 "comment",
-                CommentInfoUtil.build(comment, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+                CommentInfoUtil.build(
+                    comment,
+                    AccessCheckers.ADMIN,
+                    null,
+                    getConfig().getMedia().getDirectServe()
+                )
             );
         }
         model.put("sheriffName", sheriffName);

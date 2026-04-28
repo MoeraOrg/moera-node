@@ -34,7 +34,10 @@ public class StoryAddedLiberin extends Liberin {
                 story,
                 true,
                 t -> PostingInfoUtil.build(
-                    entityManager.merge(t.getEntry()), AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe()
+                    entityManager.merge(t.getEntry()),
+                    AccessCheckers.ADMIN,
+                    null,
+                    getConfig().getMedia().getDirectServe()
                 ),
                 getConfig().getMedia().getDirectServe()
             )

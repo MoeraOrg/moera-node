@@ -8,6 +8,7 @@ import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.operations.MediaAttachmentsProvider;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 public class PostingRevisionInfoUtil {
@@ -17,6 +18,7 @@ public class PostingRevisionInfoUtil {
         EntryRevision revision,
         MediaAttachmentsProvider mediaAttachmentsProvider,
         String receiverName,
+        Options options,
         AccessChecker accessChecker
     ) {
         PostingRevisionInfo info = new PostingRevisionInfo();
@@ -30,7 +32,10 @@ public class PostingRevisionInfoUtil {
         info.setBodySrcFormat(revision.getBodySrcFormat());
         info.setBody(new Body(revision.getBody()));
         info.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
-        info.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, receiverName));
+        var grantGenerator = options != null
+            ? new MediaGrantGenerator(null, posting.getId().toString(), null, options)
+            : null;
+        info.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, receiverName, grantGenerator));
         info.setHeading(revision.getHeading());
         info.setDescription(revision.getDescription());
         if (!UpdateInfoUtil.isEmpty(revision)) {

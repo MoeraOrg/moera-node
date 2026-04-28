@@ -267,6 +267,7 @@ public class CommentController {
                 MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
                 requestContext,
                 blockedOperations,
+                requestContext.getOptions(),
                 config.getMedia().getDirectServe()
             ));
     }
@@ -352,6 +353,7 @@ public class CommentController {
                         comment,
                         MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
                         requestContext,
+                        requestContext.getOptions(),
                         config.getMedia().getDirectServe()
                     )
                 ),
@@ -737,7 +739,9 @@ public class CommentController {
             ))
             .fetch()
             .stream()
-            .map(c -> CommentInfoUtil.build(c, entryOperations, requestContext, config.getMedia().getDirectServe()))
+            .map(c -> CommentInfoUtil.build(
+                c, entryOperations, requestContext, requestContext.getOptions(), config.getMedia().getDirectServe()
+            ))
             .sorted(Comparator.comparing(CommentInfo::getMoment))
             .collect(Collectors.toList());
 
@@ -849,6 +853,7 @@ public class CommentController {
                     entryOperations,
                     includeSet.contains("source"),
                     requestContext,
+                    requestContext.getOptions(),
                     config.getMedia().getDirectServe()
                 )
             ),
@@ -932,7 +937,9 @@ public class CommentController {
         );
         return attached.stream()
             .map(p -> withBlockings(withClientReaction(
-                PostingInfoUtil.build(p, false, requestContext, config.getMedia().getDirectServe())
+                PostingInfoUtil.build(
+                    p, false, requestContext, requestContext.getOptions(), config.getMedia().getDirectServe()
+                )
             )))
             .collect(Collectors.toList());
     }

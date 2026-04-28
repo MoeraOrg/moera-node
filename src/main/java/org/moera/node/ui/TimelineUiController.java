@@ -179,7 +179,7 @@ public class TimelineUiController {
         model.addAttribute(
             "posting",
             PostingInfoUtil.buildForUi(
-                posting, stories, entryOperations, requestContext.getOptions(), config.getMedia().getDirectServe()
+                posting, stories, entryOperations, config.getMedia().getDirectServe()
             )
         );
         model.addAttribute("canonicalUrl", canonicalUrl);
@@ -204,7 +204,9 @@ public class TimelineUiController {
                         .stream()
                         .filter(Comment::isMessage)
                         .filter(c -> c.getViewCompound().isPublic())
-                        .map(c -> CommentInfoUtil.buildForUi(c, entryOperations, config.getMedia().getDirectServe()))
+                        .map(c -> CommentInfoUtil.buildForUi(
+                            c, entryOperations, config.getMedia().getDirectServe()
+                        ))
                         .sorted(Comparator.comparing(CommentInfo::getMoment))
                         .collect(Collectors.toList());
                 }
@@ -238,7 +240,7 @@ public class TimelineUiController {
         Entry entry = comment != null ? comment : posting;
         String heading = entry.getCurrentRevision().getHeading();
         model.addAttribute("ogTitle", !ObjectUtils.isEmpty(heading) ? heading : "(no title)");
-        List<MediaAttachment> attachments = entryOperations.getMediaAttachments(entry.getCurrentRevision(), null);
+        List<MediaAttachment> attachments = entryOperations.getMediaAttachments(entry.getCurrentRevision(), null, null);
         PrivateMediaFileInfo image = !attachments.isEmpty() ? attachments.get(0).getMedia() : null;
         if (image != null) {
             boolean directServing = image.getDirectPath() != null;

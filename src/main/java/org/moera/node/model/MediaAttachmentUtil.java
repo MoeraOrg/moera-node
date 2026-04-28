@@ -5,13 +5,18 @@ import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.EntryAttachment;
 
 public class MediaAttachmentUtil {
-    
-    public static MediaAttachment build(EntryAttachment attachment, String receiverName, DirectServeConfig config) {
+
+    public static MediaAttachment build(
+        EntryAttachment attachment,
+        String receiverName,
+        DirectServeConfig config,
+        MediaGrantGenerator grantGenerator
+    ) {
         MediaAttachment mediaAttachment = new MediaAttachment();
         
         if (attachment.getMediaFileOwner() != null) {
             mediaAttachment.setMedia(
-                PrivateMediaFileInfoUtil.build(attachment.getMediaFileOwner(), receiverName, config)
+                PrivateMediaFileInfoUtil.build(attachment.getMediaFileOwner(), receiverName, config, grantGenerator)
             );
         }
         if (attachment.getRemoteMediaId() != null) {

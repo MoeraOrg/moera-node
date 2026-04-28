@@ -21,19 +21,23 @@ import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.OwnComment;
 import org.moera.node.operations.MediaAttachmentsProvider;
+import org.moera.node.option.Options;
 import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Util;
 
 public class CommentInfoUtil {
 
     // for liberin models
-    public static CommentInfo build(Comment comment, AccessChecker accessChecker, DirectServeConfig config) {
+    public static CommentInfo build(
+        Comment comment, AccessChecker accessChecker, Options options, DirectServeConfig config
+    ) {
         return build(
             comment,
             comment.getCurrentRevision(),
             MediaAttachmentsProvider.relations(config),
             false,
             accessChecker,
+            options,
             config
         );
     }
@@ -42,6 +46,7 @@ public class CommentInfoUtil {
         Comment comment,
         MediaAttachmentsProvider mediaAttachmentsProvider,
         AccessChecker accessChecker,
+        Options options,
         DirectServeConfig config
     ) {
         return build(
@@ -50,6 +55,7 @@ public class CommentInfoUtil {
             mediaAttachmentsProvider,
             false,
             accessChecker,
+            options,
             config
         );
     }
@@ -59,6 +65,7 @@ public class CommentInfoUtil {
         MediaAttachmentsProvider mediaAttachmentsProvider,
         boolean includeSource,
         AccessChecker accessChecker,
+        Options options,
         DirectServeConfig config
     ) {
         return build(
@@ -67,6 +74,7 @@ public class CommentInfoUtil {
             mediaAttachmentsProvider,
             includeSource,
             accessChecker,
+            options,
             config
         );
     }
@@ -77,10 +85,20 @@ public class CommentInfoUtil {
         MediaAttachmentsProvider mediaAttachmentsProvider,
         boolean includeSource,
         AccessChecker accessChecker,
+        Options options,
         DirectServeConfig config
     ) {
         CommentInfo commentInfo = new CommentInfo();
-        buildTo(commentInfo, comment, revision, mediaAttachmentsProvider, includeSource, accessChecker, config);
+        buildTo(
+            commentInfo,
+            comment,
+            revision,
+            mediaAttachmentsProvider,
+            includeSource,
+            accessChecker,
+            options,
+            config
+        );
         return commentInfo;
     }
 
@@ -91,6 +109,7 @@ public class CommentInfoUtil {
         MediaAttachmentsProvider mediaAttachmentsProvider,
         boolean includeSource,
         AccessChecker accessChecker,
+        Options options,
         DirectServeConfig config
     ) {
         commentInfo.setId(comment.getId().toString());
@@ -114,7 +133,12 @@ public class CommentInfoUtil {
         commentInfo.setBodySrcFormat(revision.getBodySrcFormat());
         commentInfo.setBody(new Body(revision.getBody()));
         commentInfo.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
-        commentInfo.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, null));
+        var grantGenerator = options != null
+            ? new MediaGrantGenerator(null, commentInfo.getPostingId(), commentInfo.getId(), options)
+            : null;
+        commentInfo.setMedia(
+            mediaAttachmentsProvider.getMediaAttachments(revision, null, grantGenerator)
+        );
         commentInfo.setHeading(revision.getHeading());
         commentInfo.setDescription(revision.getDescription());
         if (comment.getRepliedTo() != null) {
@@ -215,12 +239,21 @@ public class CommentInfoUtil {
     }
 
     public static CommentUiInfo buildForUi(
-        Comment comment, MediaAttachmentsProvider mediaAttachmentsProvider, DirectServeConfig config
+        Comment comment,
+        MediaAttachmentsProvider mediaAttachmentsProvider,
+        DirectServeConfig config
     ) {
         CommentUiInfo info = new CommentUiInfo();
 
         buildTo(
-            info, comment, comment.getCurrentRevision(), mediaAttachmentsProvider, false, AccessCheckers.PUBLIC, config
+            info,
+            comment,
+            comment.getCurrentRevision(),
+            mediaAttachmentsProvider,
+            false,
+            AccessCheckers.PUBLIC,
+            null,
+            config
         );
         String saneBodyPreview = comment.getCurrentRevision().getSaneBodyPreview();
         setSaneBodyPreview(info, saneBodyPreview != null ? saneBodyPreview : info.getBodyPreview().getText());

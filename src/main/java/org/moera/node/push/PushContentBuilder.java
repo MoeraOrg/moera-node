@@ -21,7 +21,7 @@ public class PushContentBuilder {
         packet.setStory(StoryInfoUtil.build(
             story,
             true,
-            t -> PostingInfoUtil.build(t.getEntry(), MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, config),
+            t -> PostingInfoUtil.build(t.getEntry(), MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, null, config),
             config
         ));
         return packet;

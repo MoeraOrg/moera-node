@@ -20,6 +20,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.model.MediaAttachmentUtil;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
+import org.moera.node.model.MediaGrantGenerator;
 import org.moera.node.model.PrivateMediaFileInfoUtil;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.ExtendedDuration;
@@ -97,7 +98,10 @@ public class EntryOperations implements MediaAttachmentsProvider {
         }
     }
 
-    public List<MediaAttachment> getMediaAttachments(EntryRevision revision, String receiverName) {
+    @Override
+    public List<MediaAttachment> getMediaAttachments(
+        EntryRevision revision, String receiverName, MediaGrantGenerator grantGenerator
+    ) {
         try {
             if (revision.getAttachmentsCache() != null) {
                 var data = objectMapper.readValue(revision.getAttachmentsCache(), MediaAttachmentsCache.class);
@@ -123,7 +127,7 @@ public class EntryOperations implements MediaAttachmentsProvider {
         Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
         return attachments.stream()
             .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-            .map(ea -> MediaAttachmentUtil.build(ea, receiverName, config.getMedia().getDirectServe()))
+            .map(ea -> MediaAttachmentUtil.build(ea, receiverName, config.getMedia().getDirectServe(), grantGenerator))
             .collect(Collectors.toList());
     }
 

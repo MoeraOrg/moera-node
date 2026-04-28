@@ -38,7 +38,9 @@ import org.springframework.util.ObjectUtils;
 public class PostingInfoUtil {
 
     // for liberin models
-    public static PostingInfo build(Entry posting, AccessChecker accessChecker, DirectServeConfig config) {
+    public static PostingInfo build(
+        Entry posting, AccessChecker accessChecker, Options options, DirectServeConfig config
+    ) {
         return build(
             posting,
             posting.getCurrentRevision(),
@@ -46,7 +48,7 @@ public class PostingInfoUtil {
             MediaAttachmentsProvider.relations(config),
             false,
             accessChecker,
-            null,
+            options,
             config
         );
     }
@@ -55,6 +57,7 @@ public class PostingInfoUtil {
         Entry posting,
         MediaAttachmentsProvider mediaAttachmentsProvider,
         AccessChecker accessChecker,
+        Options options,
         DirectServeConfig config
     ) {
         return build(
@@ -64,14 +67,14 @@ public class PostingInfoUtil {
             mediaAttachmentsProvider,
             false,
             accessChecker,
-            null,
+            options,
             config
         );
     }
 
     // for postings attached to media
     public static PostingInfo build(
-        Entry posting, boolean includeSource, AccessChecker accessChecker, DirectServeConfig config
+        Entry posting, boolean includeSource, AccessChecker accessChecker, Options options, DirectServeConfig config
     ) {
         return build(
             posting,
@@ -80,7 +83,7 @@ public class PostingInfoUtil {
             MediaAttachmentsProvider.NONE,
             includeSource,
             accessChecker,
-            null,
+            options,
             config
         );
     }
@@ -185,7 +188,10 @@ public class PostingInfoUtil {
         info.setBodySrcFormat(revision.getBodySrcFormat());
         info.setBody(new Body(revision.getBody()));
         info.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
-        info.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, posting.getReceiverName()));
+        var grantGenerator = options != null ? new MediaGrantGenerator(null, info.getId(), null, options) : null;
+        info.setMedia(
+            mediaAttachmentsProvider.getMediaAttachments(revision, posting.getReceiverName(), grantGenerator)
+        );
         info.setHeading(revision.getHeading());
         info.setDescription(revision.getDescription());
         if (!UpdateInfoUtil.isEmpty(revision)) {
@@ -391,14 +397,13 @@ public class PostingInfoUtil {
     public static PostingUiInfo buildForUi(
         Entry posting, MediaAttachmentsProvider mediaAttachmentsProvider, DirectServeConfig config
     ) {
-        return buildForUi(posting, null, mediaAttachmentsProvider, null, config);
+        return buildForUi(posting, null, mediaAttachmentsProvider, config);
     }
 
     public static PostingUiInfo buildForUi(
         Entry posting,
         List<Story> stories,
         MediaAttachmentsProvider mediaAttachmentsProvider,
-        Options options,
         DirectServeConfig config
     ) {
         PostingUiInfo info = new PostingUiInfo();
@@ -411,7 +416,7 @@ public class PostingInfoUtil {
             mediaAttachmentsProvider,
             false,
             AccessCheckers.PUBLIC,
-            options,
+            null,
             config
         );
 

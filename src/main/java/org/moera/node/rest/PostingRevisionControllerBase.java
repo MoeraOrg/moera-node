@@ -115,7 +115,14 @@ public abstract class PostingRevisionControllerBase {
             )
             .get()
             .map(r ->
-                PostingRevisionInfoUtil.build(posting, r, entryOperations, posting.getReceiverName(), requestContext)
+                PostingRevisionInfoUtil.build(
+                    posting,
+                    r,
+                    entryOperations,
+                    posting.getReceiverName(),
+                    requestContext.getOptions(),
+                    requestContext
+                )
             )
             .collect(Collectors.toList());
     }
@@ -132,7 +139,7 @@ public abstract class PostingRevisionControllerBase {
         EntryRevision revision = getRevision(postingId, id);
 
         return PostingRevisionInfoUtil.build(
-            posting, revision, entryOperations, posting.getReceiverName(), requestContext
+            posting, revision, entryOperations, posting.getReceiverName(), requestContext.getOptions(), requestContext
         );
     }
 
@@ -169,6 +176,7 @@ public abstract class PostingRevisionControllerBase {
             revision,
             MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
             posting.getReceiverName(),
+            requestContext.getOptions(),
             requestContext
         );
     }

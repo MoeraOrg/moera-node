@@ -142,7 +142,11 @@ public class MediaUiController {
         model.addAttribute(
             "posting",
             PostingInfoUtil.build(
-                posting, MediaAttachmentsProvider.NONE, requestContext, config.getMedia().getDirectServe()
+                posting,
+                MediaAttachmentsProvider.NONE,
+                requestContext,
+                requestContext.getOptions(),
+                config.getMedia().getDirectServe()
             )
         );
         model.addAttribute("caption", new SafeString(body));

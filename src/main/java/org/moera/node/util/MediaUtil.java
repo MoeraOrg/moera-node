@@ -1,6 +1,7 @@
 package org.moera.node.util;
 
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -121,16 +122,7 @@ public class MediaUtil {
         );
     }
 
-    public record PresignedUrl(String url, Long expires) {
-    }
-
-    private static PresignedUrl presignUrl(
-        String location,
-        String id,
-        ExtendedDuration valid,
-        String userFileName,
-        String secret
-    ) {
+    public static Timestamp expirationTimestamp(ExtendedDuration valid) {
         long expires = switch (valid.getZone()) {
             case FIXED -> Instant.now()
                 .plus(valid.getDuration())
@@ -142,11 +134,24 @@ public class MediaUtil {
             case ALWAYS -> LocalDate.of(2100, 1, 1).atStartOfDay().toEpochSecond(ZoneOffset.UTC);
             case NEVER -> Instant.now().toEpochMilli() / 1000;
         };
+        return Util.toTimestamp(expires);
+    }
 
+    public record PresignedUrl(String url, Long expires) {
+    }
+
+    private static PresignedUrl presignUrl(
+        String location,
+        String id,
+        ExtendedDuration valid,
+        String userFileName,
+        String secret
+    ) {
         var mac = new HMac(DigestFactory.getDigest("SHA-256"));
         mac.init(new KeyParameter(secret.getBytes(StandardCharsets.UTF_8)));
         byte[] data = id.getBytes(StandardCharsets.UTF_8);
         mac.update(data, 0, data.length);
+        long expires = Util.toEpochSecond(expirationTimestamp(valid));
         data = Long.toString(expires).getBytes(StandardCharsets.UTF_8);
         mac.update(data, 0, data.length);
         if (!ObjectUtils.isEmpty(userFileName)) {

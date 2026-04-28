@@ -108,7 +108,9 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
             Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
             List<MediaAttachment> mediaAttachments = attachments.stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> MediaAttachmentUtil.build(ea, parameters.receiverName, config.getMedia().getDirectServe()))
+                .map(ea ->
+                    MediaAttachmentUtil.build(ea, parameters.receiverName, config.getMedia().getDirectServe(), null)
+                )
                 .collect(Collectors.toList());
             cache.putCache(parameters.receiverName, mediaAttachments);
 

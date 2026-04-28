@@ -486,7 +486,9 @@ public class PostingController {
             );
         return attached.stream()
             .map(p -> withBlockings(withClientReaction(
-                PostingInfoUtil.build(p, false, requestContext, config.getMedia().getDirectServe())
+                PostingInfoUtil.build(
+                    p, false, requestContext, requestContext.getOptions(), config.getMedia().getDirectServe()
+                )
             )))
             .collect(Collectors.toList());
     }

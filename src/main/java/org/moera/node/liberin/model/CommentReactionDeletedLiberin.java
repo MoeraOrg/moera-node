@@ -42,7 +42,10 @@ public class CommentReactionDeletedLiberin extends Liberin {
         comment = entityManager.merge(comment);
         reaction = entityManager.merge(reaction);
         model.put(
-            "comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+            "comment",
+            CommentInfoUtil.build(
+                comment, AccessCheckers.ADMIN, null, getConfig().getMedia().getDirectServe()
+            )
         );
         model.put(
             "reaction",

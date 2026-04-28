@@ -59,7 +59,7 @@ public class DraftInfoUtil {
         draftInfo.setMedia(
             draft.getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> MediaAttachmentUtil.build(ea, null, config))
+                .map(ea -> MediaAttachmentUtil.build(ea, null, config, null))
                 .collect(Collectors.toList())
         );
 

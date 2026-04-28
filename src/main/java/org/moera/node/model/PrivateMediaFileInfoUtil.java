@@ -17,13 +17,15 @@ import org.springframework.util.ObjectUtils;
 public class PrivateMediaFileInfoUtil {
 
     public static PrivateMediaFileInfo build(
-        MediaFileOwner mediaFileOwner, String receiverName, DirectServeConfig config
+        MediaFileOwner mediaFileOwner,
+        String receiverName,
+        DirectServeConfig config,
+        MediaGrantGenerator grantGenerator
     ) {
         PrivateMediaFileInfo info = new PrivateMediaFileInfo();
         
         info.setId(mediaFileOwner.getId().toString());
         info.setHash(mediaFileOwner.getMediaFile().getId());
-        info.setPath(MediaUtil.privatePath(mediaFileOwner, null, null));
         info.setMimeType(mediaFileOwner.getMediaFile().getMimeType());
         info.setWidth(mediaFileOwner.getMediaFile().getSizeX());
         info.setHeight(mediaFileOwner.getMediaFile().getSizeY());
@@ -31,9 +33,12 @@ public class PrivateMediaFileInfoUtil {
         info.setSize(mediaFileOwner.getMediaFile().getFileSize());
         info.setTitle(mediaFileOwner.getTitle());
         info.setTextContent(mediaFileOwner.getMediaFile().getRecognizedText());
+        info.setAttachment(!mediaFileOwner.getMediaFile().isImage());
         if (mediaFileOwner.getMalwareMarks().isEmpty()) {
+            fillPath(info, grantGenerator);
             fillDirectPath(info, config);
         } else {
+            info.setPath(MediaUtil.privatePath(mediaFileOwner, null, null));
             info.setMalware(true);
         }
 
@@ -43,17 +48,27 @@ public class PrivateMediaFileInfoUtil {
         info.setPreviews(
             mediaFileOwner.getMediaFile().getPreviews().stream()
                 .filter(pw -> pw.getMediaFile() != null)
-                .map(pw -> MediaFilePreviewInfoUtil.build(pw, mediaFileOwner, config))
+                .map(pw -> MediaFilePreviewInfoUtil.build(pw, mediaFileOwner, config, grantGenerator))
                 .collect(Collectors.toList())
         );
-
-        info.setAttachment(!mediaFileOwner.getMediaFile().isImage());
 
         PrivateMediaFileOperations operations = new PrivateMediaFileOperations();
         operations.setView(mediaFileOwner.getViewPrincipal(), Principal.PUBLIC);
         info.setOperations(operations);
         
         return info;
+    }
+
+    public static void fillPath(PrivateMediaFileInfo info, MediaGrantGenerator grantGenerator) {
+        boolean download = Boolean.TRUE.equals(info.getAttachment());
+        String fileName = !ObjectUtils.isEmpty(info.getTitle())
+            ? MimeUtils.fileName(info.getTitle(), info.getMimeType())
+            : null;
+        ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
+        String grant = grantGenerator != null
+            ? grantGenerator.generate(info.getId(), valid, download, fileName)
+            : null;
+        info.setPath(MediaUtil.privatePath(info, null, grant));
     }
 
     public static void fillDirectPath(PrivateMediaFileInfo info, DirectServeConfig config) {

@@ -90,7 +90,7 @@ public class DeletedPostingController {
             PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "deletedAt")))
             .stream()
             .map(p -> PostingInfoUtil.build(
-                p, entryOperations, requestContext, config.getMedia().getDirectServe()
+                p, entryOperations, requestContext, requestContext.getOptions(), config.getMedia().getDirectServe()
             ))
             .collect(Collectors.toList());
     }
@@ -104,7 +104,9 @@ public class DeletedPostingController {
         Posting posting = postingRepository.findDeletedById(requestContext.nodeId(), id)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
-        return PostingInfoUtil.build(posting, entryOperations, requestContext, config.getMedia().getDirectServe());
+        return PostingInfoUtil.build(
+            posting, entryOperations, requestContext, requestContext.getOptions(), config.getMedia().getDirectServe()
+        );
     }
 
     @PostMapping("/{id}/restore")

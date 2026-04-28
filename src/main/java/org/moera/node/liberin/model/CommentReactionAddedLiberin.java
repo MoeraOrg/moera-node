@@ -50,7 +50,10 @@ public class CommentReactionAddedLiberin extends Liberin {
         super.toModel(model);
         comment = entityManager.merge(comment);
         model.put(
-            "comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+            "comment",
+            CommentInfoUtil.build(
+                comment, AccessCheckers.ADMIN, null, getConfig().getMedia().getDirectServe()
+            )
         );
         if (addedReaction != null) {
             addedReaction = entityManager.merge(addedReaction);

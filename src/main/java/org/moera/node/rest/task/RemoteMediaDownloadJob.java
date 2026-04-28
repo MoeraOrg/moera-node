@@ -142,7 +142,7 @@ public class RemoteMediaDownloadJob extends Job<RemoteMediaDownloadJob.Parameter
             fail();
         }
         state.downloadedMediaInfo =
-            PrivateMediaFileInfoUtil.build(mediaFileOwner, null, config.getMedia().getDirectServe());
+            PrivateMediaFileInfoUtil.build(mediaFileOwner, null, config.getMedia().getDirectServe(), null);
     }
 
     @Override
