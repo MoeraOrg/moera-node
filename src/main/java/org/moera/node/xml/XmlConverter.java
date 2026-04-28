@@ -19,7 +19,7 @@ public class XmlConverter {
             SAXParser saxParser = saxParserFactory.newSAXParser();
             XMLReader xmlReader = saxParser.getXMLReader();
             xmlReader.setContentHandler(handler);
-            xmlReader.parse(new InputSource(new StringReader(XmlUtils.delicateAmps(xml, false).toString())));
+            xmlReader.parse(new InputSource(new StringReader(XmlUtil.delicateAmps(xml, false).toString())));
         } catch (ParserConfigurationException | SAXException | IOException e) {
             throw new XmlConverterException(e);
         }

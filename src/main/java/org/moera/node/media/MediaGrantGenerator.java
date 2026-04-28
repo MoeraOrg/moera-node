@@ -2,7 +2,6 @@ package org.moera.node.media;
 
 import java.security.PrivateKey;
 
-import org.moera.lib.node.MediaGrant;
 import org.moera.node.option.Options;
 import org.moera.node.util.ExtendedDuration;
 
@@ -26,7 +25,7 @@ public class MediaGrantGenerator {
     }
 
     public String generate(String mediaId, ExtendedDuration duration, boolean download, String fileName) {
-        return MediaGrant.generate(
+        return MediaGrantUtil.generate(
             nodeName,
             postingId,
             commentId,

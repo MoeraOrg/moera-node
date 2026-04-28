@@ -29,7 +29,7 @@ import org.moera.node.liberin.model.AvatarAddedLiberin;
 import org.moera.node.liberin.model.AvatarDeletedLiberin;
 import org.moera.node.liberin.model.AvatarOrderedLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.media.MimeUtils;
+import org.moera.node.media.MimeUtil;
 import org.moera.node.media.ThumbnailUtil;
 import org.moera.node.model.AvatarInfoUtil;
 import org.moera.node.model.AvatarOrdinalUtil;
@@ -105,7 +105,7 @@ public class AvatarController {
             avatarAttributes.setClipSize(mediaFile.getSizeY() - avatarAttributes.getClipY());
         }
 
-        var thumbnailFormat = MimeUtils.thumbnail(mediaFile.getMimeType());
+        var thumbnailFormat = MimeUtil.thumbnail(mediaFile.getMimeType());
         ValidationUtil.assertion(thumbnailFormat != null, "avatar.media-unsupported");
 
         var tmp = mediaOperations.tmpFile();

@@ -10,7 +10,7 @@ import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.media.MediaGrantGenerator;
-import org.moera.node.media.MimeUtils;
+import org.moera.node.media.MimeUtil;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.media.MediaUtil;
 import org.springframework.util.ObjectUtils;
@@ -63,7 +63,7 @@ public class PrivateMediaFileInfoUtil {
     public static void fillPath(PrivateMediaFileInfo info, MediaGrantGenerator grantGenerator) {
         boolean download = Boolean.TRUE.equals(info.getAttachment());
         String fileName = !ObjectUtils.isEmpty(info.getTitle())
-            ? MimeUtils.fileName(info.getTitle(), info.getMimeType())
+            ? MimeUtil.fileName(info.getTitle(), info.getMimeType())
             : null;
         ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
         String grant = grantGenerator != null
@@ -73,10 +73,10 @@ public class PrivateMediaFileInfoUtil {
     }
 
     public static void fillDirectPath(PrivateMediaFileInfo info, DirectServeConfig config) {
-        var fileName = MimeUtils.fileName(info.getHash(), info.getMimeType());
+        var fileName = MimeUtil.fileName(info.getHash(), info.getMimeType());
         ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
         var userFileName = !ObjectUtils.isEmpty(info.getTitle())
-            ? MimeUtils.fileName(info.getTitle(), info.getMimeType())
+            ? MimeUtil.fileName(info.getTitle(), info.getMimeType())
             : null;
         var pu = MediaUtil.directPath(fileName, info.getHash(), valid, userFileName, config);
         info.setDirectPath(pu.url());

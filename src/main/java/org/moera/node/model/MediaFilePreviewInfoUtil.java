@@ -8,7 +8,7 @@ import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
 import org.moera.node.media.MediaGrantGenerator;
-import org.moera.node.media.MimeUtils;
+import org.moera.node.media.MimeUtil;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.media.MediaUtil;
 
@@ -51,7 +51,7 @@ public class MediaFilePreviewInfoUtil {
     }
 
     public static void fillDirectPath(MediaFilePreviewInfo info, DirectServeConfig config) {
-        var fileName = MimeUtils.fileName(info.getHash(), info.getMimeType());
+        var fileName = MimeUtil.fileName(info.getHash(), info.getMimeType());
         ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
         var pu = MediaUtil.directPath(fileName, info.getHash(), valid, config);
         info.setDirectPath(pu.url());

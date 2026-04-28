@@ -6,7 +6,7 @@ import java.util.Map;
 import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypes;
 
-public class MimeUtils {
+public class MimeUtil {
 
     public static class ThumbnailFormat {
 

@@ -17,7 +17,7 @@ import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.StoryInfo;
 import org.moera.node.global.RequestContext;
-import org.moera.node.media.MimeUtils;
+import org.moera.node.media.MimeUtil;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
 import org.moera.node.media.MediaUtil;
 import org.moera.node.util.Util;
@@ -324,7 +324,7 @@ public class GalleriesHelperSource {
             buf.append(
                 "<a class=\"file-name\" download href=\"%s\" title=\"Download\">".formatted(Util.he(fileLocation))
             );
-            String fileName = MimeUtils.fileName(
+            String fileName = MimeUtil.fileName(
                 !ObjectUtils.isEmpty(file.getTitle()) ? file.getTitle() : file.getHash(),
                 file.getMimeType()
             );

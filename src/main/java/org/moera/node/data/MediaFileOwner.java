@@ -16,7 +16,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.media.MimeUtils;
+import org.moera.node.media.MimeUtil;
 import org.moera.node.util.Util;
 
 @Entity
@@ -73,7 +73,7 @@ public class MediaFileOwner {
     }
 
     public String getFileName() {
-        return MimeUtils.fileName(id.toString(), getMediaFile().getMimeType());
+        return MimeUtil.fileName(id.toString(), getMediaFile().getMimeType());
     }
 
     public UUID getNodeId() {

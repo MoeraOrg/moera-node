@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 import org.springframework.util.ObjectUtils;
 import org.xml.sax.Attributes;
 
-public class XmlUtils {
+public class XmlUtil {
 
     private static final Pattern AMPS_PATTERN = Pattern.compile("&(?:#[0-9]{1,5}|#x[0-9A-Fa-f]{1,4}|[A-Za-z]+);");
     private static final Pattern AMPS_XML_PATTERN = Pattern.compile("&(?:#[0-9]{1,5}|#x[0-9A-Fa-f]{1,4}|lt|amp|quot);");

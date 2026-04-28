@@ -239,19 +239,19 @@ public class MediaOperations {
             if (contentType == null) {
                 contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
             }
-            if (exposed && !MimeUtils.isSupportedImage(contentType)) {
+            if (exposed && !MimeUtil.isSupportedImage(contentType)) {
                 throw new InvalidImageException();
             }
 
             Path mediaPath = FileSystems.getDefault().getPath(
-                config.getMedia().getPath(), MimeUtils.fileName(id, contentType)
+                config.getMedia().getPath(), MimeUtil.fileName(id, contentType)
             );
             Files.move(tmpPath, mediaPath, REPLACE_EXISTING);
 
             mediaFile = new MediaFile();
             mediaFile.setId(id);
             mediaFile.setMimeType(contentType);
-            if (MimeUtils.isSupportedImage(contentType)) {
+            if (MimeUtil.isSupportedImage(contentType)) {
                 mediaFile.setDimension(getImageDimension(contentType, mediaPath));
                 mediaFile.setOrientation(getImageOrientation(mediaPath));
             }
@@ -289,7 +289,7 @@ public class MediaOperations {
     public byte[] digest(MediaFile mediaFile) throws IOException {
         return digest(
             FileSystems.getDefault().getPath(
-                config.getMedia().getPath(), MimeUtils.fileName(mediaFile.getId(), mediaFile.getMimeType())
+                config.getMedia().getPath(), MimeUtil.fileName(mediaFile.getId(), mediaFile.getMimeType())
             )
         );
     }
@@ -314,7 +314,7 @@ public class MediaOperations {
     }
 
     private MediaFile cropOriginal(MediaFile original) throws IOException {
-        var previewFormat = MimeUtils.thumbnail(original.getMimeType());
+        var previewFormat = MimeUtil.thumbnail(original.getMimeType());
         if (previewFormat == null) {
             return original;
         }
@@ -345,7 +345,7 @@ public class MediaOperations {
     }
 
     private void createPreview(MediaFile original, MediaFile cropped, int width) throws IOException {
-        var previewFormat = MimeUtils.thumbnail(original.getMimeType());
+        var previewFormat = MimeUtil.thumbnail(original.getMimeType());
         if (previewFormat == null) {
             return;
         }
@@ -552,7 +552,7 @@ public class MediaOperations {
         if (download) {
             var builder = ContentDisposition.attachment();
             if (!ObjectUtils.isEmpty(title)) {
-                builder.filename(MimeUtils.fileName(title, mediaFile.getMimeType()));
+                builder.filename(MimeUtil.fileName(title, mediaFile.getMimeType()));
             }
             headers.setContentDisposition(builder.build());
         }

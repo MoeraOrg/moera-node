@@ -11,7 +11,7 @@ import jakarta.inject.Inject;
 import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
-import org.moera.node.media.MimeUtils;
+import org.moera.node.media.MimeUtil;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,9 +88,9 @@ public class MediaFileRenamePaddedIdsJob extends Job<MediaFileRenamePaddedIdsJob
             throw e;
         }
         Path oldPath = FileSystems.getDefault().getPath(
-                config.getMedia().getPath(), MimeUtils.fileName(mediaFile.getId(), mediaFile.getMimeType()));
+                config.getMedia().getPath(), MimeUtil.fileName(mediaFile.getId(), mediaFile.getMimeType()));
         Path newPath = FileSystems.getDefault().getPath(
-                config.getMedia().getPath(), MimeUtils.fileName(newId, mediaFile.getMimeType()));
+                config.getMedia().getPath(), MimeUtil.fileName(newId, mediaFile.getMimeType()));
         Files.move(oldPath, newPath, REPLACE_EXISTING);
     }
 

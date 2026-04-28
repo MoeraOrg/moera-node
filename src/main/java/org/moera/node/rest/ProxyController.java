@@ -24,7 +24,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.linkpreviewnet.LinkPreviewNet;
 import org.moera.node.linkpreviewnet.LinkPreviewNetException;
 import org.moera.node.linkpreviewnet.LinkPreviewNetInfo;
-import org.moera.node.media.MimeUtils;
+import org.moera.node.media.MimeUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.slf4j.Logger;
@@ -90,7 +90,7 @@ public class ProxyController {
         HttpHeaders headers = new HttpHeaders();
         String contentType = response.headers().firstValue("Content-Type").orElse(null);
         ValidationUtil.assertion(
-            contentType != null && MimeUtils.isSupportedImage(contentType), "proxy.resource-not-media"
+            contentType != null && MimeUtil.isSupportedImage(contentType), "proxy.resource-not-media"
         );
         headers.setContentType(MediaType.valueOf(contentType));
         response.headers().firstValueAsLong("Content-Length").ifPresent(headers::setContentLength);

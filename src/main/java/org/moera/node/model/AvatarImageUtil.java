@@ -7,7 +7,7 @@ import org.moera.lib.util.LogUtil;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.MediaFile;
-import org.moera.node.media.MimeUtils;
+import org.moera.node.media.MimeUtil;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.media.MediaUtil;
 
@@ -45,7 +45,7 @@ public class AvatarImageUtil {
     }
 
     private static void fillDirectPath(AvatarImage info, DirectServeConfig config) {
-        var fileName = MimeUtils.fileName(info.getMediaId(), info.getMimeType());
+        var fileName = MimeUtil.fileName(info.getMediaId(), info.getMimeType());
         var pu = MediaUtil.directPath(fileName, info.getMediaId(), ExtendedDuration.ALWAYS, config);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());

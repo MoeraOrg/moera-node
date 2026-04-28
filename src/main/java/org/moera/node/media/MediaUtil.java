@@ -53,7 +53,7 @@ public class MediaUtil {
     }
 
     public static String privatePath(PrivateMediaFileInfo mediaFile, Integer width, String grant) {
-        String fileName = MimeUtils.fileName(mediaFile.getId(), mediaFile.getMimeType());
+        String fileName = MimeUtil.fileName(mediaFile.getId(), mediaFile.getMimeType());
         return privatePath(fileName, width, grant);
     }
 
@@ -196,7 +196,7 @@ public class MediaUtil {
 
     public static PresignedUrl directPath(MediaFileOwner mediaFileOwner, DirectServeConfig config) {
         String userFileName = !ObjectUtils.isEmpty(mediaFileOwner.getTitle())
-            ? MimeUtils.fileName(mediaFileOwner.getTitle(), mediaFileOwner.getMediaFile().getMimeType())
+            ? MimeUtil.fileName(mediaFileOwner.getTitle(), mediaFileOwner.getMediaFile().getMimeType())
             : null;
         return directPath(
             mediaFileOwner.getMediaFile().getFileName(),

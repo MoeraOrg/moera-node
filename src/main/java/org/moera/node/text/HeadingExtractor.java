@@ -13,7 +13,7 @@ import org.jsoup.select.NodeFilter;
 import org.moera.lib.node.types.body.Body;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
-import org.moera.node.media.MimeUtils;
+import org.moera.node.media.MimeUtil;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 
@@ -214,7 +214,7 @@ public class HeadingExtractor {
             } else {
                 heading.append(mediaFileOwner.getTitle());
                 heading.append('.');
-                heading.append(MimeUtils.extension(mediaFile.getMimeType()));
+                heading.append(MimeUtil.extension(mediaFile.getMimeType()));
             }
             if (heading.length() >= len) {
                 Util.ellipsize(heading, len);

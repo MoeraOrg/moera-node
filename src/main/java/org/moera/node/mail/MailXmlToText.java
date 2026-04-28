@@ -1,6 +1,6 @@
 package org.moera.node.mail;
 
-import org.moera.node.xml.XmlUtils;
+import org.moera.node.xml.XmlUtil;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -67,7 +67,7 @@ public class MailXmlToText extends DefaultHandler {
         } else if (state == FormatterState.P && qName.equals("br")) {
             flushCurrent();
         } else if (state == FormatterState.SUBJECT || state == FormatterState.BODY || state == FormatterState.P) {
-            body.append(XmlUtils.makeTag(qName, attributes));
+            body.append(XmlUtil.makeTag(qName, attributes));
         }
     }
 
@@ -85,7 +85,7 @@ public class MailXmlToText extends DefaultHandler {
             state = FormatterState.BODY;
         } else if (state == FormatterState.P && qName.equals("br")) {
         } else if (state == FormatterState.SUBJECT || state == FormatterState.BODY || state == FormatterState.P) {
-            body.append(XmlUtils.makeTag("/" + qName));
+            body.append(XmlUtil.makeTag("/" + qName));
         }
     }
 
