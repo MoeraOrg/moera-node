@@ -5,10 +5,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.StringJoiner;
 
 import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.crypto.params.KeyParameter;
@@ -25,44 +22,78 @@ import org.springframework.util.ObjectUtils;
 
 public class MediaUtil {
 
-    public static String mediaPreview(String location, int width) {
-        return "%s?width=%d".formatted(location, width);
+    public static String publicPath(String fileName) {
+        return "public/" + fileName;
     }
 
-    public static String mediaPreviewDirect(String location, int width) {
-        int pos = location.lastIndexOf('.');
-        return "%s_%d%s".formatted(location.substring(0, pos), width, location.substring(pos));
+    public static String publicPath(MediaFile mediaFile) {
+        return publicPath(mediaFile.getFileName());
     }
 
-    public static String mediaSources(
-        String location,
-        Collection<MediaFilePreview> previews,
-        DirectServeConfig config
-    ) {
-        if (ObjectUtils.isEmpty(previews)) {
-            return "";
+    public static String privatePath(String fileName, Integer width, String grant) {
+        if (width == null) {
+            if (grant == null) {
+                return "private/%s".formatted(fileName);
+            } else {
+                return "private/%s?grant=%s".formatted(fileName, grant);
+            }
+        } else {
+            if (grant == null) {
+                return "private/%s?width=%d".formatted(fileName, width);
+            } else {
+                return "private/%s?width=%d&grant=%s".formatted(fileName, width, grant);
+            }
         }
-        return mediaSourcesInfo(
-            location,
-            previews
-                .stream()
-                .filter(preview -> preview.getMediaFile() != null)
-                .map(preview -> MediaFilePreviewInfoUtil.build(preview, config))
-                .collect(Collectors.toList())
-        );
     }
 
-    public static String mediaSourcesInfo(String location, Collection<MediaFilePreviewInfo> previews) {
-        List<String> sources = new ArrayList<>();
-        for (MediaFilePreviewInfo preview : previews) {
-            String url = Boolean.TRUE.equals(preview.getOriginal())
-                ? location
-                : (preview.getDirectPath() != null
-                   ? "/moera/media/" + preview.getDirectPath()
-                   : mediaPreview(location, preview.getTargetWidth()));
+    public static String privatePath(MediaFileOwner mediaFileOwner, Integer width, String grant) {
+        return privatePath(mediaFileOwner.getFileName(), width, grant);
+    }
+
+    public static String privatePath(PrivateMediaFileInfo mediaFile, Integer width, String grant) {
+        String fileName = MimeUtils.fileName(mediaFile.getId(), mediaFile.getMimeType());
+        return privatePath(fileName, width, grant);
+    }
+
+    public static String mediaSources(String originalPath, MediaFileOwner mediaFileOwner, DirectServeConfig config) {
+        StringJoiner sources = new StringJoiner(",");
+        for (MediaFilePreview preview : mediaFileOwner.getMediaFile().getPreviews()) {
+            if (preview.getMediaFile() == null) {
+                continue;
+            }
+            String url;
+            if (preview.isOriginal()) {
+                url = originalPath;
+            } else {
+                String directPath = MediaUtil.directPath(mediaFileOwner, config).url();
+                boolean directServing = directPath != null;
+                url = "/moera/media/"
+                    + (directServing ? directPath : MediaUtil.privatePath(mediaFileOwner, preview.getWidth(), null));
+            }
             sources.add("%s %dw".formatted(url, preview.getWidth()));
         }
-        return String.join(",", sources);
+        return sources.toString();
+    }
+
+    public static String mediaSources(PrivateMediaFileInfo mediaFile) {
+        String originalPath = "/moera/media/"
+            + (mediaFile.getDirectPath() != null ? mediaFile.getDirectPath() : mediaFile.getPath());
+
+        StringJoiner sources = new StringJoiner(",");
+        for (MediaFilePreviewInfo preview : mediaFile.getPreviews()) {
+            String url;
+            if (Boolean.TRUE.equals(preview.getOriginal())) {
+                url = originalPath;
+            } else {
+                url = "/moera/media/" + (
+                    preview.getDirectPath() != null
+                        ? preview.getDirectPath()
+                        : MediaUtil.privatePath(mediaFile, preview.getWidth(), null)
+                );
+            }
+            sources.add("%s %dw".formatted(url, preview.getWidth()));
+        }
+        return sources.toString();
     }
 
     private static int findLargerPreviewWidth(MediaFile mediaFile, int width) {
@@ -134,7 +165,7 @@ public class MediaUtil {
         return new PresignedUrl(url, expires);
     }
 
-    public static PresignedUrl presignDirectPath(
+    public static PresignedUrl directPath(
         String location,
         String id,
         ExtendedDuration valid,
@@ -148,20 +179,20 @@ public class MediaUtil {
         };
     }
 
-    public static PresignedUrl presignDirectPath(
+    public static PresignedUrl directPath(
         String location,
         String id,
         ExtendedDuration valid,
         DirectServeConfig config
     ) {
-        return presignDirectPath(location, id, valid, null, config);
+        return directPath(location, id, valid, null, config);
     }
 
-    public static PresignedUrl presignDirectPath(MediaFileOwner mediaFileOwner, DirectServeConfig config) {
+    public static PresignedUrl directPath(MediaFileOwner mediaFileOwner, DirectServeConfig config) {
         String userFileName = !ObjectUtils.isEmpty(mediaFileOwner.getTitle())
             ? MimeUtils.fileName(mediaFileOwner.getTitle(), mediaFileOwner.getMediaFile().getMimeType())
             : null;
-        return presignDirectPath(
+        return directPath(
             mediaFileOwner.getMediaFile().getFileName(),
             mediaFileOwner.getMediaFile().getId(),
             new ExtendedDuration(Duration.ofDays(3)),

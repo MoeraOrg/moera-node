@@ -34,7 +34,7 @@ public class AvatarImageUtil {
         setMediaFile(avatarImage, mediaFile);
         if (mediaFile != null) {
             avatarImage.setMediaId(mediaFile.getId());
-            avatarImage.setPath("public/" + mediaFile.getFileName());
+            avatarImage.setPath(MediaUtil.publicPath(mediaFile));
             avatarImage.setMimeType(mediaFile.getMimeType());
             avatarImage.setWidth(mediaFile.getSizeX());
             avatarImage.setHeight(mediaFile.getSizeY());
@@ -46,7 +46,7 @@ public class AvatarImageUtil {
 
     private static void fillDirectPath(AvatarImage info, DirectServeConfig config) {
         var fileName = MimeUtils.fileName(info.getMediaId(), info.getMimeType());
-        var pu = MediaUtil.presignDirectPath(fileName, info.getMediaId(), ExtendedDuration.ALWAYS, config);
+        var pu = MediaUtil.directPath(fileName, info.getMediaId(), ExtendedDuration.ALWAYS, config);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }

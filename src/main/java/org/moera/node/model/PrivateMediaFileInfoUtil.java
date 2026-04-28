@@ -23,7 +23,7 @@ public class PrivateMediaFileInfoUtil {
         
         info.setId(mediaFileOwner.getId().toString());
         info.setHash(mediaFileOwner.getMediaFile().getId());
-        info.setPath("private/" + mediaFileOwner.getFileName());
+        info.setPath(MediaUtil.privatePath(mediaFileOwner, null, null));
         info.setMimeType(mediaFileOwner.getMediaFile().getMimeType());
         info.setWidth(mediaFileOwner.getMediaFile().getSizeX());
         info.setHeight(mediaFileOwner.getMediaFile().getSizeY());
@@ -62,7 +62,7 @@ public class PrivateMediaFileInfoUtil {
         var userFileName = !ObjectUtils.isEmpty(info.getTitle())
             ? MimeUtils.fileName(info.getTitle(), info.getMimeType())
             : null;
-        var pu = MediaUtil.presignDirectPath(fileName, info.getHash(), valid, userFileName, config);
+        var pu = MediaUtil.directPath(fileName, info.getHash(), valid, userFileName, config);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }

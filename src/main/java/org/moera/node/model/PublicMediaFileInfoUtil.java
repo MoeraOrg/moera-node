@@ -12,7 +12,7 @@ public class PublicMediaFileInfoUtil {
     public static PublicMediaFileInfo build(MediaFile mediaFile, DirectServeConfig config) {
         PublicMediaFileInfo info = new PublicMediaFileInfo();
         info.setId(mediaFile.getId());
-        info.setPath("public/" + mediaFile.getFileName());
+        info.setPath(MediaUtil.publicPath(mediaFile));
         info.setMimeType(mediaFile.getMimeType());
         info.setWidth(mediaFile.getSizeX());
         info.setHeight(mediaFile.getSizeY());
@@ -24,7 +24,7 @@ public class PublicMediaFileInfoUtil {
 
     private static void fillDirectPath(PublicMediaFileInfo info, DirectServeConfig config) {
         var fileName = MimeUtils.fileName(info.getId(), info.getMimeType());
-        var pu = MediaUtil.presignDirectPath(fileName, info.getId(), ExtendedDuration.ALWAYS, config);
+        var pu = MediaUtil.directPath(fileName, info.getId(), ExtendedDuration.ALWAYS, config);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }

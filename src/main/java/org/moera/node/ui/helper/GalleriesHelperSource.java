@@ -127,16 +127,12 @@ public class GalleriesHelperSource {
     private CharSequence entryImage(
         String postingId, String commentId, PrivateMediaFileInfo mediaFile, String flex, Integer count
     ) {
-        MediaFilePreviewInfo preview = MediaFilePreviewInfoUtil.findLargerPreview(mediaFile.getPreviews(), 900);
-        int imageWidth = preview != null ? preview.getWidth() : mediaFile.getWidth();
-        int imageHeight = preview != null ? preview.getHeight() : mediaFile.getHeight();
-
         String style = null;
         if (flex != null || count != null) {
             if ("row".equals(flex)) {
-                style = "flex: %f".formatted(((float) imageWidth) / imageHeight);
+                style = "flex: %f".formatted(((float) mediaFile.getWidth()) / mediaFile.getHeight());
             } else if ("column".equals(flex)) {
-                style = "flex: %f".formatted(((float) imageHeight) / imageWidth);
+                style = "flex: %f".formatted(((float) mediaFile.getHeight()) / mediaFile.getWidth());
             }
         }
 
@@ -160,16 +156,36 @@ public class GalleriesHelperSource {
             buf.append("<div class=\"count\">+%d</div>".formatted(count));
         }
 
-        boolean directServing = mediaFile.getDirectPath() != null;
-        String mediaLocation = "/moera/media/" + (directServing ? mediaFile.getDirectPath() : mediaFile.getPath());
+        MediaFilePreviewInfo preview = MediaFilePreviewInfoUtil.findLargerPreview(mediaFile.getPreviews(), 900);
+
         buf.append("<img");
-        HelperUtil.appendAttr(
-            buf, "src", directServing ? mediaLocation : MediaUtil.mediaPreview(mediaLocation, 900)
-        );
-        HelperUtil.appendAttr(buf, "srcset", MediaUtil.mediaSourcesInfo(mediaLocation, mediaFile.getPreviews()));
+        if (preview != null) {
+            HelperUtil.appendAttr(
+                buf,
+                "src",
+                "/moera/media/" + (
+                    preview.getDirectPath() != null
+                        ? preview.getDirectPath()
+                        : MediaUtil.privatePath(mediaFile, 900, null)
+                )
+            );
+            HelperUtil.appendAttr(buf, "width", preview.getWidth());
+            HelperUtil.appendAttr(buf, "height", preview.getHeight());
+        } else {
+            HelperUtil.appendAttr(
+                buf,
+                "src",
+                "/moera/media/" + (
+                    mediaFile.getDirectPath() != null
+                        ? mediaFile.getDirectPath()
+                        : MediaUtil.privatePath(mediaFile, 900, null)
+                )
+            );
+            HelperUtil.appendAttr(buf, "width", mediaFile.getWidth());
+            HelperUtil.appendAttr(buf, "height", mediaFile.getHeight());
+        }
+        HelperUtil.appendAttr(buf, "srcset", MediaUtil.mediaSources(mediaFile));
         HelperUtil.appendAttr(buf, "sizes", MediaUtil.mediaSizes(mediaFile));
-        HelperUtil.appendAttr(buf, "width", imageWidth);
-        HelperUtil.appendAttr(buf, "height", imageHeight);
         String alt = mediaFile.getTextContent() != null ? mediaFile.getTextContent() : "";
         HelperUtil.appendAttr(buf, "alt", alt);
         buf.append('>');

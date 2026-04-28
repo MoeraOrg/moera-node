@@ -37,7 +37,7 @@ public class MediaFilePreviewInfoUtil {
     public static void fillDirectPath(MediaFilePreviewInfo info, DirectServeConfig config) {
         var fileName = MimeUtils.fileName(info.getHash(), info.getMimeType());
         ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
-        var pu = MediaUtil.presignDirectPath(fileName, info.getHash(), valid, config);
+        var pu = MediaUtil.directPath(fileName, info.getHash(), valid, config);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }

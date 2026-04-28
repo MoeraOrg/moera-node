@@ -13,7 +13,7 @@ public class AvatarInfoUtil {
         AvatarInfo avatarInfo = new AvatarInfo();
         avatarInfo.setId(avatar.getId().toString());
         avatarInfo.setMediaId(avatar.getMediaFile().getId());
-        avatarInfo.setPath("public/" + avatar.getMediaFile().getFileName());
+        avatarInfo.setPath(MediaUtil.publicPath(avatar.getMediaFile()));
         avatarInfo.setMimeType(avatar.getMediaFile().getMimeType());
         avatarInfo.setWidth(avatar.getMediaFile().getSizeX());
         avatarInfo.setHeight(avatar.getMediaFile().getSizeY());
@@ -25,7 +25,7 @@ public class AvatarInfoUtil {
 
     private static void fillDirectPath(AvatarInfo info, DirectServeConfig config) {
         var fileName = MimeUtils.fileName(info.getMediaId(), info.getMimeType());
-        var pu = MediaUtil.presignDirectPath(fileName, info.getMediaId(), ExtendedDuration.ALWAYS, config);
+        var pu = MediaUtil.directPath(fileName, info.getMediaId(), ExtendedDuration.ALWAYS, config);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }
