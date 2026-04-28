@@ -20,7 +20,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.model.MediaAttachmentUtil;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
-import org.moera.node.model.MediaGrantGenerator;
+import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.model.PrivateMediaFileInfoUtil;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.ExtendedDuration;

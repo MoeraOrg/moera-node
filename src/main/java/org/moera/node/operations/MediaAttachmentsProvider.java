@@ -10,7 +10,7 @@ import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.model.MediaAttachmentUtil;
-import org.moera.node.model.MediaGrantGenerator;
+import org.moera.node.media.MediaGrantGenerator;
 
 public interface MediaAttachmentsProvider {
 

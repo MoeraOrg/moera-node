@@ -7,6 +7,7 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
+import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;

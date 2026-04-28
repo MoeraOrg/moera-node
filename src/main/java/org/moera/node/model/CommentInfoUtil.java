@@ -20,6 +20,7 @@ import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.OwnComment;
+import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.option.Options;
 import org.moera.node.util.SheriffUtil;

@@ -27,6 +27,7 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.OwnPosting;
 import org.moera.node.data.Story;
+import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.option.Options;

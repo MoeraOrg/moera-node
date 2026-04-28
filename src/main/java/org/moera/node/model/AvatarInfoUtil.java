@@ -5,7 +5,7 @@ import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Avatar;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.util.ExtendedDuration;
-import org.moera.node.util.MediaUtil;
+import org.moera.node.media.MediaUtil;
 
 public class AvatarInfoUtil {
 

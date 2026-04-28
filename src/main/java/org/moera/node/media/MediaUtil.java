@@ -1,4 +1,4 @@
-package org.moera.node.util;
+package org.moera.node.media;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
@@ -17,8 +17,9 @@ import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
-import org.moera.node.media.MimeUtils;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
+import org.moera.node.util.ExtendedDuration;
+import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 
 public class MediaUtil {

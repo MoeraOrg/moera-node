@@ -19,7 +19,7 @@ import org.moera.lib.node.types.StoryInfo;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
-import org.moera.node.util.MediaUtil;
+import org.moera.node.media.MediaUtil;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 import tools.jackson.databind.ObjectMapper;

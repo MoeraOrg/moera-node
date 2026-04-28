@@ -1,11 +1,10 @@
-package org.moera.node.model;
+package org.moera.node.media;
 
 import java.security.PrivateKey;
 
 import org.moera.lib.node.MediaGrant;
 import org.moera.node.option.Options;
 import org.moera.node.util.ExtendedDuration;
-import org.moera.node.util.MediaUtil;
 
 public class MediaGrantGenerator {
 

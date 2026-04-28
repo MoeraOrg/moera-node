@@ -7,9 +7,10 @@ import org.moera.lib.node.types.MediaFilePreviewInfo;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
+import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.util.ExtendedDuration;
-import org.moera.node.util.MediaUtil;
+import org.moera.node.media.MediaUtil;
 
 public class MediaFilePreviewInfoUtil {
 

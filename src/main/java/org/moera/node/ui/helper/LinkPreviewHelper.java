@@ -9,7 +9,7 @@ import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.MediaFilePreviewInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
-import org.moera.node.util.MediaUtil;
+import org.moera.node.media.MediaUtil;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 

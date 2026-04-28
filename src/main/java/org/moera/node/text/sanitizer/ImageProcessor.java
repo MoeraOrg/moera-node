@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
-import org.moera.node.util.MediaUtil;
+import org.moera.node.media.MediaUtil;
 import org.owasp.html.HtmlStreamEventReceiver;
 import org.owasp.html.HtmlStreamEventReceiverWrapper;
 
