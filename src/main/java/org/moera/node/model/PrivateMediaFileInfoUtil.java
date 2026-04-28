@@ -43,7 +43,7 @@ public class PrivateMediaFileInfoUtil {
         info.setPreviews(
             mediaFileOwner.getMediaFile().getPreviews().stream()
                 .filter(pw -> pw.getMediaFile() != null)
-                .map(pw -> MediaFilePreviewInfoUtil.build(pw, config))
+                .map(pw -> MediaFilePreviewInfoUtil.build(pw, mediaFileOwner, config))
                 .collect(Collectors.toList())
         );
 

@@ -163,11 +163,7 @@ public class GalleriesHelperSource {
             HelperUtil.appendAttr(
                 buf,
                 "src",
-                "/moera/media/" + (
-                    preview.getDirectPath() != null
-                        ? preview.getDirectPath()
-                        : MediaUtil.privatePath(mediaFile, 900, null)
-                )
+                "/moera/media/" + (preview.getDirectPath() != null ? preview.getDirectPath() : preview.getPath())
             );
             HelperUtil.appendAttr(buf, "width", preview.getWidth());
             HelperUtil.appendAttr(buf, "height", preview.getHeight());
@@ -175,11 +171,7 @@ public class GalleriesHelperSource {
             HelperUtil.appendAttr(
                 buf,
                 "src",
-                "/moera/media/" + (
-                    mediaFile.getDirectPath() != null
-                        ? mediaFile.getDirectPath()
-                        : MediaUtil.privatePath(mediaFile, 900, null)
-                )
+                "/moera/media/" + (mediaFile.getDirectPath() != null ? mediaFile.getDirectPath() : mediaFile.getPath())
             );
             HelperUtil.appendAttr(buf, "width", mediaFile.getWidth());
             HelperUtil.appendAttr(buf, "height", mediaFile.getHeight());

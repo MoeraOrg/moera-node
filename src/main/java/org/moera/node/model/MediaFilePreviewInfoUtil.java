@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.moera.lib.node.types.MediaFilePreviewInfo;
 import org.moera.node.config.DirectServeConfig;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.util.ExtendedDuration;
@@ -12,10 +13,13 @@ import org.moera.node.util.MediaUtil;
 
 public class MediaFilePreviewInfoUtil {
 
-    public static MediaFilePreviewInfo build(MediaFilePreview preview, DirectServeConfig config) {
+    public static MediaFilePreviewInfo build(
+        MediaFilePreview preview, MediaFileOwner original, DirectServeConfig config
+    ) {
         MediaFilePreviewInfo info = new MediaFilePreviewInfo();
         info.setTargetWidth(preview.getWidth());
         info.setHash(preview.getMediaFile().getId());
+        info.setPath(MediaUtil.privatePath(original, preview.getWidth(), null));
         info.setMimeType(preview.getMediaFile().getMimeType());
         info.setWidth(preview.getMediaFile().getSizeX());
         info.setHeight(preview.getMediaFile().getSizeY());
