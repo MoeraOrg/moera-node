@@ -127,19 +127,20 @@ public class PostingOperations {
 
     public Posting newPosting(MediaFileOwner mediaFileOwner) {
         Posting posting = newPosting(mediaFileOwner.getOwnerName());
+        Principal mediaViewPrincipal = mediaFileOwner.isUnrestricted() ? Principal.PUBLIC : Principal.ADMIN;
         posting.setParentMedia(mediaFileOwner);
-        posting.setViewPrincipal(mediaFileOwner.getViewPrincipal());
-        posting.setViewCommentsPrincipal(mediaFileOwner.getViewPrincipal());
-        posting.setAddCommentPrincipal(mediaFileOwner.getViewPrincipal());
-        posting.setTrustCommentPrincipal(mediaFileOwner.getViewPrincipal());
-        posting.setViewReactionsPrincipal(mediaFileOwner.getViewPrincipal());
-        posting.setViewNegativeReactionsPrincipal(mediaFileOwner.getViewPrincipal());
-        posting.setViewReactionTotalsPrincipal(mediaFileOwner.getViewPrincipal());
-        posting.setViewNegativeReactionTotalsPrincipal(mediaFileOwner.getViewPrincipal());
-        posting.setViewReactionRatiosPrincipal(mediaFileOwner.getViewPrincipal());
-        posting.setViewNegativeReactionRatiosPrincipal(mediaFileOwner.getViewPrincipal());
-        posting.setAddReactionPrincipal(mediaFileOwner.getViewPrincipal());
-        posting.setAddNegativeReactionPrincipal(mediaFileOwner.getViewPrincipal());
+        posting.setViewPrincipal(mediaViewPrincipal);
+        posting.setViewCommentsPrincipal(mediaViewPrincipal);
+        posting.setAddCommentPrincipal(mediaViewPrincipal);
+        posting.setTrustCommentPrincipal(mediaViewPrincipal);
+        posting.setViewReactionsPrincipal(mediaViewPrincipal);
+        posting.setViewNegativeReactionsPrincipal(mediaViewPrincipal);
+        posting.setViewReactionTotalsPrincipal(mediaViewPrincipal);
+        posting.setViewNegativeReactionTotalsPrincipal(mediaViewPrincipal);
+        posting.setViewReactionRatiosPrincipal(mediaViewPrincipal);
+        posting.setViewNegativeReactionRatiosPrincipal(mediaViewPrincipal);
+        posting.setAddReactionPrincipal(mediaViewPrincipal);
+        posting.setAddNegativeReactionPrincipal(mediaViewPrincipal);
 
         EntryRevision revision = newRevision(posting, null);
         revision.setBodySrc(Body.EMPTY);

@@ -55,7 +55,6 @@ import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.config.Config;
 import org.moera.node.data.Comment;
-import org.moera.node.data.Draft;
 import org.moera.node.data.DraftRepository;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachmentRepository;
@@ -433,15 +432,11 @@ public class MediaOperations {
 
         Collection<Entry> entries =
             entryAttachmentRepository.findEntriesByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId());
-        Principal view = entries.stream()
-            .map(this::entryViewPrincipal)
-            .reduce(Principal.NONE, Principal::union);
-        Collection<Draft> drafts =
-            entryAttachmentRepository.findDraftsByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId());
-        if (!drafts.isEmpty()) {
-            view = view.union(Principal.ADMIN);
-        }
-        mediaFileOwner.setViewPrincipal(view);
+        mediaFileOwner.setUnrestricted(
+            entries.stream()
+                .map(this::entryViewPrincipal)
+                .anyMatch(Principal::isPublic)
+        );
         mediaFileOwner.setPermissionsUpdatedAt(Util.now());
         for (Posting posting : mediaFileOwner.getPostings()) {
             List<Entry> list = entries.stream()

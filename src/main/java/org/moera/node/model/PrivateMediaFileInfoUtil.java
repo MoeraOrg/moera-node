@@ -54,7 +54,7 @@ public class PrivateMediaFileInfoUtil {
         );
 
         PrivateMediaFileOperations operations = new PrivateMediaFileOperations();
-        operations.setView(mediaFileOwner.getViewPrincipal(), Principal.PUBLIC);
+        operations.setView(mediaFileOwner.isUnrestricted() ? Principal.PUBLIC : Principal.ADMIN, Principal.PUBLIC);
         info.setOperations(operations);
         
         return info;

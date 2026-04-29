@@ -104,18 +104,12 @@ public class MediaUiController {
 
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
             .orElseThrow(PageNotFoundException::new);
-        Principal viewPrincipal = mediaFileOwner.getViewE(requestContext.nodeName());
         MediaGrantProperties grant = mediaGrantValidator.validate(grantS, id);
         if (
             grant == null
-            && !requestContext.isPrincipal(viewPrincipal, Scope.VIEW_MEDIA)
-            && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), viewPrincipal)
-            && !(
-                includesAdmin(viewPrincipal)
-                && requestContext.isClient(requestContext.nodeName(), Scope.VIEW_MEDIA)
-            )
-            // The exception above is made to allow authentication with a carte as admin to view admin-only
-            // media instead of passing admin tokens in parameters
+            && !mediaFileOwner.isUnrestricted()
+            && !requestContext.isAdmin(Scope.VIEW_MEDIA)
+            && !requestContext.isClient(requestContext.nodeName(), Scope.VIEW_MEDIA)
         ) {
             throw new PageNotFoundException();
         }

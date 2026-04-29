@@ -15,7 +15,6 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.media.MimeUtil;
 import org.moera.node.util.Util;
 
@@ -56,7 +55,8 @@ public class MediaFileOwner {
     @Column(insertable = false, updatable = false)
     private Timestamp deadline;
 
-    private Principal viewPrincipal = Principal.PRIVATE;
+    @NotNull
+    private boolean unrestricted;
 
     @NotNull
     private Timestamp permissionsUpdatedAt = Util.now();
@@ -153,16 +153,12 @@ public class MediaFileOwner {
         return deadline;
     }
 
-    public Principal getViewPrincipal() {
-        return viewPrincipal;
+    public boolean isUnrestricted() {
+        return unrestricted;
     }
 
-    public Principal getViewE(String nodeName) {
-        return getViewPrincipal().withOwner(getOwnerName() != null ? getOwnerName() : nodeName);
-    }
-
-    public void setViewPrincipal(Principal viewPrincipal) {
-        this.viewPrincipal = viewPrincipal;
+    public void setUnrestricted(boolean unrestricted) {
+        this.unrestricted = unrestricted;
     }
 
     public Timestamp getPermissionsUpdatedAt() {

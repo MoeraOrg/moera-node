@@ -10,3 +10,6 @@ apply: always
 5. In src/main/resources/messages.properties, place codes with the same 1st or 1st and 2nd components together. Place
    codes with 3 components first and codes with 2 components after them. Codes with only 1 component should be placed at
    the beginning of the file.
+6. In the DB, entry_revisions.deleted_at IS NOT NULL when and only when the revision is the current revision of
+   the entry. In other words, the conditions `er.deleted_at IS NOT NULL` and `entry.current_revision_id = er.id` are
+   equivalent.

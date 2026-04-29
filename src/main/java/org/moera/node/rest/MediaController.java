@@ -20,7 +20,6 @@ import org.moera.lib.node.types.PrivateMediaFileAttributes;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.PublicMediaFileInfo;
 import org.moera.lib.node.types.Scope;
-import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.validate.ValidationFailure;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
@@ -51,7 +50,6 @@ import org.moera.node.model.PublicMediaFileInfoUtil;
 import org.moera.node.ocrspace.OcrSpace;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.EntryOperations;
-import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.Util;
@@ -104,9 +102,6 @@ public class MediaController {
 
     @Inject
     private BlockedUserOperations blockedUserOperations;
-
-    @Inject
-    private FeedOperations feedOperations;
 
     @Inject
     private MediaGrantValidator mediaGrantValidator;
@@ -268,12 +263,11 @@ public class MediaController {
     private MediaFileOwner getMediaFileOwner(UUID id, String grantS) {
         MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
             .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
-        Principal viewPrincipal = mediaFileOwner.getViewE(requestContext.nodeName());
         MediaGrantProperties grant = mediaGrantValidator.validate(grantS, id);
         if (
             grant == null
-            && !requestContext.isPrincipal(viewPrincipal, Scope.VIEW_MEDIA)
-            && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), viewPrincipal)
+            && !mediaFileOwner.isUnrestricted()
+            && !requestContext.isAdmin(Scope.VIEW_MEDIA)
         ) {
             throw new ObjectNotFoundFailure("media.not-found");
         }

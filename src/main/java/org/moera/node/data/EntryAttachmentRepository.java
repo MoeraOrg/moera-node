@@ -24,8 +24,9 @@ public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment
     int countByEntryIdAndMedia(UUID nodeId, UUID entryId, UUID mediaId);
 
     @Query(
-        "select er.entry from EntryAttachment ea full join ea.entryRevision er"
-        + " where er.deletedAt is null and ea.mediaFileOwner.nodeId = ?1 and ea.mediaFileOwner.id = ?2"
+        "select e from EntryAttachment ea join ea.entryRevision er join er.entry e"
+        + " where e.deletedAt is null and e.currentRevision = er"
+        + " and ea.mediaFileOwner.nodeId = ?1 and ea.mediaFileOwner.id = ?2"
     )
     Set<Entry> findEntriesByMedia(UUID nodeId, UUID mediaId);
 
