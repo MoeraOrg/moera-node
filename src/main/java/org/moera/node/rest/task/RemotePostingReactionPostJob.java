@@ -6,7 +6,9 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.exception.MoeraNodeException;
+import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.PostingInfo;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.ReactionAttributes;
 import org.moera.lib.node.types.ReactionCreated;
 import org.moera.lib.node.types.ReactionDescription;
@@ -330,11 +332,25 @@ public class RemotePostingReactionPostJob
                 new RemoteMediaReactionFailedJob.Parameters(
                     parameters.targetNodeName,
                     state.postingInfo.getParentMediaId(),
+                    parentMediaGrant(),
                     parameters.postingId
                 ),
                 nodeId
             );
         }
+    }
+
+    private String parentMediaGrant() {
+        if (state.postingInfo.getMedia() == null) {
+            return null;
+        }
+        for (MediaAttachment attachment : state.postingInfo.getMedia()) {
+            PrivateMediaFileInfo media = attachment.getMedia();
+            if (media != null && state.postingInfo.getParentMediaId().equals(media.getId())) {
+                return media.getGrant();
+            }
+        }
+        return null;
     }
 
 }

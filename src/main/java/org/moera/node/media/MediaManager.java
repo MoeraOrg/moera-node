@@ -246,18 +246,18 @@ public class MediaManager {
     }
 
     private TemporaryMediaFile getPrivateMedia(
-        String nodeName, String carte, String id, TemporaryFile tmpFile, int maxSize
+        String nodeName, String carte, String id, String grant, TemporaryFile tmpFile, int maxSize
     ) throws MoeraNodeException {
         var result = new AtomicReference<TemporaryMediaFile>();
         nodeApi.at(nodeName, carte).getPrivateMedia(
-            id, null, null, null,
+            id, null, null, grant, null,
             responseBody -> result.set(receiveMediaFile(nodeName, id, responseBody, tmpFile, maxSize))
         );
         return result.get();
     }
 
     private MediaFile getCachedPrivateMedia(
-        String nodeName, String carte, String id, String mediaFileId, String textContent, int maxSize
+        String nodeName, String carte, String id, String grant, String mediaFileId, String textContent, int maxSize
     ) throws MoeraNodeException, IOException {
         Collection<RemoteMediaCache> caches = remoteMediaCacheRepository.findByMediaWithoutNode(nodeName, id);
 
@@ -280,7 +280,7 @@ public class MediaManager {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            var tmpMedia = getPrivateMedia(nodeName, carte, id, tmp, maxSize);
+            var tmpMedia = getPrivateMedia(nodeName, carte, id, grant, tmp, maxSize);
             if (!tmpMedia.mediaFileId().equals(mediaFileId)) {
                 log.warn("Media {} has hash {} instead of {}", id, tmpMedia.mediaFileId(), mediaFileId);
                 remoteMediaCacheOperations.error(null, nodeName, id, RemoteMediaError.DIGEST_INCORRECT);
@@ -307,7 +307,7 @@ public class MediaManager {
     }
 
     private void downloadPrivateMediaForCaching(
-        String nodeName, String carte, String id, String mediaFileId, String textContent, int maxSize
+        String nodeName, String carte, String id, String grant, String mediaFileId, String textContent, int maxSize
     ) throws MoeraNodeException {
         if (id == null) {
             return;
@@ -315,7 +315,7 @@ public class MediaManager {
 
         try (var ignored = mediaFileLocks.lock(mediaFileId)) {
             try {
-                getCachedPrivateMedia(nodeName, carte, id, mediaFileId, textContent, maxSize);
+                getCachedPrivateMedia(nodeName, carte, id, grant, mediaFileId, textContent, maxSize);
             } catch (IOException e) {
                 throw new MoeraNodeLocalStorageException(
                     "Error storing private media %s: %s".formatted(id, e.getMessage())
@@ -328,7 +328,7 @@ public class MediaManager {
         String nodeName, String carte, PrivateMediaFileInfo info, int maxSize
     ) throws MoeraNodeException {
         downloadPrivateMediaForCaching(
-            nodeName, carte, info.getId(), info.getHash(), info.getTextContent(), maxSize
+            nodeName, carte, info.getId(), info.getGrant(), info.getHash(), info.getTextContent(), maxSize
         );
     }
 
@@ -352,7 +352,7 @@ public class MediaManager {
     }
 
     private MediaFileOwner downloadPrivateMedia(
-        String nodeName, String carte, String id, String mediaFileId, String title, String textContent,
+        String nodeName, String carte, String id, String grant, String mediaFileId, String title, String textContent,
         int maxSize, UUID entryId
     ) throws MoeraNodeException {
         if (id == null) {
@@ -375,7 +375,9 @@ public class MediaManager {
             }
 
             try {
-                MediaFile mediaFile = getCachedPrivateMedia(nodeName, carte, id, mediaFileId, textContent, maxSize);
+                MediaFile mediaFile = getCachedPrivateMedia(
+                    nodeName, carte, id, grant, mediaFileId, textContent, maxSize
+                );
                 if (mediaFile == null) {
                     return null;
                 }
@@ -399,7 +401,8 @@ public class MediaManager {
     ) throws MoeraNodeException {
         int maxSize = PostingFeaturesUtil.build(universalContext.getOptions(), AccessCheckers.ADMIN).getMediaMaxSize();
         return downloadPrivateMedia(
-            nodeName, carte, info.getId(), info.getHash(), info.getTitle(), info.getTextContent(), maxSize, entryId
+            nodeName, carte, info.getId(), info.getGrant(), info.getHash(), info.getTitle(), info.getTextContent(),
+            maxSize, entryId
         );
     }
 
@@ -407,15 +410,20 @@ public class MediaManager {
         String nodeName, String carte, PrivateMediaFileInfo info
     ) throws MoeraNodeException {
         return downloadPrivateMedia(
-            nodeName, carte, info.getId(), info.getHash(), info.getTitle(), info.getTextContent(), -1, null
+            nodeName, carte, info.getId(), info.getGrant(), info.getHash(), info.getTitle(), info.getTextContent(),
+            -1, null
         );
     }
 
     public byte[] getPrivateMediaDigest(String nodeName, String carte, PrivateMediaFileInfo info) {
-        return getPrivateMediaDigest(nodeName, carte, info.getId(), info.getHash());
+        return getPrivateMediaDigest(nodeName, carte, info.getId(), info.getGrant(), info.getHash());
     }
 
     public byte[] getPrivateMediaDigest(String nodeName, String carte, String id, String hash) {
+        return getPrivateMediaDigest(nodeName, carte, id, null, hash);
+    }
+
+    private byte[] getPrivateMediaDigest(String nodeName, String carte, String id, String grant, String hash) {
         Collection<RemoteMediaCache> caches =
             remoteMediaCacheRepository.findByMedia(universalContext.nodeId(), nodeName, id);
         RemoteMediaCache cache = caches.stream()
@@ -441,7 +449,7 @@ public class MediaManager {
         var tmp = mediaOperations.tmpFile();
         try {
             var tmpMedia = getPrivateMedia(
-                nodeName, carte, id, tmp, universalContext.getOptions().getInt("media.verification.max-size")
+                nodeName, carte, id, grant, tmp, universalContext.getOptions().getInt("media.verification.max-size")
             );
             remoteMediaCacheOperations.store(null, nodeName, id, tmpMedia.digest(), null);
             return tmpMedia.digest();

@@ -5,6 +5,7 @@ import java.util.Objects;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.types.MediaDownloadAttributes;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
@@ -28,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
@@ -56,11 +58,16 @@ public class RemoteMediaController {
     @Admin(Scope.REMOTE_DOWNLOAD_PRIVATE_MEDIA)
     @Entitled
     @Transactional
-    public PrivateMediaFileInfo download(@PathVariable String nodeName, @PathVariable String id) {
+    public PrivateMediaFileInfo download(
+        @PathVariable String nodeName,
+        @PathVariable String id,
+        @RequestBody(required = false) MediaDownloadAttributes attributes
+    ) {
         log.info(
             "POST /nodes/{nodeName}/media/private/{id}/download (nodeName = {}, id = {})",
             LogUtil.format(nodeName), LogUtil.format(id)
         );
+        String grant = attributes != null ? attributes.getGrant() : null;
 
         Collection<RemoteMediaCache> caches =
             remoteMediaCacheRepository.findByMedia(requestContext.nodeId(), nodeName, id);
@@ -99,7 +106,7 @@ public class RemoteMediaController {
         if (!pending) {
             jobs.run(
                 RemoteMediaDownloadJob.class,
-                new RemoteMediaDownloadJob.Parameters(nodeName, id),
+                new RemoteMediaDownloadJob.Parameters(nodeName, id, grant),
                 requestContext.nodeId()
             );
         }

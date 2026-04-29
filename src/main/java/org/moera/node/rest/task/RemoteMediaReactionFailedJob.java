@@ -23,14 +23,20 @@ public class RemoteMediaReactionFailedJob
 
         private String targetNodeName;
         private String mediaId;
+        private String mediaGrant;
         private String postingId; // The posting linked to the media
 
         public Parameters() {
         }
 
         public Parameters(String targetNodeName, String mediaId, String postingId) {
+            this(targetNodeName, mediaId, null, postingId);
+        }
+
+        public Parameters(String targetNodeName, String mediaId, String mediaGrant, String postingId) {
             this.targetNodeName = targetNodeName;
             this.mediaId = mediaId;
+            this.mediaGrant = mediaGrant;
             this.postingId = postingId;
         }
 
@@ -48,6 +54,14 @@ public class RemoteMediaReactionFailedJob
 
         public void setMediaId(String mediaId) {
             this.mediaId = mediaId;
+        }
+
+        public String getMediaGrant() {
+            return mediaGrant;
+        }
+
+        public void setMediaGrant(String mediaGrant) {
+            this.mediaGrant = mediaGrant;
         }
 
         public String getPostingId() {
@@ -110,7 +124,7 @@ public class RemoteMediaReactionFailedJob
         if (state.parentPosting == null) {
             EntryInfo[] parents = nodeApi
                 .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA))
-                .getPrivateMediaParentEntry(parameters.mediaId);
+                .getPrivateMediaParentEntry(parameters.mediaId, parameters.mediaGrant);
             if (parents != null && parents.length > 0) {
                 if (parents[0].getComment() == null) {
                     state.parentPosting = parents[0].getPosting();
@@ -169,8 +183,10 @@ public class RemoteMediaReactionFailedJob
     @Override
     protected void failed() {
         super.failed();
-        log.error("Failed to send error message to the owner of the parent posting/comment for media {} at node {}",
-                parameters.mediaId, parameters.targetNodeName);
+        log.error(
+            "Failed to send error message to the owner of the parent posting/comment for media {} at node {}",
+            parameters.mediaId, parameters.targetNodeName
+        );
     }
 
 }

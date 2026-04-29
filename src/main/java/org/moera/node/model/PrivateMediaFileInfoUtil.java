@@ -69,6 +69,7 @@ public class PrivateMediaFileInfoUtil {
         String grant = grantSupplier != null
             ? grantSupplier.generate(info.getId(), valid, download, fileName)
             : null;
+        info.setGrant(grant);
         info.setPath(MediaUtil.privatePath(info, null, grant));
     }
 

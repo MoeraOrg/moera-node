@@ -28,13 +28,15 @@ public class RemoteMediaDownloadJob extends Job<RemoteMediaDownloadJob.Parameter
 
         private String nodeName;
         private String id;
+        private String grant;
 
         public Parameters() {
         }
 
-        public Parameters(String nodeName, String id) {
+        public Parameters(String nodeName, String id, String grant) {
             this.nodeName = nodeName;
             this.id = id;
+            this.grant = grant;
         }
 
         public String getNodeName() {
@@ -51,6 +53,14 @@ public class RemoteMediaDownloadJob extends Job<RemoteMediaDownloadJob.Parameter
 
         public void setId(String id) {
             this.id = id;
+        }
+
+        public String getGrant() {
+            return grant;
+        }
+
+        public void setGrant(String grant) {
+            this.grant = grant;
         }
 
     }
@@ -122,7 +132,7 @@ public class RemoteMediaDownloadJob extends Job<RemoteMediaDownloadJob.Parameter
     @Override
     protected void execute() throws Exception {
         if (state.mediaInfo == null) {
-            state.mediaInfo = nodeApi.at(parameters.nodeName).getPrivateMediaInfo(parameters.id);
+            state.mediaInfo = nodeApi.at(parameters.nodeName).getPrivateMediaInfo(parameters.id, parameters.grant);
             checkpoint();
         }
         if (Boolean.TRUE.equals(state.mediaInfo.getMalware())) {
