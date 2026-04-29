@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.List;
 
 import org.moera.lib.node.types.MediaFilePreviewInfo;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
@@ -42,12 +43,34 @@ public class MediaFilePreviewInfoUtil {
         return larger;
     }
 
-    public static void fillPath(MediaFilePreviewInfo info, MediaFileOwner original, MediaGrantGenerator grantGenerator) {
+    public static void fillPath(
+        MediaFilePreviewInfo info,
+        MediaFileOwner original,
+        MediaGrantGenerator grantGenerator
+    ) {
+        fillPath(info, original.getId().toString(), original.getMediaFile().getMimeType(), grantGenerator);
+    }
+
+    public static void fillPath(
+        MediaFilePreviewInfo info,
+        PrivateMediaFileInfo original,
+        MediaGrantGenerator grantGenerator
+    ) {
+        fillPath(info, original.getId(), original.getMimeType(), grantGenerator);
+    }
+
+    private static void fillPath(
+        MediaFilePreviewInfo info,
+        String originalId,
+        String originalMimeType,
+        MediaGrantGenerator grantGenerator
+    ) {
         ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
         String grant = grantGenerator != null
-            ? grantGenerator.generate(original.getId().toString(), valid, false, null)
+            ? grantGenerator.generate(originalId, valid, false, null)
             : null;
-        info.setPath(MediaUtil.privatePath(original, info.getTargetWidth(), grant));
+        String fileName = MimeUtil.fileName(originalId, originalMimeType);
+        info.setPath(MediaUtil.privatePath(fileName, info.getTargetWidth(), grant));
     }
 
     public static void fillDirectPath(MediaFilePreviewInfo info, DirectServeConfig config) {

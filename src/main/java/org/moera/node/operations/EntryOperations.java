@@ -107,8 +107,8 @@ public class EntryOperations implements MediaAttachmentsProvider {
                 var data = objectMapper.readValue(revision.getAttachmentsCache(), MediaAttachmentsCache.class);
                 var cache = data.getCache(receiverName);
                 if (cache != null) {
-                    // Direct paths expire, so assuming that they always need to be updated
-                    updateCachedDirectPaths(cache);
+                    // Media paths expire, so assuming that they always need to be updated
+                    updateCachedPaths(cache, grantGenerator);
                     return cache;
                 }
             }
@@ -131,12 +131,15 @@ public class EntryOperations implements MediaAttachmentsProvider {
             .collect(Collectors.toList());
     }
 
-    private void updateCachedDirectPaths(List<MediaAttachment> attachments) {
+    private void updateCachedPaths(List<MediaAttachment> attachments, MediaGrantGenerator grantGenerator) {
         for (var attachment : attachments) {
             if (attachment.getMedia() != null) {
-                PrivateMediaFileInfoUtil.fillDirectPath(attachment.getMedia(), config.getMedia().getDirectServe());
-                if (attachment.getMedia().getPreviews() != null) {
-                    for (var preview : attachment.getMedia().getPreviews()) {
+                var media = attachment.getMedia();
+                PrivateMediaFileInfoUtil.fillPath(media, grantGenerator);
+                PrivateMediaFileInfoUtil.fillDirectPath(media, config.getMedia().getDirectServe());
+                if (media.getPreviews() != null) {
+                    for (var preview : media.getPreviews()) {
+                        MediaFilePreviewInfoUtil.fillPath(preview, media, grantGenerator);
                         MediaFilePreviewInfoUtil.fillDirectPath(preview, config.getMedia().getDirectServe());
                     }
                 }
