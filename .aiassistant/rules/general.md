@@ -7,3 +7,6 @@ apply: always
    is done automatically.
 3. Setters and getters should not contain any logic besides copying values.
 4. If a lambda can be replaced with a method reference, replace it.
+5. In src/main/resources/messages.properties, place codes with the same 1st or 1st and 2nd components together. Place
+   codes with 3 components first and codes with 2 components after them. Codes with only 1 component should be placed at
+   the beginning of the file.

@@ -37,6 +37,8 @@ import org.moera.node.data.Posting;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.InvalidImageException;
+import org.moera.node.media.MediaGrantProperties;
+import org.moera.node.media.MediaGrantValidator;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.ThresholdReachedException;
 import org.moera.node.model.CommentInfoUtil;
@@ -105,6 +107,9 @@ public class MediaController {
 
     @Inject
     private FeedOperations feedOperations;
+
+    @Inject
+    private MediaGrantValidator mediaGrantValidator;
 
     @Inject
     @PersistenceContext
@@ -260,12 +265,14 @@ public class MediaController {
         }
     }
 
-    private MediaFileOwner getMediaFileOwner(UUID id) {
+    private MediaFileOwner getMediaFileOwner(UUID id, String grantS) {
         MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
             .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
         Principal viewPrincipal = mediaFileOwner.getViewE(requestContext.nodeName());
+        MediaGrantProperties grant = mediaGrantValidator.validate(grantS, id);
         if (
-            !requestContext.isPrincipal(viewPrincipal, Scope.VIEW_MEDIA)
+            grant == null
+            && !requestContext.isPrincipal(viewPrincipal, Scope.VIEW_MEDIA)
             && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), viewPrincipal)
         ) {
             throw new ObjectNotFoundFailure("media.not-found");
@@ -283,10 +290,15 @@ public class MediaController {
 
     @GetMapping("/private/{id}/info")
     @Transactional
-    public PrivateMediaFileInfo getInfoPrivate(@PathVariable UUID id) {
+    public PrivateMediaFileInfo getInfoPrivate(
+        @PathVariable UUID id,
+        @RequestParam(required = false) String grant
+    ) {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
 
-        return PrivateMediaFileInfoUtil.build(getMediaFileOwner(id), null, config.getMedia().getDirectServe(), null);
+        return PrivateMediaFileInfoUtil.build(
+            getMediaFileOwner(id, grant), null, config.getMedia().getDirectServe(), null
+        );
     }
 
     @PutMapping("/private/{id}/info")
@@ -340,11 +352,12 @@ public class MediaController {
         @PathVariable UUID id,
         @RequestParam(required = false) Integer width,
         @RequestParam(required = false) Boolean download,
+        @RequestParam(required = false) String grant,
         @RequestParam(name = "ignoremalware", required = false) Boolean ignoreMalware
     ) {
         log.info("GET /media/private/{id}/data (id = {})", LogUtil.format(id));
 
-        MediaFileOwner mediaFileOwner = getMediaFileOwner(id);
+        MediaFileOwner mediaFileOwner = getMediaFileOwner(id, grant);
         mediaOperations.blockMalware(mediaFileOwner, ignoreMalware);
 
         return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, mediaFileOwner.getTitle(), download);
@@ -352,10 +365,13 @@ public class MediaController {
 
     @GetMapping("/private/{id}/parent")
     @Transactional
-    public List<EntryInfo> getParentPrivate(@PathVariable UUID id) {
+    public List<EntryInfo> getParentPrivate(
+        @PathVariable UUID id,
+        @RequestParam(required = false) String grant
+    ) {
         log.info("GET /media/private/{id}/parent (id = {})", LogUtil.format(id));
 
-        MediaFileOwner mediaFileOwner = getMediaFileOwner(id);
+        MediaFileOwner mediaFileOwner = getMediaFileOwner(id, grant);
         Set<Entry> entries = entryRepository.findByMediaId(mediaFileOwner.getId());
         List<EntryInfo> parents = new ArrayList<>();
         for (Entry entry : entries) {

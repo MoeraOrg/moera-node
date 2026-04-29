@@ -18,6 +18,8 @@ import org.moera.node.global.MaxCache;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
+import org.moera.node.media.MediaGrantProperties;
+import org.moera.node.media.MediaGrantValidator;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.operations.FeedOperations;
@@ -27,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,6 +59,9 @@ public class MediaUiController {
 
     @Inject
     private FeedOperations feedOperations;
+
+    @Inject
+    private MediaGrantValidator mediaGrantValidator;
 
     @GetMapping("/public/{id}.{ext}")
     @MaxCache
@@ -91,6 +97,7 @@ public class MediaUiController {
         @PathVariable UUID id,
         @RequestParam(required = false) Integer width,
         @RequestParam(required = false) Boolean download,
+        @RequestParam(name = "grant", required = false) String grantS,
         @RequestParam(name = "ignoremalware", required = false) Boolean ignoreMalware
     ) {
         log.info("GET MEDIA /media/private/{id}.ext (id = {})", LogUtil.format(id));
@@ -98,8 +105,10 @@ public class MediaUiController {
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
             .orElseThrow(PageNotFoundException::new);
         Principal viewPrincipal = mediaFileOwner.getViewE(requestContext.nodeName());
+        MediaGrantProperties grant = mediaGrantValidator.validate(grantS, id);
         if (
-            !requestContext.isPrincipal(viewPrincipal, Scope.VIEW_MEDIA)
+            grant == null
+            && !requestContext.isPrincipal(viewPrincipal, Scope.VIEW_MEDIA)
             && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), viewPrincipal)
             && !(
                 includesAdmin(viewPrincipal)
@@ -112,7 +121,17 @@ public class MediaUiController {
         }
         mediaOperations.blockMalware(mediaFileOwner, ignoreMalware);
 
-        return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, mediaFileOwner.getTitle(), download);
+        String title = mediaFileOwner.getTitle();
+        if (grant != null) {
+            if (grant.isDownload()) {
+                download = true;
+            }
+            if (!ObjectUtils.isEmpty(grant.getFileName())) {
+                title = grant.getFileName();
+            }
+        }
+
+        return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, title, download);
     }
 
     @GetMapping(path = "/private/{id}/caption", produces = "text/html")

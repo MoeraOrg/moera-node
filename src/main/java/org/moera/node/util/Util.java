@@ -222,6 +222,19 @@ public class Util {
         }
     }
 
+    public static <X extends Throwable> UUID uuid(
+        String value, Supplier<? extends X> exceptionSupplier
+    ) throws X {
+        if (value == null) {
+            throw exceptionSupplier.get();
+        }
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException e) {
+            throw exceptionSupplier.get();
+        }
+    }
+
     public static <X extends Throwable> UUID uuidOrNull(
         String value, Supplier<? extends X> exceptionSupplier
     ) throws X {
