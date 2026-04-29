@@ -241,11 +241,9 @@ public class TimelineUiController {
         String heading = entry.getCurrentRevision().getHeading();
         model.addAttribute("ogTitle", !ObjectUtils.isEmpty(heading) ? heading : "(no title)");
         List<MediaAttachment> attachments = entryOperations.getMediaAttachments(entry.getCurrentRevision(), null, null);
-        PrivateMediaFileInfo image = !attachments.isEmpty() ? attachments.get(0).getMedia() : null;
+        PrivateMediaFileInfo image = !attachments.isEmpty() ? attachments.getFirst().getMedia() : null;
         if (image != null) {
-            boolean directServing = image.getDirectPath() != null;
-            String mediaLocation = "/moera/media/" + (directServing ? image.getDirectPath() : image.getPath());
-            model.addAttribute("ogImage", requestContext.getSiteUrl() + mediaLocation);
+            model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + image.getPath());
             model.addAttribute("ogImageType", image.getMimeType());
             model.addAttribute("ogImageWidth", image.getWidth());
             model.addAttribute("ogImageHeight", image.getHeight());
