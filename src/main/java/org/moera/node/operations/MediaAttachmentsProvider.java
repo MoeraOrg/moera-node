@@ -9,23 +9,23 @@ import org.moera.lib.node.types.MediaAttachment;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
+import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.model.MediaAttachmentUtil;
-import org.moera.node.media.MediaGrantGenerator;
 
 public interface MediaAttachmentsProvider {
 
-    MediaAttachmentsProvider NONE = (revision, receiverName, grantGenerator) -> Collections.emptyList();
+    MediaAttachmentsProvider NONE = (revision, receiverName, grantSupplier) -> Collections.emptyList();
 
     static MediaAttachmentsProvider relations(DirectServeConfig config) {
-        return (revision, receiverName, grantGenerator) ->
+        return (revision, receiverName, grantSupplier) ->
             revision.getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> MediaAttachmentUtil.build(ea, receiverName, config, grantGenerator))
+                .map(ea -> MediaAttachmentUtil.build(ea, receiverName, config, grantSupplier))
                 .collect(Collectors.toList());
     }
 
     List<MediaAttachment> getMediaAttachments(
-        EntryRevision revision, String receiverName, MediaGrantGenerator grantGenerator
+        EntryRevision revision, String receiverName, MediaGrantSupplier grantSupplier
     );
 
 }

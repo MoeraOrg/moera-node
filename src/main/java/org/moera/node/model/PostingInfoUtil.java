@@ -189,9 +189,9 @@ public class PostingInfoUtil {
         info.setBodySrcFormat(revision.getBodySrcFormat());
         info.setBody(new Body(revision.getBody()));
         info.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
-        var grantGenerator = options != null ? new MediaGrantGenerator(null, info.getId(), null, options) : null;
+        var grantSupplier = options != null ? new MediaGrantGenerator(null, info.getId(), null, options) : null;
         info.setMedia(
-            mediaAttachmentsProvider.getMediaAttachments(revision, posting.getReceiverName(), grantGenerator)
+            mediaAttachmentsProvider.getMediaAttachments(revision, posting.getReceiverName(), grantSupplier)
         );
         info.setHeading(revision.getHeading());
         info.setDescription(revision.getDescription());

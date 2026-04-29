@@ -297,7 +297,10 @@ public class MediaController {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
 
         return PrivateMediaFileInfoUtil.build(
-            getMediaFileOwner(id, grant), null, config.getMedia().getDirectServe(), null
+            getMediaFileOwner(id, grant),
+            null,
+            config.getMedia().getDirectServe(),
+            (mediaId, duration, download, fileName) -> grant
         );
     }
 

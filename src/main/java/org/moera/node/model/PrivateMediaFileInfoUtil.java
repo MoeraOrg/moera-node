@@ -9,7 +9,7 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
-import org.moera.node.media.MediaGrantGenerator;
+import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.media.MimeUtil;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.media.MediaUtil;
@@ -21,7 +21,7 @@ public class PrivateMediaFileInfoUtil {
         MediaFileOwner mediaFileOwner,
         String receiverName,
         DirectServeConfig config,
-        MediaGrantGenerator grantGenerator
+        MediaGrantSupplier grantSupplier
     ) {
         PrivateMediaFileInfo info = new PrivateMediaFileInfo();
         
@@ -36,7 +36,7 @@ public class PrivateMediaFileInfoUtil {
         info.setTextContent(mediaFileOwner.getMediaFile().getRecognizedText());
         info.setAttachment(!mediaFileOwner.getMediaFile().isImage());
         if (mediaFileOwner.getMalwareMarks().isEmpty()) {
-            fillPath(info, grantGenerator);
+            fillPath(info, grantSupplier);
             fillDirectPath(info, config);
         } else {
             info.setPath(MediaUtil.privatePath(mediaFileOwner, null, null));
@@ -49,7 +49,7 @@ public class PrivateMediaFileInfoUtil {
         info.setPreviews(
             mediaFileOwner.getMediaFile().getPreviews().stream()
                 .filter(pw -> pw.getMediaFile() != null)
-                .map(pw -> MediaFilePreviewInfoUtil.build(pw, mediaFileOwner, config, grantGenerator))
+                .map(pw -> MediaFilePreviewInfoUtil.build(pw, mediaFileOwner, config, grantSupplier))
                 .collect(Collectors.toList())
         );
 
@@ -60,14 +60,14 @@ public class PrivateMediaFileInfoUtil {
         return info;
     }
 
-    public static void fillPath(PrivateMediaFileInfo info, MediaGrantGenerator grantGenerator) {
+    public static void fillPath(PrivateMediaFileInfo info, MediaGrantSupplier grantSupplier) {
         boolean download = Boolean.TRUE.equals(info.getAttachment());
         String fileName = !ObjectUtils.isEmpty(info.getTitle())
             ? MimeUtil.fileName(info.getTitle(), info.getMimeType())
             : null;
         ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
-        String grant = grantGenerator != null
-            ? grantGenerator.generate(info.getId(), valid, download, fileName)
+        String grant = grantSupplier != null
+            ? grantSupplier.generate(info.getId(), valid, download, fileName)
             : null;
         info.setPath(MediaUtil.privatePath(info, null, grant));
     }

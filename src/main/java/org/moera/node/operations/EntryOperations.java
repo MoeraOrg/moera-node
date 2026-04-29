@@ -18,9 +18,9 @@ import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntryType;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
+import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.model.MediaAttachmentUtil;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
-import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.model.PrivateMediaFileInfoUtil;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.ExtendedDuration;
@@ -100,7 +100,7 @@ public class EntryOperations implements MediaAttachmentsProvider {
 
     @Override
     public List<MediaAttachment> getMediaAttachments(
-        EntryRevision revision, String receiverName, MediaGrantGenerator grantGenerator
+        EntryRevision revision, String receiverName, MediaGrantSupplier grantSupplier
     ) {
         try {
             if (revision.getAttachmentsCache() != null) {
@@ -108,7 +108,7 @@ public class EntryOperations implements MediaAttachmentsProvider {
                 var cache = data.getCache(receiverName);
                 if (cache != null) {
                     // Media paths expire, so assuming that they always need to be updated
-                    updateCachedPaths(cache, grantGenerator);
+                    updateCachedPaths(cache, grantSupplier);
                     return cache;
                 }
             }
@@ -127,19 +127,19 @@ public class EntryOperations implements MediaAttachmentsProvider {
         Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
         return attachments.stream()
             .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-            .map(ea -> MediaAttachmentUtil.build(ea, receiverName, config.getMedia().getDirectServe(), grantGenerator))
+            .map(ea -> MediaAttachmentUtil.build(ea, receiverName, config.getMedia().getDirectServe(), grantSupplier))
             .collect(Collectors.toList());
     }
 
-    private void updateCachedPaths(List<MediaAttachment> attachments, MediaGrantGenerator grantGenerator) {
+    private void updateCachedPaths(List<MediaAttachment> attachments, MediaGrantSupplier grantSupplier) {
         for (var attachment : attachments) {
             if (attachment.getMedia() != null) {
                 var media = attachment.getMedia();
-                PrivateMediaFileInfoUtil.fillPath(media, grantGenerator);
+                PrivateMediaFileInfoUtil.fillPath(media, grantSupplier);
                 PrivateMediaFileInfoUtil.fillDirectPath(media, config.getMedia().getDirectServe());
                 if (media.getPreviews() != null) {
                     for (var preview : media.getPreviews()) {
-                        MediaFilePreviewInfoUtil.fillPath(preview, media, grantGenerator);
+                        MediaFilePreviewInfoUtil.fillPath(preview, media, grantSupplier);
                         MediaFilePreviewInfoUtil.fillDirectPath(preview, config.getMedia().getDirectServe());
                     }
                 }

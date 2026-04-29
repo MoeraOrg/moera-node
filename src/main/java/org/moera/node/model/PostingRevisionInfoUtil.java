@@ -33,10 +33,10 @@ public class PostingRevisionInfoUtil {
         info.setBodySrcFormat(revision.getBodySrcFormat());
         info.setBody(new Body(revision.getBody()));
         info.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
-        var grantGenerator = options != null
+        var grantSupplier = options != null
             ? new MediaGrantGenerator(null, posting.getId().toString(), null, options)
             : null;
-        info.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, receiverName, grantGenerator));
+        info.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, receiverName, grantSupplier));
         info.setHeading(revision.getHeading());
         info.setDescription(revision.getDescription());
         if (!UpdateInfoUtil.isEmpty(revision)) {

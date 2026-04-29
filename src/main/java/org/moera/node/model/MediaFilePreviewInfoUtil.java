@@ -8,7 +8,7 @@ import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
-import org.moera.node.media.MediaGrantGenerator;
+import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.media.MimeUtil;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.media.MediaUtil;
@@ -19,7 +19,7 @@ public class MediaFilePreviewInfoUtil {
         MediaFilePreview preview,
         MediaFileOwner original,
         DirectServeConfig config,
-        MediaGrantGenerator grantGenerator
+        MediaGrantSupplier grantSupplier
     ) {
         MediaFilePreviewInfo info = new MediaFilePreviewInfo();
         info.setTargetWidth(preview.getWidth());
@@ -28,7 +28,7 @@ public class MediaFilePreviewInfoUtil {
         info.setWidth(preview.getMediaFile().getSizeX());
         info.setHeight(preview.getMediaFile().getSizeY());
         info.setOriginal(preview.isOriginal());
-        fillPath(info, original, grantGenerator);
+        fillPath(info, original, grantSupplier);
         fillDirectPath(info, config);
         return info;
     }
@@ -46,28 +46,28 @@ public class MediaFilePreviewInfoUtil {
     public static void fillPath(
         MediaFilePreviewInfo info,
         MediaFileOwner original,
-        MediaGrantGenerator grantGenerator
+        MediaGrantSupplier grantSupplier
     ) {
-        fillPath(info, original.getId().toString(), original.getMediaFile().getMimeType(), grantGenerator);
+        fillPath(info, original.getId().toString(), original.getMediaFile().getMimeType(), grantSupplier);
     }
 
     public static void fillPath(
         MediaFilePreviewInfo info,
         PrivateMediaFileInfo original,
-        MediaGrantGenerator grantGenerator
+        MediaGrantSupplier grantSupplier
     ) {
-        fillPath(info, original.getId(), original.getMimeType(), grantGenerator);
+        fillPath(info, original.getId(), original.getMimeType(), grantSupplier);
     }
 
     private static void fillPath(
         MediaFilePreviewInfo info,
         String originalId,
         String originalMimeType,
-        MediaGrantGenerator grantGenerator
+        MediaGrantSupplier grantSupplier
     ) {
         ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
-        String grant = grantGenerator != null
-            ? grantGenerator.generate(originalId, valid, false, null)
+        String grant = grantSupplier != null
+            ? grantSupplier.generate(originalId, valid, false, null)
             : null;
         String fileName = MimeUtil.fileName(originalId, originalMimeType);
         info.setPath(MediaUtil.privatePath(fileName, info.getTargetWidth(), grant));

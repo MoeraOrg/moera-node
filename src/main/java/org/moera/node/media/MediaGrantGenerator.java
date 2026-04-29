@@ -5,7 +5,7 @@ import java.security.PrivateKey;
 import org.moera.node.option.Options;
 import org.moera.node.util.ExtendedDuration;
 
-public class MediaGrantGenerator {
+public class MediaGrantGenerator implements MediaGrantSupplier {
 
     private final String nodeName;
     private final String postingId;
@@ -24,6 +24,7 @@ public class MediaGrantGenerator {
         this.signingKey = options.getPrivateKey("profile.signing-key");
     }
 
+    @Override
     public String generate(String mediaId, ExtendedDuration duration, boolean download, String fileName) {
         return MediaGrantUtil.generate(
             nodeName,
