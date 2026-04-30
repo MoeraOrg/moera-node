@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 908a6kU9RJLW7gqy7Pg8qI7CV9V2tqiOklZWfraPPPLGsFvrEutJaOte4MWLOVj
+\restrict 2ytmSnIUKewoCOVHjXhAJ7dfcwkqYcYu9w4a0MMx5efjOsoJxEnKw5BBR9GY3LK
 
 -- Dumped from database version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
@@ -1316,10 +1316,11 @@ CREATE TABLE public.media_file_owners (
     created_at timestamp without time zone NOT NULL,
     usage_count integer DEFAULT 0 NOT NULL,
     deadline timestamp without time zone,
-    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     usage_updated_at timestamp without time zone DEFAULT now() NOT NULL,
     permissions_updated_at timestamp without time zone DEFAULT now() NOT NULL,
-    title character varying(255)
+    title character varying(255),
+    malware_marks text DEFAULT ''::text NOT NULL,
+    unrestricted boolean DEFAULT false NOT NULL
 );
 
 
@@ -1690,10 +1691,11 @@ CREATE TABLE public.remote_media_cache (
     id uuid NOT NULL,
     remote_node_name character varying(63) NOT NULL,
     remote_media_id character varying(40) NOT NULL,
-    digest bytea NOT NULL,
+    digest bytea,
     media_file_id character varying(40),
     deadline timestamp without time zone NOT NULL,
-    node_id uuid
+    node_id uuid,
+    error smallint
 );
 
 
@@ -4323,5 +4325,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 908a6kU9RJLW7gqy7Pg8qI7CV9V2tqiOklZWfraPPPLGsFvrEutJaOte4MWLOVj
+\unrestrict 2ytmSnIUKewoCOVHjXhAJ7dfcwkqYcYu9w4a0MMx5efjOsoJxEnKw5BBR9GY3LK
 
