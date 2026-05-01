@@ -2,7 +2,6 @@ package org.moera.node.data;
 
 import java.sql.Timestamp;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -39,12 +38,6 @@ public interface MediaFileOwnerRepository extends JpaRepository<MediaFileOwner, 
     @Query("delete from MediaFileOwner mo where mo.deadline is not null and mo.deadline < ?1")
     @Modifying
     void deleteUnused(Timestamp deadline);
-
-    @Query(
-        "select mo from MediaFileOwner mo where mo.nodeId = ?1 and mo.ownerName is null"
-        + " and not exists (select p from Posting p where p.parentMedia = mo)"
-    )
-    List<MediaFileOwner> findWithoutPosting(UUID nodeId);
 
     @Query("select mo from MediaFileOwner mo where mo.usageUpdatedAt > mo.permissionsUpdatedAt")
     Page<MediaFileOwner> findOutdatedPermissions(Pageable pageable);

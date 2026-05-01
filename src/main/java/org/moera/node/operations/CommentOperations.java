@@ -82,6 +82,9 @@ public class CommentOperations {
     private MediaOperations mediaOperations;
 
     @Inject
+    private PostingOperations postingOperations;
+
+    @Inject
     private SheriffUserListOperations sheriffUserListOperations;
 
     @Inject
@@ -222,11 +225,12 @@ public class CommentOperations {
                 attachment = entryAttachmentRepository.save(attachment);
                 current.addAttachment(attachment);
 
+                Posting mediaPosting = mfo.getPostingByParentMediaEntry(comment);
+                if (mediaPosting == null) {
+                    mediaPosting = postingOperations.newPosting(mfo, comment);
+                }
                 if (mediaEntryUpdater != null) {
-                    Posting mediaPosting = mfo.getPosting(null);
-                    if (mediaPosting != null) {
-                        mediaEntryUpdater.accept(mediaPosting);
-                    }
+                    mediaEntryUpdater.accept(mediaPosting);
                 }
             }
         }

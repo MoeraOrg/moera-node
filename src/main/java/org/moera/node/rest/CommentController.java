@@ -932,7 +932,7 @@ public class CommentController {
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        List<Posting> attached = entryAttachmentRepository.findOwnAttachedPostings(
+        List<Posting> attached = entryAttachmentRepository.findAttachedPostings(
             requestContext.nodeId(), comment.getCurrentRevision().getId()
         );
         return attached.stream()

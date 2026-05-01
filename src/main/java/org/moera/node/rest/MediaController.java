@@ -50,7 +50,6 @@ import org.moera.node.model.PublicMediaFileInfoUtil;
 import org.moera.node.ocrspace.OcrSpace;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.EntryOperations;
-import org.moera.node.operations.PostingOperations;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -93,9 +92,6 @@ public class MediaController {
 
     @Inject
     private MediaOperations mediaOperations;
-
-    @Inject
-    private PostingOperations postingOperations;
 
     @Inject
     private EntryOperations entryOperations;
@@ -225,7 +221,6 @@ public class MediaController {
             MediaFileOwner mediaFileOwner = mediaOperations.own(
                 mediaFile, clientName, uploadedFileName(contentDisposition)
             );
-            mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
             if (isSuitableForOcr(mediaFile)) {
                 mediaFile.setRecognizeAt(Util.now());
             }

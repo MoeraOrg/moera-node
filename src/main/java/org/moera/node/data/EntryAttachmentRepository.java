@@ -38,18 +38,12 @@ public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment
 
     @Query(
         "select p from EntryAttachment ea"
-        + " left join ea.mediaFileOwner mfo full join mfo.postings p left join fetch p.currentRevision"
-        + " where mfo.nodeId = ?1 and ea.entryRevision.id = ?2 and p.receiverName is null and p is not null"
+        + " join ea.entryRevision er join er.entry e"
+        + " join ea.mediaFileOwner mfo join mfo.postings p left join fetch p.currentRevision"
+        + " where mfo.nodeId = ?1 and ea.entryRevision.id = ?2 and p.parentMediaEntry = e"
+        + " and p.deletedAt is null"
         + " order by ea.ordinal"
     )
-    List<Posting> findOwnAttachedPostings(UUID nodeId, UUID entryRevisionId);
-
-    @Query(
-        "select p from EntryAttachment ea"
-        + " left join ea.mediaFileOwner mfo full join mfo.postings p left join fetch p.currentRevision"
-        + " where mfo.nodeId = ?1 and ea.entryRevision.id = ?2 and p.receiverName = ?3 and p is not null"
-        + " order by ea.ordinal"
-    )
-    List<Posting> findReceivedAttachedPostings(UUID nodeId, UUID entryRevisionId, String receiverName);
+    List<Posting> findAttachedPostings(UUID nodeId, UUID entryRevisionId);
 
 }

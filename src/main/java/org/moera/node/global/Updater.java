@@ -18,15 +18,12 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionUpgrade;
 import org.moera.node.data.EntryRevisionUpgradeRepository;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.MediaFileOwner;
-import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.UpgradeType;
 import org.moera.node.domain.Domains;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.operations.PostingOperations;
 import org.moera.node.option.Options;
 import org.moera.node.rest.task.upgrade.AllRemoteAvatarsDownloadTask;
 import org.moera.node.rest.task.upgrade.AllRemoteGendersDownloadTask;
@@ -71,16 +68,10 @@ public class Updater {
     private MediaFileRepository mediaFileRepository;
 
     @Inject
-    private MediaFileOwnerRepository mediaFileOwnerRepository;
-
-    @Inject
     private ContactUpgradeRepository contactUpgradeRepository;
 
     @Inject
     private MediaOperations mediaOperations;
-
-    @Inject
-    private PostingOperations postingOperations;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -214,7 +205,6 @@ public class Updater {
 
     private void executeMediaUpgrades() {
         updateMediaFileDigests();
-        createMediaPostings();
         renamePaddedIds();
     }
 
@@ -232,25 +222,6 @@ public class Updater {
             mediaFile.setDigest(mediaOperations.digest(mediaFile));
         } catch (IOException e) {
             log.warn("Cannot calculate digest of media file {}: {}", mediaFile.getId(), e.getMessage());
-        }
-    }
-
-    private void createMediaPostings() {
-        for (String domainName : domains.getAllDomainNames()) {
-            UUID nodeId = domains.getDomainNodeId(domainName);
-            String nodeName = domains.getDomainOptions(domainName).nodeName();
-            if (nodeName == null) {
-                continue;
-            }
-            universalContext.associate(nodeId);
-            List<MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findWithoutPosting(nodeId);
-            for (MediaFileOwner mediaFileOwner : mediaFileOwners) {
-                Posting posting = postingOperations.newPosting(mediaFileOwner);
-                mediaFileOwner.addPosting(posting);
-                mediaOperations.updatePermissions(mediaFileOwner);
-                log.info("Created posting {} for media {}",
-                        mediaFileOwner.getPosting(null).getId(), mediaFileOwner.getId());
-            }
         }
     }
 

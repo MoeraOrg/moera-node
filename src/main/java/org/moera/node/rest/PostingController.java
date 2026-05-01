@@ -477,13 +477,9 @@ public class PostingController {
         if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        List<Posting> attached = posting.isOriginal()
-            ? entryAttachmentRepository.findOwnAttachedPostings(
-                requestContext.nodeId(), posting.getCurrentRevision().getId()
-            )
-            : entryAttachmentRepository.findReceivedAttachedPostings(
-                requestContext.nodeId(), posting.getCurrentRevision().getId(), posting.getReceiverName()
-            );
+        List<Posting> attached = entryAttachmentRepository.findAttachedPostings(
+            requestContext.nodeId(), posting.getCurrentRevision().getId()
+        );
         return attached.stream()
             .map(p -> withBlockings(withClientReaction(
                 PostingInfoUtil.build(

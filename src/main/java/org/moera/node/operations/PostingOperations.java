@@ -125,10 +125,10 @@ public class PostingOperations {
         return posting;
     }
 
-    public Posting newPosting(MediaFileOwner mediaFileOwner) {
+    public Posting newPosting(MediaFileOwner mediaFileOwner, Entry parentMediaEntry) {
         Posting posting = newPosting(mediaFileOwner.getOwnerName());
         Principal mediaViewPrincipal = mediaFileOwner.isUnrestricted() ? Principal.PUBLIC : Principal.ADMIN;
-        posting.setParentMedia(mediaFileOwner);
+        mediaFileOwner.addPosting(posting, parentMediaEntry);
         posting.setViewPrincipal(mediaViewPrincipal);
         posting.setViewCommentsPrincipal(mediaViewPrincipal);
         posting.setAddCommentPrincipal(mediaViewPrincipal);
@@ -194,11 +194,12 @@ public class PostingOperations {
                 attachment = entryAttachmentRepository.save(attachment);
                 current.addAttachment(attachment);
 
+                Posting mediaPosting = mfo.getPostingByParentMediaEntry(posting);
+                if (mediaPosting == null) {
+                    mediaPosting = newPosting(mfo, posting);
+                }
                 if (mediaEntryUpdater != null) {
-                    Posting mediaPosting = mfo.getPosting(posting.getReceiverName());
-                    if (mediaPosting != null) {
-                        mediaEntryUpdater.accept(mediaPosting);
-                    }
+                    mediaEntryUpdater.accept(mediaPosting);
                 }
             }
         }

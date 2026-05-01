@@ -123,14 +123,31 @@ public class MediaFileOwner {
                 .orElse(null);
     }
 
+    public Posting getPostingByParentMediaEntry(Entry parentMediaEntry) {
+        UUID parentMediaEntryId = parentMediaEntry != null ? parentMediaEntry.getId() : null;
+        return postings.stream()
+                .filter(p -> Objects.equals(
+                    p.getParentMediaEntry() != null ? p.getParentMediaEntry().getId() : null,
+                    parentMediaEntryId
+                ))
+                .findFirst()
+                .orElse(null);
+    }
+
     public void addPosting(Posting posting) {
+        addPosting(posting, null);
+    }
+
+    public void addPosting(Posting posting, Entry parentMediaEntry) {
         postings.add(posting);
         posting.setParentMedia(this);
+        posting.setParentMediaEntry(parentMediaEntry);
     }
 
     public void removePosting(Posting posting) {
         postings.removeIf(sr -> sr.getId().equals(posting.getId()));
         posting.setParentMedia(null);
+        posting.setParentMediaEntry(null);
     }
 
     public Timestamp getCreatedAt() {

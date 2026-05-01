@@ -23,6 +23,7 @@ import org.moera.lib.node.types.WhoAmI;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
+import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
@@ -162,6 +163,7 @@ public class Picker extends Task {
                 pick.getRemotePostingId(),
                 pick.getFeedName(),
                 pick.getMediaFileOwner(),
+                pick.getParentMediaEntry(),
                 pick.isRecommended(),
                 pick.isViewed(),
                 pick.getPublishAt(),
@@ -181,6 +183,7 @@ public class Picker extends Task {
         String remotePostingId,
         String feedName,
         MediaFileOwner parentMedia,
+        Entry parentMediaEntry,
         boolean recommended,
         boolean viewed,
         Timestamp publishAt,
@@ -215,6 +218,7 @@ public class Picker extends Task {
             posting.setId(UUID.randomUUID());
             posting.setNodeId(nodeId);
             posting.setParentMedia(parentMedia);
+            posting.setParentMediaEntry(parentMediaEntry);
             posting.setReceiverName(receiverName);
             posting.setReceiverFullName(receiverFullName);
             posting.setReceiverGender(receiverGender);
@@ -310,17 +314,18 @@ public class Picker extends Task {
                 revision.addAttachment(attachment);
 
                 if (attach.getMedia().getPostingId() != null) {
-                    picks.add(pickMediaPosting(media, attach.getMedia().getPostingId()));
+                    picks.add(pickMediaPosting(media, revision.getEntry(), attach.getMedia().getPostingId()));
                 }
             }
         }
     }
 
-    private Pick pickMediaPosting(MediaFileOwner media, String remotePostingId) {
+    private Pick pickMediaPosting(MediaFileOwner media, Entry parentMediaEntry, String remotePostingId) {
         Pick pick = new Pick();
         pick.setRemoteNodeName(remoteNodeName);
         pick.setRemotePostingId(remotePostingId);
         pick.setMediaFileOwner(media);
+        pick.setParentMediaEntry(parentMediaEntry);
         return pick;
     }
 

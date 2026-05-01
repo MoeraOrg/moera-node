@@ -39,6 +39,9 @@ public class Pick {
     @ManyToOne
     private MediaFileOwner mediaFileOwner;
 
+    @ManyToOne
+    private Entry parentMediaEntry;
+
     private boolean recommended;
 
     private boolean viewed;
@@ -107,6 +110,14 @@ public class Pick {
 
     public void setMediaFileOwner(MediaFileOwner mediaFileOwner) {
         this.mediaFileOwner = mediaFileOwner;
+    }
+
+    public Entry getParentMediaEntry() {
+        return parentMediaEntry;
+    }
+
+    public void setParentMediaEntry(Entry parentMediaEntry) {
+        this.parentMediaEntry = parentMediaEntry;
     }
 
     public boolean isRecommended() {
