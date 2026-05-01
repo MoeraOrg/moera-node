@@ -138,13 +138,9 @@ public class StoryOperations {
     }
 
     public void unpublish(UUID entryId) {
-        unpublish(entryId, universalContext.nodeId(), universalContext::send);
-    }
-
-    public void unpublish(UUID entryId, UUID nodeId, Consumer<Liberin> liberinSender) {
-        storyRepository.findByEntryId(nodeId, entryId).stream()
+        storyRepository.findByEntryId(universalContext.nodeId(), entryId).stream()
             .filter(story -> story.getFeedName() != null)
-            .peek(story -> liberinSender.accept(new StoryDeletedLiberin(story).withNodeId(nodeId)))
+            .peek(story -> universalContext.send(new StoryDeletedLiberin(story)))
             .forEach(storyRepository::delete);
     }
 

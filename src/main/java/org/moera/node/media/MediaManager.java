@@ -25,14 +25,13 @@ import org.moera.node.api.node.MoeraNodeLocalStorageException;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.config.Config;
 import org.moera.node.data.Avatar;
-import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.RemoteMediaCache;
-import org.moera.node.data.RemoteMediaError;
 import org.moera.node.data.RemoteMediaCacheRepository;
+import org.moera.node.data.RemoteMediaError;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.PostingFeaturesUtil;
@@ -62,9 +61,6 @@ public class MediaManager {
 
     @Inject
     private MediaFileOwnerRepository mediaFileOwnerRepository;
-
-    @Inject
-    private EntryAttachmentRepository entryAttachmentRepository;
 
     @Inject
     private RemoteMediaCacheRepository remoteMediaCacheRepository;
@@ -337,10 +333,7 @@ public class MediaManager {
             .findByAdminFile(universalContext.nodeId(), mediaFileId);
         for (MediaFileOwner mediaFileOwner : mediaFileOwners) {
             if (entryId != null) {
-                int count = entryAttachmentRepository.countByEntryIdAndMedia(
-                    universalContext.nodeId(), entryId, mediaFileOwner.getId()
-                );
-                if (count > 0) {
+                if (mediaOperations.isAttached(mediaFileOwner, entryId)) {
                     return mediaFileOwner;
                 }
             } else {

@@ -16,9 +16,12 @@ import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntryType;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.media.MediaGrantSupplier;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.MediaAttachmentUtil;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
 import org.moera.node.model.PrivateMediaFileInfoUtil;
@@ -27,7 +30,6 @@ import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
@@ -45,6 +47,9 @@ public class EntryOperations implements MediaAttachmentsProvider {
     private RequestCounter requestCounter;
 
     @Inject
+    private UniversalContext universalContext;
+
+    @Inject
     private Domains domains;
 
     @Inject
@@ -52,6 +57,9 @@ public class EntryOperations implements MediaAttachmentsProvider {
 
     @Inject
     private EntryAttachmentRepository entryAttachmentRepository;
+
+    @Inject
+    private MediaOperations mediaOperations;
 
     @Inject
     private Transaction tx;
@@ -68,32 +76,37 @@ public class EntryOperations implements MediaAttachmentsProvider {
             log.info("Purging outdated revisions");
 
             for (String domainName : domains.getAllDomainNames()) {
-                UUID nodeId = domains.getDomainNodeId(domainName);
-                purgeOutdatedRevisions(nodeId, domainName, EntryType.POSTING, true, "posting.revision.lifetime");
-                purgeOutdatedRevisions(nodeId, domainName, EntryType.POSTING, false, "posting.picked.revision.lifetime");
-                purgeOutdatedRevisions(nodeId, domainName, EntryType.COMMENT, true, "comment.revision.lifetime");
+                universalContext.associate(domains.getDomainNodeId(domainName));
+                purgeOutdatedRevisions(EntryType.POSTING, true, "posting.revision.lifetime");
+                purgeOutdatedRevisions(EntryType.POSTING, false, "posting.picked.revision.lifetime");
+                purgeOutdatedRevisions(EntryType.COMMENT, true, "comment.revision.lifetime");
             }
         }
     }
 
     private void purgeOutdatedRevisions(
-        UUID nodeId, String domainName, EntryType entryType, boolean original, String optionName
+        EntryType entryType, boolean original, String optionName
     ) {
-        MDC.put("domain", domainName);
-
-        ExtendedDuration lifetime = domains.getDomainOptions(domainName).getDuration(optionName);
+        ExtendedDuration lifetime = universalContext.getOptions().getDuration(optionName);
         if (lifetime.isNever()) {
             return;
         }
         Timestamp createdBefore = Timestamp.from(Instant.now().minus(lifetime.getDuration()));
         Set<UUID> entryIds = original
-                ? entryRevisionRepository.findOriginalEntriesWithOutdated(nodeId, entryType, createdBefore)
-                : entryRevisionRepository.findNotOriginalEntriesWithOutdated(nodeId, entryType, createdBefore);
+            ? entryRevisionRepository.findOriginalEntriesWithOutdated(
+                universalContext.nodeId(), entryType, createdBefore
+            )
+            : entryRevisionRepository.findNotOriginalEntriesWithOutdated(
+                universalContext.nodeId(), entryType, createdBefore
+            );
         for (UUID entryId : entryIds) {
             log.info("Purging outdated revisions of entry {}", entryId);
             tx.executeWrite(() -> {
+                Set<MediaFileOwner> affectedMedia =
+                    entryAttachmentRepository.findMediaByOutdatedRevisions(entryId, createdBefore);
                 entryRevisionRepository.deleteOutdated(entryId, createdBefore);
                 entryRevisionRepository.updateTotalRevisions(entryId);
+                mediaOperations.deleteObsoleteMediaPostings(affectedMedia);
             });
         }
     }

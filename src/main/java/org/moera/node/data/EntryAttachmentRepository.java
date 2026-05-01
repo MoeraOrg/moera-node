@@ -1,5 +1,6 @@
 package org.moera.node.data;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -18,10 +19,24 @@ public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment
     Set<EntryAttachment> findByEntryRevision(UUID entryRevisionId);
 
     @Query(
-        "select count(*) from EntryAttachment ea left join ea.entryRevision er left join er.entry e"
-        + " where e.nodeId = ?1 and er.entry.id = ?2 and ea.mediaFileOwner.id = ?3"
+        "select count(*) from EntryAttachment ea left join ea.entryRevision r"
+        + " where r.entry.id = ?1 and ea.mediaFileOwner.id = ?2"
     )
-    int countByEntryIdAndMedia(UUID nodeId, UUID entryId, UUID mediaId);
+    int countByEntryIdAndMedia(UUID entryId, UUID mediaId);
+
+    @Query(
+        "select distinct mfo from EntryAttachment ea join ea.entryRevision r"
+        + " join ea.mediaFileOwner mfo left join fetch mfo.postings p left join fetch p.currentRevision"
+        + " where r.entry.id = ?1"
+    )
+    Set<MediaFileOwner> findMediaByEntry(UUID entryId);
+
+    @Query(
+        "select distinct mfo from EntryAttachment ea join ea.entryRevision r"
+        + " join ea.mediaFileOwner mfo left join fetch mfo.postings p left join fetch p.currentRevision"
+        + " where r.entry.id = ?1 and r.createdAt < ?2 and " + EntryRevisionRepository.CONDITION_UNUSED
+    )
+    Set<MediaFileOwner> findMediaByOutdatedRevisions(UUID entryId, Timestamp createdBefore);
 
     @Query(
         "select e from EntryAttachment ea join ea.entryRevision er join er.entry e"

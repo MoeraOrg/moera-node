@@ -54,12 +54,13 @@ import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.config.Config;
+import org.moera.node.data.ChildOperationsUtil;
 import org.moera.node.data.Comment;
 import org.moera.node.data.DraftRepository;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachmentRepository;
-import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntryRepository;
+import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -79,6 +80,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.operations.OcrJob;
+import org.moera.node.operations.PostingOperations;
 import org.moera.node.task.Jobs;
 import org.moera.node.userlist.MalwareListOperations;
 import org.moera.node.util.DigestingOutputStream;
@@ -86,6 +88,7 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
@@ -145,6 +148,10 @@ public class MediaOperations {
 
     @Inject
     private MalwareListOperations malwareListOperations;
+
+    @Inject
+    @Lazy
+    private PostingOperations postingOperations;
 
     @Inject
     private Transaction tx;
@@ -425,6 +432,14 @@ public class MediaOperations {
         return view;
     }
 
+    public void updatePermissions(Entry entry) {
+        if (entry == null) {
+            return;
+        }
+
+        entryAttachmentRepository.findMediaByEntry(entry.getId()).forEach(this::updatePermissions);
+    }
+
     public void updatePermissions(MediaFileOwner mediaFileOwner) {
         if (mediaFileOwner == null) {
             return;
@@ -438,71 +453,129 @@ public class MediaOperations {
                 .anyMatch(Principal::isPublic)
         );
         mediaFileOwner.setPermissionsUpdatedAt(Util.now());
-        for (Posting posting : mediaFileOwner.getPostings()) {
-            List<Entry> list = entries.stream()
-                .filter(e -> Objects.equals(e.getReceiverName(), posting.getReceiverName()))
-                .toList();
-            list.forEach(e -> {
-                posting.setRejectedReactionsPositive(e.getRejectedReactionsPositive());
-                posting.setRejectedReactionsNegative(e.getRejectedReactionsNegative());
-                posting.setChildRejectedReactionsPositive(e.getChildRejectedReactionsPositive());
-                posting.setChildRejectedReactionsNegative(e.getChildRejectedReactionsNegative());
-            });
-            Principal principal = list.stream()
-                .map(this::entryViewPrincipal)
-                .reduce(Principal.NONE, Principal::union);
-            posting.setViewPrincipal(principal);
-            principal = list.stream()
-                .map(Entry::getViewCommentsPrincipal)
-                .reduce(Principal.NONE, Principal::union);
-            posting.setViewCommentsPrincipal(principal);
-            principal = list.stream()
-                .map(Entry::getAddCommentPrincipal)
-                .reduce(Principal.NONE, Principal::union);
-            posting.setAddCommentPrincipal(principal);
-            principal = list.stream()
-                .map(Entry::getTrustCommentPrincipal)
-                .reduce(Principal.NONE, Principal::union);
-            posting.setTrustCommentPrincipal(principal);
-            principal = list.stream()
-                .map(Entry::getViewReactionsPrincipal)
-                .reduce(Principal.NONE, Principal::union);
-            posting.setViewReactionsPrincipal(principal);
-            principal = list.stream()
-                .map(Entry::getViewNegativeReactionsPrincipal)
-                .reduce(Principal.NONE, Principal::union);
-            posting.setViewNegativeReactionsPrincipal(principal);
-            principal = list.stream()
-                .map(Entry::getViewReactionTotalsPrincipal)
-                .reduce(Principal.NONE, Principal::union);
-            posting.setViewReactionTotalsPrincipal(principal);
-            principal = list.stream()
-                .map(Entry::getViewNegativeReactionTotalsPrincipal)
-                .reduce(Principal.NONE, Principal::union);
-            posting.setViewNegativeReactionTotalsPrincipal(principal);
-            principal = list.stream()
-                .map(Entry::getViewReactionRatiosPrincipal)
-                .reduce(Principal.NONE, Principal::union);
-            posting.setViewReactionRatiosPrincipal(principal);
-            principal = list.stream()
-                .map(Entry::getViewNegativeReactionRatiosPrincipal)
-                .reduce(Principal.NONE, Principal::union);
-            posting.setViewNegativeReactionTotalsPrincipal(principal);
-            principal = list.stream()
-                .map(Entry::getAddReactionPrincipal)
-                .reduce(Principal.NONE, Principal::union);
-            posting.setAddReactionPrincipal(principal);
-            principal = list.stream()
-                .map(Entry::getAddNegativeReactionPrincipal)
-                .reduce(Principal.NONE, Principal::union);
-            posting.setAddNegativeReactionPrincipal(principal);
-        }
     }
 
-    public void updatePermissions(Entry entry) {
-        if (entry.getCurrentRevision() != null) {
-            entry.getCurrentRevision().getAttachments().forEach(ea -> updatePermissions(ea.getMediaFileOwner()));
+    public void deleteObsoleteMediaPostings(Collection<MediaFileOwner> mediaFileOwners) {
+        mediaFileOwners.forEach(mediaFileOwner -> {
+            updatePermissions(mediaFileOwner);
+            postingOperations.deletePostings(obsoleteMediaPostings(mediaFileOwner));
+        });
+    }
+
+    public List<Posting> obsoleteMediaPostings(Entry entry) {
+        if (entry == null) {
+            return Collections.emptyList();
         }
+
+        List<Posting> obsoletePostings = new ArrayList<>();
+        entryAttachmentRepository.findMediaByEntry(entry.getId())
+            .forEach(mediaFileOwner -> obsoletePostings.addAll(obsoleteMediaPostings(mediaFileOwner)));
+        return obsoletePostings;
+    }
+
+    private List<Posting> obsoleteMediaPostings(MediaFileOwner mediaFileOwner) {
+        if (mediaFileOwner == null) {
+            return Collections.emptyList();
+        }
+
+        List<Posting> obsoletePostings = new ArrayList<>();
+        for (Posting posting : mediaFileOwner.getPostings()) {
+            if (posting.getDeletedAt() != null) {
+                continue;
+            }
+
+            Entry parent = posting.getParentMediaEntry();
+            if (parent == null) {
+                restrictMediaPostingPermissions(posting);
+                continue;
+            }
+            if (parent.getDeletedAt() != null || !isAttached(mediaFileOwner, parent)) {
+                obsoletePostings.add(posting);
+                continue;
+            }
+
+            inheritMediaPostingPermissions(posting, parent);
+        }
+        return obsoletePostings;
+    }
+
+    public boolean isAttached(MediaFileOwner mediaFileOwner, Entry parent) {
+        return isAttached(mediaFileOwner, parent.getId());
+    }
+
+    public boolean isAttached(MediaFileOwner mediaFileOwner, UUID parentEntryId) {
+        return entryAttachmentRepository.countByEntryIdAndMedia(parentEntryId, mediaFileOwner.getId()) != 0;
+    }
+
+    private void inheritMediaPostingPermissions(Posting posting, Entry parent) {
+        posting.setRejectedReactionsPositive(parent.getRejectedReactionsPositive());
+        posting.setRejectedReactionsNegative(parent.getRejectedReactionsNegative());
+        posting.setChildRejectedReactionsPositive(parent.getChildRejectedReactionsPositive());
+        posting.setChildRejectedReactionsNegative(parent.getChildRejectedReactionsNegative());
+
+        posting.setParentViewPrincipal(Principal.UNSET);
+        posting.setViewPrincipal(entryViewPrincipal(parent));
+        posting.setParentEditPrincipal(parent.getEditCompound());
+        posting.setParentDeletePrincipal(parent.getDeleteCompound());
+        posting.setParentViewCommentsPrincipal(Principal.UNSET);
+        posting.setViewCommentsPrincipal(parent.getViewCommentsCompound());
+        posting.setParentAddCommentPrincipal(Principal.UNSET);
+        posting.setAddCommentPrincipal(parent.getAddCommentCompound());
+        posting.setParentTrustCommentPrincipal(Principal.UNSET);
+        posting.setTrustCommentPrincipal(parent.getTrustCommentCompound());
+        posting.setParentOverrideCommentPrincipal(parent.getOverrideCommentCompound());
+        posting.setParentViewReactionsPrincipal(Principal.UNSET);
+        posting.setViewReactionsPrincipal(parent.getViewReactionsCompound());
+        posting.setParentViewNegativeReactionsPrincipal(Principal.UNSET);
+        posting.setViewNegativeReactionsPrincipal(parent.getViewNegativeReactionsCompound());
+        posting.setParentViewReactionTotalsPrincipal(Principal.UNSET);
+        posting.setViewReactionTotalsPrincipal(parent.getViewReactionTotalsCompound());
+        posting.setParentViewNegativeReactionTotalsPrincipal(Principal.UNSET);
+        posting.setViewNegativeReactionTotalsPrincipal(parent.getViewNegativeReactionTotalsCompound());
+        posting.setParentViewReactionRatiosPrincipal(Principal.UNSET);
+        posting.setViewReactionRatiosPrincipal(parent.getViewReactionRatiosCompound());
+        posting.setParentViewNegativeReactionRatiosPrincipal(Principal.UNSET);
+        posting.setViewNegativeReactionRatiosPrincipal(parent.getViewNegativeReactionRatiosCompound());
+        posting.setParentAddReactionPrincipal(Principal.UNSET);
+        posting.setAddReactionPrincipal(parent.getAddReactionCompound());
+        posting.setParentAddNegativeReactionPrincipal(Principal.UNSET);
+        posting.setAddNegativeReactionPrincipal(parent.getAddNegativeReactionCompound());
+        posting.setParentOverrideReactionPrincipal(parent.getOverrideReactionCompound());
+        posting.setParentOverrideCommentReactionPrincipal(parent.getOverrideCommentReactionCompound());
+        ChildOperationsUtil.copyAll(posting, parent);
+    }
+
+    private void restrictMediaPostingPermissions(Posting posting) {
+        posting.setParentViewPrincipal(Principal.UNSET);
+        posting.setViewPrincipal(Principal.SECRET);
+        posting.setParentEditPrincipal(Principal.UNSET);
+        posting.setParentDeletePrincipal(Principal.SECRET);
+        posting.setParentViewCommentsPrincipal(Principal.UNSET);
+        posting.setViewCommentsPrincipal(Principal.ADMIN);
+        posting.setParentAddCommentPrincipal(Principal.UNSET);
+        posting.setAddCommentPrincipal(Principal.NONE);
+        posting.setParentTrustCommentPrincipal(Principal.UNSET);
+        posting.setTrustCommentPrincipal(Principal.NONE);
+        posting.setParentOverrideCommentPrincipal(Principal.NONE);
+        posting.setParentViewReactionsPrincipal(Principal.UNSET);
+        posting.setViewReactionsPrincipal(Principal.ADMIN);
+        posting.setParentViewNegativeReactionsPrincipal(Principal.UNSET);
+        posting.setViewNegativeReactionsPrincipal(Principal.ADMIN);
+        posting.setParentViewReactionTotalsPrincipal(Principal.UNSET);
+        posting.setViewReactionTotalsPrincipal(Principal.ADMIN);
+        posting.setParentViewNegativeReactionTotalsPrincipal(Principal.UNSET);
+        posting.setViewNegativeReactionTotalsPrincipal(Principal.ADMIN);
+        posting.setParentViewReactionRatiosPrincipal(Principal.UNSET);
+        posting.setViewReactionRatiosPrincipal(Principal.ADMIN);
+        posting.setParentViewNegativeReactionRatiosPrincipal(Principal.UNSET);
+        posting.setViewNegativeReactionRatiosPrincipal(Principal.ADMIN);
+        posting.setParentAddReactionPrincipal(Principal.UNSET);
+        posting.setAddReactionPrincipal(Principal.NONE);
+        posting.setParentAddNegativeReactionPrincipal(Principal.UNSET);
+        posting.setAddNegativeReactionPrincipal(Principal.NONE);
+        posting.setParentOverrideReactionPrincipal(Principal.NONE);
+        posting.setParentOverrideCommentReactionPrincipal(Principal.NONE);
+        ChildOperationsUtil.setRestrictive(posting);
     }
 
     public void mediaTextUpdated(MediaFileOwner mediaFileOwner) {

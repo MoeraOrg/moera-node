@@ -6,7 +6,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -34,18 +37,14 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
 import org.moera.node.domain.Domains;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
-import org.moera.node.global.RequestContext;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.liberin.Liberin;
-import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
 import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.PostingTextUtil;
-import org.moera.node.option.Options;
 import org.moera.node.text.MediaExtractor;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Transaction;
@@ -66,9 +65,6 @@ public class PostingOperations {
 
     @Inject
     private RequestCounter requestCounter;
-
-    @Inject
-    private RequestContext requestContext;
 
     @Inject
     private UniversalContext universalContext;
@@ -93,9 +89,6 @@ public class PostingOperations {
 
     @Inject
     private TimelinePublicPageOperations timelinePublicPageOperations;
-
-    @Inject
-    private LiberinManager liberinManager;
 
     @Inject
     private Transaction tx;
@@ -165,14 +158,18 @@ public class PostingOperations {
         Consumer<EntryRevision> revisionUpdater,
         Consumer<Entry> mediaEntryUpdater
     ) {
+        List<MediaFileOwner> affectedMedia = new ArrayList<>(media);
         EntryRevision latest = posting.getCurrentRevision();
         if (latest != null) {
             if (isNothingChanged != null && isNothingChanged.test(latest)) {
                 posting = postingRepository.saveAndFlush(posting);
-                updateRelatedObjects(posting);
+                updateRelatedObjects(posting, Collections.emptyList());
                 return posting;
             }
             if (latest.getSignature() == null) {
+                latest.getAttachments().stream()
+                    .map(EntryAttachment::getMediaFileOwner)
+                    .forEach(affectedMedia::add);
                 posting.removeRevision(latest);
                 posting.setTotalRevisions(posting.getTotalRevisions() - 1);
                 posting.setCurrentRevision(null);
@@ -210,7 +207,7 @@ public class PostingOperations {
 
         storyOperations.publish(posting, publications);
 
-        updateRelatedObjects(posting);
+        updateRelatedObjects(posting, affectedMedia);
 
         return posting;
     }
@@ -230,8 +227,9 @@ public class PostingOperations {
         }
     }
 
-    private void updateRelatedObjects(Posting posting) {
+    private void updateRelatedObjects(Posting posting, Collection<MediaFileOwner> affectedMedia) {
         mediaOperations.updatePermissions(posting);
+        mediaOperations.deleteObsoleteMediaPostings(affectedMedia);
 
         if (posting.getViewCompound().isPublic()) {
             Story timelineStory = posting.getStory(Feed.TIMELINE);
@@ -277,12 +275,8 @@ public class PostingOperations {
     }
 
     public void deletePosting(Posting posting) {
-        deletePosting(posting, requestContext.getOptions());
-    }
-
-    private void deletePosting(Posting posting, Options options) {
         posting.setDeletedAt(Util.now());
-        ExtendedDuration postingTtl = options.getDuration("posting.deleted.lifetime");
+        ExtendedDuration postingTtl = universalContext.getOptions().getDuration("posting.deleted.lifetime");
         if (!postingTtl.isNever()) {
             posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl.getDuration())));
         }
@@ -291,7 +285,25 @@ public class PostingOperations {
             posting.getCurrentRevision().setDeletedAt(Util.now());
         }
         posting = postingRepository.saveAndFlush(posting);
-        mediaOperations.updatePermissions(posting);
+
+        if (posting.getParentMedia() == null) {
+            mediaOperations.updatePermissions(posting);
+            deletePostings(mediaOperations.obsoleteMediaPostings(posting));
+        }
+    }
+
+    public void deletePostings(Collection<Posting> postings) {
+        Set<UUID> deleted = new HashSet<>();
+        for (Posting posting : postings) {
+            if (posting == null || posting.getDeletedAt() != null || !deleted.add(posting.getId())) {
+                continue;
+            }
+
+            EntryRevision latest = posting.getCurrentRevision();
+            deletePosting(posting);
+            storyOperations.unpublish(posting.getId());
+            universalContext.send(new PostingDeletedLiberin(posting, latest));
+        }
     }
 
     public void deletePickedPosting(Posting posting) {
@@ -304,7 +316,7 @@ public class PostingOperations {
 
             universalContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
         } else {
-            deletePosting(posting, universalContext.getOptions());
+            deletePosting(posting);
             storyOperations.unpublish(posting.getId());
 
             universalContext.send(new PostingDeletedLiberin(posting, latest));
@@ -351,17 +363,15 @@ public class PostingOperations {
             log.info("Purging unlinked postings");
 
             for (String domainName : domains.getAllDomainNames()) {
-                Options options = domains.getDomainOptions(domainName);
-                List<Liberin> liberinList = new ArrayList<>();
+                universalContext.associate(domains.getDomainNodeId(domainName));
                 tx.executeWrite(() ->
-                    postingRepository.findUnlinked(options.nodeId()).forEach(posting -> {
+                    postingRepository.findUnlinked(universalContext.nodeId()).forEach(posting -> {
                         log.info("Deleting unlinked posting {}", posting.getId());
                         EntryRevision latest = posting.getCurrentRevision();
-                        deletePosting(posting, options);
-                        liberinList.add(new PostingDeletedLiberin(posting, latest).withNodeId(options.nodeId()));
+                        deletePosting(posting);
+                        universalContext.send(new PostingDeletedLiberin(posting, latest));
                     })
                 );
-                liberinList.forEach(liberinManager::send);
             }
         }
     }
@@ -371,8 +381,6 @@ public class PostingOperations {
         try (var ignored = requestCounter.allot()) {
             log.info("Purging expired unsigned postings");
 
-            List<Liberin> liberins = new ArrayList<>();
-
             tx.executeWrite(() -> {
                 List<Posting> postings = postingRepository.findExpiredUnsigned(Util.now());
                 for (Posting posting : postings) {
@@ -380,10 +388,10 @@ public class PostingOperations {
                     EntryRevision latest = posting.getCurrentRevision();
                     if (posting.getDeletedAt() != null || posting.getTotalRevisions() <= 1) {
                         log.debug("Purging expired unsigned posting {}", LogUtil.format(posting.getId()));
-                        storyOperations.unpublish(posting.getId(), posting.getNodeId(), liberins::add);
+                        storyOperations.unpublish(posting.getId());
                         postingRepository.delete(posting);
 
-                        liberins.add(new PostingDeletedLiberin(posting, latest).withNodeId(posting.getNodeId()));
+                        universalContext.send(new PostingDeletedLiberin(posting, latest));
                     } else {
                         EntryRevision revision = posting.getRevisions().stream()
                             .min(Comparator.comparing(EntryRevision::getCreatedAt))
@@ -394,15 +402,11 @@ public class PostingOperations {
                             posting.setCurrentRevision(revision);
                             posting.setTotalRevisions(posting.getTotalRevisions() - 1);
 
-                            liberins
-                                .add(new PostingUpdatedLiberin(posting, latest, posting.getViewE())
-                                .withNodeId(posting.getNodeId()));
+                            universalContext.send(new PostingUpdatedLiberin(posting, latest, posting.getViewE()));
                         }
                     }
                 }
             });
-
-            liberins.forEach(liberinManager::send);
         }
     }
 

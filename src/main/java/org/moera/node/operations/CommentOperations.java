@@ -6,6 +6,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -195,14 +197,18 @@ public class CommentOperations {
         Consumer<EntryRevision> revisionUpdater,
         Consumer<Entry> mediaEntryUpdater
     ) {
+        List<MediaFileOwner> affectedMedia = new ArrayList<>(media);
         EntryRevision latest = comment.getCurrentRevision();
         if (latest != null) {
             if (isNothingChanged != null && isNothingChanged.test(latest)) {
                 comment = commentRepository.saveAndFlush(comment);
-                updateRelatedObjects(comment);
+                updateRelatedObjects(comment, Collections.emptyList());
                 return comment;
             }
             if (latest.getSignature() == null) {
+                latest.getAttachments().stream()
+                    .map(EntryAttachment::getMediaFileOwner)
+                    .forEach(affectedMedia::add);
                 comment.removeRevision(latest);
                 comment.setTotalRevisions(comment.getTotalRevisions() - 1);
                 comment.setCurrentRevision(null);
@@ -239,7 +245,7 @@ public class CommentOperations {
         comment = commentRepository.saveAndFlush(comment);
         signIfOwnedOrAnonymous(comment);
 
-        updateRelatedObjects(comment);
+        updateRelatedObjects(comment, affectedMedia);
 
         return comment;
     }
@@ -299,8 +305,9 @@ public class CommentOperations {
         }
     }
 
-    private void updateRelatedObjects(Comment comment) {
+    private void updateRelatedObjects(Comment comment, Collection<MediaFileOwner> affectedMedia) {
         mediaOperations.updatePermissions(comment);
+        mediaOperations.deleteObsoleteMediaPostings(affectedMedia);
 
         if (
             comment.getPosting().getViewCompound().isPublic()
@@ -339,6 +346,9 @@ public class CommentOperations {
                 LogUtil.format(comment.getId())
             );
         }
+
+        mediaOperations.updatePermissions(comment);
+        postingOperations.deletePostings(mediaOperations.obsoleteMediaPostings(comment));
     }
 
     @Scheduled(fixedDelayString = "PT15M")
