@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import jakarta.inject.Inject;
 
+import org.moera.node.global.UniversalContext;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -16,6 +17,9 @@ public class Transaction {
 
     @Inject
     private PlatformTransactionManager txManager;
+
+    @Inject
+    private UniversalContext universalContext;
 
     public <T> T executeReadWithExceptions(Callable<T> inside) throws Exception {
         return executeWithExceptions(inside, true);
@@ -230,7 +234,9 @@ public class Transaction {
         DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
         definition.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         definition.setReadOnly(readOnly);
-        return txManager.getTransaction(definition);
+        TransactionStatus status = txManager.getTransaction(definition);
+        universalContext.holdLiberins();
+        return status;
     }
 
     private boolean isCompleted(TransactionStatus status) {
@@ -239,13 +245,23 @@ public class Transaction {
 
     private void commitTransaction(TransactionStatus status) {
         if (status != null) {
-            txManager.commit(status);
+            try {
+                txManager.commit(status);
+            } catch (Throwable e) {
+                universalContext.rollbackLiberins();
+                throw e;
+            }
+            universalContext.commitLiberins();
         }
     }
 
     private void rollbackTransaction(TransactionStatus status) {
         if (status != null) {
-            txManager.rollback(status);
+            try {
+                txManager.rollback(status);
+            } finally {
+                universalContext.rollbackLiberins();
+            }
         }
     }
 

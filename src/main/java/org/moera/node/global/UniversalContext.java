@@ -1,5 +1,9 @@
 package org.moera.node.global;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import jakarta.inject.Inject;
@@ -31,6 +35,7 @@ public class UniversalContext {
     private final ThreadLocal<Boolean> subscribedToClient = ThreadLocal.withInitial(() -> false);
     private final ThreadLocal<String[]> friendGroups = new ThreadLocal<>();
     private final ThreadLocal<String> clientName = new ThreadLocal<>();
+    private final ThreadLocal<Deque<List<Liberin>>> heldLiberins = ThreadLocal.withInitial(ArrayDeque::new);
 
     @Inject
     private RequestContext requestContext;
@@ -168,11 +173,55 @@ public class UniversalContext {
         }
     }
 
+    public void holdLiberins() {
+        if (!isBackground()) {
+            return;
+        }
+
+        heldLiberins.get().push(new ArrayList<>());
+    }
+
+    public void commitLiberins() {
+        if (!isBackground()) {
+            return;
+        }
+
+        Deque<List<Liberin>> stack = heldLiberins.get();
+        if (stack.isEmpty()) {
+            return;
+        }
+
+        List<Liberin> liberins = stack.pop();
+        if (!stack.isEmpty()) {
+            stack.peek().addAll(liberins);
+        } else {
+            liberinManager.send(liberins);
+        }
+    }
+
+    public void rollbackLiberins() {
+        if (!isBackground()) {
+            return;
+        }
+
+        Deque<List<Liberin>> stack = heldLiberins.get();
+        if (stack.isEmpty()) {
+            return;
+        }
+
+        stack.pop();
+    }
+
     public void send(Liberin liberin) {
         if (isBackground()) {
             liberin.setNodeId(nodeId());
             liberin.setPluginContext(this);
-            liberinManager.send(liberin);
+            Deque<List<Liberin>> stack = heldLiberins.get();
+            if (!stack.isEmpty()) {
+                stack.peek().add(liberin);
+            } else {
+                liberinManager.send(liberin);
+            }
         } else {
             liberin.setPluginContext(requestContext);
             requestContext.send(liberin);
