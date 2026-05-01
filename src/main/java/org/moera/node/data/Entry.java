@@ -138,6 +138,9 @@ public class Entry {
     @ManyToOne(fetch = FetchType.LAZY)
     private MediaFileOwner parentMedia;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Entry parentMediaEntry;
+
     @NotNull
     private int totalChildren;
 
@@ -626,6 +629,14 @@ public class Entry {
 
     public void setParentMedia(MediaFileOwner parentMedia) {
         this.parentMedia = parentMedia;
+    }
+
+    public Entry getParentMediaEntry() {
+        return parentMediaEntry;
+    }
+
+    public void setParentMediaEntry(Entry parentMediaEntry) {
+        this.parentMediaEntry = parentMediaEntry;
     }
 
     public int getTotalChildren() {
