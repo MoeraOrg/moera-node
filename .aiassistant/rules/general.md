@@ -13,3 +13,5 @@ apply: always
 6. In the DB, entry_revisions.deleted_at IS NOT NULL when and only when the revision is the current revision of
    the entry. In other words, the conditions `er.deleted_at IS NOT NULL` and `entry.current_revision_id = er.id` are
    equivalent.
+7. `Job.success()`, `Job.fail()`, `Job.retry()` always throw an exception, so there is no need to write `return` after
+   them.

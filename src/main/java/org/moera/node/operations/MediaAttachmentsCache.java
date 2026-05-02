@@ -1,45 +1,24 @@
 package org.moera.node.operations;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.moera.lib.node.types.MediaAttachment;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MediaAttachmentsCache {
 
-    private List<MediaAttachment> owner;
-    private Map<String, List<MediaAttachment>> receivers = new HashMap<>();
+    private List<MediaAttachment> attachments;
 
     public MediaAttachmentsCache() {
     }
 
-    public List<MediaAttachment> getOwner() {
-        return owner;
+    public List<MediaAttachment> getAttachments() {
+        return attachments;
     }
 
-    public void setOwner(List<MediaAttachment> owner) {
-        this.owner = owner;
-    }
-
-    public Map<String, List<MediaAttachment>> getReceivers() {
-        return receivers;
-    }
-
-    public void setReceivers(Map<String, List<MediaAttachment>> receivers) {
-        this.receivers = receivers;
-    }
-
-    public List<MediaAttachment> getCache(String receiverName) {
-        return receiverName == null ? owner : receivers.get(receiverName);
-    }
-
-    public void putCache(String receiverName, List<MediaAttachment> attachments) {
-        if (receiverName == null) {
-            owner = attachments;
-        } else {
-            receivers.put(receiverName, attachments);
-        }
+    public void setAttachments(List<MediaAttachment> attachments) {
+        this.attachments = attachments;
     }
 
 }

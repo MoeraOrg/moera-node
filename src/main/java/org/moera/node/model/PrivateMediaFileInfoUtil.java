@@ -8,7 +8,6 @@ import org.moera.lib.node.types.PrivateMediaFileOperations;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFileOwner;
-import org.moera.node.data.Posting;
 import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.media.MimeUtil;
 import org.moera.node.util.ExtendedDuration;
@@ -19,7 +18,6 @@ public class PrivateMediaFileInfoUtil {
 
     public static PrivateMediaFileInfo build(
         MediaFileOwner mediaFileOwner,
-        String receiverName,
         DirectServeConfig config,
         MediaGrantSupplier grantSupplier
     ) {
@@ -42,9 +40,6 @@ public class PrivateMediaFileInfoUtil {
             info.setPath(MediaUtil.privatePath(mediaFileOwner, null, null));
             info.setMalware(true);
         }
-
-        Posting posting = mediaFileOwner.getPosting(receiverName);
-        info.setPostingId(posting != null ? posting.getId().toString() : null);
         
         info.setPreviews(
             mediaFileOwner.getMediaFile().getPreviews().stream()

@@ -225,7 +225,7 @@ public class MediaController {
                 mediaFile.setRecognizeAt(Util.now());
             }
 
-            return PrivateMediaFileInfoUtil.build(mediaFileOwner, null, config.getMedia().getDirectServe(), null);
+            return PrivateMediaFileInfoUtil.build(mediaFileOwner, config.getMedia().getDirectServe(), null);
         } catch (InvalidImageException e) {
             throw new ValidationFailure("media.image-invalid");
         } catch (ThresholdReachedException e) {
@@ -287,7 +287,6 @@ public class MediaController {
 
         return PrivateMediaFileInfoUtil.build(
             getMediaFileOwner(id, grant),
-            null,
             config.getMedia().getDirectServe(),
             (mediaId, duration, download, fileName) -> grant
         );
@@ -314,7 +313,7 @@ public class MediaController {
             mediaOperations.mediaTextUpdated(mediaFileOwner);
         }
 
-        return PrivateMediaFileInfoUtil.build(mediaFileOwner, null, config.getMedia().getDirectServe(), null);
+        return PrivateMediaFileInfoUtil.build(mediaFileOwner, config.getMedia().getDirectServe(), null);
     }
 
     private boolean canEdit(MediaFileOwner mediaFileOwner) {

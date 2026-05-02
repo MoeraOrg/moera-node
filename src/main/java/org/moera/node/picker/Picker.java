@@ -313,8 +313,8 @@ public class Picker extends Task {
                 attachment = entryAttachmentRepository.save(attachment);
                 revision.addAttachment(attachment);
 
-                if (attach.getMedia().getPostingId() != null) {
-                    picks.add(pickMediaPosting(media, revision.getEntry(), attach.getMedia().getPostingId()));
+                if (attach.getPostingId() != null) {
+                    picks.add(pickMediaPosting(media, revision.getEntry(), attach.getPostingId()));
                 }
             }
         }

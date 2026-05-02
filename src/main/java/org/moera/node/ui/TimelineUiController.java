@@ -240,7 +240,7 @@ public class TimelineUiController {
         Entry entry = comment != null ? comment : posting;
         String heading = entry.getCurrentRevision().getHeading();
         model.addAttribute("ogTitle", !ObjectUtils.isEmpty(heading) ? heading : "(no title)");
-        List<MediaAttachment> attachments = entryOperations.getMediaAttachments(entry.getCurrentRevision(), null, null);
+        List<MediaAttachment> attachments = entryOperations.getMediaAttachments(entry.getCurrentRevision(), null);
         PrivateMediaFileInfo image = !attachments.isEmpty() ? attachments.getFirst().getMedia() : null;
         if (image != null) {
             model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + image.getPath());

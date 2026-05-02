@@ -137,9 +137,7 @@ public class CommentInfoUtil {
         var grantSupplier = options != null
             ? new MediaGrantGenerator(null, commentInfo.getPostingId(), commentInfo.getId(), options)
             : null;
-        commentInfo.setMedia(
-            mediaAttachmentsProvider.getMediaAttachments(revision, null, grantSupplier)
-        );
+        commentInfo.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, grantSupplier));
         commentInfo.setHeading(revision.getHeading());
         commentInfo.setDescription(revision.getDescription());
         if (comment.getRepliedTo() != null) {

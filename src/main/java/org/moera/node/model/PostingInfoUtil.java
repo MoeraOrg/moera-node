@@ -172,6 +172,9 @@ public class PostingInfoUtil {
         }
         info.setReceiverPostingId(posting.getReceiverEntryId());
         info.setParentMediaId(posting.getParentMedia() != null ? posting.getParentMedia().getId().toString() : null);
+        info.setParentMediaEntryId(
+            posting.getParentMediaEntry() != null ? posting.getParentMediaEntry().getId().toString() : null
+        );
         info.setOwnerName(posting.getOwnerName());
         info.setOwnerFullName(posting.getOwnerFullName());
         info.setOwnerGender(posting.getOwnerGender());
@@ -190,9 +193,7 @@ public class PostingInfoUtil {
         info.setBody(new Body(revision.getBody()));
         info.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
         var grantSupplier = options != null ? new MediaGrantGenerator(null, info.getId(), null, options) : null;
-        info.setMedia(
-            mediaAttachmentsProvider.getMediaAttachments(revision, posting.getReceiverName(), grantSupplier)
-        );
+        info.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, grantSupplier));
         info.setHeading(revision.getHeading());
         info.setDescription(revision.getDescription());
         if (!UpdateInfoUtil.isEmpty(revision)) {

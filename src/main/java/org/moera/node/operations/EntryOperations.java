@@ -112,13 +112,11 @@ public class EntryOperations implements MediaAttachmentsProvider {
     }
 
     @Override
-    public List<MediaAttachment> getMediaAttachments(
-        EntryRevision revision, String receiverName, MediaGrantSupplier grantSupplier
-    ) {
+    public List<MediaAttachment> getMediaAttachments(EntryRevision revision, MediaGrantSupplier grantSupplier) {
         try {
             if (revision.getAttachmentsCache() != null) {
                 var data = objectMapper.readValue(revision.getAttachmentsCache(), MediaAttachmentsCache.class);
-                var cache = data.getCache(receiverName);
+                var cache = data.getAttachments();
                 if (cache != null) {
                     // Media paths expire, so assuming that they always need to be updated
                     updateCachedPaths(cache, grantSupplier);
@@ -131,16 +129,13 @@ public class EntryOperations implements MediaAttachmentsProvider {
         }
 
         if (jobs.isReady()) {
-            jobs.runNoPersist(
-                CacheMediaAttachmentsJob.class,
-                new CacheMediaAttachmentsJob.Parameters(revision.getId(), receiverName)
-            );
+            jobs.runNoPersist(CacheMediaAttachmentsJob.class, new CacheMediaAttachmentsJob.Parameters(revision.getId()));
         }
 
         Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
         return attachments.stream()
             .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-            .map(ea -> MediaAttachmentUtil.build(ea, receiverName, config.getMedia().getDirectServe(), grantSupplier))
+            .map(ea -> MediaAttachmentUtil.build(ea, config.getMedia().getDirectServe(), grantSupplier))
             .collect(Collectors.toList());
     }
 

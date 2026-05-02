@@ -28,14 +28,12 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
     public static class Parameters {
 
         private UUID entryRevisionId;
-        private String receiverName;
 
         public Parameters() {
         }
 
-        public Parameters(UUID entryRevisionId, String receiverName) {
+        public Parameters(UUID entryRevisionId) {
             this.entryRevisionId = entryRevisionId;
-            this.receiverName = receiverName;
         }
 
         public UUID getEntryRevisionId() {
@@ -44,14 +42,6 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
 
         public void setEntryRevisionId(UUID entryRevisionId) {
             this.entryRevisionId = entryRevisionId;
-        }
-
-        public String getReceiverName() {
-            return receiverName;
-        }
-
-        public void setReceiverName(String receiverName) {
-            this.receiverName = receiverName;
         }
 
     }
@@ -85,8 +75,7 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
     @Override
     protected void started() {
         super.started();
-        log.debug("Caching media attachments for entry revision {}, receiver {}",
-                LogUtil.format(parameters.entryRevisionId), LogUtil.format(parameters.receiverName));
+        log.debug("Caching media attachments for entry revision {}", LogUtil.format(parameters.entryRevisionId));
     }
 
     @Override
@@ -108,11 +97,9 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
             Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
             List<MediaAttachment> mediaAttachments = attachments.stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea ->
-                    MediaAttachmentUtil.build(ea, parameters.receiverName, config.getMedia().getDirectServe(), null)
-                )
+                .map(ea -> MediaAttachmentUtil.build(ea, config.getMedia().getDirectServe(), null))
                 .collect(Collectors.toList());
-            cache.putCache(parameters.receiverName, mediaAttachments);
+            cache.setAttachments(mediaAttachments);
 
             try {
                 revision.setAttachmentsCache(objectMapper.writeValueAsString(cache));

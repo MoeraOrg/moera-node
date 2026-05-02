@@ -14,6 +14,7 @@ import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.Posting;
+import org.moera.node.data.PostingRepository;
 import org.moera.node.global.MaxCache;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
@@ -53,6 +54,9 @@ public class MediaUiController {
 
     @Inject
     private MediaFileOwnerRepository mediaFileOwnerRepository;
+
+    @Inject
+    private PostingRepository postingRepository;
 
     @Inject
     private MediaOperations mediaOperations;
@@ -128,20 +132,22 @@ public class MediaUiController {
         return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, title, download);
     }
 
-    @GetMapping(path = "/private/{id}/caption", produces = "text/html")
+    @GetMapping(path = "/private/caption/{postingId}", produces = "text/html")
     @Transactional
-    public String getCaptionPrivate(@PathVariable UUID id, Model model) {
-        log.info("GET MEDIA /media/private/{id}/caption (id = {})", LogUtil.format(id));
+    public String getCaptionPrivate(@PathVariable UUID postingId, Model model) {
+        log.info(
+            "GET MEDIA /media/private/caption/{postingId} (postingId = {})",
+            LogUtil.format(postingId)
+        );
 
-        MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
             .orElseThrow(PageNotFoundException::new);
-        Posting posting = mediaFileOwner.getPosting(null);
-        if (posting == null) {
-            throw new PageNotFoundException();
-        }
         if (
             !requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
-            && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), posting.getViewE())
+            && !feedOperations.isSheriffAllowed(
+                () -> mediaOperations.getParentStories(posting.getParentMedia().getId()),
+                posting.getViewE()
+            )
             && !(
                 includesAdmin(posting.getViewE())
                 && requestContext.isClient(requestContext.nodeName(), Scope.VIEW_CONTENT)

@@ -14,18 +14,16 @@ import org.moera.node.model.MediaAttachmentUtil;
 
 public interface MediaAttachmentsProvider {
 
-    MediaAttachmentsProvider NONE = (revision, receiverName, grantSupplier) -> Collections.emptyList();
+    MediaAttachmentsProvider NONE = (revision, grantSupplier) -> Collections.emptyList();
 
     static MediaAttachmentsProvider relations(DirectServeConfig config) {
-        return (revision, receiverName, grantSupplier) ->
+        return (revision, grantSupplier) ->
             revision.getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> MediaAttachmentUtil.build(ea, receiverName, config, grantSupplier))
+                .map(ea -> MediaAttachmentUtil.build(ea, config, grantSupplier))
                 .collect(Collectors.toList());
     }
 
-    List<MediaAttachment> getMediaAttachments(
-        EntryRevision revision, String receiverName, MediaGrantSupplier grantSupplier
-    );
+    List<MediaAttachment> getMediaAttachments(EntryRevision revision, MediaGrantSupplier grantSupplier);
 
 }

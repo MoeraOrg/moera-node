@@ -18,7 +18,6 @@ public class PostingRevisionInfoUtil {
         Posting posting,
         EntryRevision revision,
         MediaAttachmentsProvider mediaAttachmentsProvider,
-        String receiverName,
         Options options,
         AccessChecker accessChecker
     ) {
@@ -36,7 +35,7 @@ public class PostingRevisionInfoUtil {
         var grantSupplier = options != null
             ? new MediaGrantGenerator(null, posting.getId().toString(), null, options)
             : null;
-        info.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, receiverName, grantSupplier));
+        info.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, grantSupplier));
         info.setHeading(revision.getHeading());
         info.setDescription(revision.getDescription());
         if (!UpdateInfoUtil.isEmpty(revision)) {

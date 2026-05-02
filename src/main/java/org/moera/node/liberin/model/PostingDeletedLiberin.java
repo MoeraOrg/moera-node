@@ -55,7 +55,6 @@ public class PostingDeletedLiberin extends Liberin {
                 posting,
                 latestRevision,
                 MediaAttachmentsProvider.relations(getConfig().getMedia().getDirectServe()),
-                posting.getReceiverName(),
                 null,
                 AccessCheckers.ADMIN
             )

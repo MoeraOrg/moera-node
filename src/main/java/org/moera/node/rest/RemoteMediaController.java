@@ -82,7 +82,7 @@ public class RemoteMediaController {
                 mediaFileOwnerRepository.findByAdminFile(requestContext.nodeId(), mediaFile.getId());
             if (!owners.isEmpty()) {
                 return PrivateMediaFileInfoUtil.build(
-                    owners.iterator().next(), null, config.getMedia().getDirectServe(), null
+                    owners.iterator().next(), config.getMedia().getDirectServe(), null
                 );
             }
         }

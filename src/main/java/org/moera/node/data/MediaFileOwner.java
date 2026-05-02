@@ -116,13 +116,6 @@ public class MediaFileOwner {
         this.postings = postings;
     }
 
-    public Posting getPosting(String receiverName) {
-        return postings.stream()
-                .filter(p -> Objects.equals(p.getReceiverName(), receiverName))
-                .findFirst()
-                .orElse(null);
-    }
-
     public Posting getPostingByParentMediaEntry(Entry parentMediaEntry) {
         UUID parentMediaEntryId = parentMediaEntry != null ? parentMediaEntry.getId() : null;
         return postings.stream()

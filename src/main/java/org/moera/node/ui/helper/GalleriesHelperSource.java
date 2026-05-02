@@ -69,13 +69,15 @@ public class GalleriesHelperSource {
         for (MediaInfo entry : entries) {
             var props = entry.getMedia()
                 .stream()
-                .map(MediaAttachment::getMedia)
-                .map(mfo -> Map.of(
-                    "id", mfo.getId(),
-                    "src", "/moera/media/" + mfo.getPath(),
-                    "thumb", "/moera/media/" + mfo.getPath() + "?width=150",
-                    "subHtmlUrl", "/moera/media/private/" + mfo.getId() + "/caption"
-                ))
+                .map(attachment -> {
+                    var media = attachment.getMedia();
+                    return Map.of(
+                        "id", media.getId(),
+                        "src", "/moera/media/" + media.getPath(),
+                        "thumb", "/moera/media/" + media.getPath() + "?width=150",
+                        "subHtmlUrl", "/moera/media/private/caption/" + attachment.getPostingId()
+                    );
+                })
                 .toArray(Map[]::new);
             entryMap.put(entry.getId(), props);
         }
