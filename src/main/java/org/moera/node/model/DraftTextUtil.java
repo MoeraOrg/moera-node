@@ -71,6 +71,9 @@ public class DraftTextUtil {
                 if (ObjectUtils.isEmpty(heading)) {
                     heading = getAttachmentIcons(body, draftText.getMedia());
                 }
+                if (heading == null) {
+                    heading = "";
+                }
                 draft.setHeading(heading);
             } else {
                 draft.setBodySrc(Body.EMPTY);
