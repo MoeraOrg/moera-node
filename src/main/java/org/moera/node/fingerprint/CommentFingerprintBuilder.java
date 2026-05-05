@@ -171,7 +171,7 @@ public class CommentFingerprintBuilder {
                     Util.toTimestamp(commentRevisionInfo.getCreatedAt()),
                     (byte) 0,
                     CryptoUtil.digest(
-                        AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest)
+                        AttachmentFingerprintBuilder.build(null, commentRevisionInfo.getMedia(), mediaDigest)
                     )
                 );
             case 0 ->
@@ -186,7 +186,7 @@ public class CommentFingerprintBuilder {
                     Util.toTimestamp(commentRevisionInfo.getCreatedAt()),
                     (byte) 0,
                     CryptoUtil.digest(
-                        AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest)
+                        AttachmentFingerprintBuilder.build(null, commentRevisionInfo.getMedia(), mediaDigest)
                     )
                 );
             default -> throw new FingerprintException("Unknown fingerprint version: " + version);
@@ -256,7 +256,7 @@ public class CommentFingerprintBuilder {
                     Util.toTimestamp(commentRevisionInfo.getCreatedAt()),
                     (byte) 0,
                     CryptoUtil.digest(
-                        AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest)
+                        AttachmentFingerprintBuilder.build(null, commentRevisionInfo.getMedia(), mediaDigest)
                     )
                 );
             case 0 ->
@@ -271,7 +271,7 @@ public class CommentFingerprintBuilder {
                     Util.toTimestamp(commentRevisionInfo.getCreatedAt()),
                     (byte) 0,
                     CryptoUtil.digest(
-                        AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest)
+                        AttachmentFingerprintBuilder.build(null, commentRevisionInfo.getMedia(), mediaDigest)
                     )
                 );
             default -> throw new FingerprintException("Unknown fingerprint version: " + version);

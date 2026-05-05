@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import org.moera.lib.node.types.CommentRevisionInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.config.Config;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.EntryRevision;
@@ -19,6 +20,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.CommentRevisionInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.operations.MediaAttachmentsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +35,9 @@ public class CommentRevisionController {
 
     @Inject
     protected RequestContext requestContext;
+
+    @Inject
+    protected Config config;
 
     @Inject
     protected CommentRepository commentRepository;
@@ -65,7 +70,13 @@ public class CommentRevisionController {
         }
 
         return comment.getRevisions().stream()
-            .map(r -> CommentRevisionInfoUtil.build(comment, r, requestContext))
+            .map(r -> CommentRevisionInfoUtil.build(
+                comment,
+                r,
+                MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
+                requestContext.getOptions(),
+                requestContext
+            ))
             .sorted(Comparator.comparing(CommentRevisionInfo::getCreatedAt).reversed())
             .collect(Collectors.toList());
     }
@@ -95,7 +106,13 @@ public class CommentRevisionController {
         EntryRevision revision = entryRevisionRepository.findByEntryIdAndId(requestContext.nodeId(), commentId, id)
             .orElseThrow(() -> new ObjectNotFoundFailure("comment-revision.not-found"));
 
-        return CommentRevisionInfoUtil.build(comment, revision, requestContext);
+        return CommentRevisionInfoUtil.build(
+            comment,
+            revision,
+            MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
+            requestContext.getOptions(),
+            requestContext
+        );
     }
 
 }

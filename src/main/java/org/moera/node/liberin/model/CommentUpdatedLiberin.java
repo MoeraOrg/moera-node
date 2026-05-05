@@ -11,6 +11,7 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.CommentRevisionInfoUtil;
+import org.moera.node.operations.MediaAttachmentsProvider;
 
 public class CommentUpdatedLiberin extends Liberin {
 
@@ -78,7 +79,16 @@ public class CommentUpdatedLiberin extends Liberin {
                 comment, AccessCheckers.ADMIN, null, getConfig().getMedia().getDirectServe()
             )
         );
-        model.put("latestRevision", CommentRevisionInfoUtil.build(comment, latestRevision, AccessCheckers.ADMIN));
+        model.put(
+            "latestRevision",
+            CommentRevisionInfoUtil.build(
+                comment,
+                latestRevision,
+                MediaAttachmentsProvider.relations(getConfig().getMedia().getDirectServe()),
+                null,
+                AccessCheckers.ADMIN
+            )
+        );
         model.put("latestViewPrincipal", latestViewE);
         model.put("latestPremoderating", latestPremoderating);
     }
