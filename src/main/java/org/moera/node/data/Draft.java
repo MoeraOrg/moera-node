@@ -93,6 +93,8 @@ public class Draft {
     @Size(max = 75)
     private String bodyFormat = BodyFormat.MESSAGE.getValue();
 
+    private String mediaCaptions;
+
     @NotNull
     private String heading = "";
 
@@ -279,6 +281,14 @@ public class Draft {
 
     public void setBodyFormat(String bodyFormat) {
         this.bodyFormat = bodyFormat;
+    }
+
+    public String getMediaCaptions() {
+        return mediaCaptions;
+    }
+
+    public void setMediaCaptions(String mediaCaptions) {
+        this.mediaCaptions = mediaCaptions;
     }
 
     public String getHeading() {

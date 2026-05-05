@@ -79,6 +79,14 @@ public class DraftTextUtil {
             }
         }
 
+        if (draftText.getMediaCaptions() != null) {
+            try {
+                draft.setMediaCaptions(new ObjectMapper().writeValueAsString(draftText.getMediaCaptions()));
+            } catch (JacksonException e) {
+                log.error("Error serializing DraftText.mediaCaptions", e);
+            }
+        }
+
         if (draftText.getPublishAt() != null) {
             draft.setPublishAt(Util.toTimestamp(draftText.getPublishAt()));
         }

@@ -15,6 +15,7 @@ import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 public class DraftInfoUtil {
@@ -62,6 +63,17 @@ public class DraftInfoUtil {
                 .map(ea -> MediaAttachmentUtil.build(ea, config, null))
                 .collect(Collectors.toList())
         );
+
+        if (draft.getMediaCaptions() != null) {
+            try {
+                draftInfo.setMediaCaptions(
+                    new ObjectMapper().readValue(draft.getMediaCaptions(), new TypeReference<>() {
+                    })
+                );
+            } catch (JacksonException e) {
+                log.error("Error deserializing Draft.mediaCaptions", e);
+            }
+        }
 
         draftInfo.setHeading(draft.getHeading());
         draftInfo.setPublishAt(Util.toEpochSecond(draft.getPublishAt()));
