@@ -120,20 +120,8 @@ public class PostingOperations {
 
     public Posting newPosting(MediaFileOwner mediaFileOwner, Entry parentMediaEntry) {
         Posting posting = newPosting(mediaFileOwner.getOwnerName());
-        Principal mediaViewPrincipal = mediaFileOwner.isUnrestricted() ? Principal.PUBLIC : Principal.ADMIN;
         mediaFileOwner.addPosting(posting, parentMediaEntry);
-        posting.setViewPrincipal(mediaViewPrincipal);
-        posting.setViewCommentsPrincipal(mediaViewPrincipal);
-        posting.setAddCommentPrincipal(mediaViewPrincipal);
-        posting.setTrustCommentPrincipal(mediaViewPrincipal);
-        posting.setViewReactionsPrincipal(mediaViewPrincipal);
-        posting.setViewNegativeReactionsPrincipal(mediaViewPrincipal);
-        posting.setViewReactionTotalsPrincipal(mediaViewPrincipal);
-        posting.setViewNegativeReactionTotalsPrincipal(mediaViewPrincipal);
-        posting.setViewReactionRatiosPrincipal(mediaViewPrincipal);
-        posting.setViewNegativeReactionRatiosPrincipal(mediaViewPrincipal);
-        posting.setAddReactionPrincipal(mediaViewPrincipal);
-        posting.setAddNegativeReactionPrincipal(mediaViewPrincipal);
+        mediaOperations.updateMediaPostingPermissions(posting);
 
         EntryRevision revision = newRevision(posting, null);
         revision.setBodySrc(Body.EMPTY);

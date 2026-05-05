@@ -486,7 +486,7 @@ public class MediaOperations {
 
             Entry parent = posting.getParentMediaEntry();
             if (parent == null) {
-                restrictMediaPostingPermissions(posting);
+                updateMediaPostingPermissions(posting);
                 continue;
             }
             if (parent.getDeletedAt() != null || !isAttached(mediaFileOwner, parent)) {
@@ -494,7 +494,7 @@ public class MediaOperations {
                 continue;
             }
 
-            inheritMediaPostingPermissions(posting, parent);
+            updateMediaPostingPermissions(posting);
         }
         return obsoletePostings;
     }
@@ -505,6 +505,15 @@ public class MediaOperations {
 
     public boolean isAttached(MediaFileOwner mediaFileOwner, UUID parentEntryId) {
         return entryAttachmentRepository.countByEntryIdAndMedia(parentEntryId, mediaFileOwner.getId()) != 0;
+    }
+
+    public void updateMediaPostingPermissions(Posting posting) {
+        Entry parent = posting.getParentMediaEntry();
+        if (parent != null) {
+            inheritMediaPostingPermissions(posting, parent);
+        } else {
+            restrictMediaPostingPermissions(posting);
+        }
     }
 
     private void inheritMediaPostingPermissions(Posting posting, Entry parent) {
