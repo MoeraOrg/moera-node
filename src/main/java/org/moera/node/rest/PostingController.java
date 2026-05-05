@@ -156,7 +156,7 @@ public class PostingController {
     public ResponseEntity<PostingInfo> post(@RequestBody PostingText postingText) {
         log.info(
             "POST /postings (bodySrc = {}, bodySrcFormat = {})",
-            LogUtil.format(postingText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(postingText.getBodySrc(), 64),
             LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat()))
         );
 
@@ -283,6 +283,7 @@ public class PostingController {
     }
 
     private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {
+        normalizeBodySource(postingText);
         byte[] digest = null;
         if (postingText.getSignature() == null) {
             // permission checks only AFTER this point
@@ -307,12 +308,9 @@ public class PostingController {
                 throw new AuthenticationException();
             }
 
-            ValidationUtil.assertion(
-                posting != null || postingText.getBodySrc() != null || !ObjectUtils.isEmpty(postingText.getMedia()),
-                "posting.body-src.blank"
-            );
+            ValidationUtil.assertion(hasBodyTextOrMedia(postingText), "posting.body-src.blank");
             ValidationUtil.maxSize(
-                postingText.getBodySrc() != null ? postingText.getBodySrc().getEncoded() : null,
+                postingText.getBodySrc().getEncoded(),
                 getMaxPostingSize(),
                 "posting.body-src.wrong-size"
             );
@@ -366,6 +364,23 @@ public class PostingController {
             "posting.comment-reaction-operations.wrong-principal"
         );
         return digest;
+    }
+
+    static void normalizeBodySource(PostingText postingText) {
+        ValidationUtil.notNull(postingText.getBodySrc(), "posting.body-src.blank");
+        if (
+            postingText.getSignature() == null
+            && postingText.getBodySrcFormat() != SourceFormat.APPLICATION
+            && postingText.getBodySrc().getText() == null
+        ) {
+            postingText.getBodySrc().setText("");
+        }
+    }
+
+    static boolean hasBodyTextOrMedia(PostingText postingText) {
+        return postingText.getBodySrcFormat() == SourceFormat.APPLICATION
+            || !ObjectUtils.isEmpty(postingText.getBodySrc().getText())
+            || !ObjectUtils.isEmpty(postingText.getMedia());
     }
 
     private byte[] parentMediaDigest(Posting posting) {

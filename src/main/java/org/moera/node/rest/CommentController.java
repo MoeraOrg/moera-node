@@ -369,6 +369,7 @@ public class CommentController {
         String ownerName,
         byte[] repliedToDigest
     ) {
+        normalizeBodySource(commentText);
         byte[] digest = null;
         boolean isSenior;
         if (Rules.ANONYMOUS_NODE_NAME.equals(ownerName) && comment == null) {
@@ -377,13 +378,9 @@ public class CommentController {
             commentText.setOwnerAvatar(null); // make anonymous comments visually distinct
             commentText.setSignature(null);
             commentText.setSignatureVersion(null);
+            ValidationUtil.assertion(hasBodyTextOrMedia(commentText), "comment.body-src.blank");
             ValidationUtil.assertion(
-                commentText.getBodySrc() != null || !ObjectUtils.isEmpty(commentText.getMedia()),
-                "comment.body-src.blank"
-            );
-            ValidationUtil.assertion(
-                commentText.getBodySrc() == null
-                    || commentText.getBodySrc().getEncoded().length() <= getMaxCommentSize(),
+                commentText.getBodySrc().getEncoded().length() <= getMaxCommentSize(),
                 "comment.body-src.wrong-size"
             );
         } else if (commentText.getSignature() == null) {
@@ -411,13 +408,9 @@ public class CommentController {
                 }
             }
 
+            ValidationUtil.assertion(hasBodyTextOrMedia(commentText), "comment.body-src.blank");
             ValidationUtil.assertion(
-                comment != null || commentText.getBodySrc() != null || !ObjectUtils.isEmpty(commentText.getMedia()),
-                "comment.body-src.blank"
-            );
-            ValidationUtil.assertion(
-                commentText.getBodySrc() == null
-                    || commentText.getBodySrc().getEncoded().length() <= getMaxCommentSize(),
+                commentText.getBodySrc().getEncoded().length() <= getMaxCommentSize(),
                 "comment.body-src.wrong-size"
             );
         } else {
@@ -486,6 +479,23 @@ public class CommentController {
         );
 
         return digest;
+    }
+
+    static void normalizeBodySource(CommentText commentText) {
+        ValidationUtil.notNull(commentText.getBodySrc(), "comment.body-src.blank");
+        if (
+            commentText.getSignature() == null
+            && commentText.getBodySrcFormat() != SourceFormat.APPLICATION
+            && commentText.getBodySrc().getText() == null
+        ) {
+            commentText.getBodySrc().setText("");
+        }
+    }
+
+    static boolean hasBodyTextOrMedia(CommentText commentText) {
+        return commentText.getBodySrcFormat() == SourceFormat.APPLICATION
+            || !ObjectUtils.isEmpty(commentText.getBodySrc().getText())
+            || !ObjectUtils.isEmpty(commentText.getMedia());
     }
 
     private byte[] mediaDigest(UUID id) {
