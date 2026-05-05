@@ -481,7 +481,7 @@ public class CommentController {
         return digest;
     }
 
-    static void normalizeBodySource(CommentText commentText) {
+    private static void normalizeBodySource(CommentText commentText) {
         ValidationUtil.notNull(commentText.getBodySrc(), "comment.body-src.blank");
         if (
             commentText.getSignature() == null
@@ -492,7 +492,7 @@ public class CommentController {
         }
     }
 
-    static boolean hasBodyTextOrMedia(CommentText commentText) {
+    private static boolean hasBodyTextOrMedia(CommentText commentText) {
         return commentText.getBodySrcFormat() == SourceFormat.APPLICATION
             || !ObjectUtils.isEmpty(commentText.getBodySrc().getText())
             || !ObjectUtils.isEmpty(commentText.getMedia());

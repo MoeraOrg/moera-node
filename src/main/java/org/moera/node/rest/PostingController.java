@@ -366,7 +366,7 @@ public class PostingController {
         return digest;
     }
 
-    static void normalizeBodySource(PostingText postingText) {
+    private static void normalizeBodySource(PostingText postingText) {
         ValidationUtil.notNull(postingText.getBodySrc(), "posting.body-src.blank");
         if (
             postingText.getSignature() == null
@@ -377,7 +377,7 @@ public class PostingController {
         }
     }
 
-    static boolean hasBodyTextOrMedia(PostingText postingText) {
+    private static boolean hasBodyTextOrMedia(PostingText postingText) {
         return postingText.getBodySrcFormat() == SourceFormat.APPLICATION
             || !ObjectUtils.isEmpty(postingText.getBodySrc().getText())
             || !ObjectUtils.isEmpty(postingText.getMedia());
