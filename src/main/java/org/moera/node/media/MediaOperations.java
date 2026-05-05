@@ -623,13 +623,13 @@ public class MediaOperations {
         }
     }
 
-    public ResponseEntity<Resource> serve(MediaFile mediaFile, String title, boolean download) {
+    private ResponseEntity<Resource> serve(MediaFile mediaFile, String fileName, boolean download) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(mediaFile.getMimeType()));
         if (download) {
             var builder = ContentDisposition.attachment();
-            if (!ObjectUtils.isEmpty(title)) {
-                builder.filename(MimeUtil.fileName(title, mediaFile.getMimeType()));
+            if (!ObjectUtils.isEmpty(fileName)) {
+                builder.filename(fileName);
             }
             headers.setContentDisposition(builder.build());
         }
@@ -655,10 +655,10 @@ public class MediaOperations {
         }
     }
 
-    public ResponseEntity<Resource> serve(MediaFile mediaFile, Integer width, String title, Boolean download) {
+    public ResponseEntity<Resource> serve(MediaFile mediaFile, Integer width, String fileName, Boolean download) {
         download = download != null ? download : false;
         if (width == null) {
-            return serve(mediaFile, title, download);
+            return serve(mediaFile, fileName, download);
         }
 
         MediaFilePreview preview = mediaFile.findLargerPreview(width);

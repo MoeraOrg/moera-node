@@ -351,7 +351,7 @@ public class MediaController {
         MediaFileOwner mediaFileOwner = getMediaFileOwner(id, grant);
         mediaOperations.blockMalware(mediaFileOwner, ignoreMalware);
 
-        return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, mediaFileOwner.getTitle(), download);
+        return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, mediaFileOwner.getUserFileName(), download);
     }
 
     @GetMapping("/private/{id}/parent")

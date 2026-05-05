@@ -119,7 +119,7 @@ public class MediaUiController {
         }
         mediaOperations.blockMalware(mediaFileOwner, ignoreMalware);
 
-        String title = mediaFileOwner.getTitle();
+        String title = mediaFileOwner.getUserFileName();
         if (grant != null) {
             if (grant.isDownload()) {
                 download = true;

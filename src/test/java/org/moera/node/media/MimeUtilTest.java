@@ -13,8 +13,14 @@ public class MimeUtilTest {
     }
 
     @Test
-    void unknownMimeTypeProducesEmptyExtension() {
-        Assertions.assertEquals("", MimeUtil.extension("application/x-moera-unknown"));
+    void extensionUsesAdditionalRegistry() {
+        Assertions.assertEquals("md", MimeUtil.extension("text/markdown"));
+    }
+
+    @Test
+    void unknownMimeTypeProducesDefaultExtension() {
+        Assertions.assertEquals("bin", MimeUtil.extension("application/x-moera-unknown"));
+        Assertions.assertEquals("txt", MimeUtil.extension("text/x-moera-unknown"));
         Assertions.assertEquals("media.jpg", MimeUtil.fileName("media", "image/jpeg"));
     }
 

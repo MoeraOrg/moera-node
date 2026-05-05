@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypes;
+import org.springframework.util.ObjectUtils;
 
 public class MimeUtil {
 
@@ -21,6 +22,9 @@ public class MimeUtil {
     }
 
     private static final MimeTypes MIME_TYPES = MimeTypes.getDefaultMimeTypes();
+    private static final Map<String, String> ADDITIONAL_MIME_TYPES = Map.of(
+        "text/markdown", "md"
+    );
     private static final Map<String, ThumbnailFormat> THUMBNAIL_FORMATS = new HashMap<>();
 
     static {
@@ -49,12 +53,19 @@ public class MimeUtil {
     }
 
     public static String extension(String mimeType) {
+        String extension = null;
         try {
-            var extension = MIME_TYPES.forName(mimeType).getExtension();
-            return extension.startsWith(".") ? extension.substring(1) : extension;
+            extension = MIME_TYPES.forName(mimeType).getExtension();
         } catch (MimeTypeException e) {
-            return "";
+            // ignore
         }
+        if (ObjectUtils.isEmpty(extension)) {
+            extension = ADDITIONAL_MIME_TYPES.get(mimeType);
+        }
+        if (ObjectUtils.isEmpty(extension)) {
+            extension = mimeType != null && mimeType.startsWith("text/") ? "txt" : "bin";
+        }
+        return extension.startsWith(".") ? extension.substring(1) : extension;
     }
 
     public static String fileName(String name, String mimeType) {

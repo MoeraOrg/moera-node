@@ -17,6 +17,7 @@ import jakarta.validation.constraints.Size;
 
 import org.moera.node.media.MimeUtil;
 import org.moera.node.util.Util;
+import org.springframework.util.ObjectUtils;
 
 @Entity
 @Table(name = "media_file_owners")
@@ -98,6 +99,10 @@ public class MediaFileOwner {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getUserFileName() {
+        return MimeUtil.fileName(!ObjectUtils.isEmpty(title) ? title : id.toString(), getMediaFile().getMimeType());
     }
 
     public MediaFile getMediaFile() {
