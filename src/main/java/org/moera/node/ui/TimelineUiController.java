@@ -259,8 +259,11 @@ public class TimelineUiController {
         String description = entry.getCurrentRevision().getDescription();
         description = !ObjectUtils.isEmpty(description) ? description : entry.getCurrentRevision().getHeading();
         model.addAttribute("ogDescription", description);
-        var createdAt = entry.getReceiverCreatedAt() != null ? entry.getReceiverCreatedAt() : entry.getCreatedAt();
-        model.addAttribute("ogArticlePublishedTime", createdAt.toInstant().toString());
+        stories.stream()
+            .filter(story -> Feed.TIMELINE.equals(story.getFeedName()))
+            .map(Story::getPublishedAt)
+            .min(Comparator.naturalOrder())
+            .ifPresent(publishedAt -> model.addAttribute("ogArticlePublishedTime", publishedAt.toInstant().toString()));
         if (entry.getEditedAt() != null) {
             var editedAt = entry.getReceiverEditedAt() != null ? entry.getReceiverEditedAt() : entry.getEditedAt();
             model.addAttribute("ogArticleModifiedTime", editedAt.toInstant().toString());

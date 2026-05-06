@@ -7,6 +7,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import jakarta.inject.Inject;
 
 import org.jsoup.Jsoup;
@@ -132,14 +138,18 @@ public class ProxyController {
         return queryDirectly(url);
     }
 
+    private Document fetchDocument(String url) throws IOException {
+        return Jsoup.connect(url)
+            .header("User-Agent", config.getUserAgent("link preview"))
+            .followRedirects(true)
+            .timeout((int) REQUEST_TIMEOUT.toMillis())
+            .get();
+    }
+
     private LinkPreviewInfo queryDirectly(String url) {
         Document document;
         try {
-            document = Jsoup.connect(url)
-                .header("User-Agent", config.getUserAgent("link preview"))
-                .followRedirects(true)
-                .timeout((int) REQUEST_TIMEOUT.toMillis())
-                .get();
+            document = fetchDocument(url);
         } catch (IOException e) {
             throw new ObjectNotFoundFailure("proxy.resource-not-found");
         }
@@ -153,43 +163,7 @@ public class ProxyController {
             if (ObjectUtils.isEmpty(property)) {
                 property = element.attr("name");
             }
-            String content = element.attr("content");
-            switch (property) {
-                case "og:site_name":
-                    linkPreviewInfo.setSiteName(content);
-                    break;
-                case "og:url":
-                    linkPreviewInfo.setUrl(content);
-                    break;
-                case "og:title":
-                    linkPreviewInfo.setTitle(content);
-                    break;
-                case "og:description":
-                    linkPreviewInfo.setDescription(content);
-                    break;
-                case "og:image":
-                    linkPreviewInfo.setImageUrl(content);
-                    break;
-                case "twitter:title":
-                case "title":
-                    if (ObjectUtils.isEmpty(linkPreviewInfo.getTitle())) {
-                        linkPreviewInfo.setTitle(content);
-                    }
-                    break;
-                case "twitter:description":
-                case "description":
-                    if (ObjectUtils.isEmpty(linkPreviewInfo.getDescription())) {
-                        linkPreviewInfo.setDescription(content);
-                    }
-                    break;
-                case "twitter:image":
-                    if (ObjectUtils.isEmpty(linkPreviewInfo.getImageUrl())) {
-                        linkPreviewInfo.setImageUrl(content);
-                    }
-                    break;
-                default:
-                    // ignore
-            }
+            analyzeMetaTag(linkPreviewInfo, property, element.attr("content"));
         }
         if (ObjectUtils.isEmpty(linkPreviewInfo.getTitle())) {
             Elements titles = document.select("head title");
@@ -198,6 +172,72 @@ public class ProxyController {
             }
         }
         return linkPreviewInfo;
+    }
+
+    private static void analyzeMetaTag(LinkPreviewInfo linkPreviewInfo, String property, String content) {
+        switch (property) {
+            case "og:site_name":
+                linkPreviewInfo.setSiteName(content);
+                break;
+            case "og:url":
+                linkPreviewInfo.setUrl(content);
+                break;
+            case "og:title":
+                linkPreviewInfo.setTitle(content);
+                break;
+            case "og:description":
+                linkPreviewInfo.setDescription(content);
+                break;
+            case "og:image":
+                linkPreviewInfo.setImageUrl(content);
+                break;
+            case "article:published_time":
+                Long publishedAt = parseTimestamp(content);
+                if (publishedAt != null) {
+                    linkPreviewInfo.setPublishedAt(publishedAt);
+                }
+                break;
+            case "twitter:title":
+            case "title":
+                if (ObjectUtils.isEmpty(linkPreviewInfo.getTitle())) {
+                    linkPreviewInfo.setTitle(content);
+                }
+                break;
+            case "twitter:description":
+            case "description":
+                if (ObjectUtils.isEmpty(linkPreviewInfo.getDescription())) {
+                    linkPreviewInfo.setDescription(content);
+                }
+                break;
+            case "twitter:image":
+                if (ObjectUtils.isEmpty(linkPreviewInfo.getImageUrl())) {
+                    linkPreviewInfo.setImageUrl(content);
+                }
+                break;
+            default:
+                // ignore
+        }
+    }
+
+    static Long parseTimestamp(String value) {
+        if (ObjectUtils.isEmpty(value)) {
+            return null;
+        }
+        try {
+            return OffsetDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME).toInstant().getEpochSecond();
+        } catch (DateTimeParseException e) {
+            // fall through
+        }
+        try {
+            return LocalDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME).toEpochSecond(ZoneOffset.UTC);
+        } catch (DateTimeParseException e) {
+            // fall through
+        }
+        try {
+            return LocalDate.parse(value, DateTimeFormatter.ISO_DATE).atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
     }
 
     private LinkPreviewInfo queryLinkPreviewNet(String url) {
