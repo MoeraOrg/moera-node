@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 2ytmSnIUKewoCOVHjXhAJ7dfcwkqYcYu9w4a0MMx5efjOsoJxEnKw5BBR9GY3LK
+\restrict dNUfzYGXClMaxxabxjEFYfOp4U977isP3wudfzrGYkeoBzsuYkWjzdATvo0ZwSd
 
 -- Dumped from database version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
@@ -957,7 +957,8 @@ CREATE TABLE public.drafts (
     rejected_reactions_negative character varying(255) DEFAULT '*'::character varying NOT NULL,
     child_rejected_reactions_positive character varying(255) DEFAULT ''::character varying NOT NULL,
     child_rejected_reactions_negative character varying(255) DEFAULT ''::character varying NOT NULL,
-    allow_anonymous_children boolean DEFAULT false NOT NULL
+    allow_anonymous_children boolean DEFAULT false NOT NULL,
+    media_captions text
 );
 
 
@@ -1084,7 +1085,8 @@ CREATE TABLE public.entries (
     parent_trust_comment_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
     receiver_trust_comment_principal character varying(70),
     premoderating boolean DEFAULT false NOT NULL,
-    client_id character varying(40)
+    client_id character varying(40),
+    parent_media_entry_id uuid
 );
 
 
@@ -1523,7 +1525,8 @@ CREATE TABLE public.picks (
     media_file_owner_id uuid,
     recommended boolean DEFAULT false NOT NULL,
     viewed boolean DEFAULT false NOT NULL,
-    publish_at timestamp without time zone
+    publish_at timestamp without time zone,
+    parent_media_entry_id uuid
 );
 
 
@@ -2820,24 +2823,17 @@ CREATE INDEX entries_parent_id_moment_idx ON public.entries USING btree (parent_
 
 
 --
--- Name: entries_parent_media_id_not_null_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: entries_parent_media_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE UNIQUE INDEX entries_parent_media_id_not_null_idx ON public.entries USING btree (parent_media_id, receiver_name) WHERE (receiver_name IS NOT NULL);
-
-
---
--- Name: entries_parent_media_id_null_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE UNIQUE INDEX entries_parent_media_id_null_idx ON public.entries USING btree (parent_media_id) WHERE (receiver_name IS NULL);
+CREATE INDEX entries_parent_media_entry_id_idx ON public.entries USING btree (parent_media_entry_id) WHERE (parent_media_entry_id IS NOT NULL);
 
 
 --
--- Name: entries_parent_media_id_receiver_name_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: entries_parent_media_entry_id_parent_media_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX entries_parent_media_id_receiver_name_idx ON public.entries USING btree (parent_media_id, receiver_name);
+CREATE UNIQUE INDEX entries_parent_media_entry_id_parent_media_id_idx ON public.entries USING btree (parent_media_entry_id, parent_media_id) WHERE ((parent_media_entry_id IS NOT NULL) AND (parent_media_id IS NOT NULL));
 
 
 --
@@ -3216,6 +3212,13 @@ CREATE INDEX picks_media_file_owner_id_idx ON public.picks USING btree (media_fi
 --
 
 CREATE INDEX picks_node_id_idx ON public.picks USING btree (node_id);
+
+
+--
+-- Name: picks_parent_media_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX picks_parent_media_entry_id_idx ON public.picks USING btree (parent_media_entry_id) WHERE (parent_media_entry_id IS NOT NULL);
 
 
 --
@@ -3978,6 +3981,14 @@ ALTER TABLE ONLY public.entries
 
 
 --
+-- Name: entries entries_parent_media_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entries_parent_media_entry_id_fkey FOREIGN KEY (parent_media_entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: entries entries_parent_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -4170,6 +4181,14 @@ ALTER TABLE ONLY public.picks
 
 
 --
+-- Name: picks picks_parent_media_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.picks
+    ADD CONSTRAINT picks_parent_media_entry_id_fkey FOREIGN KEY (parent_media_entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: public_pages public_pages_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -4325,5 +4344,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 2ytmSnIUKewoCOVHjXhAJ7dfcwkqYcYu9w4a0MMx5efjOsoJxEnKw5BBR9GY3LK
+\unrestrict dNUfzYGXClMaxxabxjEFYfOp4U977isP3wudfzrGYkeoBzsuYkWjzdATvo0ZwSd
 
