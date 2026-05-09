@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.principal.Principal;
@@ -32,6 +33,7 @@ public class BlockedByUser implements ContactRelated {
     private Contact contact;
 
     @NotNull
+    @Size(max = 135)
     private String remoteNodeName;
 
     private String remotePostingId;

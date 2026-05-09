@@ -34,7 +34,7 @@ public class RemoteVerification {
     private VerificationType verificationType;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String nodeName;
 
     @NotNull
@@ -47,7 +47,7 @@ public class RemoteVerification {
     @Size(max = 40)
     private String revisionId;
 
-    @Size(max = 63)
+    @Size(max = 135)
     private String ownerName;
 
     @NotNull

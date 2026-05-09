@@ -18,7 +18,7 @@ public class InitialRecommendation {
     private UUID id;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String nodeName;
 
     @NotNull

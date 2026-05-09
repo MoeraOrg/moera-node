@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import org.moera.node.util.Util;
 
@@ -20,6 +21,7 @@ public class Favor {
     private UUID nodeId;
 
     @NotNull
+    @Size(max = 135)
     private String nodeName;
 
     @NotNull

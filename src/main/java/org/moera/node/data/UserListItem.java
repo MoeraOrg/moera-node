@@ -25,7 +25,7 @@ public class UserListItem {
     private String listName;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String nodeName;
 
     @NotNull

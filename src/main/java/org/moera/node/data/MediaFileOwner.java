@@ -29,7 +29,7 @@ public class MediaFileOwner {
     @NotNull
     private UUID nodeId;
 
-    @Size(max = 63)
+    @Size(max = 135)
     private String ownerName;
 
     @Size(max = 255)

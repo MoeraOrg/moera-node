@@ -34,7 +34,7 @@ public class Draft {
     private DraftType draftType;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String receiverName;
 
     @Size(max = 40)

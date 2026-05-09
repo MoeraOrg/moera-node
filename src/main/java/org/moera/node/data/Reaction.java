@@ -20,7 +20,7 @@ public class Reaction {
     private UUID id;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String ownerName = "";
 
     @Size(max = 96)

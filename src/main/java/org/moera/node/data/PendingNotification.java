@@ -23,7 +23,7 @@ public class PendingNotification {
     private UUID nodeId;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String nodeName = "";
 
     @NotNull

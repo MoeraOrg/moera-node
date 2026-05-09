@@ -21,7 +21,7 @@ public class RemoteUserListItem {
     private UUID nodeId;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String listNodeName;
 
     @NotNull
@@ -29,7 +29,7 @@ public class RemoteUserListItem {
     private String listName;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String nodeName;
 
     @NotNull

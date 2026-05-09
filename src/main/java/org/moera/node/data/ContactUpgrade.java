@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "contact_upgrades")
@@ -27,6 +28,7 @@ public class ContactUpgrade {
     private UpgradeType upgradeType;
 
     @NotNull
+    @Size(max = 135)
     private String remoteNodeName;
 
     public long getId() {

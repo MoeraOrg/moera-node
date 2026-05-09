@@ -43,7 +43,7 @@ public class Entry {
     @Column(insertable = false, updatable = false)
     private EntryType entryType;
 
-    @Size(max = 63)
+    @Size(max = 135)
     private String receiverName;
 
     @Size(max = 96)
@@ -62,7 +62,7 @@ public class Entry {
     private String receiverEntryId;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String ownerName = "";
 
     @Size(max = 96)
@@ -152,7 +152,7 @@ public class Entry {
     @ManyToOne(fetch = FetchType.LAZY)
     private EntryRevision repliedToRevision;
 
-    @Size(max = 63)
+    @Size(max = 135)
     private String repliedToName;
 
     @Size(max = 96)

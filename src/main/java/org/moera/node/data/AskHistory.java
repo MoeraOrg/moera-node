@@ -23,7 +23,7 @@ public class AskHistory {
     private UUID nodeId;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String remoteNodeName;
 
     @NotNull

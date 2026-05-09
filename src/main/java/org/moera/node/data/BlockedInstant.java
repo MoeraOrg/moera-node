@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.util.Util;
@@ -29,10 +30,12 @@ public class BlockedInstant {
     @ManyToOne
     private Entry entry;
 
+    @Size(max = 135)
     private String remoteNodeName;
 
     private String remotePostingId;
 
+    @Size(max = 135)
     private String remoteOwnerName;
 
     @NotNull

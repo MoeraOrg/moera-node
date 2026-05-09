@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "remote_media_cache")
@@ -19,6 +20,7 @@ public class RemoteMediaCache {
     private UUID nodeId;
 
     @NotNull
+    @Size(max = 135)
     private String remoteNodeName;
 
     @NotNull

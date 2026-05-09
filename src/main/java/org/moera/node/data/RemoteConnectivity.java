@@ -19,7 +19,7 @@ public class RemoteConnectivity {
     private UUID id;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String remoteNodeName;
 
     @NotNull

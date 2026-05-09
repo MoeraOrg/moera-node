@@ -30,7 +30,7 @@ public class SheriffOrder {
     private boolean delete;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String remoteNodeName;
 
     @Size(max = 96)
@@ -40,7 +40,7 @@ public class SheriffOrder {
     @Size(max = 63)
     private String remoteFeedName;
 
-    @Size(max = 63)
+    @Size(max = 135)
     private String remotePostingOwnerName;
 
     @Size(max = 96)
@@ -58,7 +58,7 @@ public class SheriffOrder {
     @Size(max = 40)
     private String remotePostingRevisionId;
 
-    @Size(max = 63)
+    @Size(max = 135)
     private String remoteCommentOwnerName;
 
     @Size(max = 96)

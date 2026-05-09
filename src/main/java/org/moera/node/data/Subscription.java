@@ -31,7 +31,7 @@ public class Subscription {
     private String remoteSubscriberId;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String remoteNodeName;
 
     @Size(max = 63)

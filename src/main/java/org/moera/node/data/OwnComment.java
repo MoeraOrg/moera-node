@@ -22,7 +22,7 @@ public class OwnComment {
     private UUID nodeId;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String remoteNodeName = "";
 
     @Size(max = 96)
@@ -42,7 +42,7 @@ public class OwnComment {
     @Size(max = 40)
     private String remoteCommentId = "";
 
-    @Size(max = 63)
+    @Size(max = 135)
     private String remoteRepliedToName = "";
 
     @Size(max = 96)

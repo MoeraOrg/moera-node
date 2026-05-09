@@ -20,7 +20,7 @@ public class SearchEngineStatistics {
     private UUID id;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String nodeName;
 
     @NotNull
@@ -28,7 +28,7 @@ public class SearchEngineStatistics {
     private SearchEngine engine;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String ownerName;
 
     @Size(max = 40)

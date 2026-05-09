@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.SourceFormat;
@@ -30,6 +31,7 @@ public class BlockedUser implements ContactRelated {
     private BlockedOperation blockedOperation;
 
     @NotNull
+    @Size(max = 135)
     private String remoteNodeName;
 
     @ManyToOne
@@ -38,6 +40,7 @@ public class BlockedUser implements ContactRelated {
     @ManyToOne
     private Entry entry;
 
+    @Size(max = 135)
     private String entryNodeName;
 
     private String entryPostingId;

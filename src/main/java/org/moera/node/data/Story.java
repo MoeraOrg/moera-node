@@ -72,7 +72,7 @@ public class Story {
     @NotNull
     private String summary = "";
 
-    @Size(max = 63)
+    @Size(max = 135)
     private String remoteNodeName;
 
     @Size(max = 96)
@@ -84,7 +84,7 @@ public class Story {
     @Size(max = 8)
     private String remoteAvatarShape;
 
-    @Size(max = 63)
+    @Size(max = 135)
     private String remotePostingNodeName;
 
     @Size(max = 96)
@@ -96,7 +96,7 @@ public class Story {
     @Size(max = 8)
     private String remotePostingAvatarShape;
 
-    @Size(max = 63)
+    @Size(max = 135)
     private String remoteOwnerName;
 
     @Size(max = 96)

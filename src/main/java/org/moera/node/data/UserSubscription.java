@@ -38,7 +38,7 @@ public class UserSubscription implements ContactRelated {
     private String feedName;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 135)
     private String remoteNodeName;
 
     @ManyToOne
