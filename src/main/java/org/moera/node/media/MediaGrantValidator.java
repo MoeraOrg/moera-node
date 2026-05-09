@@ -100,7 +100,7 @@ public class MediaGrantValidator {
             log.info("Media grant: not a media grant fingerprint");
             throw new ValidationFailure("media-grant.invalid");
         }
-        if (ObjectUtils.isEmpty(grant.getPostingId())) {
+        if (grant.getVersion() == 0 && ObjectUtils.isEmpty(grant.getPostingId())) {
             log.info("Media grant: posting ID is missing");
             throw new ValidationFailure("media-grant.posting-id.missing");
         }
@@ -123,6 +123,10 @@ public class MediaGrantValidator {
     }
 
     private void validateEntry(MediaGrantProperties grant) {
+        if (grant.getVersion() > 0) {
+            return;
+        }
+
         UUID postingId = Util.uuid(
             grant.getPostingId(),
             () -> new ValidationFailure("media-grant.posting-id.invalid")

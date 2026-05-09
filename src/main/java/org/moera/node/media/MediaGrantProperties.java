@@ -12,6 +12,10 @@ public class MediaGrantProperties {
         this.fingerprint = fingerprint;
     }
 
+    public int getVersion() {
+        return fingerprint.getVersion();
+    }
+
     public String getObjectType() {
         return (String) fingerprint.get("object_type");
     }

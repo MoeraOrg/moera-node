@@ -33,7 +33,7 @@ public class CommentRevisionInfoUtil {
         info.setBody(new Body(revision.getBody()));
         info.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
         var grantSupplier = options != null
-            ? new MediaGrantGenerator(null, comment.getPosting().getId().toString(), comment.getId().toString(), options)
+            ? new MediaGrantGenerator(null, options)
             : null;
         info.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, grantSupplier));
         info.setHeading(revision.getHeading());

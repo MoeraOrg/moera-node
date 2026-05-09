@@ -20,8 +20,6 @@ public class MediaGrantUtil {
      * Generates a cryptographically signed media grant.
      *
      * @param nodeName   name of the node that grants media access, <code>null</code> for the target node itself
-     * @param postingId  ID of the posting that grants media access
-     * @param commentId  ID of the comment that grants media access, if any
      * @param mediaId    ID of the accessed media on the target node
      * @param expires    timestamp when the grant expires
      * @param download   whether the media should be downloaded
@@ -31,8 +29,6 @@ public class MediaGrantUtil {
      */
     public static String generate(
         String nodeName,
-        String postingId,
-        String commentId,
         String mediaId,
         Timestamp expires,
         boolean download,
@@ -43,8 +39,6 @@ public class MediaGrantUtil {
         new SecureRandom().nextBytes(salt);
         byte[] fingerprint = Fingerprints.mediaGrant(
             NodeName.expand(nodeName),
-            postingId,
-            commentId,
             mediaId,
             expires,
             download,

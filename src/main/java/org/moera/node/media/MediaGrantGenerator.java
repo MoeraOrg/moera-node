@@ -8,19 +8,10 @@ import org.moera.node.util.ExtendedDuration;
 public class MediaGrantGenerator implements MediaGrantSupplier {
 
     private final String nodeName;
-    private final String postingId;
-    private final String commentId;
     private final PrivateKey signingKey;
 
-    public MediaGrantGenerator(
-        String nodeName,
-        String postingId,
-        String commentId,
-        Options options
-    ) {
+    public MediaGrantGenerator(String nodeName, Options options) {
         this.nodeName = nodeName;
-        this.postingId = postingId;
-        this.commentId = commentId;
         this.signingKey = options.getPrivateKey("profile.signing-key");
     }
 
@@ -28,8 +19,6 @@ public class MediaGrantGenerator implements MediaGrantSupplier {
     public String generate(String mediaId, ExtendedDuration duration, boolean download, String fileName) {
         return MediaGrantUtil.generate(
             nodeName,
-            postingId,
-            commentId,
             mediaId,
             MediaUtil.expirationTimestamp(duration),
             download,
