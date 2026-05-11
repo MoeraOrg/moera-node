@@ -6,10 +6,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
-import org.moera.lib.node.types.RemoteMedia;
-import org.moera.node.util.Util;
 
 @Entity
 @Table(name = "entry_attachments")
@@ -27,20 +23,8 @@ public class EntryAttachment {
     @ManyToOne
     private MediaFileOwner mediaFileOwner;
 
-    @Size(max = 40)
-    private String remoteMediaId;
-
-    @Size(max = 40)
-    private String remoteMediaHash;
-
-    private byte[] remoteMediaDigest;
-
-    @NotNull
-    @Size(max = 80)
-    private String remoteMediaMimeType = "image/jpeg";
-
-    @NotNull
-    private boolean remoteMediaAttachment;
+    @ManyToOne
+    private RemoteMediaFile remoteMediaFile;
 
     @NotNull
     private int ordinal;
@@ -65,16 +49,10 @@ public class EntryAttachment {
         this.ordinal = ordinal;
     }
 
-    public EntryAttachment(Draft draft, RemoteMedia remoteMedia, int ordinal) {
+    public EntryAttachment(Draft draft, RemoteMediaFile remoteMediaFile, int ordinal) {
         this.id = UUID.randomUUID();
         this.draft = draft;
-        this.remoteMediaId = remoteMedia.getId();
-        this.remoteMediaHash = remoteMedia.getHash();
-        this.remoteMediaDigest = Util.base64decode(remoteMedia.getDigest());
-        this.remoteMediaMimeType = remoteMedia.getMimeType() != null
-            ? remoteMedia.getMimeType()
-            : this.remoteMediaMimeType;
-        this.remoteMediaAttachment = remoteMedia.getAttachment() != null ? remoteMedia.getAttachment() : false;
+        this.remoteMediaFile = remoteMediaFile;
         this.ordinal = ordinal;
     }
 
@@ -110,44 +88,12 @@ public class EntryAttachment {
         this.mediaFileOwner = mediaFileOwner;
     }
 
-    public String getRemoteMediaId() {
-        return remoteMediaId;
+    public RemoteMediaFile getRemoteMediaFile() {
+        return remoteMediaFile;
     }
 
-    public void setRemoteMediaId(String remoteMediaId) {
-        this.remoteMediaId = remoteMediaId;
-    }
-
-    public String getRemoteMediaHash() {
-        return remoteMediaHash;
-    }
-
-    public void setRemoteMediaHash(String remoteMediaHash) {
-        this.remoteMediaHash = remoteMediaHash;
-    }
-
-    public byte[] getRemoteMediaDigest() {
-        return remoteMediaDigest;
-    }
-
-    public void setRemoteMediaDigest(byte[] remoteMediaDigest) {
-        this.remoteMediaDigest = remoteMediaDigest;
-    }
-
-    public String getRemoteMediaMimeType() {
-        return remoteMediaMimeType;
-    }
-
-    public void setRemoteMediaMimeType(String remoteMediaMimeType) {
-        this.remoteMediaMimeType = remoteMediaMimeType;
-    }
-
-    public boolean isRemoteMediaAttachment() {
-        return remoteMediaAttachment;
-    }
-
-    public void setRemoteMediaAttachment(boolean remoteMediaAttachment) {
-        this.remoteMediaAttachment = remoteMediaAttachment;
+    public void setRemoteMediaFile(RemoteMediaFile remoteMediaFile) {
+        this.remoteMediaFile = remoteMediaFile;
     }
 
     public int getOrdinal() {

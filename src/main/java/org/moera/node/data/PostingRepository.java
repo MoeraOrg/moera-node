@@ -41,6 +41,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
         "select p from Posting p"
         + " join fetch p.currentRevision cr left join fetch cr.attachments cra"
         + " left join fetch cra.mediaFileOwner mfo left join fetch mfo.mediaFile mf left join fetch mf.previews"
+        + " left join fetch cra.remoteMediaFile"
         + " join fetch p.reactionTotals"
         + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is not null"
     )
@@ -57,7 +58,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
         "select mfo from Posting p"
         + " left join p.currentRevision cr left join cr.attachments cra"
         + " left join cra.mediaFileOwner mfo left join fetch mfo.mediaFile"
-        + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null and cra.remoteMediaId = ?3"
+        + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null and cra.remoteMediaFile.mediaId = ?3"
     )
     Optional<MediaFileOwner> findAttachedMediaByRemoteId(UUID nodeId, UUID id, String remoteMediaId);
 

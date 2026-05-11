@@ -36,6 +36,7 @@ import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.ReactionTotalRepository;
+import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.liberin.Liberin;
@@ -44,6 +45,7 @@ import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaOperations;
+import org.moera.node.media.RemoteMediaOperations;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.StoryOperations;
@@ -88,6 +90,9 @@ public class Picker extends Task {
 
     @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    private RemoteMediaOperations remoteMediaOperations;
 
     @Inject
     private StoryOperations storyOperations;
@@ -307,9 +312,10 @@ public class Picker extends Task {
                 remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), attach.getMedia(), entryId
             );
             if (media != null) {
+                RemoteMediaFile remoteMediaFile = remoteMediaOperations.store(remoteNodeName, attach.getMedia());
                 EntryAttachment attachment = new EntryAttachment(revision, media, ordinal++);
                 attachment.setEmbedded(attach.isEmbedded());
-                attachment.setRemoteMediaId(attach.getMedia().getId());
+                attachment.setRemoteMediaFile(remoteMediaFile);
                 attachment = entryAttachmentRepository.save(attachment);
                 revision.addAttachment(attachment);
 

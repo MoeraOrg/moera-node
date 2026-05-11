@@ -31,6 +31,7 @@ import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
@@ -41,6 +42,7 @@ import org.moera.node.liberin.model.DraftAddedLiberin;
 import org.moera.node.liberin.model.DraftDeletedLiberin;
 import org.moera.node.liberin.model.DraftUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
+import org.moera.node.media.RemoteMediaOperations;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.DraftInfoUtil;
 import org.moera.node.model.DraftTextUtil;
@@ -99,6 +101,9 @@ public class DraftController {
 
     @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    private RemoteMediaOperations remoteMediaOperations;
 
     @GetMapping
     @Admin(Scope.DRAFTS)
@@ -302,7 +307,8 @@ public class DraftController {
             }
         } else {
             for (RemoteMedia md : remoteMedia) {
-                EntryAttachment attachment = new EntryAttachment(draft, md, ordinal++);
+                RemoteMediaFile remoteMediaFile = remoteMediaOperations.store(draft.getReceiverName(), md);
+                EntryAttachment attachment = new EntryAttachment(draft, remoteMediaFile, ordinal++);
                 attachment.setEmbedded(embedded.contains(md.getHash()));
                 attachment = entryAttachmentRepository.save(attachment);
                 draft.addAttachment(attachment);

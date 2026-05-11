@@ -36,6 +36,7 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
     @Query(
         "select r from EntryRevision r"
         + " left join fetch r.attachments ra left join fetch ra.mediaFileOwner mfo"
+        + " left join fetch ra.remoteMediaFile"
         + " left join fetch mfo.mediaFile mf left join fetch mf.previews"
         + " where r.entry.nodeId = ?1 and r.entry.id = ?2 and r.entry.deletedAt is null and r.id = ?3"
     )
@@ -50,6 +51,7 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
     @Query(
         "select r from EntryRevision r"
         + " left join fetch r.attachments ra left join fetch ra.mediaFileOwner mfo"
+        + " left join fetch ra.remoteMediaFile"
         + " left join fetch mfo.mediaFile mf left join fetch mf.previews"
         + " where r.entry.nodeId = ?1 and r.entry.id = ?2 and r.entry.deletedAt is not null and r.id = ?3"
     )

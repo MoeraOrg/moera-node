@@ -24,8 +24,8 @@ public class MediaAttachmentUtil {
             );
             mediaAttachment.setPostingId(mediaPosting != null ? mediaPosting.getId().toString() : null);
         }
-        if (attachment.getRemoteMediaId() != null) {
-            mediaAttachment.setRemoteMedia(RemoteMediaInfoUtil.build(attachment));
+        if (attachment.getRemoteMediaFile() != null) {
+            mediaAttachment.setRemoteMedia(RemoteMediaInfoUtil.build(attachment.getRemoteMediaFile()));
         }
         mediaAttachment.setEmbedded(attachment.isEmbedded());
         
