@@ -284,7 +284,7 @@ public class PostingController {
     }
 
     private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {
-        normalizeBodySource(postingText);
+        normalizeBodySource(posting, postingText);
         byte[] digest = null;
         if (postingText.getSignature() == null) {
             // permission checks only AFTER this point
@@ -309,12 +309,14 @@ public class PostingController {
                 throw new AuthenticationException();
             }
 
-            ValidationUtil.assertion(hasBodyTextOrMedia(postingText), "posting.body-src.blank");
-            ValidationUtil.maxSize(
-                postingText.getBodySrc().getEncoded(),
-                getMaxPostingSize(),
-                "posting.body-src.wrong-size"
-            );
+            ValidationUtil.assertion(posting != null || hasBodyTextOrMedia(postingText), "posting.body-src.blank");
+            if (postingText.getBodySrc() != null) {
+                ValidationUtil.maxSize(
+                    postingText.getBodySrc().getEncoded(),
+                    getMaxPostingSize(),
+                    "posting.body-src.wrong-size"
+                );
+            }
         } else {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
             byte[] fingerprint = PostingFingerprintBuilder.build(
@@ -367,11 +369,14 @@ public class PostingController {
         return digest;
     }
 
-    private static void normalizeBodySource(PostingText postingText) {
-        ValidationUtil.notNull(postingText.getBodySrc(), "posting.body-src.blank");
+    private static void normalizeBodySource(Posting posting, PostingText postingText) {
+        if (posting == null) {
+            ValidationUtil.notNull(postingText.getBodySrc(), "posting.body-src.blank");
+        }
         if (
             postingText.getSignature() == null
             && postingText.getBodySrcFormat() != SourceFormat.APPLICATION
+            && postingText.getBodySrc() != null
             && postingText.getBodySrc().getText() == null
         ) {
             postingText.getBodySrc().setText("");
