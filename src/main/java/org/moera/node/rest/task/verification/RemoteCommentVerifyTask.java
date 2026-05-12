@@ -104,12 +104,6 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
 
         updateData(data -> data.setRevisionId(commentInfo.getRevisionId()));
 
-        byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
-                ? mediaManager.getPrivateMediaDigest(
-                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), postingInfo.getParentMediaId(),
-                    null
-                )
-                : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(
                     remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), pmf
@@ -132,7 +126,11 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
                 revisionInfo.getSignatureVersion(),
                 postingInfo,
                 revisionInfo,
-                parentMediaDigest,
+                mediaManager.getParentMediaDigest(
+                    postingInfo.getParentMedia(),
+                    remoteNodeName,
+                    nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                ),
                 mediaDigest
             ),
             repliedToDigest
@@ -167,11 +165,6 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             return;
         }
 
-        byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
-            ? mediaManager.getPrivateMediaDigest(
-                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), postingInfo.getParentMediaId(), null
-            )
-            : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
             pmf -> mediaManager.getPrivateMediaDigest(
                 remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), pmf
@@ -195,7 +188,11 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
                 postingRevisionInfo.getSignatureVersion(),
                 postingInfo,
                 postingRevisionInfo,
-                parentMediaDigest,
+                mediaManager.getParentMediaDigest(
+                    postingInfo.getParentMedia(),
+                    remoteNodeName,
+                    nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                ),
                 mediaDigest
             ),
             repliedToDigest

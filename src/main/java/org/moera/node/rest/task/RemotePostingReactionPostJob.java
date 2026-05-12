@@ -248,21 +248,17 @@ public class RemotePostingReactionPostJob
     }
 
     private ReactionDescription buildReaction() {
-        byte[] parentMediaDigest = state.postingInfo.getParentMediaId() != null
-                ? mediaManager.getPrivateMediaDigest(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                    state.postingInfo.getParentMediaId(),
-                    null
-                )
-                : null;
         byte[] fingerprint = ReactionFingerprintBuilder.build(
                 nodeName(),
                 parameters.attributes,
                 PostingFingerprintBuilder.build(
                     state.postingInfo.getSignatureVersion(),
                     state.postingInfo,
-                    parentMediaDigest,
+                    mediaManager.getParentMediaDigest(
+                        state.postingInfo.getParentMedia(),
+                        parameters.targetNodeName,
+                        nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                    ),
                     pmf ->
                         mediaManager.getPrivateMediaDigest(
                             parameters.targetNodeName,
@@ -320,10 +316,12 @@ public class RemotePostingReactionPostJob
     @Override
     protected void failed() {
         super.failed();
-        if (state.postingInfo.getParentMediaId() == null) {
+        if (state.postingInfo.getParentMedia() == null) {
             send(
                 new RemotePostingReactionAddingFailedLiberin(
-                    parameters.targetNodeName, parameters.postingId, state.postingInfo
+                    parameters.targetNodeName,
+                    parameters.postingId,
+                    state.postingInfo
                 )
             );
         } else {
@@ -331,8 +329,7 @@ public class RemotePostingReactionPostJob
                 RemoteMediaReactionFailedJob.class,
                 new RemoteMediaReactionFailedJob.Parameters(
                     parameters.targetNodeName,
-                    state.postingInfo.getParentMediaId(),
-                    parentMediaGrant(),
+                    state.postingInfo.getParentMedia(),
                     parameters.postingId
                 ),
                 nodeId
@@ -346,7 +343,7 @@ public class RemotePostingReactionPostJob
         }
         for (MediaAttachment attachment : state.postingInfo.getMedia()) {
             PrivateMediaFileInfo media = attachment.getMedia();
-            if (media != null && state.postingInfo.getParentMediaId().equals(media.getId())) {
+            if (media != null && state.postingInfo.getParentMedia().getMediaId().equals(media.getId())) {
                 return media.getGrant();
             }
         }

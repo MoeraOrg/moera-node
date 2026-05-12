@@ -7,6 +7,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
+import org.moera.node.media.LocalRemoteMedia;
+
 @Entity
 @Table(name = "entry_attachments")
 public class EntryAttachment {
@@ -35,17 +37,29 @@ public class EntryAttachment {
     public EntryAttachment() {
     }
 
-    public EntryAttachment(EntryRevision entryRevision, MediaFileOwner mediaFileOwner, int ordinal) {
+    public EntryAttachment(
+        EntryRevision entryRevision, MediaFileOwner mediaFileOwner, RemoteMediaFile remoteMediaFile, int ordinal
+    ) {
         this.id = UUID.randomUUID();
         this.entryRevision = entryRevision;
         this.mediaFileOwner = mediaFileOwner;
+        this.remoteMediaFile = remoteMediaFile;
         this.ordinal = ordinal;
     }
 
-    public EntryAttachment(Draft draft, MediaFileOwner mediaFileOwner, int ordinal) {
+    public EntryAttachment(EntryRevision entryRevision, LocalRemoteMedia media, int ordinal) {
+        this(entryRevision, media.mediaFileOwner(), media.remoteMediaFile(), ordinal);
+    }
+
+    public EntryAttachment(EntryRevision entryRevision, MediaFileOwner mediaFileOwner, int ordinal) {
+        this(entryRevision, mediaFileOwner, null, ordinal);
+    }
+
+    public EntryAttachment(Draft draft, LocalRemoteMedia media, int ordinal) {
         this.id = UUID.randomUUID();
         this.draft = draft;
-        this.mediaFileOwner = mediaFileOwner;
+        this.mediaFileOwner = media.mediaFileOwner();
+        this.remoteMediaFile = media.remoteMediaFile();
         this.ordinal = ordinal;
     }
 
@@ -94,6 +108,10 @@ public class EntryAttachment {
 
     public void setRemoteMediaFile(RemoteMediaFile remoteMediaFile) {
         this.remoteMediaFile = remoteMediaFile;
+    }
+
+    public LocalRemoteMedia getLocalRemoteMedia() {
+        return new LocalRemoteMedia(getMediaFileOwner(), getRemoteMediaFile());
     }
 
     public int getOrdinal() {

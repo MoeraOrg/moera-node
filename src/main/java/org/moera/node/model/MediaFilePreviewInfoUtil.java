@@ -67,7 +67,7 @@ public class MediaFilePreviewInfoUtil {
     ) {
         ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
         String grant = grantSupplier != null
-            ? grantSupplier.generate(originalId, valid, false, null)
+            ? grantSupplier.generate(null, originalId, valid, false, null)
             : null;
         String fileName = MimeUtil.fileName(originalId, originalMimeType);
         info.setPath(MediaUtil.privatePath(fileName, info.getTargetWidth(), grant));

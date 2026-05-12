@@ -76,15 +76,9 @@ public class MediaLeaseController {
 
         attributes.validate();
 
-        String clientName = requestContext.getClientName(Scope.LEASE_MEDIA);
+        String clientName = requestContext.getClientName(Scope.VIEW_MEDIA);
         boolean admin = requestContext.isAdmin(Scope.LEASE_MEDIA) && requestContext.isAdmin(Scope.VIEW_MEDIA);
-        if (clientName == null && !admin) {
-            throw new AuthenticationException();
-        }
-        if (clientName != null && !requestContext.hasClientScope(Scope.VIEW_MEDIA) && !admin) {
-            throw new AuthenticationException();
-        }
-        if (!admin && !Objects.equals(attributes.getNodeName(), clientName)) {
+        if ((clientName == null || !Objects.equals(attributes.getNodeName(), clientName)) && !admin) {
             throw new AuthenticationException();
         }
 
@@ -142,7 +136,7 @@ public class MediaLeaseController {
         mediaLease.setEntry(entry);
         mediaLease = mediaLeaseRepository.save(mediaLease);
 
-        var grantSupplier = entry != null ? new MediaGrantGenerator(null, requestContext.getOptions()) : null;
+        var grantSupplier = entry != null ? new MediaGrantGenerator(requestContext.getOptions()) : null;
         return MediaLeaseInfoUtil.build(mediaLease, config.getMedia().getDirectServe(), grantSupplier);
     }
 

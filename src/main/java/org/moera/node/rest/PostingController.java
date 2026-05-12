@@ -50,6 +50,7 @@ import org.moera.node.liberin.model.PostingAddedLiberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingReadLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -177,7 +178,7 @@ public class PostingController {
         if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
             throw new UserBlockedException();
         }
-        List<MediaFileOwner> media = mediaOperations.validateAttachments(
+        List<LocalRemoteMedia> media = mediaOperations.validateAttachments(
             postingText.getMedia(),
             true,
             requestContext.isAdmin(Scope.VIEW_MEDIA),
@@ -243,7 +244,7 @@ public class PostingController {
             postingText.getPublications() == null || postingText.getPublications().isEmpty(),
             "posting.publications.cannot-modify"
         );
-        List<MediaFileOwner> media = mediaOperations.validateAttachments(
+        List<LocalRemoteMedia> media = mediaOperations.validateAttachments(
             postingText.getMedia(),
             true,
             requestContext.isAdmin(Scope.VIEW_MEDIA),
@@ -390,8 +391,8 @@ public class PostingController {
     }
 
     private byte[] parentMediaDigest(Posting posting) {
-        return posting != null && posting.getParentMedia() != null
-            ? posting.getParentMedia().getMediaFile().getDigest()
+        return posting != null
+            ? new LocalRemoteMedia(posting.getParentMedia(), posting.getParentRemoteMedia()).digest()
             : null;
     }
 

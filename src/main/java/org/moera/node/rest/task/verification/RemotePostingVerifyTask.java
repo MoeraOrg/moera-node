@@ -42,12 +42,11 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
                 .at(data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_CONTENT))
                 .getPosting(data.getPostingId(), false);
             updateData(data -> data.setOwnerName(postingInfo.getReceiverName()));
-            byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
-                ? mediaManager.getPrivateMediaDigest(
-                    data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA),
-                    postingInfo.getParentMediaId(), null
-                )
-                : null;
+            byte[] parentMediaDigest = mediaManager.getParentMediaDigest(
+                postingInfo.getParentMedia(),
+                data.getNodeName(),
+                nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+            );
             Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(
                     data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf

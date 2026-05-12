@@ -5,7 +5,7 @@ import java.util.Set;
 
 import org.moera.lib.node.types.body.Body;
 import org.moera.node.config.DirectServeConfig;
-import org.moera.node.data.MediaFileOwner;
+import org.moera.node.media.LocalRemoteMedia;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -72,7 +72,7 @@ public class HtmlSanitizer {
     private static String sanitize(
         String html,
         boolean preview,
-        List<MediaFileOwner> media,
+        List<LocalRemoteMedia> media,
         boolean noFollowOnLinks,
         DirectServeConfig config
     ) {
@@ -99,7 +99,7 @@ public class HtmlSanitizer {
     private static String sanitizeIfNeeded(
         String html,
         boolean preview,
-        List<MediaFileOwner> media,
+        List<LocalRemoteMedia> media,
         boolean noFollowOnLinks,
         DirectServeConfig config
     ) {
@@ -110,7 +110,7 @@ public class HtmlSanitizer {
     public static String sanitizeIfNeeded(
         Body body,
         boolean preview,
-        List<MediaFileOwner> media,
+        List<LocalRemoteMedia> media,
         boolean noFollowOnLinks,
         DirectServeConfig config
     ) {

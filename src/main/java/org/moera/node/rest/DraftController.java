@@ -29,7 +29,6 @@ import org.moera.node.data.DraftRepository;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.domain.DomainsConfiguredEvent;
@@ -41,6 +40,7 @@ import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.model.DraftAddedLiberin;
 import org.moera.node.liberin.model.DraftDeletedLiberin;
 import org.moera.node.liberin.model.DraftUpdatedLiberin;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.RemoteMediaOperations;
 import org.moera.node.model.AvatarDescriptionUtil;
@@ -208,7 +208,7 @@ public class DraftController {
             "draft.receiver-comment-id.blank"
         );
 
-        List<MediaFileOwner> media = validate(draftText);
+        List<LocalRemoteMedia> media = validate(draftText);
 
         Draft draft = new Draft();
         draft.setId(UUID.randomUUID());
@@ -247,7 +247,7 @@ public class DraftController {
         );
 
         draftText.validate();
-        List<MediaFileOwner> media = validate(draftText);
+        List<LocalRemoteMedia> media = validate(draftText);
 
         UUID draftId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
         Draft draft = draftRepository.findById(requestContext.nodeId(), draftId)
@@ -261,7 +261,7 @@ public class DraftController {
         return DraftInfoUtil.build(draft, config.getMedia().getDirectServe());
     }
 
-    private List<MediaFileOwner> validate(DraftText draftText) {
+    private List<LocalRemoteMedia> validate(DraftText draftText) {
         ValidationUtil.assertion(
             draftText.getBodySrc() == null || draftText.getBodySrc().getEncoded().length() <= getMaxPostingSize(),
             "draft.body-src.wrong-size"
@@ -289,7 +289,7 @@ public class DraftController {
         }
     }
 
-    private void updateAttachments(Draft draft, List<MediaFileOwner> media, List<RemoteMedia> remoteMedia) {
+    private void updateAttachments(Draft draft, List<LocalRemoteMedia> media, List<RemoteMedia> remoteMedia) {
         Set<EntryAttachment> attachments = new HashSet<>(draft.getAttachments());
         for (EntryAttachment ea : attachments) {
             draft.removeAttachment(ea);
@@ -300,9 +300,9 @@ public class DraftController {
 
         int ordinal = 0;
         if (draft.getReceiverName().equals(requestContext.nodeName())) {
-            for (MediaFileOwner mfo : media) {
-                EntryAttachment attachment = new EntryAttachment(draft, mfo, ordinal++);
-                attachment.setEmbedded(embedded.contains(mfo.getMediaFile().getId()));
+            for (LocalRemoteMedia lrm : media) {
+                EntryAttachment attachment = new EntryAttachment(draft, lrm, ordinal++);
+                attachment.setEmbedded(embedded.contains(lrm.hash()));
                 attachment = entryAttachmentRepository.save(attachment);
                 draft.addAttachment(attachment);
             }

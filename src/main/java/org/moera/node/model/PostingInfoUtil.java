@@ -24,9 +24,9 @@ import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
-import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.OwnPosting;
 import org.moera.node.data.Story;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
@@ -171,10 +171,9 @@ public class PostingInfoUtil {
             ));
         }
         info.setReceiverPostingId(posting.getReceiverEntryId());
-        info.setParentMediaId(posting.getParentMedia() != null ? posting.getParentMedia().getId().toString() : null);
-        info.setParentMediaEntryId(
-            posting.getParentMediaEntry() != null ? posting.getParentMediaEntry().getId().toString() : null
-        );
+        if (posting.getParentMediaEntry() != null) {
+            info.setParentMedia(ParentMediaInfoUtil.build(posting));
+        }
         info.setOwnerName(posting.getOwnerName());
         info.setOwnerFullName(posting.getOwnerFullName());
         info.setOwnerGender(posting.getOwnerGender());
@@ -192,7 +191,7 @@ public class PostingInfoUtil {
         info.setBodySrcFormat(revision.getBodySrcFormat());
         info.setBody(new Body(revision.getBody()));
         info.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
-        var grantSupplier = options != null ? new MediaGrantGenerator(null, options) : null;
+        var grantSupplier = options != null ? new MediaGrantGenerator(options) : null;
         info.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, grantSupplier));
         info.setHeading(revision.getHeading());
         info.setDescription(revision.getDescription());
@@ -579,9 +578,9 @@ public class PostingInfoUtil {
     }
 
     public static void toPickedEntryRevision(PostingInfo info, EntryRevision entryRevision, DirectServeConfig config) {
-        List<MediaFileOwner> media = entryRevision.getAttachments().stream()
-            .map(EntryAttachment::getMediaFileOwner)
-            .collect(Collectors.toList());
+        List<LocalRemoteMedia> media = entryRevision.getAttachments().stream()
+            .map(EntryAttachment::getLocalRemoteMedia)
+            .toList();
 
         entryRevision.setReceiverRevisionId(info.getRevisionId());
         entryRevision.setBodyPreview(info.getBodyPreview().getEncoded());
@@ -614,7 +613,14 @@ public class PostingInfoUtil {
 
     public static void toOwnPosting(PostingInfo info, OwnPosting ownPosting) {
         ownPosting.setRemotePostingId(info.getId());
-        ownPosting.setRemoteParentMediaId(info.getParentMediaId());
+        if (info.getParentMedia() != null) {
+            ownPosting.setRemoteParentMediaId(info.getParentMedia().getMediaId());
+            ownPosting.setRemoteParentMediaEntryId(
+                info.getParentMedia().getCommentId() != null
+                    ? info.getParentMedia().getCommentId()
+                    : info.getParentMedia().getPostingId()
+            );
+        }
         ownPosting.setHeading(info.getHeading());
         ownPosting.setCreatedAt(Util.now());
     }

@@ -168,6 +168,7 @@ public class Picker extends Task {
                 pick.getRemotePostingId(),
                 pick.getFeedName(),
                 pick.getMediaFileOwner(),
+                pick.getRemoteMediaFile(),
                 pick.getParentMediaEntry(),
                 pick.isRecommended(),
                 pick.isViewed(),
@@ -188,6 +189,7 @@ public class Picker extends Task {
         String remotePostingId,
         String feedName,
         MediaFileOwner parentMedia,
+        RemoteMediaFile parentRemoteMedia,
         Entry parentMediaEntry,
         boolean recommended,
         boolean viewed,
@@ -223,6 +225,7 @@ public class Picker extends Task {
             posting.setId(UUID.randomUUID());
             posting.setNodeId(nodeId);
             posting.setParentMedia(parentMedia);
+            posting.setParentRemoteMedia(parentRemoteMedia);
             posting.setParentMediaEntry(parentMediaEntry);
             posting.setReceiverName(receiverName);
             posting.setReceiverFullName(receiverFullName);
@@ -304,33 +307,57 @@ public class Picker extends Task {
     }
 
     private void downloadMedia(
-        PostingInfo postingInfo, UUID entryId, EntryRevision revision, List<Pick> picks
+        PostingInfo postingInfo,
+        UUID entryId,
+        EntryRevision revision,
+        List<Pick> picks
     ) throws MoeraNodeException {
         int ordinal = 0;
         for (MediaAttachment attach : postingInfo.getMedia()) {
-            MediaFileOwner media = mediaManager.downloadPrivateMedia(
-                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), attach.getMedia(), entryId
-            );
-            if (media != null) {
-                RemoteMediaFile remoteMediaFile = remoteMediaOperations.store(remoteNodeName, attach.getMedia());
-                EntryAttachment attachment = new EntryAttachment(revision, media, ordinal++);
-                attachment.setEmbedded(attach.isEmbedded());
-                attachment.setRemoteMediaFile(remoteMediaFile);
-                attachment = entryAttachmentRepository.save(attachment);
-                revision.addAttachment(attachment);
-
-                if (attach.getPostingId() != null) {
-                    picks.add(pickMediaPosting(media, revision.getEntry(), attach.getPostingId()));
-                }
-            }
+            downloadMedia(attach, ordinal++, entryId, revision, picks);
         }
     }
 
-    private Pick pickMediaPosting(MediaFileOwner media, Entry parentMediaEntry, String remotePostingId) {
+    private void downloadMedia(
+        MediaAttachment attach,
+        int ordinal,
+        UUID entryId,
+        EntryRevision revision,
+        List<Pick> picks
+    ) throws MoeraNodeException {
+        MediaFileOwner media = null;
+        long maxSize = universalContext.getOptions().getLong("posting.media.max-size");
+        if (attach.getMedia().getSize() <= maxSize) {
+            media = mediaManager.downloadPrivateMedia(
+                remoteNodeName,
+                generateCarte(remoteNodeName, Scope.VIEW_MEDIA),
+                attach.getMedia(),
+                entryId
+            );
+        }
+        RemoteMediaFile remoteMedia = remoteMediaOperations.store(remoteNodeName, attach.getMedia());
+
+        EntryAttachment attachment = new EntryAttachment(revision, media, remoteMedia, ordinal);
+        attachment.setEmbedded(attach.isEmbedded());
+        attachment = entryAttachmentRepository.save(attachment);
+        revision.addAttachment(attachment);
+
+        if (attach.getPostingId() != null) {
+            picks.add(pickMediaPosting(media, remoteMedia, revision.getEntry(), attach.getPostingId()));
+        }
+    }
+
+    private Pick pickMediaPosting(
+        MediaFileOwner media,
+        RemoteMediaFile remoteMedia,
+        Entry parentMediaEntry,
+        String remotePostingId
+    ) {
         Pick pick = new Pick();
         pick.setRemoteNodeName(remoteNodeName);
         pick.setRemotePostingId(remotePostingId);
         pick.setMediaFileOwner(media);
+        pick.setRemoteMediaFile(remoteMedia);
         pick.setParentMediaEntry(parentMediaEntry);
         return pick;
     }

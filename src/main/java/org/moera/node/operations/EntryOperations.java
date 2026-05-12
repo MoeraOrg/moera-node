@@ -23,8 +23,6 @@ import org.moera.node.global.UniversalContext;
 import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.MediaAttachmentUtil;
-import org.moera.node.model.MediaFilePreviewInfoUtil;
-import org.moera.node.model.PrivateMediaFileInfoUtil;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Transaction;
@@ -140,19 +138,9 @@ public class EntryOperations implements MediaAttachmentsProvider {
     }
 
     private void updateCachedPaths(List<MediaAttachment> attachments, MediaGrantSupplier grantSupplier) {
-        for (var attachment : attachments) {
-            if (attachment.getMedia() != null) {
-                var media = attachment.getMedia();
-                PrivateMediaFileInfoUtil.fillPath(media, grantSupplier);
-                PrivateMediaFileInfoUtil.fillDirectPath(media, config.getMedia().getDirectServe());
-                if (media.getPreviews() != null) {
-                    for (var preview : media.getPreviews()) {
-                        MediaFilePreviewInfoUtil.fillPath(preview, media, grantSupplier);
-                        MediaFilePreviewInfoUtil.fillDirectPath(preview, config.getMedia().getDirectServe());
-                    }
-                }
-            }
-        }
+        attachments.forEach(attachment ->
+            MediaAttachmentUtil.fillPaths(attachment, config.getMedia().getDirectServe(), grantSupplier)
+        );
     }
 
 }

@@ -70,6 +70,7 @@ import org.moera.node.liberin.model.CommentAddedLiberin;
 import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.liberin.model.CommentsReadLiberin;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.CommentCreatedUtil;
@@ -228,7 +229,7 @@ public class CommentController {
             throw new UserBlockedException();
         }
         mediaOperations.validateAvatar(commentText.getOwnerAvatar());
-        List<MediaFileOwner> media = mediaOperations.validateAttachments(
+        List<LocalRemoteMedia> media = mediaOperations.validateAttachments(
             commentText.getMedia(),
             true,
             requestContext.isAdmin(Scope.VIEW_CONTENT),
@@ -319,7 +320,7 @@ public class CommentController {
             throw new UserBlockedException();
         }
         mediaOperations.validateAvatar(commentText.getOwnerAvatar());
-        List<MediaFileOwner> media = mediaOperations.validateAttachments(
+        List<LocalRemoteMedia> media = mediaOperations.validateAttachments(
             commentText.getMedia(),
             true,
             requestContext.isAdmin(Scope.VIEW_CONTENT),

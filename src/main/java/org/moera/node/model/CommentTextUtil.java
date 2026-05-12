@@ -19,6 +19,7 @@ import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.text.TextConverter;
 import org.moera.node.text.shorten.Shortener;
 import org.moera.node.util.Util;
@@ -326,7 +327,7 @@ public class CommentTextUtil {
         EntryRevision revision,
         byte[] digest,
         TextConverter textConverter,
-        List<MediaFileOwner> media,
+        List<LocalRemoteMedia> media,
         boolean noFollowOnLinks
     ) {
         if (commentText.getCreatedAt() != null) {

@@ -41,7 +41,9 @@ public class PostingFingerprintBuilder {
                     posting.isOriginal() ? revision.getCreatedAt() : revision.getReceiverCreatedAt(),
                     (byte) 0,
                     CryptoUtil.digest(
-                        AttachmentFingerprintBuilder.build(posting.getParentMedia(), revision.getAttachments())
+                        AttachmentFingerprintBuilder.build(
+                            posting.getParentMedia(), posting.getParentRemoteMedia(), revision.getAttachments()
+                        )
                     )
                 );
             case 0 ->

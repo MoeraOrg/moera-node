@@ -133,19 +133,13 @@ public class MediaFileOwner {
     }
 
     public void addPosting(Posting posting) {
-        addPosting(posting, null);
-    }
-
-    public void addPosting(Posting posting, Entry parentMediaEntry) {
         postings.add(posting);
         posting.setParentMedia(this);
-        posting.setParentMediaEntry(parentMediaEntry);
     }
 
     public void removePosting(Posting posting) {
         postings.removeIf(sr -> sr.getId().equals(posting.getId()));
         posting.setParentMedia(null);
-        posting.setParentMediaEntry(null);
     }
 
     public Timestamp getCreatedAt() {

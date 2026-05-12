@@ -4,10 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -15,7 +12,6 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
 import org.moera.lib.node.types.BlockedOperation;
-import org.moera.lib.node.types.EntryInfo;
 import org.moera.lib.node.types.PrivateMediaFileAttributes;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.PublicMediaFileInfo;
@@ -25,14 +21,10 @@ import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.UserBlockedException;
 import org.moera.node.config.Config;
-import org.moera.node.data.Comment;
-import org.moera.node.data.Entry;
-import org.moera.node.data.EntryRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
-import org.moera.node.data.Posting;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.InvalidImageException;
@@ -40,16 +32,13 @@ import org.moera.node.media.MediaGrantProperties;
 import org.moera.node.media.MediaGrantValidator;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.ThresholdReachedException;
-import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingFeaturesUtil;
-import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.PrivateMediaFileInfoUtil;
 import org.moera.node.model.PublicMediaFileInfoUtil;
 import org.moera.node.ocrspace.OcrSpace;
 import org.moera.node.operations.BlockedUserOperations;
-import org.moera.node.operations.EntryOperations;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -88,13 +77,7 @@ public class MediaController {
     private MediaFileOwnerRepository mediaFileOwnerRepository;
 
     @Inject
-    private EntryRepository entryRepository;
-
-    @Inject
     private MediaOperations mediaOperations;
-
-    @Inject
-    private EntryOperations entryOperations;
 
     @Inject
     private BlockedUserOperations blockedUserOperations;
@@ -289,7 +272,7 @@ public class MediaController {
         return PrivateMediaFileInfoUtil.build(
             getMediaFileOwner(mediaId, grant),
             config.getMedia().getDirectServe(),
-            (id1, duration, download, fileName) -> grant
+            (nodeName, id1, duration, download, fileName) -> grant
         );
     }
 
@@ -355,54 +338,6 @@ public class MediaController {
         mediaOperations.blockMalware(mediaFileOwner, ignoreMalware);
 
         return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, mediaFileOwner.getUserFileName(), download);
-    }
-
-    @GetMapping("/private/{id}/parent")
-    @Transactional
-    public List<EntryInfo> getParentPrivate(
-        @PathVariable String id,
-        @RequestParam(required = false) String grant
-    ) {
-        log.info("GET /media/private/{id}/parent (id = {})", LogUtil.format(id));
-
-        UUID mediaId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
-        MediaFileOwner mediaFileOwner = getMediaFileOwner(mediaId, grant);
-        Set<Entry> entries = entryRepository.findByMediaId(mediaFileOwner.getId());
-        List<EntryInfo> parents = new ArrayList<>();
-        for (Entry entry : entries) {
-            EntryInfo info = new EntryInfo();
-            switch (entry) {
-                case Posting posting:
-                    info.setPosting(
-                        PostingInfoUtil.build(
-                            posting,
-                            entryOperations,
-                            requestContext,
-                            requestContext.getOptions(),
-                            config.getMedia().getDirectServe()
-                        )
-                    );
-                    break;
-
-                case Comment comment:
-                    info.setComment(
-                        CommentInfoUtil.build(
-                            comment,
-                            entryOperations,
-                            requestContext,
-                            requestContext.getOptions(),
-                            config.getMedia().getDirectServe()
-                        )
-                    );
-                    break;
-
-                default:
-                    continue;
-            }
-            parents.add(info);
-        }
-
-        return parents;
     }
 
 }

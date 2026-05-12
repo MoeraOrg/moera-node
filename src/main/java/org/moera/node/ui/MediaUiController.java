@@ -15,6 +15,7 @@ import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.StoryRepository;
 import org.moera.node.global.MaxCache;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
@@ -58,6 +59,9 @@ public class MediaUiController {
 
     @Inject
     private PostingRepository postingRepository;
+
+    @Inject
+    private StoryRepository storyRepository;
 
     @Inject
     private MediaOperations mediaOperations;
@@ -145,17 +149,19 @@ public class MediaUiController {
         UUID postingUuid = Util.uuid(postingId).orElseThrow(PageNotFoundException::new);
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingUuid)
             .orElseThrow(PageNotFoundException::new);
+        if (posting.getParentMediaEntry() == null) {
+            throw new PageNotFoundException();
+        }
         if (
             !requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
             && !feedOperations.isSheriffAllowed(
-                () -> mediaOperations.getParentStories(posting.getParentMedia().getId()),
+                () -> storyRepository.findByEntryId(requestContext.nodeId(), posting.getParentMediaEntry().getId()),
                 posting.getViewE()
             )
             && !(
                 includesAdmin(posting.getViewE())
                 && requestContext.isClient(requestContext.nodeName(), Scope.VIEW_CONTENT)
             )
-            // See the comment above
         ) {
             throw new PageNotFoundException();
         }

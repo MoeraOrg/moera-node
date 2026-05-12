@@ -250,14 +250,13 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
         );
         Map<UUID, byte[]> mediaDigests = buildMediaDigestsMap();
         cacheMediaDigests(mediaDigests);
-        byte[] parentMediaDigest = state.prevPostingInfo != null && state.prevPostingInfo.getParentMediaId() != null
-                ? mediaManager.getPrivateMediaDigest(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                    state.prevPostingInfo.getParentMediaId(),
-                    null
-                )
-                : null;
+        byte[] parentMediaDigest = state.prevPostingInfo != null
+            ? mediaManager.getParentMediaDigest(
+                state.prevPostingInfo.getParentMedia(),
+                parameters.targetNodeName,
+                nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+            )
+            : null;
         byte[] fingerprint = PostingFingerprintBuilder.build(
             postingText,
             parentMediaDigest,
@@ -299,7 +298,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
     }
 
     private void savePosting() {
-        if (state.postingInfo.getParentMediaId() != null) {
+        if (state.postingInfo.getParentMedia() != null) {
             return;
         }
 
@@ -320,7 +319,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
                         ownPosting.setRemoteAvatarShape(state.target.getAvatar().getShape());
                     }
                     ownPosting = ownPostingRepository.save(ownPosting);
-                    if (state.postingInfo.getParentMediaId() == null) {
+                    if (state.postingInfo.getParentMedia() == null) {
                         favorOperations.addFavor(nodeId, parameters.targetNodeName, FavorType.POST);
                     }
                 }

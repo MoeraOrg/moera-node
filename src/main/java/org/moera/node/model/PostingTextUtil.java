@@ -19,6 +19,7 @@ import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.text.TextConverter;
 import org.moera.node.text.shorten.Shortener;
 import org.moera.node.util.Util;
@@ -125,7 +126,7 @@ public class PostingTextUtil {
             entry.setExternalSourceUri(postingText.getExternalSourceUri());
         }
 
-        if (entry.getParentMedia() == null) {
+        if (entry.getParentMediaEntry() == null) {
             if (postingText.getOperations() != null) {
                 toPrincipal(postingText.getOperations().getView(), entry::setViewPrincipal);
                 toPrincipal(postingText.getOperations().getViewComments(), entry::setViewCommentsPrincipal);
@@ -356,7 +357,7 @@ public class PostingTextUtil {
         EntryRevision revision,
         byte[] digest,
         TextConverter textConverter,
-        List<MediaFileOwner> media
+        List<LocalRemoteMedia> media
     ) {
         if (postingText.getCreatedAt() != null) {
             revision.setCreatedAt(Util.toTimestamp(postingText.getCreatedAt()));

@@ -1,10 +1,15 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -38,14 +43,19 @@ public class RemoteMediaFile {
     @NotNull
     private boolean attachment;
 
+    @Column(name="size_x")
     private Integer sizeX;
 
+    @Column(name="size_y")
     private Integer sizeY;
 
     private Long fileSize;
 
     @Size(max = 40)
     private String leaseId;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parentRemoteMedia")
+    private Set<Posting> postings = new HashSet<>();
 
     @NotNull
     @Column(insertable = false, updatable = false)
@@ -148,6 +158,35 @@ public class RemoteMediaFile {
 
     public void setLeaseId(String leaseId) {
         this.leaseId = leaseId;
+    }
+
+    public Set<Posting> getPostings() {
+        return postings;
+    }
+
+    public void setPostings(Set<Posting> postings) {
+        this.postings = postings;
+    }
+
+    public Posting getPostingByParentMediaEntry(Entry parentMediaEntry) {
+        UUID parentMediaEntryId = parentMediaEntry != null ? parentMediaEntry.getId() : null;
+        return postings.stream()
+            .filter(p -> Objects.equals(
+                p.getParentMediaEntry() != null ? p.getParentMediaEntry().getId() : null,
+                parentMediaEntryId
+            ))
+            .findFirst()
+            .orElse(null);
+    }
+
+    public void addPosting(Posting posting) {
+        postings.add(posting);
+        posting.setParentRemoteMedia(this);
+    }
+
+    public void removePosting(Posting posting) {
+        postings.removeIf(sr -> sr.getId().equals(posting.getId()));
+        posting.setParentRemoteMedia(null);
     }
 
     public int getUsageCount() {

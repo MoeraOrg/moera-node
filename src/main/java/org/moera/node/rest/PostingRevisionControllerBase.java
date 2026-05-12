@@ -16,13 +16,13 @@ import org.moera.node.config.Config;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
-import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.Liberin;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingRevisionInfoUtil;
 import org.moera.node.operations.EntryOperations;
@@ -162,11 +162,10 @@ public abstract class PostingRevisionControllerBase {
 
         posting.setDeletedAt(null);
         posting.setDeadline(null);
-        List<MediaFileOwner> media = revision.getAttachments().stream()
-                .map(EntryAttachment::getMediaFileOwner)
+        List<LocalRemoteMedia> media = revision.getAttachments().stream()
+                .map(EntryAttachment::getLocalRemoteMedia)
                 .collect(Collectors.toList());
-        posting = postingOperations.createOrUpdatePosting(posting, revision, media, null, null,
-                null, null);
+        posting = postingOperations.createOrUpdatePosting(posting, revision, media, null, null, null, null);
 
         requestContext.send(getRestorationLiberin(posting, latest));
 

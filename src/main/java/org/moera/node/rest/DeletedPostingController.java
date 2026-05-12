@@ -13,7 +13,6 @@ import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.config.Config;
 import org.moera.node.data.EntryAttachment;
-import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
@@ -25,6 +24,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.operations.EntryOperations;
@@ -123,8 +123,8 @@ public class DeletedPostingController {
 
         posting.setDeletedAt(null);
         posting.setDeadline(null);
-        List<MediaFileOwner> media = posting.getCurrentRevision().getAttachments().stream()
-            .map(EntryAttachment::getMediaFileOwner)
+        List<LocalRemoteMedia> media = posting.getCurrentRevision().getAttachments().stream()
+            .map(EntryAttachment::getLocalRemoteMedia)
             .collect(Collectors.toList());
         posting = postingOperations.createOrUpdatePosting(
             posting, posting.getCurrentRevision(), media, null, null, null, null

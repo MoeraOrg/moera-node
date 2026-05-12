@@ -211,14 +211,11 @@ public class RemoteCommentReactionPostJob
     }
 
     private ReactionDescription buildReaction() {
-        byte[] parentMediaDigest = state.postingInfo.getParentMediaId() != null
-            ? mediaManager.getPrivateMediaDigest(
-                parameters.targetNodeName,
-                generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                state.postingInfo.getParentMediaId(),
-                null
-            )
-            : null;
+        byte[] parentMediaDigest = mediaManager.getParentMediaDigest(
+            state.postingInfo.getParentMedia(),
+            parameters.targetNodeName,
+            nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+        );
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
             pmf -> mediaManager.getPrivateMediaDigest(
                 parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA), pmf

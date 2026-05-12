@@ -171,7 +171,7 @@ public class TimelineUiController {
         if (
             posting == null
             || !posting.isMessage()
-            || posting.getParentMedia() != null
+            || posting.getParentMediaEntry() != null
             || !posting.getViewCompound().isPublic()
         ) {
             throw new PageNotFoundException();

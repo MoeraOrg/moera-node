@@ -41,6 +41,9 @@ public class OwnPosting {
     @Size(max = 40)
     private String remoteParentMediaId;
 
+    @Size(max = 40)
+    private String remoteParentMediaEntryId;
+
     @NotNull
     @Size(max = 255)
     private String heading = "";
@@ -110,6 +113,18 @@ public class OwnPosting {
 
     public void setRemoteParentMediaId(String remoteParentMediaId) {
         this.remoteParentMediaId = remoteParentMediaId;
+    }
+
+    public String getRemoteParentMediaEntryId() {
+        return remoteParentMediaEntryId;
+    }
+
+    public void setRemoteParentMediaEntryId(String remoteParentMediaEntryId) {
+        this.remoteParentMediaEntryId = remoteParentMediaEntryId;
+    }
+
+    public boolean hasParentMedia() {
+        return getRemoteParentMediaId() != null || getRemoteParentMediaEntryId() != null;
     }
 
     public String getHeading() {

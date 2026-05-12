@@ -134,9 +134,7 @@ public class CommentInfoUtil {
         commentInfo.setBodySrcFormat(revision.getBodySrcFormat());
         commentInfo.setBody(new Body(revision.getBody()));
         commentInfo.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
-        var grantSupplier = options != null
-            ? new MediaGrantGenerator(null, options)
-            : null;
+        var grantSupplier = options != null ? new MediaGrantGenerator(options) : null;
         commentInfo.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, grantSupplier));
         commentInfo.setHeading(revision.getHeading());
         commentInfo.setDescription(revision.getDescription());

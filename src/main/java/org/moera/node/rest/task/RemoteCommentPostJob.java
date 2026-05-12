@@ -357,21 +357,17 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         );
         Map<UUID, byte[]> mediaDigests = buildMediaDigestsMap();
         cacheMediaDigests(mediaDigests);
-        byte[] parentMediaDigest = state.postingInfo.getParentMediaId() != null
-                ? mediaManager.getPrivateMediaDigest(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                    state.postingInfo.getParentMediaId(),
-                    null
-                )
-                : null;
         byte[] fingerprint = CommentFingerprintBuilder.build(
             commentText,
             id -> commentMediaDigest(id, mediaDigests),
             CryptoUtil.digest(PostingFingerprintBuilder.build(
                 state.postingInfo.getSignatureVersion(),
                 state.postingInfo,
-                parentMediaDigest,
+                mediaManager.getParentMediaDigest(
+                    state.postingInfo.getParentMedia(),
+                    parameters.targetNodeName,
+                    nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                ),
                 pmf -> mediaManager.getPrivateMediaDigest(
                     parameters.targetNodeName,
                     generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),

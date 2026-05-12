@@ -13,6 +13,8 @@ import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.MediaFileOwner;
+import org.moera.node.data.RemoteMediaFile;
+import org.moera.node.media.LocalRemoteMedia;
 
 public class AttachmentFingerprintBuilder {
 
@@ -26,24 +28,27 @@ public class AttachmentFingerprintBuilder {
         return Fingerprints.attachment(digest);
     }
 
-    public static byte[] build(MediaFileOwner mediaFileOwner) {
-        return build(LATEST_VERSION, mediaFileOwner);
+    public static byte[] build(LocalRemoteMedia media) {
+        return build(LATEST_VERSION, media);
     }
 
-    public static byte[] build(short version, MediaFileOwner mediaFileOwner) {
-        return Fingerprints.attachment(mediaFileOwner.getMediaFile().getDigest());
-    }
-
-    public static byte[] build(EntryAttachment attachment) {
-        return build(LATEST_VERSION, attachment);
-    }
-
-    public static byte[] build(short version, EntryAttachment attachment) {
-        return build(version, attachment.getMediaFileOwner());
+    public static byte[] build(short version, LocalRemoteMedia media) {
+        return Fingerprints.attachment(media.digest());
     }
 
     public static List<byte[]> build(
         MediaFileOwner parentMedia,
+        RemoteMediaFile parentRemoteMedia,
+        Collection<EntryAttachment> entryAttachments
+    ) {
+        LocalRemoteMedia parent = parentMedia != null || parentRemoteMedia != null
+            ? new LocalRemoteMedia(parentMedia, parentRemoteMedia)
+            : null;
+        return build(parent, entryAttachments);
+    }
+
+    public static List<byte[]> build(
+        LocalRemoteMedia parentMedia,
         Collection<EntryAttachment> entryAttachments
     ) {
         if (entryAttachments == null) {
@@ -52,11 +57,15 @@ public class AttachmentFingerprintBuilder {
 
         List<byte[]> digests = new ArrayList<>();
         if (parentMedia != null) {
-            digests.add(build(parentMedia));
+            byte[] digest = parentMedia.digest();
+            if (digest != null) {
+                digests.add(build(parentMedia));
+            }
         }
         entryAttachments.stream()
             .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-            .filter(ea -> ea.getMediaFileOwner().getMediaFile().getDigest() != null)
+            .map(EntryAttachment::getLocalRemoteMedia)
+            .filter(lrm -> lrm.digest() != null)
             .map(AttachmentFingerprintBuilder::build)
             .forEach(digests::add);
         return digests;

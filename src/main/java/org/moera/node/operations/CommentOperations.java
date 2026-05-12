@@ -10,10 +10,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.Rules;
@@ -40,6 +42,7 @@ import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.CommentTextUtil;
@@ -192,12 +195,15 @@ public class CommentOperations {
         Entry posting,
         Comment comment,
         EntryRevision revision,
-        List<MediaFileOwner> media,
+        List<LocalRemoteMedia> media,
         Predicate<EntryRevision> isNothingChanged,
         Consumer<EntryRevision> revisionUpdater,
         Consumer<Entry> mediaEntryUpdater
     ) {
-        List<MediaFileOwner> affectedMedia = new ArrayList<>(media);
+        List<MediaFileOwner> affectedMedia = media.stream()
+            .map(LocalRemoteMedia::mediaFileOwner)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
         EntryRevision latest = comment.getCurrentRevision();
         if (latest != null) {
             if (isNothingChanged != null && isNothingChanged.test(latest)) {
@@ -225,15 +231,15 @@ public class CommentOperations {
         if (!media.isEmpty()) {
             Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(current.getBody()));
             int ordinal = 0;
-            for (MediaFileOwner mfo : media) {
-                EntryAttachment attachment = new EntryAttachment(current, mfo, ordinal++);
-                attachment.setEmbedded(embedded.contains(mfo.getMediaFile().getId()));
+            for (LocalRemoteMedia lrm : media) {
+                EntryAttachment attachment = new EntryAttachment(current, lrm, ordinal++);
+                attachment.setEmbedded(embedded.contains(lrm.hash()));
                 attachment = entryAttachmentRepository.save(attachment);
                 current.addAttachment(attachment);
 
-                Posting mediaPosting = mfo.getPostingByParentMediaEntry(comment);
+                Posting mediaPosting = lrm.postingByParentMediaEntry(comment);
                 if (mediaPosting == null) {
-                    mediaPosting = postingOperations.newPosting(mfo, comment);
+                    mediaPosting = postingOperations.newPosting(lrm, comment);
                 }
                 if (mediaEntryUpdater != null) {
                     mediaEntryUpdater.accept(mediaPosting);

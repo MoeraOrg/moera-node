@@ -139,6 +139,9 @@ public class Entry {
     private MediaFileOwner parentMedia;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    private RemoteMediaFile parentRemoteMedia;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     private Entry parentMediaEntry;
 
     @NotNull
@@ -629,6 +632,14 @@ public class Entry {
 
     public void setParentMedia(MediaFileOwner parentMedia) {
         this.parentMedia = parentMedia;
+    }
+
+    public RemoteMediaFile getParentRemoteMedia() {
+        return parentRemoteMedia;
+    }
+
+    public void setParentRemoteMedia(RemoteMediaFile parentRemoteMedia) {
+        this.parentRemoteMedia = parentRemoteMedia;
     }
 
     public Entry getParentMediaEntry() {

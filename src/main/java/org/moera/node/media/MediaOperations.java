@@ -55,11 +55,9 @@ import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.config.Config;
 import org.moera.node.data.ChildOperationsUtil;
-import org.moera.node.data.Comment;
 import org.moera.node.data.DraftRepository;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachmentRepository;
-import org.moera.node.data.EntryRepository;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
@@ -68,8 +66,6 @@ import org.moera.node.data.MediaFilePreview;
 import org.moera.node.data.MediaFilePreviewRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.Posting;
-import org.moera.node.data.Story;
-import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.CommentMediaTextUpdatedLiberin;
@@ -136,12 +132,6 @@ public class MediaOperations {
 
     @Inject
     private EntryRevisionRepository entryRevisionRepository;
-
-    @Inject
-    private EntryRepository entryRepository;
-
-    @Inject
-    private StoryRepository storyRepository;
 
     @Inject
     private DraftRepository draftRepository;
@@ -681,7 +671,7 @@ public class MediaOperations {
         }
     }
 
-    public <T> List<MediaFileOwner> validateAttachments(
+    public <T> List<LocalRemoteMedia> validateAttachments(
         Collection<T> records,
         Function<T, String> idGetter,
         boolean compressed,
@@ -706,7 +696,7 @@ public class MediaOperations {
         return validateAttachments(uuids, compressed, isAdminViewMedia, isAdminUncompressedMedia, clientName);
     }
 
-    public List<MediaFileOwner> validateAttachments(
+    public List<LocalRemoteMedia> validateAttachments(
         Collection<String> ids,
         boolean compressed,
         boolean isAdminViewMedia,
@@ -729,7 +719,7 @@ public class MediaOperations {
         return validateAttachments(uuids, compressed, isAdminViewMedia, isAdminUncompressedMedia, clientName);
     }
 
-    private List<MediaFileOwner> validateAttachments(
+    private List<LocalRemoteMedia> validateAttachments(
         UUID[] ids,
         boolean compressed,
         boolean isAdminViewMedia,
@@ -743,7 +733,7 @@ public class MediaOperations {
         PostingFeatures features = PostingFeaturesUtil.build(universalContext.getOptions(), AccessCheckers.ADMIN);
         int recommendedSize = features.getImageRecommendedSize();
 
-        List<MediaFileOwner> attached = new ArrayList<>();
+        List<LocalRemoteMedia> attached = new ArrayList<>();
         Set<UUID> usedIds = new HashSet<>();
         Map<UUID, MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findByIds(universalContext.nodeId(), ids)
             .stream()
@@ -768,19 +758,10 @@ public class MediaOperations {
                     || mediaFileOwner.getMediaFile().getFileSize() <= recommendedSize,
                 "media.not-compressed"
             );
-            attached.add(mediaFileOwner);
+            attached.add(new LocalRemoteMedia(mediaFileOwner, null));
             usedIds.add(id);
         }
         return attached;
-    }
-
-    public List<Story> getParentStories(UUID mediaFileOwnerId) {
-        Set<Entry> entries = entryRepository.findByMediaId(mediaFileOwnerId);
-        return entries.stream()
-            .map(entry -> entry instanceof Comment ? entry.getParent().getId() : entry.getId())
-            .map(id -> storyRepository.findByEntryId(universalContext.nodeId(), id))
-            .flatMap(Collection::stream)
-            .collect(Collectors.toList());
     }
 
     @Scheduled(fixedDelayString = "PT6H")

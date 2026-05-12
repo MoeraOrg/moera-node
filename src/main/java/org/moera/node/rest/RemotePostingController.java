@@ -139,7 +139,7 @@ public class RemotePostingController {
         OwnPosting ownPosting = ownPostingRepository
             .findByRemotePostingId(requestContext.nodeId(), nodeName, postingId)
             .orElse(null);
-        if (ownPosting != null && ownPosting.getRemoteParentMediaId() == null) {
+        if (ownPosting != null && !ownPosting.hasParentMedia()) {
             favorOperations.asyncAddFavor(nodeName, FavorType.UNPOST);
             requestContext.send(new RemotePostingUpdatedLiberin(nodeName, postingId));
         }

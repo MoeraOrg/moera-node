@@ -40,6 +40,9 @@ public class Pick {
     private MediaFileOwner mediaFileOwner;
 
     @ManyToOne
+    private RemoteMediaFile remoteMediaFile;
+
+    @ManyToOne
     private Entry parentMediaEntry;
 
     private boolean recommended;
@@ -110,6 +113,14 @@ public class Pick {
 
     public void setMediaFileOwner(MediaFileOwner mediaFileOwner) {
         this.mediaFileOwner = mediaFileOwner;
+    }
+
+    public RemoteMediaFile getRemoteMediaFile() {
+        return remoteMediaFile;
+    }
+
+    public void setRemoteMediaFile(RemoteMediaFile remoteMediaFile) {
+        this.remoteMediaFile = remoteMediaFile;
     }
 
     public Entry getParentMediaEntry() {

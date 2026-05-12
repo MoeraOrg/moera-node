@@ -135,12 +135,6 @@ public class RepliedToDigestVerifier {
             postingRevisions.put(commentRevisionInfo.getPostingRevisionId(), postingRevisionInfo);
         }
 
-        byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
-            ? mediaManager.getPrivateMediaDigest(
-                targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_MEDIA),
-                postingInfo.getParentMediaId(), null
-            )
-            : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
             pmf -> mediaManager.getPrivateMediaDigest(
                 targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_MEDIA), pmf
@@ -155,7 +149,11 @@ public class RepliedToDigestVerifier {
                 postingRevisionInfo.getSignatureVersion(),
                 postingInfo,
                 postingRevisionInfo,
-                parentMediaDigest,
+                mediaManager.getParentMediaDigest(
+                    postingInfo.getParentMedia(),
+                    targetNodeName,
+                    nodeName -> generateCarte.generate(nodeName, Scope.VIEW_MEDIA)
+                ),
                 mediaDigest
             ),
             repliedToDigest

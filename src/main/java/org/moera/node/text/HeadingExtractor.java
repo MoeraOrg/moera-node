@@ -13,6 +13,7 @@ import org.jsoup.select.NodeFilter;
 import org.moera.lib.node.types.body.Body;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MimeUtil;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
@@ -34,7 +35,7 @@ public class HeadingExtractor {
         Pattern.CASE_INSENSITIVE
     );
 
-    public static String extractHeading(Body body, List<MediaFileOwner> media, boolean collapseQuotations) {
+    public static String extractHeading(Body body, List<LocalRemoteMedia> media, boolean collapseQuotations) {
         if (!ObjectUtils.isEmpty(body.getSubject())) {
             return Util.ellipsize(body.getSubject(), HEADING_LENGTH);
         }
@@ -54,7 +55,7 @@ public class HeadingExtractor {
     }
 
     public static String extractDescription(
-        Body body, List<MediaFileOwner> media, boolean collapseQuotations, String heading
+        Body body, List<LocalRemoteMedia> media, boolean collapseQuotations, String heading
     ) {
         String text = body.getAllText();
         if (ObjectUtils.isEmpty(text)) {
@@ -181,7 +182,7 @@ public class HeadingExtractor {
 
     }
 
-    private static String extractGalleryTexts(Body body, List<MediaFileOwner> media, int len) {
+    private static String extractGalleryTexts(Body body, List<LocalRemoteMedia> media, int len) {
         if (ObjectUtils.isEmpty(media)) {
             return "";
         }
@@ -190,7 +191,11 @@ public class HeadingExtractor {
         boolean hasGallery = false;
         boolean hasAttachedFiles = false;
         Set<String> linkIds = MediaExtractor.extractMediaFileIds(body.getLinkPreviews());
-        for (MediaFileOwner mediaFileOwner : media) {
+        for (LocalRemoteMedia localRemoteMedia : media) {
+            MediaFileOwner mediaFileOwner = localRemoteMedia.mediaFileOwner();
+            if (mediaFileOwner == null) {
+                continue;
+            }
             MediaFile mediaFile = mediaFileOwner.getMediaFile();
             if (mediaFile == null || linkIds.contains(mediaFile.getId())) {
                 continue;

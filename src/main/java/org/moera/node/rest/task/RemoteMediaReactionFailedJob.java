@@ -4,7 +4,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
-import org.moera.lib.node.types.EntryInfo;
+import org.moera.lib.node.types.ParentMediaInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.liberin.model.RemoteCommentMediaReactionAddingFailedLiberin;
@@ -22,21 +22,15 @@ public class RemoteMediaReactionFailedJob
     public static class Parameters {
 
         private String targetNodeName;
-        private String mediaId;
-        private String mediaGrant;
+        private ParentMediaInfo parentMedia;
         private String postingId; // The posting linked to the media
 
         public Parameters() {
         }
 
-        public Parameters(String targetNodeName, String mediaId, String postingId) {
-            this(targetNodeName, mediaId, null, postingId);
-        }
-
-        public Parameters(String targetNodeName, String mediaId, String mediaGrant, String postingId) {
+        public Parameters(String targetNodeName, ParentMediaInfo parentMedia, String postingId) {
             this.targetNodeName = targetNodeName;
-            this.mediaId = mediaId;
-            this.mediaGrant = mediaGrant;
+            this.parentMedia = parentMedia;
             this.postingId = postingId;
         }
 
@@ -48,20 +42,12 @@ public class RemoteMediaReactionFailedJob
             this.targetNodeName = targetNodeName;
         }
 
-        public String getMediaId() {
-            return mediaId;
+        public ParentMediaInfo getMediaParent() {
+            return parentMedia;
         }
 
-        public void setMediaId(String mediaId) {
-            this.mediaId = mediaId;
-        }
-
-        public String getMediaGrant() {
-            return mediaGrant;
-        }
-
-        public void setMediaGrant(String mediaGrant) {
-            this.mediaGrant = mediaGrant;
+        public void setMediaParent(ParentMediaInfo mediaParent) {
+            this.parentMedia = mediaParent;
         }
 
         public String getPostingId() {
@@ -121,27 +107,22 @@ public class RemoteMediaReactionFailedJob
 
     @Override
     protected void execute() throws MoeraNodeException {
-        if (state.parentPosting == null) {
-            EntryInfo[] parents = nodeApi
-                .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA))
-                .getPrivateMediaParentEntry(parameters.mediaId, parameters.mediaGrant);
-            if (parents != null && parents.length > 0) {
-                if (parents[0].getComment() == null) {
-                    state.parentPosting = parents[0].getPosting();
-                } else {
-                    state.parentComment = parents[0].getComment();
-                    if (state.parentComment != null) {
-                        state.parentPosting = nodeApi
-                            .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
-                            .getPosting(state.parentComment.getPostingId(), false);
-                    }
-                }
-            }
-            checkpoint();
+        if (state.parentComment.getPostingId() == null) {
+            success();
         }
 
         if (state.parentPosting == null) {
-            success();
+            state.parentPosting = nodeApi
+                .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
+                .getPosting(state.parentComment.getPostingId(), false);
+            checkpoint();
+        }
+
+        if (parameters.parentMedia.getCommentId() != null && state.parentComment == null) {
+            state.parentComment = nodeApi
+                .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
+                .getComment(state.parentComment.getPostingId(), parameters.parentMedia.getCommentId(), false);
+            checkpoint();
         }
 
         if (state.parentPosting.getOwnerAvatar() != null) {
@@ -163,7 +144,7 @@ public class RemoteMediaReactionFailedJob
                     parameters.targetNodeName,
                     parameters.postingId,
                     state.parentPosting.getId(),
-                    parameters.mediaId,
+                    parameters.parentMedia.getMediaId(),
                     state.parentPosting
                 )
             );
@@ -172,7 +153,7 @@ public class RemoteMediaReactionFailedJob
                 new RemoteCommentMediaReactionAddingFailedLiberin(
                     parameters.targetNodeName,
                     parameters.postingId,
-                    parameters.mediaId,
+                    parameters.parentMedia.getMediaId(),
                     state.parentPosting,
                     state.parentComment
                 )
@@ -183,10 +164,18 @@ public class RemoteMediaReactionFailedJob
     @Override
     protected void failed() {
         super.failed();
-        log.error(
-            "Failed to send error message to the owner of the parent posting/comment for media {} at node {}",
-            parameters.mediaId, parameters.targetNodeName
-        );
+        if (parameters.parentMedia.getNodeName() == null) {
+            log.error(
+                "Failed to send error message to the owner of the parent posting/comment for media {} at node {}",
+                parameters.parentMedia.getMediaId(), parameters.targetNodeName
+            );
+        } else {
+            log.error(
+                "Failed to send error message to the owner of the parent posting/comment for media {} leased from"
+                    + " the node {} at node {}",
+                parameters.parentMedia.getMediaId(), parameters.parentMedia.getNodeName(), parameters.targetNodeName
+            );
+        }
     }
 
 }

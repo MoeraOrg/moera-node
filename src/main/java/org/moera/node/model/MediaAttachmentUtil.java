@@ -16,20 +16,41 @@ public class MediaAttachmentUtil {
         MediaAttachment mediaAttachment = new MediaAttachment();
         
         if (attachment.getMediaFileOwner() != null) {
-            mediaAttachment.setMedia(PrivateMediaFileInfoUtil.build(
-                attachment.getMediaFileOwner(), config, grantSupplier
-            ));
+            mediaAttachment.setMedia(
+                PrivateMediaFileInfoUtil.build(attachment.getMediaFileOwner(), config, grantSupplier)
+            );
             Posting mediaPosting = attachment.getMediaFileOwner().getPostingByParentMediaEntry(
                 attachment.getEntryRevision() != null ? attachment.getEntryRevision().getEntry() : null
             );
             mediaAttachment.setPostingId(mediaPosting != null ? mediaPosting.getId().toString() : null);
         }
         if (attachment.getRemoteMediaFile() != null) {
-            mediaAttachment.setRemoteMedia(RemoteMediaInfoUtil.build(attachment.getRemoteMediaFile()));
+            mediaAttachment.setRemoteMedia(RemoteMediaInfoUtil.build(attachment.getRemoteMediaFile(), grantSupplier));
         }
         mediaAttachment.setEmbedded(attachment.isEmbedded());
         
         return mediaAttachment;
+    }
+
+    public static void fillPaths(
+        MediaAttachment mediaAttachment,
+        DirectServeConfig config,
+        MediaGrantSupplier grantSupplier
+    ) {
+        if (mediaAttachment.getMedia() != null) {
+            var media = mediaAttachment.getMedia();
+            PrivateMediaFileInfoUtil.fillPath(media, grantSupplier);
+            PrivateMediaFileInfoUtil.fillDirectPath(media, config);
+            if (media.getPreviews() != null) {
+                for (var preview : media.getPreviews()) {
+                    MediaFilePreviewInfoUtil.fillPath(preview, media, grantSupplier);
+                    MediaFilePreviewInfoUtil.fillDirectPath(preview, config);
+                }
+            }
+        }
+        if (mediaAttachment.getRemoteMedia() != null) {
+            RemoteMediaInfoUtil.fillGrant(mediaAttachment.getRemoteMedia(), grantSupplier);
+        }
     }
 
 }

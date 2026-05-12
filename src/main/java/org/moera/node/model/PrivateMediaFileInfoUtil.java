@@ -12,6 +12,7 @@ import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.media.MimeUtil;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.media.MediaUtil;
+import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 
 public class PrivateMediaFileInfoUtil {
@@ -25,6 +26,7 @@ public class PrivateMediaFileInfoUtil {
         
         info.setId(mediaFileOwner.getId().toString());
         info.setHash(mediaFileOwner.getMediaFile().getId());
+        info.setDigest(Util.base64encode(mediaFileOwner.getMediaFile().getDigest()));
         info.setMimeType(mediaFileOwner.getMediaFile().getMimeType());
         info.setWidth(mediaFileOwner.getMediaFile().getSizeX());
         info.setHeight(mediaFileOwner.getMediaFile().getSizeY());
@@ -62,7 +64,7 @@ public class PrivateMediaFileInfoUtil {
             : null;
         ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
         String grant = grantSupplier != null
-            ? grantSupplier.generate(info.getId(), valid, download, fileName)
+            ? grantSupplier.generate(null, info.getId(), valid, download, fileName)
             : null;
         info.setGrant(grant);
         info.setPath(MediaUtil.privatePath(info, null, grant));

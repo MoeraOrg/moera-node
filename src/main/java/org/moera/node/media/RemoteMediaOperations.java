@@ -39,14 +39,16 @@ public class RemoteMediaOperations {
         return remoteMediaFile;
     }
 
-    public RemoteMediaFile store(String remoteNodeName, PrivateMediaFileInfo media) {
+    public RemoteMediaFile store(String remoteNodeName, PrivateMediaFileInfo media, String leaseId) {
         RemoteMediaFile remoteMediaFile = create(remoteNodeName, media.getId());
         remoteMediaFile.setHash(media.getHash());
+        remoteMediaFile.setDigest(Util.base64decode(media.getDigest()));
         remoteMediaFile.setMimeType(media.getMimeType());
         remoteMediaFile.setAttachment(Boolean.TRUE.equals(media.getAttachment()));
         remoteMediaFile.setSizeX(media.getWidth());
         remoteMediaFile.setSizeY(media.getHeight());
         remoteMediaFile.setFileSize(media.getSize());
+        remoteMediaFile.setLeaseId(leaseId);
         return remoteMediaFile;
     }
 

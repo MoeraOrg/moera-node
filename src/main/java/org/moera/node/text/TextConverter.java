@@ -9,7 +9,7 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.node.config.Config;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.EntryRevision;
-import org.moera.node.data.MediaFileOwner;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.text.shorten.Shortener;
 import org.springframework.stereotype.Component;
@@ -46,7 +46,7 @@ public class TextConverter {
         BodyFormat bodyFormat,
         Body sourceBodyPreview,
         boolean isSigned,
-        List<MediaFileOwner> media,
+        List<LocalRemoteMedia> media,
         boolean collapseQuotations,
         boolean noFollowOnLinks,
         EntryRevision revision
@@ -104,7 +104,7 @@ public class TextConverter {
     }
 
     public static void headingToRevision(
-        Body body, List<MediaFileOwner> media, boolean collapseQuotations, EntryRevision revision
+        Body body, List<LocalRemoteMedia> media, boolean collapseQuotations, EntryRevision revision
     ) {
         if (!revision.getBodyFormat().equals(BodyFormat.APPLICATION.getValue())) {
             String heading = HeadingExtractor.extractHeading(body, media, collapseQuotations);
@@ -113,7 +113,7 @@ public class TextConverter {
         }
     }
 
-    private static boolean hasAttachedGallery(Body body, List<MediaFileOwner> media) {
+    private static boolean hasAttachedGallery(Body body, List<LocalRemoteMedia> media) {
         if (ObjectUtils.isEmpty(media)) {
             return false;
         }

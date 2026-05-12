@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.body.Body;
@@ -19,7 +18,6 @@ import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntryType;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.liberin.model.CommentHeadingUpdatedLiberin;
@@ -27,6 +25,7 @@ import org.moera.node.liberin.model.CommentMediaTextUpdatedLiberin;
 import org.moera.node.liberin.model.DraftUpdatedLiberin;
 import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
 import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.ocrspace.OcrSpace;
 import org.moera.node.ocrspace.OcrSpaceConnectionException;
 import org.moera.node.ocrspace.OcrSpaceInvalidResponseException;
@@ -131,9 +130,9 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
             for (var revision : revisions) {
                 Entry entry = revision.getEntry();
                 boolean collapseQuotations = entry.getEntryType() == EntryType.COMMENT;
-                List<MediaFileOwner> media = revision.getAttachments().stream()
-                    .map(EntryAttachment::getMediaFileOwner)
-                    .collect(Collectors.toList());
+                List<LocalRemoteMedia> media = revision.getAttachments().stream()
+                    .map(EntryAttachment::getLocalRemoteMedia)
+                    .toList();
                 String oldHeading = revision.getHeading();
                 String oldDescription = revision.getDescription();
                 TextConverter.headingToRevision(new Body(revision.getBody()), media, collapseQuotations, revision);

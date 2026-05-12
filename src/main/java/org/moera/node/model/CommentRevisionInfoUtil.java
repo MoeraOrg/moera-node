@@ -32,9 +32,7 @@ public class CommentRevisionInfoUtil {
         info.setBodySrcFormat(revision.getBodySrcFormat());
         info.setBody(new Body(revision.getBody()));
         info.setBodyFormat(BodyFormat.forValue(revision.getBodyFormat()));
-        var grantSupplier = options != null
-            ? new MediaGrantGenerator(null, options)
-            : null;
+        var grantSupplier = options != null ? new MediaGrantGenerator(options) : null;
         info.setMedia(mediaAttachmentsProvider.getMediaAttachments(revision, grantSupplier));
         info.setHeading(revision.getHeading());
         info.setDescription(revision.getDescription());

@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -18,6 +19,7 @@ import jakarta.persistence.PersistenceContext;
 import okhttp3.ResponseBody;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.ParentMediaInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.PublicMediaFileInfo;
 import org.moera.lib.node.types.principal.AccessCheckers;
@@ -455,6 +457,25 @@ public class MediaManager {
                 log.warn("Error removing temporary media file {}: {}", tmp.path(), e.getMessage());
             }
         }
+    }
+
+    public byte[] getParentMediaDigest(
+        ParentMediaInfo parentMedia,
+        String defaultNodeName,
+        Function<String, String> carteGenerator
+    ) {
+        if (parentMedia == null) {
+            return null;
+        }
+        String parentMediaNodeName = parentMedia.getNodeName() != null ? parentMedia.getNodeName() : defaultNodeName;
+        return parentMedia.getMediaId() != null
+            ? getPrivateMediaDigest(
+                parentMediaNodeName,
+                carteGenerator.apply(parentMediaNodeName),
+                parentMedia.getMediaId(),
+                null
+            )
+            : null;
     }
 
     public void cacheUploadedRemoteMedia(String remoteNodeName, String remoteMediaId, byte[] digest) {

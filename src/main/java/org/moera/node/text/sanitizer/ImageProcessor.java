@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaUtil;
 import org.owasp.html.HtmlStreamEventReceiver;
 import org.owasp.html.HtmlStreamEventReceiverWrapper;
@@ -17,17 +18,21 @@ import org.owasp.html.HtmlStreamEventReceiverWrapper;
 class ImageProcessor extends HtmlStreamEventReceiverWrapper {
 
     private final DirectServeConfig config;
-    private final Map<String, MediaFileOwner> media;
+    private final Map<String, LocalRemoteMedia> media;
 
-    ImageProcessor(DirectServeConfig config, HtmlStreamEventReceiver underlying, List<MediaFileOwner> mediaFileOwners) {
+    ImageProcessor(
+        DirectServeConfig config,
+        HtmlStreamEventReceiver underlying,
+        List<LocalRemoteMedia> mediaAttachments
+    ) {
         super(underlying);
 
         this.config = config;
-        media = mediaFileOwners != null
-                ? mediaFileOwners.stream()
+        media = mediaAttachments != null
+                ? mediaAttachments.stream()
                     .collect(
                         Collectors.toMap(
-                            mfo -> mfo.getMediaFile().getId(),
+                            LocalRemoteMedia::hash,
                             Function.identity(),
                             (mfo1, mfo2) -> mfo1
                         )
@@ -49,7 +54,8 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                 if (attrName.equalsIgnoreCase("src")) {
                     src = attrValue;
                     if (attrValue.startsWith("hash:")) {
-                        mediaFileOwner = media.get(attrValue.substring(5));
+                        LocalRemoteMedia localRemoteMedia = media.get(attrValue.substring(5));
+                        mediaFileOwner = localRemoteMedia != null ? localRemoteMedia.mediaFileOwner() : null;
                     }
                 } else if (attrName.equalsIgnoreCase("width")) {
                     try {

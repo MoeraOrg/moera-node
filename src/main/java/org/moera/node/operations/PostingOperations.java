@@ -5,16 +5,17 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
@@ -43,6 +44,7 @@ import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
 import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.PostingTextUtil;
 import org.moera.node.text.MediaExtractor;
@@ -118,9 +120,15 @@ public class PostingOperations {
         return posting;
     }
 
-    public Posting newPosting(MediaFileOwner mediaFileOwner, Entry parentMediaEntry) {
-        Posting posting = newPosting(mediaFileOwner.getOwnerName());
-        mediaFileOwner.addPosting(posting, parentMediaEntry);
+    public Posting newPosting(LocalRemoteMedia media, Entry parentMediaEntry) {
+        Posting posting = newPosting(parentMediaEntry.getOwnerName());
+        posting.setParentMediaEntry(parentMediaEntry);
+        if (media.mediaFileOwner() != null) {
+            media.mediaFileOwner().addPosting(posting);
+        }
+        if (media.remoteMediaFile() != null) {
+            media.remoteMediaFile().addPosting(posting);
+        }
         mediaOperations.updateMediaPostingPermissions(posting);
 
         EntryRevision revision = newRevision(posting, null);
@@ -140,13 +148,16 @@ public class PostingOperations {
     public Posting createOrUpdatePosting(
         Posting posting,
         EntryRevision revision,
-        List<MediaFileOwner> media,
+        List<LocalRemoteMedia> media,
         List<StoryAttributes> publications,
         Predicate<EntryRevision> isNothingChanged,
         Consumer<EntryRevision> revisionUpdater,
         Consumer<Entry> mediaEntryUpdater
     ) {
-        List<MediaFileOwner> affectedMedia = new ArrayList<>(media);
+        List<MediaFileOwner> affectedMedia = media.stream()
+            .map(LocalRemoteMedia::mediaFileOwner)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
         EntryRevision latest = posting.getCurrentRevision();
         if (latest != null) {
             if (isNothingChanged != null && isNothingChanged.test(latest)) {
@@ -173,15 +184,15 @@ public class PostingOperations {
         if (!media.isEmpty()) {
             Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(current.getBody()));
             int ordinal = 0;
-            for (MediaFileOwner mfo : media) {
-                EntryAttachment attachment = new EntryAttachment(current, mfo, ordinal++);
-                attachment.setEmbedded(embedded.contains(mfo.getMediaFile().getId()));
+            for (LocalRemoteMedia lrm : media) {
+                EntryAttachment attachment = new EntryAttachment(current, lrm, ordinal++);
+                attachment.setEmbedded(embedded.contains(lrm.hash()));
                 attachment = entryAttachmentRepository.save(attachment);
                 current.addAttachment(attachment);
 
-                Posting mediaPosting = mfo.getPostingByParentMediaEntry(posting);
+                Posting mediaPosting = lrm.postingByParentMediaEntry(posting);
                 if (mediaPosting == null) {
-                    mediaPosting = newPosting(mfo, posting);
+                    mediaPosting = newPosting(lrm, posting);
                 }
                 if (mediaEntryUpdater != null) {
                     mediaEntryUpdater.accept(mediaPosting);
@@ -274,7 +285,7 @@ public class PostingOperations {
         }
         posting = postingRepository.saveAndFlush(posting);
 
-        if (posting.getParentMedia() == null) {
+        if (posting.getParentMediaEntry() == null) {
             mediaOperations.updatePermissions(posting);
             deletePostings(mediaOperations.obsoleteMediaPostings(posting));
         }

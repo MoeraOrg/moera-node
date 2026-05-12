@@ -104,17 +104,6 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
             return;
         }
 
-        byte[] postingParentMediaDigest = postingInfo.getParentMediaId() != null
-            ? mediaManager.getPrivateMediaDigest(
-                data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), postingInfo.getParentMediaId(),
-                null
-            )
-            : null;
-        Function<PrivateMediaFileInfo, byte[]> postingMediaDigest =
-            pmf -> mediaManager.getPrivateMediaDigest(
-                data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf
-            );
-
         byte[] fingerprint = ReactionFingerprintBuilder.build(
             reactionInfo.getSignatureVersion(),
             reactionInfo,
@@ -122,8 +111,14 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                 postingRevisionInfo.getSignatureVersion(),
                 postingInfo,
                 postingRevisionInfo,
-                postingParentMediaDigest,
-                postingMediaDigest
+                mediaManager.getParentMediaDigest(
+                    postingInfo.getParentMedia(),
+                    data.getNodeName(),
+                    nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                ),
+                pmf -> mediaManager.getPrivateMediaDigest(
+                    data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf
+                )
             )
         );
         succeeded(CryptoUtil.verifySignature(fingerprint, reactionInfo.getSignature(), signingKey));
@@ -147,12 +142,6 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
             return;
         }
 
-        byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
-            ? mediaManager.getPrivateMediaDigest(
-                data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), postingInfo.getParentMediaId(),
-                null
-            )
-            : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
             pmf -> mediaManager.getPrivateMediaDigest(
                 data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf
@@ -170,7 +159,11 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                     postingRevisionInfo.getSignatureVersion(),
                     postingInfo,
                     postingRevisionInfo,
-                    parentMediaDigest,
+                    mediaManager.getParentMediaDigest(
+                        postingInfo.getParentMedia(),
+                        data.getNodeName(),
+                        nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                    ),
                     mediaDigest
                 )
             )
