@@ -122,10 +122,11 @@ public class BlockedUserController {
 
     @GetMapping("/{id}")
     @Transactional
-    public BlockedUserInfo get(@PathVariable UUID id) {
+    public BlockedUserInfo get(@PathVariable String id) {
         log.info("GET /people/blocked-users/{id}, (id = {})", LogUtil.format(id));
 
-        BlockedUser blockedUser = blockedUserRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        UUID blockedUserId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("blocked-user.not-found"));
+        BlockedUser blockedUser = blockedUserRepository.findByNodeIdAndId(requestContext.nodeId(), blockedUserId)
             .orElseThrow(() -> new ObjectNotFoundFailure("blocked-user.not-found"));
 
         if (
@@ -143,10 +144,11 @@ public class BlockedUserController {
     @DeleteMapping("/{id}")
     @Admin(Scope.BLOCK)
     @Transactional
-    public Result delete(@PathVariable UUID id) {
+    public Result delete(@PathVariable String id) {
         log.info("DELETE /people/blocked-users/{id}, (id = {})", LogUtil.format(id));
 
-        BlockedUser blockedUser = blockedUserRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        UUID blockedUserId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("blocked-user.not-found"));
+        BlockedUser blockedUser = blockedUserRepository.findByNodeIdAndId(requestContext.nodeId(), blockedUserId)
             .orElseThrow(() -> new ObjectNotFoundFailure("blocked-user.not-found"));
         blockedUserRepository.delete(blockedUser);
         contactOperations.updateBlockedUserCounts(blockedUser, -1).fill(blockedUser);

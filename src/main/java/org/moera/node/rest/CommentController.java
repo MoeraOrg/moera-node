@@ -184,7 +184,7 @@ public class CommentController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<CommentCreated> post(@PathVariable UUID postingId, @RequestBody CommentText commentText) {
+    public ResponseEntity<CommentCreated> post(@PathVariable String postingId, @RequestBody CommentText commentText) {
         log.info(
             "POST /postings/{postingId}/comments (postingId = {}, bodySrc = {}, bodySrcFormat = {})",
             LogUtil.format(postingId),
@@ -194,7 +194,8 @@ public class CommentController {
 
         commentText.validate();
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingUuid)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         ValidationUtil.notNull(posting.getCurrentRevision().getSignature(), "posting.not-signed");
         Comment repliedTo = null;
@@ -223,7 +224,7 @@ public class CommentController {
         if (!requestContext.isPrincipal(posting.getAddCommentE(), Scope.ADD_COMMENT)) {
             throw new AuthenticationException();
         }
-        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
+        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingUuid)) {
             throw new UserBlockedException();
         }
         mediaOperations.validateAvatar(commentText.getOwnerAvatar());
@@ -258,7 +259,7 @@ public class CommentController {
 
         requestContext.send(new CommentAddedLiberin(posting, comment));
 
-        var blockedOperations = blockedUserOperations.findBlockedOperations(postingId);
+        var blockedOperations = blockedUserOperations.findBlockedOperations(postingUuid);
         return ResponseEntity
             .created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
             .body(CommentCreatedUtil.build(
@@ -275,7 +276,7 @@ public class CommentController {
     @PutMapping("/{commentId}")
     @Transactional
     public CommentInfo put(
-        @PathVariable UUID postingId, @PathVariable UUID commentId, @RequestBody CommentText commentText
+        @PathVariable String postingId, @PathVariable String commentId, @RequestBody CommentText commentText
     ) {
         log.info(
             "PUT /postings/{postingId}/comments/{commentId}"
@@ -288,12 +289,14 @@ public class CommentController {
 
         commentText.validate();
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        UUID commentUuid = Util.uuid(commentId).orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid)
             .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         EntryRevision latest = comment.getCurrentRevision();
         Principal latestView = comment.getViewE();
         boolean latestPremoderating = comment.isPremoderating();
-        if (!comment.getPosting().getId().equals(postingId)) {
+        if (!comment.getPosting().getId().equals(postingUuid)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         byte[] repliedToDigest = comment.getRepliedTo() != null
@@ -312,7 +315,7 @@ public class CommentController {
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
+        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingUuid)) {
             throw new UserBlockedException();
         }
         mediaOperations.validateAvatar(commentText.getOwnerAvatar());
@@ -506,10 +509,11 @@ public class CommentController {
     @PutMapping
     @Transactional
     @NoClientId
-    public Result putAll(@PathVariable UUID postingId, @RequestBody CommentMassAttributes commentMassAttributes) {
+    public Result putAll(@PathVariable String postingId, @RequestBody CommentMassAttributes commentMassAttributes) {
         log.info("PUT /postings/{postingId}/comments (postingId = {})", LogUtil.format(postingId));
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingUuid)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
@@ -517,7 +521,7 @@ public class CommentController {
         if (!requestContext.isPrincipal(posting.getOverrideCommentE(), Scope.DELETE_OTHERS_CONTENT)) {
             throw new AuthenticationException();
         }
-        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
+        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingUuid)) {
             throw new UserBlockedException();
         }
         OperationsValidator.validateOperations(
@@ -533,7 +537,7 @@ public class CommentController {
             // It is possible to perform the update in a single query, making a backup of the previous state
             // Then, use the backup to generate liberins
             page = commentRepository.findByNodeIdAndParentId(
-                requestContext.nodeId(), postingId, PageRequest.of(n++, MASS_UPDATE_PAGE_SIZE)
+                requestContext.nodeId(), postingUuid, PageRequest.of(n++, MASS_UPDATE_PAGE_SIZE)
             );
             for (Comment comment : page.getContent()) {
                 if (!CommentMassAttributesUtil.sameAsEntry(commentMassAttributes, comment)) {
@@ -556,7 +560,7 @@ public class CommentController {
     @GetMapping
     @Transactional
     public CommentsSliceInfo getAll(
-        @PathVariable UUID postingId,
+        @PathVariable String postingId,
         @RequestParam(required = false) Long before,
         @RequestParam(required = false) Long after,
         @RequestParam(required = false) Integer limit
@@ -566,7 +570,8 @@ public class CommentController {
             LogUtil.format(postingId), LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit)
         );
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingUuid)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         List<Story> stories = requestContext.isPossibleSheriff()
             ? storyRepository.findByEntryId(requestContext.nodeId(), posting.getId())
@@ -605,7 +610,7 @@ public class CommentController {
         }
         calcSliceTotals(sliceInfo, posting);
 
-        requestContext.send(new CommentsReadLiberin(postingId, before, after, limit));
+        requestContext.send(new CommentsReadLiberin(postingUuid, before, after, limit));
 
         return sliceInfo;
     }
@@ -817,8 +822,8 @@ public class CommentController {
     @GetMapping("/{commentId}")
     @Transactional
     public CommentInfo get(
-        @PathVariable UUID postingId,
-        @PathVariable UUID commentId,
+        @PathVariable String postingId,
+        @PathVariable String commentId,
         @RequestParam(required = false) String include
     ) {
         log.info(
@@ -828,7 +833,9 @@ public class CommentController {
 
         Set<String> includeSet = Util.setParam(include);
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        UUID commentUuid = Util.uuid(commentId).orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid)
             .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         Entry posting = comment.getPosting();
         List<Story> stories = requestContext.isPossibleSheriff()
@@ -852,7 +859,7 @@ public class CommentController {
         ) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!posting.getId().equals(postingId)) {
+        if (!posting.getId().equals(postingUuid)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
 
@@ -873,13 +880,15 @@ public class CommentController {
 
     @DeleteMapping("/{commentId}")
     @Transactional
-    public CommentTotalInfo delete(@PathVariable UUID postingId, @PathVariable UUID commentId) {
+    public CommentTotalInfo delete(@PathVariable String postingId, @PathVariable String commentId) {
         log.info(
             "DELETE /postings/{postingId}/comments/{commentId} (postingId = {}, commentId = {})",
             LogUtil.format(postingId), LogUtil.format(commentId)
         );
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        UUID commentUuid = Util.uuid(commentId).orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid)
             .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         EntryRevision latest = comment.getCurrentRevision();
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
@@ -891,7 +900,7 @@ public class CommentController {
         if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!comment.getPosting().getId().equals(postingId)) {
+        if (!comment.getPosting().getId().equals(postingUuid)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         if (
@@ -906,7 +915,7 @@ public class CommentController {
         ) {
             throw new AuthenticationException();
         }
-        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
+        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingUuid)) {
             throw new UserBlockedException();
         }
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
@@ -922,13 +931,15 @@ public class CommentController {
 
     @GetMapping("/{commentId}/attached")
     @Transactional
-    public List<PostingInfo> getAttached(@PathVariable UUID postingId, @PathVariable UUID commentId) {
+    public List<PostingInfo> getAttached(@PathVariable String postingId, @PathVariable String commentId) {
         log.info(
             "GET /postings/{postingId}/comments/{commentId}/attached, (postingId = {}, commentId = {})",
             LogUtil.format(postingId), LogUtil.format(commentId)
         );
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        UUID commentUuid = Util.uuid(commentId).orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid)
             .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
@@ -939,7 +950,7 @@ public class CommentController {
         if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!comment.getPosting().getId().equals(postingId)) {
+        if (!comment.getPosting().getId().equals(postingUuid)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         List<Posting> attached = entryAttachmentRepository.findAttachedPostings(

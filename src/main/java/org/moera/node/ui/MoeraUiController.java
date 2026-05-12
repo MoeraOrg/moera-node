@@ -4,10 +4,12 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.UniversalLocation;
+import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
 import org.moera.node.operations.EmailVerificationOperations;
+import org.moera.node.util.Util;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -121,15 +123,17 @@ public class MoeraUiController {
     @VirtualPage
     public String post(
         @PathVariable String id,
-        @RequestParam(name = "comment", required = false) UUID commentId,
-        @RequestParam(name = "media", required = false) UUID mediaId
+        @RequestParam(name = "comment", required = false) String commentId,
+        @RequestParam(name = "media", required = false) String mediaId
     ) {
+        UUID commentUuid = Util.uuidOrNull(commentId, PageNotFoundException::new);
+        UUID mediaUuid = Util.uuidOrNull(mediaId, PageNotFoundException::new);
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString("redirect:/post/" + id);
-        if (commentId != null) {
-            builder = builder.queryParam("comment", commentId);
+        if (commentUuid != null) {
+            builder = builder.queryParam("comment", commentUuid);
         }
-        if (mediaId != null) {
-            builder = builder.queryParam("media", mediaId);
+        if (mediaUuid != null) {
+            builder = builder.queryParam("media", mediaUuid);
         }
         return builder.build().toUriString();
     }

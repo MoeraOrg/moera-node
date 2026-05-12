@@ -20,6 +20,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.BlockedByUserInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.operations.BlockedByUserOperations;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,10 +50,13 @@ public class BlockedByUserController {
 
     @GetMapping("/{id}")
     @Transactional
-    public BlockedByUserInfo get(@PathVariable UUID id) {
+    public BlockedByUserInfo get(@PathVariable String id) {
         log.info("GET /people/blocked-by-users/{id}, (id = {})", LogUtil.format(id));
 
-        BlockedByUser blockedByUser = blockedByUserRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        UUID blockedByUserId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("blocked-by-user.not-found"));
+        BlockedByUser blockedByUser = blockedByUserRepository.findByNodeIdAndId(
+            requestContext.nodeId(), blockedByUserId
+        )
             .orElseThrow(() -> new ObjectNotFoundFailure("blocked-by-user.not-found"));
 
         if (

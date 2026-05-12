@@ -33,6 +33,7 @@ import org.moera.node.model.SheriffOrderAttributesUtil;
 import org.moera.node.rest.task.SheriffOrderPostJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.SafeInteger;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -170,11 +171,13 @@ public class SheriffComplaintGroupController {
 
     @GetMapping("/{id}")
     @Transactional
-    public SheriffComplaintGroupInfo get(@PathVariable UUID id) {
+    public SheriffComplaintGroupInfo get(@PathVariable String id) {
         log.info("GET /sheriff/complaints/groups/{id} (id = {})", LogUtil.format(id));
 
+        UUID sheriffComplaintGroupId = Util.uuid(id)
+            .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complaint-group.not-found"));
         SheriffComplaintGroup sheriffComplaintGroup = sheriffComplaintGroupRepository
-            .findByNodeIdAndId(requestContext.nodeId(), id)
+            .findByNodeIdAndId(requestContext.nodeId(), sheriffComplaintGroupId)
             .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complaint-group.not-found"));
 
         return SheriffComplaintGroupInfoUtil.build(sheriffComplaintGroup);
@@ -182,14 +185,18 @@ public class SheriffComplaintGroupController {
 
     @GetMapping("/{id}/complaints")
     @Transactional
-    public List<SheriffComplaintInfo> getComplaints(@PathVariable UUID id) {
+    public List<SheriffComplaintInfo> getComplaints(@PathVariable String id) {
         log.info("GET /sheriff/complaints/groups/{id}/complaints (id = {})", LogUtil.format(id));
 
+        UUID sheriffComplaintGroupId = Util.uuid(id)
+            .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complaint-group.not-found"));
         SheriffComplaintGroup sheriffComplaintGroup = sheriffComplaintGroupRepository
-            .findByNodeIdAndId(requestContext.nodeId(), id)
+            .findByNodeIdAndId(requestContext.nodeId(), sheriffComplaintGroupId)
             .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complaint-group.not-found"));
 
-        List<SheriffComplaint> sheriffComplaints = sheriffComplaintRepository.findByGroupId(requestContext.nodeId(), id);
+        List<SheriffComplaint> sheriffComplaints = sheriffComplaintRepository.findByGroupId(
+            requestContext.nodeId(), sheriffComplaintGroupId
+        );
 
         return sheriffComplaints.stream()
             .filter(
@@ -205,7 +212,7 @@ public class SheriffComplaintGroupController {
     @Admin(Scope.SHERIFF)
     @Transactional
     public SheriffComplaintGroupInfo put(
-        @PathVariable UUID id,
+        @PathVariable String id,
         @RequestBody SheriffComplaintDecisionText sheriffComplaintDecisionText
     ) {
         log.info(
@@ -221,8 +228,10 @@ public class SheriffComplaintGroupController {
             "sheriff-complaint-decision.decision-code.missing"
         );
 
+        UUID sheriffComplaintGroupId = Util.uuid(id)
+            .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complaint-group.not-found"));
         SheriffComplaintGroup sheriffComplaintGroup = sheriffComplaintGroupRepository
-            .findByNodeIdAndId(requestContext.nodeId(), id)
+            .findByNodeIdAndId(requestContext.nodeId(), sheriffComplaintGroupId)
             .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complaint-group.not-found"));
         SheriffComplaintStatus prevStatus = sheriffComplaintGroup.getStatus();
         boolean noOrder = (prevStatus == SheriffComplaintStatus.POSTED || prevStatus == SheriffComplaintStatus.PREPARED)

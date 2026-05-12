@@ -214,7 +214,7 @@ public class PostingController {
     @PutMapping("/{id}")
     @Entitled
     @Transactional
-    public PostingInfo put(@PathVariable UUID id, @RequestBody PostingText postingText) {
+    public PostingInfo put(@PathVariable String id, @RequestBody PostingText postingText) {
         log.info(
             "PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {})",
             LogUtil.format(id),
@@ -224,7 +224,8 @@ public class PostingController {
 
         postingText.validate();
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
+        UUID postingId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         ValidationUtil.assertion(posting.isOriginal(), "posting.not-original");
         Principal latestView = posting.getViewE();
@@ -420,14 +421,15 @@ public class PostingController {
 
     @GetMapping("/{id}")
     @Transactional
-    public PostingInfo get(@PathVariable UUID id, @RequestParam(required = false) String include) {
+    public PostingInfo get(@PathVariable String id, @RequestParam(required = false) String include) {
         log.info("GET /postings/{id}, (id = {}, include = {})", LogUtil.format(id), LogUtil.format(include));
 
         Set<String> includeSet = Util.setParam(include);
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
+        UUID postingId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
+        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), postingId);
         if (
             !requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
             && !feedOperations.isSheriffAllowed(stories, posting.getViewE())
@@ -435,7 +437,7 @@ public class PostingController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
-        requestContext.send(new PostingReadLiberin(id));
+        requestContext.send(new PostingReadLiberin(postingId));
 
         return withSheriffUserListMarks(withBlockings(withClientReaction(
             PostingInfoUtil.build(
@@ -452,10 +454,11 @@ public class PostingController {
 
     @DeleteMapping("/{id}")
     @Transactional
-    public Result delete(@PathVariable UUID id) {
+    public Result delete(@PathVariable String id) {
         log.info("DELETE /postings/{id}, (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
+        UUID postingId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         EntryRevision latest = posting.getCurrentRevision();
         if (
@@ -484,10 +487,11 @@ public class PostingController {
 
     @GetMapping("/{id}/attached")
     @Transactional
-    public List<PostingInfo> getAttached(@PathVariable UUID id) {
+    public List<PostingInfo> getAttached(@PathVariable String id) {
         log.info("GET /postings/{id}/attached, (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
+        UUID postingId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");

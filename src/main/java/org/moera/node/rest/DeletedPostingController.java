@@ -98,10 +98,11 @@ public class DeletedPostingController {
     @GetMapping("/{id}")
     @Admin(Scope.DELETE_OWN_CONTENT)
     @Transactional
-    public PostingInfo get(@PathVariable UUID id) {
+    public PostingInfo get(@PathVariable String id) {
         log.info("GET /deleted-postings/{id}, (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findDeletedById(requestContext.nodeId(), id)
+        UUID postingId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        Posting posting = postingRepository.findDeletedById(requestContext.nodeId(), postingId)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
         return PostingInfoUtil.build(
@@ -113,10 +114,11 @@ public class DeletedPostingController {
     @Admin(Scope.DELETE_OWN_CONTENT)
     @Entitled
     @Transactional
-    public PostingInfo restore(@PathVariable UUID id) {
+    public PostingInfo restore(@PathVariable String id) {
         log.info("POST /deleted-postings/{id}/restore (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findDeletedWithAttachmentsById(requestContext.nodeId(), id)
+        UUID postingId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        Posting posting = postingRepository.findDeletedWithAttachmentsById(requestContext.nodeId(), postingId)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
         posting.setDeletedAt(null);
@@ -130,7 +132,7 @@ public class DeletedPostingController {
 
         requestContext.send(new PostingRestoredLiberin(posting));
 
-        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
+        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), postingId);
         return PostingInfoUtil.build(
             posting,
             stories,

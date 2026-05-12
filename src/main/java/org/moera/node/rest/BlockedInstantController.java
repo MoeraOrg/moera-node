@@ -116,10 +116,13 @@ public class BlockedInstantController {
     @GetMapping("/{id}")
     @Admin(Scope.OTHER)
     @Transactional
-    public BlockedInstantInfo get(@PathVariable UUID id) {
+    public BlockedInstantInfo get(@PathVariable String id) {
         log.info("GET /blocked-instants/{id}, (id = {})", LogUtil.format(id));
 
-        BlockedInstant blockedInstant = blockedInstantRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        UUID blockedInstantId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("blocked-instant.not-found"));
+        BlockedInstant blockedInstant = blockedInstantRepository.findByNodeIdAndId(
+            requestContext.nodeId(), blockedInstantId
+        )
             .orElseThrow(() -> new ObjectNotFoundFailure("blocked-instant.not-found"));
 
         return BlockedInstantInfoUtil.build(blockedInstant);
@@ -128,10 +131,13 @@ public class BlockedInstantController {
     @DeleteMapping("/{id}")
     @Admin(Scope.OTHER)
     @Transactional
-    public Result delete(@PathVariable UUID id) {
+    public Result delete(@PathVariable String id) {
         log.info("DELETE /blocked-instants/{id}, (id = {})", LogUtil.format(id));
 
-        BlockedInstant blockedInstant = blockedInstantRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        UUID blockedInstantId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("blocked-instant.not-found"));
+        BlockedInstant blockedInstant = blockedInstantRepository.findByNodeIdAndId(
+            requestContext.nodeId(), blockedInstantId
+        )
             .orElseThrow(() -> new ObjectNotFoundFailure("blocked-instant.not-found"));
         blockedInstantRepository.delete(blockedInstant);
 

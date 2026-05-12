@@ -46,10 +46,11 @@ public class PostingReactionTotalsController {
 
     @GetMapping("/{postingId}/reaction-totals")
     @Transactional
-    public ReactionTotalsInfo get(@PathVariable UUID postingId) {
+    public ReactionTotalsInfo get(@PathVariable String postingId) {
         log.info("GET /postings/{postingId}/reaction-totals (postingId = {})", LogUtil.format(postingId));
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingUuid)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");

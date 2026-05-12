@@ -43,6 +43,7 @@ import org.moera.node.model.SubscriptionDescriptionUtil;
 import org.moera.node.model.SubscriptionInfoUtil;
 import org.moera.node.model.SubscriptionOverrideUtil;
 import org.moera.node.operations.ContactOperations;
+import org.moera.node.util.Util;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.option.OptionHook;
@@ -171,10 +172,13 @@ public class SubscriptionController {
 
     @PutMapping("/{id}")
     @Transactional
-    public SubscriptionInfo put(@PathVariable UUID id, @RequestBody SubscriptionOverride subscriptionOverride) {
+    public SubscriptionInfo put(@PathVariable String id, @RequestBody SubscriptionOverride subscriptionOverride) {
         log.info("PUT /people/subscriptions/{id} (id = {})", LogUtil.format(id));
 
-        UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(requestContext.nodeId(), id)
+        UUID subscriptionId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
+        UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(
+            requestContext.nodeId(), subscriptionId
+        )
             .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
         Principal latestView = subscription.getViewE();
         if (subscription.getSubscriptionType() != SubscriptionType.FEED) {
@@ -204,10 +208,13 @@ public class SubscriptionController {
     @DeleteMapping("/{id}")
     @Admin(Scope.SUBSCRIBE)
     @Transactional
-    public ContactInfo delete(@PathVariable UUID id) {
+    public ContactInfo delete(@PathVariable String id) {
         log.info("DELETE /people/subscriptions/{id} (id = {})", LogUtil.format(id));
 
-        UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(requestContext.nodeId(), id)
+        UUID subscriptionId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
+        UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(
+            requestContext.nodeId(), subscriptionId
+        )
             .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
         if (!requestContext.isPrincipal(subscription.getDeleteE(requestContext.getOptions()), Scope.SUBSCRIBE)) {
             throw new AuthenticationException();

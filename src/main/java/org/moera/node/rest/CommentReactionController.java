@@ -91,7 +91,9 @@ public class CommentReactionController {
 
     @PostMapping
     public ResponseEntity<ReactionCreated> post(
-        @PathVariable UUID postingId, @PathVariable UUID commentId, @RequestBody ReactionDescription reactionDescription
+        @PathVariable String postingId,
+        @PathVariable String commentId,
+        @RequestBody ReactionDescription reactionDescription
     ) {
         log.info(
             "POST /postings/{postingId}/comments/{commentId}/reactions"
@@ -102,11 +104,13 @@ public class CommentReactionController {
             LogUtil.format(reactionDescription.getEmoji())
         );
 
-        try (var ignored = lock.lock(postingId)) {
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        UUID commentUuid = Util.uuid(commentId).orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        try (var ignored = lock.lock(postingUuid)) {
             return tx.executeWrite(() -> {
-                Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid)
                     .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-                if (!comment.getPosting().getId().equals(postingId)) {
+                if (!comment.getPosting().getId().equals(postingUuid)) {
                     throw new ObjectNotFoundFailure("comment.wrong-posting");
                 }
                 ValidationUtil.notNull(comment.getCurrentRevision().getSignature(), "comment.not-signed");
@@ -121,7 +125,7 @@ public class CommentReactionController {
                 if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("comment.not-found");
                 }
-                if (blockedUserOperations.isBlocked(BlockedOperation.REACTION, postingId)) {
+                if (blockedUserOperations.isBlocked(BlockedOperation.REACTION, postingUuid)) {
                     throw new UserBlockedException();
                 }
                 OperationsValidator.validateOperations(
@@ -155,8 +159,8 @@ public class CommentReactionController {
     @PutMapping("/{ownerName}")
     @Transactional
     public ReactionInfo put(
-        @PathVariable UUID postingId,
-        @PathVariable UUID commentId,
+        @PathVariable String postingId,
+        @PathVariable String commentId,
         @PathVariable String ownerName,
         @RequestBody ReactionOverride reactionOverride
     ) {
@@ -166,7 +170,9 @@ public class CommentReactionController {
             LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName)
         );
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        UUID commentUuid = Util.uuid(commentId).orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid)
             .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
@@ -177,7 +183,7 @@ public class CommentReactionController {
         if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!comment.getPosting().getId().equals(postingId)) {
+        if (!comment.getPosting().getId().equals(postingUuid)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         if (
@@ -187,7 +193,7 @@ public class CommentReactionController {
         ) {
             throw new AuthenticationException();
         }
-        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
+        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingUuid)) {
             throw new UserBlockedException();
         }
         OperationsValidator.validateOperations(
@@ -239,8 +245,8 @@ public class CommentReactionController {
     @GetMapping
     @Transactional
     public ReactionsSliceInfo getAll(
-        @PathVariable UUID postingId,
-        @PathVariable UUID commentId,
+        @PathVariable String postingId,
+        @PathVariable String commentId,
         @RequestParam(defaultValue = "false") boolean negative,
         @RequestParam(required = false) Integer emoji,
         @RequestParam(required = false) Long before,
@@ -253,7 +259,9 @@ public class CommentReactionController {
             LogUtil.format(before), LogUtil.format(limit)
         );
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        UUID commentUuid = Util.uuid(commentId).orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid)
             .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
@@ -264,7 +272,7 @@ public class CommentReactionController {
         if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!comment.getPosting().getId().equals(postingId)) {
+        if (!comment.getPosting().getId().equals(postingUuid)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         if (!requestContext.isPrincipal(comment.getViewReactionsE(), Scope.VIEW_CONTENT)) {
@@ -277,13 +285,13 @@ public class CommentReactionController {
                 ? limit : ReactionOperations.MAX_REACTIONS_PER_REQUEST;
         ValidationUtil.assertion(limit >= 0, "limit.invalid");
         before = before != null ? before : SafeInteger.MAX_VALUE;
-        return reactionOperations.getBefore(commentId, negative, emoji, before, limit);
+        return reactionOperations.getBefore(commentUuid, negative, emoji, before, limit);
     }
 
     @GetMapping("/{ownerName}")
     @Transactional
     public ReactionInfo get(
-        @PathVariable UUID postingId, @PathVariable UUID commentId, @PathVariable String ownerName
+        @PathVariable String postingId, @PathVariable String commentId, @PathVariable String ownerName
     ) {
         log.info(
             "GET /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
@@ -291,7 +299,9 @@ public class CommentReactionController {
             LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName)
         );
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        UUID commentUuid = Util.uuid(commentId).orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid)
             .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
@@ -302,17 +312,17 @@ public class CommentReactionController {
         if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!comment.getPosting().getId().equals(postingId)) {
+        if (!comment.getPosting().getId().equals(postingUuid)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         if (
             !requestContext.isPrincipal(comment.getViewReactionsE(), Scope.VIEW_CONTENT)
             && !requestContext.isClient(ownerName, Scope.VIEW_CONTENT)
         ) {
-            return ReactionInfoUtil.ofComment(commentId); // FIXME ugly, return 404
+            return ReactionInfoUtil.ofComment(commentUuid); // FIXME ugly, return 404
         }
 
-        Reaction reaction = reactionRepository.findByEntryIdAndOwner(commentId, ownerName);
+        Reaction reaction = reactionRepository.findByEntryIdAndOwner(commentUuid, ownerName);
 
         if (
             reaction == null
@@ -320,7 +330,7 @@ public class CommentReactionController {
             || reaction.isNegative()
                 && !requestContext.isPrincipal(comment.getViewNegativeReactionsE(), Scope.VIEW_CONTENT)
         ) {
-            return ReactionInfoUtil.ofComment(commentId); // FIXME ugly, return 404
+            return ReactionInfoUtil.ofComment(commentUuid); // FIXME ugly, return 404
         }
 
         return ReactionInfoUtil.build(reaction, requestContext, config.getMedia().getDirectServe());
@@ -329,13 +339,15 @@ public class CommentReactionController {
     @DeleteMapping
     @Admin(Scope.DELETE_OTHERS_CONTENT)
     @Transactional
-    public Result deleteAll(@PathVariable UUID postingId, @PathVariable UUID commentId) {
+    public Result deleteAll(@PathVariable String postingId, @PathVariable String commentId) {
         log.info(
             "DELETE /postings/{postingId}/comments/{commentId}/reactions (postingId = {}, commentId = {})",
             LogUtil.format(postingId), LogUtil.format(commentId)
         );
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        UUID commentUuid = Util.uuid(commentId).orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid)
             .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
@@ -346,15 +358,15 @@ public class CommentReactionController {
         if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!comment.getPosting().getId().equals(postingId)) {
+        if (!comment.getPosting().getId().equals(postingUuid)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
+        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingUuid)) {
             throw new UserBlockedException();
         }
 
-        reactionRepository.deleteAllByEntryId(commentId, Util.now());
-        reactionTotalOperations.deleteAllByEntryId(commentId);
+        reactionRepository.deleteAllByEntryId(commentUuid, Util.now());
+        reactionTotalOperations.deleteAllByEntryId(commentUuid);
 
         requestContext.send(new CommentReactionsDeletedAllLiberin(comment));
 
@@ -363,7 +375,7 @@ public class CommentReactionController {
 
     @DeleteMapping("/{ownerName}")
     public ReactionTotalsInfo delete(
-        @PathVariable UUID postingId, @PathVariable UUID commentId, @PathVariable String ownerName
+        @PathVariable String postingId, @PathVariable String commentId, @PathVariable String ownerName
     ) {
         log.info(
             "DELETE /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
@@ -371,9 +383,11 @@ public class CommentReactionController {
             LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName)
         );
 
-        try (var ignored = lock.lock(postingId)) {
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        UUID commentUuid = Util.uuid(commentId).orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        try (var ignored = lock.lock(postingUuid)) {
             return tx.executeWrite(() -> {
-                Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid)
                     .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
                 if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("comment.not-found");
@@ -384,10 +398,10 @@ public class CommentReactionController {
                 if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("comment.not-found");
                 }
-                if (!comment.getPosting().getId().equals(postingId)) {
+                if (!comment.getPosting().getId().equals(postingUuid)) {
                     throw new ObjectNotFoundFailure("comment.wrong-posting");
                 }
-                if (blockedUserOperations.isBlocked(BlockedOperation.REACTION, postingId)) {
+                if (blockedUserOperations.isBlocked(BlockedOperation.REACTION, postingUuid)) {
                     throw new UserBlockedException();
                 }
 

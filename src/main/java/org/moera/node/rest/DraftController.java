@@ -238,7 +238,7 @@ public class DraftController {
     @Admin(Scope.DRAFTS)
     @Entitled
     @Transactional
-    public DraftInfo put(@PathVariable UUID id, @RequestBody DraftText draftText) {
+    public DraftInfo put(@PathVariable String id, @RequestBody DraftText draftText) {
         log.info(
             "PUT /drafts/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {})",
             LogUtil.format(id),
@@ -249,7 +249,8 @@ public class DraftController {
         draftText.validate();
         List<MediaFileOwner> media = validate(draftText);
 
-        Draft draft = draftRepository.findById(requestContext.nodeId(), id)
+        UUID draftId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
+        Draft draft = draftRepository.findById(requestContext.nodeId(), draftId)
             .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
         DraftTextUtil.toDraft(draftText, draft, textConverter);
         updateDeadline(draft);
@@ -334,10 +335,11 @@ public class DraftController {
     @GetMapping("/{id}")
     @Admin(Scope.DRAFTS)
     @Transactional
-    public DraftInfo get(@PathVariable UUID id) {
+    public DraftInfo get(@PathVariable String id) {
         log.info("GET /drafts/{id}, (id = {})", LogUtil.format(id));
 
-        Draft draft = draftRepository.findById(requestContext.nodeId(), id)
+        UUID draftId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
+        Draft draft = draftRepository.findById(requestContext.nodeId(), draftId)
             .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
 
         return DraftInfoUtil.build(draft, config.getMedia().getDirectServe());
@@ -346,10 +348,11 @@ public class DraftController {
     @DeleteMapping("/{id}")
     @Admin(Scope.DRAFTS)
     @Transactional
-    public Result delete(@PathVariable UUID id) {
+    public Result delete(@PathVariable String id) {
         log.info("DELETE /drafts/{id}, (id = {})", LogUtil.format(id));
 
-        Draft draft = draftRepository.findById(requestContext.nodeId(), id)
+        UUID draftId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
+        Draft draft = draftRepository.findById(requestContext.nodeId(), draftId)
             .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
         draftRepository.delete(draft);
 

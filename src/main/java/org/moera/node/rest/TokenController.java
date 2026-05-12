@@ -122,10 +122,11 @@ public class TokenController {
     @PutMapping("/{id}")
     @Admin(Scope.TOKENS)
     @Transactional
-    public TokenInfo put(@PathVariable UUID id, @RequestBody TokenUpdate update) {
+    public TokenInfo put(@PathVariable String id, @RequestBody TokenUpdate update) {
         log.info("PUT /tokens/{} (name = {})", id, LogUtil.format(update.getName()));
 
-        Token token = tokenRepository.findByNodeIdAndId(requestContext.nodeId(), id, Util.now()).orElse(null);
+        UUID tokenId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("not-found"));
+        Token token = tokenRepository.findByNodeIdAndId(requestContext.nodeId(), tokenId, Util.now()).orElse(null);
         if (token == null) {
             throw new ObjectNotFoundFailure("not-found");
         }
@@ -145,10 +146,11 @@ public class TokenController {
     @DeleteMapping("/{id}")
     @Admin(Scope.TOKENS)
     @Transactional
-    public Result delete(@PathVariable UUID id) {
+    public Result delete(@PathVariable String id) {
         log.info("DELETE /tokens/{}", id);
 
-        Token token = tokenRepository.findByNodeIdAndId(requestContext.nodeId(), id, Util.now()).orElse(null);
+        UUID tokenId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("not-found"));
+        Token token = tokenRepository.findByNodeIdAndId(requestContext.nodeId(), tokenId, Util.now()).orElse(null);
         if (token == null) {
             throw new ObjectNotFoundFailure("not-found");
         }
@@ -172,10 +174,11 @@ public class TokenController {
     @GetMapping("/{id}")
     @Admin(Scope.TOKENS)
     @Transactional
-    public TokenInfo get(@PathVariable UUID id) {
+    public TokenInfo get(@PathVariable String id) {
         log.info("GET /tokens/{}", id);
 
-        Token token = tokenRepository.findByNodeIdAndId(requestContext.nodeId(), id, Util.now()).orElse(null);
+        UUID tokenId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("not-found"));
+        Token token = tokenRepository.findByNodeIdAndId(requestContext.nodeId(), tokenId, Util.now()).orElse(null);
         if (token == null) {
             throw new ObjectNotFoundFailure("not-found");
         }

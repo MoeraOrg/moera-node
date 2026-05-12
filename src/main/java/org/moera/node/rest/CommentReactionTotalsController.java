@@ -14,6 +14,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.operations.ReactionTotalOperations;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,11 +39,13 @@ public class CommentReactionTotalsController {
 
     @GetMapping
     @Transactional
-    public ReactionTotalsInfo get(@PathVariable UUID postingId, @PathVariable UUID commentId) {
+    public ReactionTotalsInfo get(@PathVariable String postingId, @PathVariable String commentId) {
         log.info("GET /postings/{postingId}/comments/{commentId}/reaction-totals (postingId = {}, commentId = {})",
                 LogUtil.format(postingId), LogUtil.format(commentId));
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        UUID commentUuid = Util.uuid(commentId).orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
@@ -53,7 +56,7 @@ public class CommentReactionTotalsController {
         if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!comment.getPosting().getId().equals(postingId)) {
+        if (!comment.getPosting().getId().equals(postingUuid)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
 

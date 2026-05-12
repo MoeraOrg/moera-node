@@ -24,6 +24,7 @@ import org.moera.node.ui.sitemap.SitemapIndex;
 import org.moera.node.ui.sitemap.SitemapIndexItem;
 import org.moera.node.ui.sitemap.SitemapUrl;
 import org.moera.node.ui.sitemap.SitemapUrlSet;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -101,10 +102,11 @@ public class SitemapController {
     @GetMapping(path = "/{id}", produces = MediaType.TEXT_XML_VALUE)
     @Transactional
     @ResponseBody
-    public SitemapUrlSet sitemap(@PathVariable UUID id) {
+    public SitemapUrlSet sitemap(@PathVariable String id) {
         log.info("GET /sitemaps/{id} (id = {})", LogUtil.format(id));
 
-        Collection<SitemapRecord> records = sitemapRecordRepository.findRecords(requestContext.nodeId(), id);
+        UUID sitemapId = Util.uuid(id).orElseThrow(PageNotFoundException::new);
+        Collection<SitemapRecord> records = sitemapRecordRepository.findRecords(requestContext.nodeId(), sitemapId);
         if (records.isEmpty()) {
             throw new PageNotFoundException();
         }

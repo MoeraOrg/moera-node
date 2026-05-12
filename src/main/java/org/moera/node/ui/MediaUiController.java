@@ -25,6 +25,7 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -98,7 +99,7 @@ public class MediaUiController {
     @Transactional
     @ResponseBody
     public ResponseEntity<Resource> getDataPrivate(
-        @PathVariable UUID id,
+        @PathVariable String id,
         @RequestParam(required = false) Integer width,
         @RequestParam(required = false) Boolean download,
         @RequestParam(name = "grant", required = false) String grantS,
@@ -106,9 +107,10 @@ public class MediaUiController {
     ) {
         log.info("GET MEDIA /media/private/{id}.ext (id = {})", LogUtil.format(id));
 
-        MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
+        UUID mediaId = Util.uuid(id).orElseThrow(PageNotFoundException::new);
+        MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), mediaId)
             .orElseThrow(PageNotFoundException::new);
-        MediaGrantProperties grant = mediaGrantValidator.validate(grantS, id);
+        MediaGrantProperties grant = mediaGrantValidator.validate(grantS, mediaId);
         if (
             grant == null
             && !mediaFileOwner.isUnrestricted()
@@ -134,13 +136,14 @@ public class MediaUiController {
 
     @GetMapping(path = "/private/caption/{postingId}", produces = "text/html")
     @Transactional
-    public String getCaptionPrivate(@PathVariable UUID postingId, Model model) {
+    public String getCaptionPrivate(@PathVariable String postingId, Model model) {
         log.info(
             "GET MEDIA /media/private/caption/{postingId} (postingId = {})",
             LogUtil.format(postingId)
         );
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(PageNotFoundException::new);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingUuid)
             .orElseThrow(PageNotFoundException::new);
         if (
             !requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)

@@ -41,6 +41,7 @@ import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.operations.CommentPublicPageOperations;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.TimelinePublicPageOperations;
+import org.moera.node.util.Util;
 import org.moera.node.util.VirtualPageHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,20 +139,23 @@ public class TimelineUiController {
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/post/{id}", produces = "text/html")
     @Transactional
     public String posting(
-        @PathVariable UUID id,
+        @PathVariable String id,
         @RequestParam(required = false) Long before,
-        @RequestParam(name = "comment", required = false) UUID commentId,
-        @RequestParam(name = "media", required = false) UUID mediaId,
+        @RequestParam(name = "comment", required = false) String commentId,
+        @RequestParam(name = "media", required = false) String mediaId,
         HttpServletResponse response,
         Model model
     ) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/post/" + id);
-        if (commentId != null) {
-            builder = builder.queryParam("comment", commentId);
+        UUID postingId = Util.uuid(id).orElseThrow(PageNotFoundException::new);
+        UUID commentUuid = Util.uuidOrNull(commentId, PageNotFoundException::new);
+        UUID mediaUuid = Util.uuidOrNull(mediaId, PageNotFoundException::new);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/post/" + postingId);
+        if (commentUuid != null) {
+            builder = builder.queryParam("comment", commentUuid);
         }
         String canonicalUrl = builder.build().toUriString();
-        if (mediaId != null) {
-            builder = builder.queryParam("media", mediaId);
+        if (mediaUuid != null) {
+            builder = builder.queryParam("media", mediaUuid);
         }
         VirtualPageHeader.put(response, requestContext.nodeName(), builder.build().toUriString());
         if (requestContext.isAutoClient()) {
@@ -163,7 +167,7 @@ public class TimelineUiController {
             LogUtil.format(id), LogUtil.format(before), LogUtil.format(commentId), LogUtil.format(mediaId)
         );
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (
             posting == null
             || !posting.isMessage()
@@ -172,7 +176,7 @@ public class TimelineUiController {
         ) {
             throw new PageNotFoundException();
         }
-        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
+        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), postingId);
 
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
         model.addAttribute("menuIndex", "timeline");
@@ -183,23 +187,25 @@ public class TimelineUiController {
             )
         );
         model.addAttribute("canonicalUrl", canonicalUrl);
-        model.addAttribute("openComments", commentId != null || before != null);
-        model.addAttribute("openMediaPostingId", id.toString());
-        model.addAttribute("openMediaCommentId", Objects.toString(commentId, null));
-        model.addAttribute("openMediaId", Objects.toString(mediaId, null));
+        model.addAttribute("openComments", commentUuid != null || before != null);
+        model.addAttribute("openMediaPostingId", postingId.toString());
+        model.addAttribute("openMediaCommentId", Objects.toString(commentUuid, null));
+        model.addAttribute("openMediaId", Objects.toString(mediaUuid, null));
 
-        Comment comment = commentId != null && posting.isOriginal()
-            ? commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null)
+        Comment comment = commentUuid != null && posting.isOriginal()
+            ? commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid).orElse(null)
             : null;
         if (posting.isOriginal()) {
             if (posting.getViewCommentsCompound().isPublic()) {
                 before = comment != null ? comment.getMoment() : before;
                 before = before != null ? before : Long.MIN_VALUE + 1;
                 List<CommentUiInfo> comments = Collections.emptyList();
-                PublicPage publicPage = publicPageRepository.findContainingForEntry(requestContext.nodeId(), id, before);
+                PublicPage publicPage = publicPageRepository.findContainingForEntry(
+                    requestContext.nodeId(), postingId, before
+                );
                 if (publicPage != null && posting.getViewCommentsCompound().isPublic()) {
                     comments = commentRepository.findInRange(
-                        requestContext.nodeId(), id, publicPage.getAfterMoment(), publicPage.getBeforeMoment()
+                        requestContext.nodeId(), postingId, publicPage.getAfterMoment(), publicPage.getBeforeMoment()
                     )
                         .stream()
                         .filter(Comment::isMessage)
@@ -211,8 +217,8 @@ public class TimelineUiController {
                         .collect(Collectors.toList());
                 }
 
-                if (commentId != null) {
-                    model.addAttribute("anchor", "comment-" + commentId);
+                if (commentUuid != null) {
+                    model.addAttribute("anchor", "comment-" + commentUuid);
                 }
                 model.addAttribute("comments", comments);
                 model.addAttribute("commentId", Objects.toString(commentId, null));

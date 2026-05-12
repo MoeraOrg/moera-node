@@ -54,11 +54,15 @@ public class AsyncOperationController {
     @GetMapping("/remote-posting-verification/{id}")
     @Admin(Scope.OTHER)
     @Transactional
-    public RemotePostingVerificationInfo getRemotePostingVerification(@PathVariable UUID id) {
+    public RemotePostingVerificationInfo getRemotePostingVerification(@PathVariable String id) {
         log.info("GET /async-operations/remote-posting-verification/{id}, (id = {})", LogUtil.format(id));
 
+        UUID remotePostingVerificationId = Util.uuid(id)
+            .orElseThrow(() -> new ObjectNotFoundFailure("async-operation.not-found"));
         RemotePostingVerification data =
-                remotePostingVerificationRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                remotePostingVerificationRepository.findByNodeIdAndId(
+                    requestContext.nodeId(), remotePostingVerificationId
+                )
                         .orElseThrow(() -> new ObjectNotFoundFailure("async-operation.not-found"));
 
         return RemotePostingVerificationInfoUtil.build(data);
@@ -67,11 +71,15 @@ public class AsyncOperationController {
     @GetMapping("/remote-reaction-verification/{id}")
     @Admin(Scope.OTHER)
     @Transactional
-    public RemoteReactionVerificationInfo getRemoteReactionVerification(@PathVariable UUID id) {
+    public RemoteReactionVerificationInfo getRemoteReactionVerification(@PathVariable String id) {
         log.info("GET /async-operations/remote-reaction-verification/{id}, (id = {})", LogUtil.format(id));
 
+        UUID remoteReactionVerificationId = Util.uuid(id)
+            .orElseThrow(() -> new ObjectNotFoundFailure("async-operation.not-found"));
         RemoteReactionVerification data =
-                remoteReactionVerificationRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                remoteReactionVerificationRepository.findByNodeIdAndId(
+                    requestContext.nodeId(), remoteReactionVerificationId
+                )
                         .orElseThrow(() -> new ObjectNotFoundFailure("async-operation.not-found"));
 
         return RemoteReactionVerificationInfoUtil.build(data);

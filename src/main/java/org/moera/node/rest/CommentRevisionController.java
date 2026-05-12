@@ -21,6 +21,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.CommentRevisionInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.operations.MediaAttachmentsProvider;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,13 +49,15 @@ public class CommentRevisionController {
     @GetMapping
     @NoCache
     @Transactional
-    public List<CommentRevisionInfo> getAll(@PathVariable UUID postingId, @PathVariable UUID commentId) {
+    public List<CommentRevisionInfo> getAll(@PathVariable String postingId, @PathVariable String commentId) {
         log.info(
             "GET /postings/{postingId}/comments/{commentId}/revisions (postingId = {}, commentId = {})",
             LogUtil.format(postingId), LogUtil.format(commentId)
         );
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        UUID commentUuid = Util.uuid(commentId).orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid)
             .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
@@ -65,7 +68,7 @@ public class CommentRevisionController {
         if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!comment.getPosting().getId().equals(postingId)) {
+        if (!comment.getPosting().getId().equals(postingUuid)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
 
@@ -83,13 +86,18 @@ public class CommentRevisionController {
 
     @GetMapping("/{id}")
     @Transactional
-    public CommentRevisionInfo get(@PathVariable UUID postingId, @PathVariable UUID commentId, @PathVariable UUID id) {
+    public CommentRevisionInfo get(
+        @PathVariable String postingId, @PathVariable String commentId, @PathVariable String id
+    ) {
         log.info(
             "GET /postings/{postingId}/comments/{commentId}/revisions/{id} (postingId = {}, commentId = {}, id = {})",
             LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(id)
         );
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+        UUID postingUuid = Util.uuid(postingId).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        UUID commentUuid = Util.uuid(commentId).orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        UUID revisionId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("comment-revision.not-found"));
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentUuid)
             .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
@@ -100,10 +108,12 @@ public class CommentRevisionController {
         if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!comment.getPosting().getId().equals(postingId)) {
+        if (!comment.getPosting().getId().equals(postingUuid)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        EntryRevision revision = entryRevisionRepository.findByEntryIdAndId(requestContext.nodeId(), commentId, id)
+        EntryRevision revision = entryRevisionRepository.findByEntryIdAndId(
+            requestContext.nodeId(), commentUuid, revisionId
+        )
             .orElseThrow(() -> new ObjectNotFoundFailure("comment-revision.not-found"));
 
         return CommentRevisionInfoUtil.build(

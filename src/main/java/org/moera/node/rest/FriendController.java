@@ -81,24 +81,25 @@ public class FriendController {
 
     @GetMapping
     @Transactional
-    public List<FriendInfo> getAll(@RequestParam(required = false, name = "group") UUID groupId) {
+    public List<FriendInfo> getAll(@RequestParam(required = false, name = "group") String groupId) {
         log.info("GET /people/friends (group = {})", LogUtil.format(groupId));
 
         if (!requestContext.isPrincipal(Friend.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)) {
             throw new AuthenticationException();
         }
 
-        if (groupId != null) {
-            FriendGroup group = friendCache.getNodeGroup(groupId)
+        UUID friendGroupId = Util.uuidOrNull(groupId, () -> new ObjectNotFoundFailure("friend-group.not-found"));
+        if (friendGroupId != null) {
+            FriendGroup group = friendCache.getNodeGroup(friendGroupId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
             if (!requestContext.isAdmin(Scope.VIEW_PEOPLE) && !group.getViewPrincipal().isPublic()) {
                 throw new AuthenticationException();
             }
         }
 
-        List<Friend> friends = groupId == null
+        List<Friend> friends = friendGroupId == null
             ? friendRepository.findAllByNodeId(requestContext.nodeId())
-            : friendRepository.findAllByNodeIdAndGroup(requestContext.nodeId(), groupId);
+            : friendRepository.findAllByNodeIdAndGroup(requestContext.nodeId(), friendGroupId);
         List<FriendInfo> friendInfos = new ArrayList<>();
         List<FriendGroupDetails> groups = null;
         String prevNodeName = null;
@@ -110,7 +111,7 @@ public class FriendController {
                 FriendInfo info = FriendInfoUtil.build(
                     friend, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
                 );
-                if (groupId == null) {
+                if (friendGroupId == null) {
                     groups = new ArrayList<>();
                     info.setGroups(groups);
                 }

@@ -230,10 +230,11 @@ public class AvatarController {
 
     @GetMapping("/{id}")
     @Transactional
-    public AvatarInfo get(@PathVariable UUID id) {
+    public AvatarInfo get(@PathVariable String id) {
         log.info("GET /avatars/{id} (id = {})", LogUtil.format(id));
 
-        Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        UUID avatarId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
+        Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), avatarId)
             .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
         return AvatarInfoUtil.build(avatar, config.getMedia().getDirectServe());
     }
@@ -241,10 +242,11 @@ public class AvatarController {
     @DeleteMapping("/{id}")
     @Admin(Scope.UPDATE_PROFILE)
     @Transactional
-    public Result delete(@PathVariable UUID id) {
+    public Result delete(@PathVariable String id) {
         log.info("DELETE /avatars/{id} (id = {})", LogUtil.format(id));
 
-        Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        UUID avatarId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
+        Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), avatarId)
             .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
         avatarRepository.delete(avatar);
 

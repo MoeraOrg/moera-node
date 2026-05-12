@@ -32,6 +32,7 @@ import org.moera.node.model.FriendGroupDescriptionUtil;
 import org.moera.node.model.FriendGroupInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.operations.OperationsValidator;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;
@@ -75,10 +76,11 @@ public class FriendGroupController {
 
     @GetMapping("/{id}")
     @Transactional
-    public FriendGroupInfo get(@PathVariable UUID id) {
+    public FriendGroupInfo get(@PathVariable String id) {
         log.info("GET /people/friends/groups/{id} (id = {})", LogUtil.format(id));
 
-        FriendGroup friendGroup = friendCache.getNodeGroup(id)
+        UUID friendGroupId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
+        FriendGroup friendGroup = friendCache.getNodeGroup(friendGroupId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
         if (!isFriendGroupVisible(friendGroup)) {
             throw new AuthenticationException();
@@ -129,7 +131,7 @@ public class FriendGroupController {
     @Admin(Scope.FRIEND)
     @Transactional
     public FriendGroupInfo put(
-        @PathVariable UUID id, @RequestBody FriendGroupDescription friendGroupDescription
+        @PathVariable String id, @RequestBody FriendGroupDescription friendGroupDescription
     ) {
         log.info(
             "PUT /people/friends/groups/{id} (id = {}, title = {}, viewPrincipal = {})",
@@ -146,7 +148,8 @@ public class FriendGroupController {
             "friend-group.operations.wrong-principal"
         );
 
-        FriendGroup friendGroup = friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        UUID friendGroupId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
+        FriendGroup friendGroup = friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), friendGroupId)
             .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
         Principal latestViewPrincipal = friendGroup.getViewPrincipal();
         FriendGroupDescriptionUtil.toFriendGroup(friendGroupDescription, friendGroup);
@@ -161,22 +164,25 @@ public class FriendGroupController {
     @DeleteMapping("/{id}")
     @Admin(Scope.FRIEND)
     @Transactional
-    public Result delete(@PathVariable UUID id) {
+    public Result delete(@PathVariable String id) {
         log.info("DELETE /people/friends/groups/{id} (id = {})", LogUtil.format(id));
 
-        FriendGroup friendGroup = friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        UUID friendGroupId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
+        FriendGroup friendGroup = friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), friendGroupId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
         Principal latestViewPrincipal = friendGroup.getViewPrincipal();
-        List<Friend> members = friendRepository.findAllByNodeIdAndGroup(requestContext.nodeId(), id);
+        List<Friend> members = friendRepository.findAllByNodeIdAndGroup(requestContext.nodeId(), friendGroupId);
         friendGroupRepository.delete(friendGroup);
 
         requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
         requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS_ALL, null);
         // We send a liberin for admin and for every member of the group, because the group will not exist
         // when the liberins will be processed
-        requestContext.send(new FriendGroupDeletedLiberin(id, latestViewPrincipal, null));
+        requestContext.send(new FriendGroupDeletedLiberin(friendGroupId, latestViewPrincipal, null));
         members.forEach(member ->
-                requestContext.send(new FriendGroupDeletedLiberin(id, latestViewPrincipal, member.getRemoteNodeName())));
+                requestContext.send(
+                    new FriendGroupDeletedLiberin(friendGroupId, latestViewPrincipal, member.getRemoteNodeName())
+                ));
 
         return Result.OK;
     }

@@ -92,7 +92,7 @@ public class SubscriberController {
         @RequestParam(required = false) String nodeName,
         @RequestParam(required = false) SubscriptionType type,
         @RequestParam(required = false) String feedName,
-        @RequestParam(required = false) UUID entryId
+        @RequestParam(required = false) String entryId
     ) {
         log.info(
             "GET /people/subscribers (nodeName = {}, type = {})",
@@ -112,6 +112,7 @@ public class SubscriberController {
         QSubscriber subscriber = QSubscriber.subscriber;
         BooleanBuilder where = new BooleanBuilder();
         where.and(subscriber.nodeId.eq(requestContext.nodeId()));
+        UUID subscriberEntryId = Util.uuidOrNull(entryId, () -> new ObjectNotFoundFailure("posting.not-found"));
         if (!ObjectUtils.isEmpty(nodeName)) {
             where.and(subscriber.remoteNodeName.eq(nodeName));
         }
@@ -121,8 +122,8 @@ public class SubscriberController {
         if (feedName != null) {
             where.and(subscriber.feedName.eq(feedName));
         }
-        if (entryId != null) {
-            where.and(subscriber.entry.id.eq(entryId));
+        if (subscriberEntryId != null) {
+            where.and(subscriber.entry.id.eq(subscriberEntryId));
         }
 
         return fetchSubscribers(where).stream()
@@ -137,10 +138,11 @@ public class SubscriberController {
 
     @GetMapping("/{id}")
     @Transactional
-    public SubscriberInfo get(@PathVariable UUID id) {
+    public SubscriberInfo get(@PathVariable String id) {
         log.info("GET /people/subscribers/{id} (id = {})", LogUtil.format(id));
 
-        Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        UUID subscriberId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
+        Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), subscriberId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
             if (
@@ -287,10 +289,11 @@ public class SubscriberController {
 
     @PutMapping("/{id}")
     @Transactional
-    public SubscriberInfo put(@PathVariable UUID id, @RequestBody SubscriberOverride subscriberOverride) {
+    public SubscriberInfo put(@PathVariable String id, @RequestBody SubscriberOverride subscriberOverride) {
         log.info("PUT /people/subscribers/{id} (id = {})", LogUtil.format(id));
 
-        Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        UUID subscriberId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
+        Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), subscriberId)
             .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
         Principal latestView = subscriber.getViewE();
         if (subscriber.getSubscriptionType() != SubscriptionType.FEED) {
@@ -335,10 +338,11 @@ public class SubscriberController {
 
     @DeleteMapping("/{id}")
     @Transactional
-    public ContactInfo delete(@PathVariable UUID id) {
+    public ContactInfo delete(@PathVariable String id) {
         log.info("DELETE /people/subscribers/{id} (id = {})", LogUtil.format(id));
 
-        Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        UUID subscriberId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
+        Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), subscriberId)
             .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
         if (!requestContext.isPrincipal(subscriber.getDeleteE(), Scope.SUBSCRIBE)) {
             throw new AuthenticationException();

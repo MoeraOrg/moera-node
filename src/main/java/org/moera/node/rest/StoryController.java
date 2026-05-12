@@ -26,6 +26,7 @@ import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Transaction;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
@@ -63,10 +64,11 @@ public class StoryController {
 
     @GetMapping("/{id}")
     @Transactional
-    public StoryInfo get(@PathVariable UUID id) {
+    public StoryInfo get(@PathVariable String id) {
         log.info("GET /stories/{id} (id = {})", LogUtil.format(id));
 
-        Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+        UUID storyId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
+        Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), storyId).orElse(null);
         if (story == null || Feed.isAdmin(story.getFeedName()) && !requestContext.isAdmin(Scope.VIEW_FEEDS)) {
             throw new ObjectNotFoundFailure("story.not-found");
         }
@@ -93,7 +95,7 @@ public class StoryController {
 
     @PutMapping("/{id}")
     @Admin(Scope.UPDATE_FEEDS)
-    public StoryInfo put(@PathVariable UUID id, @RequestBody StoryAttributes storyAttributes) {
+    public StoryInfo put(@PathVariable String id, @RequestBody StoryAttributes storyAttributes) {
         log.info(
             "PUT /stories/{id} (id = {}, publishAt = {}, pinned = {}, viewed = {}, read = {})",
             LogUtil.format(id),
@@ -103,8 +105,9 @@ public class StoryController {
             LogUtil.format(storyAttributes.getRead())
         );
 
+        UUID storyId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
         Pair<Story, StoryInfo> info = tx.executeWrite(() -> {
-            Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+            Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), storyId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
             if (
                 story.getEntry() != null
@@ -144,11 +147,12 @@ public class StoryController {
 
     @DeleteMapping("/{id}")
     @Admin(Scope.UPDATE_FEEDS)
-    public Result delete(@PathVariable UUID id) {
+    public Result delete(@PathVariable String id) {
         log.info("DELETE /stories/{id} (id = {})", LogUtil.format(id));
 
+        UUID storyId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
         Story deletedStory = tx.executeWrite(() -> {
-            Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+            Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), storyId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
             storyRepository.delete(story);
 

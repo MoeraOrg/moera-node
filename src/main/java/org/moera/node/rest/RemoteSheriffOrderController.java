@@ -23,6 +23,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.SheriffOrderInfoUtil;
 import org.moera.node.rest.task.SheriffOrderPostJob;
 import org.moera.node.task.Jobs;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -81,13 +82,14 @@ public class RemoteSheriffOrderController {
 
     @GetMapping("/{id}")
     @Transactional
-    public SheriffOrderInfo get(@PathVariable String nodeName, @PathVariable UUID id) {
+    public SheriffOrderInfo get(@PathVariable String nodeName, @PathVariable String id) {
         log.info(
             "GET /moera/api/nodes/{nodeName}/sheriff/orders/{id} (nodeName = {}, id = {})",
             LogUtil.format(nodeName), LogUtil.format(id)
         );
 
-        SheriffOrder sheriffOrder = sheriffOrderRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        UUID sheriffOrderId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("sheriff-order.not-found"));
+        SheriffOrder sheriffOrder = sheriffOrderRepository.findByNodeIdAndId(requestContext.nodeId(), sheriffOrderId)
             .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-order.not-found"));
         if (!Objects.equals(sheriffOrder.getRemoteNodeName(), nodeName)) {
             throw new ObjectNotFoundFailure("sheriff-order.wrong-node");

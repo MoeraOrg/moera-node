@@ -127,15 +127,11 @@ public class MediaGrantValidator {
             return;
         }
 
-        UUID postingId = Util.uuid(
-            grant.getPostingId(),
-            () -> new ValidationFailure("media-grant.posting-id.invalid")
-        );
+        UUID postingId = Util.uuid(grant.getPostingId())
+            .orElseThrow(() -> new ValidationFailure("media-grant.posting-id.invalid"));
         if (!ObjectUtils.isEmpty(grant.getCommentId())) {
-            UUID commentId = Util.uuid(
-                grant.getCommentId(),
-                () -> new ValidationFailure("media-grant.comment-id.invalid")
-            );
+            UUID commentId = Util.uuid(grant.getCommentId())
+                .orElseThrow(() -> new ValidationFailure("media-grant.comment-id.invalid"));
             Comment comment = commentRepository.findByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> {
                     log.info("Media grant: comment {} is not found", LogUtil.format(commentId));

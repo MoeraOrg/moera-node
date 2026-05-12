@@ -280,29 +280,31 @@ public class MediaController {
     @GetMapping("/private/{id}/info")
     @Transactional
     public PrivateMediaFileInfo getInfoPrivate(
-        @PathVariable UUID id,
+        @PathVariable String id,
         @RequestParam(required = false) String grant
     ) {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
 
+        UUID mediaId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
         return PrivateMediaFileInfoUtil.build(
-            getMediaFileOwner(id, grant),
+            getMediaFileOwner(mediaId, grant),
             config.getMedia().getDirectServe(),
-            (mediaId, duration, download, fileName) -> grant
+            (id1, duration, download, fileName) -> grant
         );
     }
 
     @PutMapping("/private/{id}/info")
     @Transactional
     public PrivateMediaFileInfo updatePrivateMediaInfo(
-        @PathVariable UUID id,
+        @PathVariable String id,
         @RequestBody PrivateMediaFileAttributes attributes
     ) {
         log.info("PUT /media/private/{id}/info (id = {})", LogUtil.format(id));
 
         attributes.validate();
 
-        MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
+        UUID mediaId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+        MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), mediaId)
             .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
         if (!canEdit(mediaFileOwner)) {
             throw new AuthenticationException();
@@ -340,7 +342,7 @@ public class MediaController {
     @GetMapping("/private/{id}/data")
     @Transactional
     public ResponseEntity<Resource> getDataPrivate(
-        @PathVariable UUID id,
+        @PathVariable String id,
         @RequestParam(required = false) Integer width,
         @RequestParam(required = false) Boolean download,
         @RequestParam(required = false) String grant,
@@ -348,7 +350,8 @@ public class MediaController {
     ) {
         log.info("GET /media/private/{id}/data (id = {})", LogUtil.format(id));
 
-        MediaFileOwner mediaFileOwner = getMediaFileOwner(id, grant);
+        UUID mediaId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+        MediaFileOwner mediaFileOwner = getMediaFileOwner(mediaId, grant);
         mediaOperations.blockMalware(mediaFileOwner, ignoreMalware);
 
         return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, mediaFileOwner.getUserFileName(), download);
@@ -357,12 +360,13 @@ public class MediaController {
     @GetMapping("/private/{id}/parent")
     @Transactional
     public List<EntryInfo> getParentPrivate(
-        @PathVariable UUID id,
+        @PathVariable String id,
         @RequestParam(required = false) String grant
     ) {
         log.info("GET /media/private/{id}/parent (id = {})", LogUtil.format(id));
 
-        MediaFileOwner mediaFileOwner = getMediaFileOwner(id, grant);
+        UUID mediaId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+        MediaFileOwner mediaFileOwner = getMediaFileOwner(mediaId, grant);
         Set<Entry> entries = entryRepository.findByMediaId(mediaFileOwner.getId());
         List<EntryInfo> parents = new ArrayList<>();
         for (Entry entry : entries) {
