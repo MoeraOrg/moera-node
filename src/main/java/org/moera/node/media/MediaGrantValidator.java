@@ -22,6 +22,7 @@ import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
+import org.moera.node.data.MediaLeaseRepository;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.util.Util;
@@ -50,6 +51,9 @@ public class MediaGrantValidator {
 
     @Inject
     private CommentRepository commentRepository;
+
+    @Inject
+    private MediaLeaseRepository mediaLeaseRepository;
 
     public MediaGrantProperties validate(String grantS, UUID mediaId) {
         if (ObjectUtils.isEmpty(grantS)) {
@@ -82,6 +86,7 @@ public class MediaGrantValidator {
         validateFingerprint(properties, mediaId != null ? mediaId.toString() : null);
         validateEntry(properties);
         validateSignature(fingerprint, signature, properties);
+        validateLease(properties, mediaId);
 
         return properties;
     }
@@ -194,6 +199,23 @@ public class MediaGrantValidator {
             throw new ValidationFailure("media-grant.unknown-signing-key");
         }
         return CryptoUtil.privateToPublicKey((ECPrivateKey) signingKey);
+    }
+
+    private void validateLease(MediaGrantProperties grant, UUID mediaId) {
+        if (ObjectUtils.isEmpty(grant.getNodeName())) {
+            return;
+        }
+
+        boolean leased = mediaLeaseRepository.countByOwnerNameAndMediaId(
+            requestContext.nodeId(), grant.getNodeName(), mediaId
+        ) != 0;
+        if (!leased) {
+            log.info(
+                "Media grant: lease of media {} to node {} is not found",
+                LogUtil.format(mediaId), LogUtil.format(grant.getNodeName())
+            );
+            throw new ValidationFailure("media-grant.not-leased");
+        }
     }
 
 }
