@@ -75,7 +75,8 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     int countByOwnerNameAndFeed(UUID nodeId, String ownerName, String feedName);
 
     @Query(
-        "select p from Posting p where p.nodeId = ?1 and p.deletedAt is null and p.parentMedia is null"
+        "select p from Posting p"
+        + " where p.nodeId = ?1 and p.deletedAt is null and (p.parentMedia is null or p.parentMediaEntry is null)"
         + " and not exists(select s from Story s where s.entry.id = p.id)"
     )
     List<Posting> findUnlinked(UUID nodeId);
