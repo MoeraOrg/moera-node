@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict dNUfzYGXClMaxxabxjEFYfOp4U977isP3wudfzrGYkeoBzsuYkWjzdATvo0ZwSd
+\restrict R6Dbk6n43fXngguU9jksGoOkv1PVPWaycBCBDMDUquKAuxDoj7gb9PkOC8f9y0U
 
 -- Dumped from database version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
@@ -352,6 +352,31 @@ $$;
 ALTER FUNCTION public.update_entry_attachments_media_file_owner_id() OWNER TO moera;
 
 --
+-- Name: update_entry_attachments_remote_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_entry_attachments_remote_media_file_id() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_remote_media_file_reference(OLD.remote_media_file_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_remote_media_file_reference(OLD.remote_media_file_id, NEW.remote_media_file_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_remote_media_file_reference(NULL, NEW.remote_media_file_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_entry_attachments_remote_media_file_id() OWNER TO moera;
+
+--
 -- Name: update_entry_media_file_owner_usage(); Type: FUNCTION; Schema: public; Owner: moera
 --
 
@@ -391,9 +416,9 @@ CREATE FUNCTION public.update_entry_remote_node() RETURNS trigger
             RETURN OLD;
         ELSIF TG_OP = 'UPDATE' THEN
             DECLARE
-                old_receiver_name varchar(63) := CASE WHEN OLD.deleted_at IS NULL THEN OLD.receiver_name ELSE NULL END;
+                old_receiver_name varchar(135) := CASE WHEN OLD.deleted_at IS NULL THEN OLD.receiver_name ELSE NULL END;
                 old_receiver_entry_id varchar(40) := CASE WHEN OLD.deleted_at IS NULL THEN OLD.receiver_entry_id ELSE NULL END;
-                new_receiver_name varchar(63) := CASE WHEN NEW.deleted_at IS NULL THEN NEW.receiver_name ELSE NULL END;
+                new_receiver_name varchar(135) := CASE WHEN NEW.deleted_at IS NULL THEN NEW.receiver_name ELSE NULL END;
                 new_receiver_entry_id varchar(40) := CASE WHEN NEW.deleted_at IS NULL THEN NEW.receiver_entry_id ELSE NULL END;
             BEGIN
                 IF (old_receiver_name IS NULL AND new_receiver_name IS NULL OR old_receiver_name = new_receiver_name)
@@ -602,6 +627,54 @@ $$;
 ALTER FUNCTION public.update_media_file_reference(old_id character varying, new_id character varying) OWNER TO moera;
 
 --
+-- Name: update_media_lease_media_file_owner_id(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_media_lease_media_file_owner_id() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_media_file_owner_reference(OLD.media_file_owner_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_media_file_owner_reference(OLD.media_file_owner_id, NEW.media_file_owner_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_media_file_owner_reference(NULL, NEW.media_file_owner_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_media_lease_media_file_owner_id() OWNER TO moera;
+
+--
+-- Name: update_remote_media_file_reference(uuid, uuid); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_remote_media_file_reference(old_id uuid, new_id uuid) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF old_id = new_id THEN
+            RETURN;
+        END IF;
+        IF old_id IS NOT NULL THEN
+            UPDATE remote_media_files SET usage_count = usage_count - 1 WHERE id = old_id;
+        END IF;
+        IF new_id IS NOT NULL THEN
+            UPDATE remote_media_files SET usage_count = usage_count + 1 WHERE id = new_id;
+        END IF;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_remote_media_file_reference(old_id uuid, new_id uuid) OWNER TO moera;
+
+--
 -- Name: update_subscriber_remote_node(); Type: FUNCTION; Schema: public; Owner: moera
 --
 
@@ -741,7 +814,7 @@ SET default_table_access_method = heap;
 CREATE TABLE public.ask_history (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     subject smallint NOT NULL,
     created_at timestamp without time zone NOT NULL
 );
@@ -774,7 +847,7 @@ CREATE TABLE public.blocked_by_users (
     node_id uuid NOT NULL,
     blocked_operation smallint NOT NULL,
     contact_id uuid,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     remote_posting_id character varying(40),
     created_at timestamp without time zone NOT NULL,
     deadline timestamp without time zone,
@@ -794,9 +867,9 @@ CREATE TABLE public.blocked_instants (
     story_type smallint NOT NULL,
     entry_id uuid,
     created_at timestamp without time zone NOT NULL,
-    remote_node_name character varying(63),
+    remote_node_name character varying(135),
     remote_posting_id character varying(40),
-    remote_owner_name character varying(63),
+    remote_owner_name character varying(135),
     deadline timestamp without time zone
 );
 
@@ -811,10 +884,10 @@ CREATE TABLE public.blocked_users (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
     blocked_operation smallint NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     contact_id uuid,
     entry_id uuid,
-    entry_node_name character varying(63),
+    entry_node_name character varying(135),
     entry_posting_id character varying(40),
     created_at timestamp without time zone NOT NULL,
     deadline timestamp without time zone,
@@ -834,7 +907,7 @@ CREATE TABLE public.contact_upgrades (
     id bigint NOT NULL,
     node_id uuid NOT NULL,
     upgrade_type smallint NOT NULL,
-    remote_node_name character varying(63) NOT NULL
+    remote_node_name character varying(135) NOT NULL
 );
 
 
@@ -861,7 +934,7 @@ ALTER TABLE public.contact_upgrades_seq OWNER TO moera;
 CREATE TABLE public.contacts (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     remote_full_name character varying(96),
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
@@ -933,7 +1006,7 @@ CREATE TABLE public.drafts (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
     draft_type smallint NOT NULL,
-    receiver_name character varying(63) NOT NULL,
+    receiver_name character varying(135) NOT NULL,
     receiver_posting_id character varying(40),
     receiver_comment_id character varying(40),
     created_at timestamp without time zone NOT NULL,
@@ -987,12 +1060,12 @@ CREATE TABLE public.entries (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
     entry_type smallint NOT NULL,
-    owner_name character varying(63),
+    owner_name character varying(135),
     created_at timestamp without time zone NOT NULL,
     current_revision_id uuid,
     deleted_at timestamp without time zone,
     total_revisions integer NOT NULL,
-    receiver_name character varying(63),
+    receiver_name character varying(135),
     deadline timestamp without time zone,
     receiver_created_at timestamp without time zone,
     current_receiver_revision_id character varying(40),
@@ -1003,7 +1076,7 @@ CREATE TABLE public.entries (
     total_children integer DEFAULT 0 NOT NULL,
     moment bigint,
     replied_to_id uuid,
-    replied_to_name character varying(63),
+    replied_to_name character varying(135),
     replied_to_heading character varying(255),
     replied_to_digest bytea,
     replied_to_revision_id uuid,
@@ -1103,11 +1176,7 @@ CREATE TABLE public.entry_attachments (
     ordinal integer NOT NULL,
     draft_id uuid,
     embedded boolean DEFAULT true NOT NULL,
-    remote_media_id character varying(40),
-    remote_media_hash character varying(40),
-    remote_media_digest bytea,
-    remote_media_mime_type character varying(80) DEFAULT 'image/jpeg'::character varying NOT NULL,
-    remote_media_attachment boolean DEFAULT false NOT NULL
+    remote_media_file_id uuid
 );
 
 
@@ -1182,7 +1251,7 @@ ALTER TABLE public.entry_revisions OWNER TO moera;
 CREATE TABLE public.entry_sources (
     id uuid NOT NULL,
     entry_id uuid NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     remote_feed_name character varying(63) NOT NULL,
     remote_posting_id character varying(40) NOT NULL,
     created_at timestamp without time zone NOT NULL,
@@ -1201,7 +1270,7 @@ ALTER TABLE public.entry_sources OWNER TO moera;
 CREATE TABLE public.favors (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    node_name character varying(63) NOT NULL,
+    node_name character varying(135) NOT NULL,
     value real NOT NULL,
     decay_hours integer NOT NULL,
     created_at timestamp without time zone NOT NULL,
@@ -1233,7 +1302,7 @@ ALTER TABLE public.friend_groups OWNER TO moera;
 CREATE TABLE public.friend_ofs (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     remote_group_id character varying(40) NOT NULL,
     remote_group_title character varying(63),
     remote_added_at timestamp without time zone NOT NULL,
@@ -1250,7 +1319,7 @@ ALTER TABLE public.friend_ofs OWNER TO moera;
 
 CREATE TABLE public.friends (
     id uuid NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     friend_group_id uuid NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
     view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
@@ -1283,7 +1352,7 @@ ALTER TABLE public.frozen_notifications OWNER TO moera;
 CREATE TABLE public.grants (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    node_name character varying(63) NOT NULL,
+    node_name character varying(135) NOT NULL,
     auth_scope bigint NOT NULL,
     updated_at timestamp without time zone NOT NULL
 );
@@ -1297,7 +1366,7 @@ ALTER TABLE public.grants OWNER TO moera;
 
 CREATE TABLE public.initial_recommendations (
     id uuid NOT NULL,
-    node_name character varying(63) NOT NULL,
+    node_name character varying(135) NOT NULL,
     posting_id character varying(40) NOT NULL,
     created_at timestamp without time zone NOT NULL,
     deadline timestamp without time zone NOT NULL
@@ -1313,7 +1382,7 @@ ALTER TABLE public.initial_recommendations OWNER TO moera;
 CREATE TABLE public.media_file_owners (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    owner_name character varying(63),
+    owner_name character varying(135),
     media_file_id character varying(40) NOT NULL,
     created_at timestamp without time zone NOT NULL,
     usage_count integer DEFAULT 0 NOT NULL,
@@ -1367,6 +1436,24 @@ CREATE TABLE public.media_files (
 ALTER TABLE public.media_files OWNER TO moera;
 
 --
+-- Name: media_leases; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.media_leases (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    node_name character varying(135) NOT NULL,
+    owner_name character varying(135),
+    media_file_owner_id uuid NOT NULL,
+    posting_id uuid,
+    comment_id uuid,
+    created_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.media_leases OWNER TO moera;
+
+--
 -- Name: option_defaults; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -1401,13 +1488,13 @@ ALTER TABLE public.options OWNER TO moera;
 CREATE TABLE public.own_comments (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     remote_posting_id character varying(40) NOT NULL,
     remote_comment_id character varying(40) NOT NULL,
     heading character varying(255) NOT NULL,
     created_at timestamp without time zone NOT NULL,
     remote_full_name character varying(96),
-    remote_replied_to_name character varying(63),
+    remote_replied_to_name character varying(135),
     remote_replied_to_full_name character varying(96),
     remote_avatar_media_file_id character varying(40),
     remote_avatar_shape character varying(8),
@@ -1426,7 +1513,7 @@ ALTER TABLE public.own_comments OWNER TO moera;
 CREATE TABLE public.own_postings (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     remote_full_name character varying(96),
     remote_posting_id character varying(40) NOT NULL,
     heading character varying(255) NOT NULL,
@@ -1446,7 +1533,7 @@ ALTER TABLE public.own_postings OWNER TO moera;
 CREATE TABLE public.own_reactions (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     remote_posting_id character varying(40) NOT NULL,
     negative boolean NOT NULL,
     emoji integer NOT NULL,
@@ -1499,7 +1586,7 @@ ALTER TABLE public.pending_jobs OWNER TO moera;
 CREATE TABLE public.pending_notifications (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    node_name character varying(63) NOT NULL,
+    node_name character varying(135) NOT NULL,
     notification text NOT NULL,
     created_at timestamp without time zone NOT NULL,
     subscription_created_at timestamp without time zone,
@@ -1517,7 +1604,7 @@ CREATE TABLE public.picks (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
     feed_name character varying(63),
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     remote_feed_name character varying(63),
     remote_posting_id character varying(40) NOT NULL,
     created_at timestamp without time zone NOT NULL,
@@ -1613,7 +1700,7 @@ ALTER TABLE public.reaction_totals OWNER TO moera;
 
 CREATE TABLE public.reactions (
     id uuid NOT NULL,
-    owner_name character varying(63) NOT NULL,
+    owner_name character varying(135) NOT NULL,
     entry_revision_id uuid NOT NULL,
     negative boolean NOT NULL,
     emoji integer NOT NULL,
@@ -1663,7 +1750,7 @@ ALTER TABLE public.reminders OWNER TO moera;
 
 CREATE TABLE public.remote_connectivity (
     id uuid NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     status smallint NOT NULL,
     updated_at timestamp without time zone NOT NULL
 );
@@ -1678,7 +1765,7 @@ ALTER TABLE public.remote_connectivity OWNER TO moera;
 CREATE TABLE public.remote_grants (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     auth_scope bigint NOT NULL,
     updated_at timestamp without time zone NOT NULL
 );
@@ -1692,7 +1779,7 @@ ALTER TABLE public.remote_grants OWNER TO moera;
 
 CREATE TABLE public.remote_media_cache (
     id uuid NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     remote_media_id character varying(40) NOT NULL,
     digest bytea,
     media_file_id character varying(40),
@@ -1705,15 +1792,39 @@ CREATE TABLE public.remote_media_cache (
 ALTER TABLE public.remote_media_cache OWNER TO moera;
 
 --
+-- Name: remote_media_files; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.remote_media_files (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    node_name character varying(135) NOT NULL,
+    media_id character varying(40) NOT NULL,
+    hash character varying(40),
+    digest bytea,
+    mime_type character varying(80),
+    attachment boolean DEFAULT false NOT NULL,
+    size_x smallint,
+    size_y smallint,
+    file_size bigint,
+    lease_id character varying(40),
+    usage_count integer DEFAULT 0 NOT NULL,
+    deadline timestamp without time zone
+);
+
+
+ALTER TABLE public.remote_media_files OWNER TO moera;
+
+--
 -- Name: remote_user_list_items; Type: TABLE; Schema: public; Owner: moera
 --
 
 CREATE TABLE public.remote_user_list_items (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    list_node_name character varying(63) NOT NULL,
+    list_node_name character varying(135) NOT NULL,
     list_name character varying(63) NOT NULL,
-    node_name character varying(63) NOT NULL,
+    node_name character varying(135) NOT NULL,
     absent boolean DEFAULT false NOT NULL,
     cached_at timestamp without time zone NOT NULL,
     deadline timestamp without time zone NOT NULL
@@ -1730,11 +1841,11 @@ CREATE TABLE public.remote_verifications (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
     verification_type smallint NOT NULL,
-    node_name character varying(63) NOT NULL,
+    node_name character varying(135) NOT NULL,
     posting_id character varying(40) NOT NULL,
     comment_id character varying(40),
     revision_id character varying(40),
-    owner_name character varying(63),
+    owner_name character varying(135),
     status smallint NOT NULL,
     error_code character varying(63),
     error_message character varying(255),
@@ -1771,12 +1882,12 @@ ALTER TABLE public.schema_history OWNER TO moera;
 CREATE TABLE public.search_engine_statistics (
     id uuid NOT NULL,
     engine smallint NOT NULL,
-    owner_name character varying(63) NOT NULL,
+    owner_name character varying(135) NOT NULL,
     posting_id character varying(40),
     comment_id character varying(40),
     media_id character varying(40),
     clicked_at timestamp without time zone NOT NULL,
-    node_name character varying(63) DEFAULT ''::character varying NOT NULL,
+    node_name character varying(135) DEFAULT ''::character varying NOT NULL,
     heading character varying(255)
 );
 
@@ -1805,16 +1916,16 @@ ALTER TABLE public.search_history OWNER TO moera;
 CREATE TABLE public.sheriff_complaint_groups (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     remote_node_full_name character varying(96),
     remote_feed_name character varying(63) NOT NULL,
-    remote_posting_owner_name character varying(63),
+    remote_posting_owner_name character varying(135),
     remote_posting_owner_full_name character varying(96),
     remote_posting_owner_gender character varying(31),
     remote_posting_heading character varying(255),
     remote_posting_id character varying(40),
     remote_posting_revision_id character varying(40),
-    remote_comment_owner_name character varying(63),
+    remote_comment_owner_name character varying(135),
     remote_comment_owner_full_name character varying(96),
     remote_comment_owner_gender character varying(31),
     remote_comment_heading character varying(255),
@@ -1839,7 +1950,7 @@ ALTER TABLE public.sheriff_complaint_groups OWNER TO moera;
 CREATE TABLE public.sheriff_complaints (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    owner_name character varying(63),
+    owner_name character varying(135),
     owner_full_name character varying(96),
     owner_gender character varying(31),
     group_id uuid NOT NULL,
@@ -1860,7 +1971,7 @@ CREATE TABLE public.sheriff_orders (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
     delete boolean DEFAULT false NOT NULL,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     remote_feed_name character varying(63) NOT NULL,
     remote_posting_id character varying(40),
     remote_comment_id character varying(40),
@@ -1870,12 +1981,12 @@ CREATE TABLE public.sheriff_orders (
     created_at timestamp without time zone NOT NULL,
     signature bytea NOT NULL,
     signature_version smallint NOT NULL,
-    remote_posting_owner_name character varying(63),
+    remote_posting_owner_name character varying(135),
     remote_posting_owner_full_name character varying(96),
     remote_posting_owner_gender character varying(31),
     remote_posting_heading character varying(255),
     remote_posting_revision_id character varying(40),
-    remote_comment_owner_name character varying(63),
+    remote_comment_owner_name character varying(135),
     remote_comment_owner_full_name character varying(96),
     remote_comment_owner_gender character varying(31),
     remote_comment_heading character varying(255),
@@ -1923,11 +2034,11 @@ CREATE TABLE public.stories (
     published_at timestamp without time zone DEFAULT now() NOT NULL,
     pinned boolean DEFAULT false NOT NULL,
     summary text DEFAULT ''::character varying NOT NULL,
-    remote_node_name character varying(63),
+    remote_node_name character varying(135),
     remote_posting_id character varying(40),
     parent_id uuid,
     remote_comment_id character varying(40),
-    remote_owner_name character varying(63),
+    remote_owner_name character varying(135),
     remote_replied_to_id character varying(40),
     remote_full_name character varying(96),
     remote_owner_full_name character varying(96),
@@ -1938,7 +2049,7 @@ CREATE TABLE public.stories (
     remote_parent_posting_id character varying(40),
     remote_parent_comment_id character varying(40),
     remote_parent_media_id character varying(40),
-    remote_posting_node_name character varying(63),
+    remote_posting_node_name character varying(135),
     remote_posting_full_name character varying(96),
     remote_posting_avatar_media_file_id character varying(40),
     remote_posting_avatar_shape character varying(8),
@@ -1958,7 +2069,7 @@ CREATE TABLE public.subscribers (
     subscription_type smallint NOT NULL,
     feed_name character varying(63),
     entry_id uuid,
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     created_at timestamp without time zone NOT NULL,
     admin_view_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
     view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
@@ -1977,7 +2088,7 @@ CREATE TABLE public.subscriptions (
     node_id uuid NOT NULL,
     subscription_type smallint NOT NULL,
     remote_subscriber_id character varying(40),
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     remote_feed_name character varying(63),
     remote_entry_id character varying(40),
     created_at timestamp without time zone NOT NULL,
@@ -2019,7 +2130,7 @@ CREATE TABLE public.user_list_items (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
     list_name character varying(63) NOT NULL,
-    node_name character varying(63) NOT NULL,
+    node_name character varying(135) NOT NULL,
     created_at timestamp without time zone NOT NULL,
     moment bigint NOT NULL
 );
@@ -2036,7 +2147,7 @@ CREATE TABLE public.user_subscriptions (
     node_id uuid NOT NULL,
     subscription_type smallint NOT NULL,
     feed_name character varying(63),
-    remote_node_name character varying(63) NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
     remote_feed_name character varying(63),
     remote_entry_id character varying(40),
     created_at timestamp without time zone NOT NULL,
@@ -2270,6 +2381,14 @@ ALTER TABLE ONLY public.media_files
 
 
 --
+-- Name: media_leases media_leases_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_leases
+    ADD CONSTRAINT media_leases_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: option_defaults option_defaults_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -2419,6 +2538,14 @@ ALTER TABLE ONLY public.remote_grants
 
 ALTER TABLE ONLY public.remote_media_cache
     ADD CONSTRAINT remote_media_cache_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: remote_media_files remote_media_files_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.remote_media_files
+    ADD CONSTRAINT remote_media_files_pkey PRIMARY KEY (id);
 
 
 --
@@ -2886,6 +3013,13 @@ CREATE INDEX entry_attachments_media_file_owner_id_idx ON public.entry_attachmen
 
 
 --
+-- Name: entry_attachments_remote_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_attachments_remote_media_file_id_idx ON public.entry_attachments USING btree (remote_media_file_id);
+
+
+--
 -- Name: entry_revision_upgrades_entry_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -3086,6 +3220,34 @@ CREATE INDEX media_files_deadline_idx ON public.media_files USING btree (deadlin
 --
 
 CREATE INDEX media_files_recognize_idx ON public.media_files USING btree (recognized_at, recognize_at);
+
+
+--
+-- Name: media_leases_media_file_owner_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_leases_media_file_owner_id_idx ON public.media_leases USING btree (media_file_owner_id);
+
+
+--
+-- Name: media_leases_node_id_owner_name_media_file_owner_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_leases_node_id_owner_name_media_file_owner_id_idx ON public.media_leases USING btree (node_id, owner_name, media_file_owner_id);
+
+
+--
+-- Name: media_leases_node_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_leases_node_name_idx ON public.media_leases USING btree (node_id, node_name);
+
+
+--
+-- Name: media_leases_owner_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_leases_owner_name_idx ON public.media_leases USING btree (node_id, owner_name);
 
 
 --
@@ -3380,6 +3542,20 @@ CREATE UNIQUE INDEX remote_media_cache_node_id_remote_node_name_remote_media_id_
 --
 
 CREATE UNIQUE INDEX remote_media_cache_null_remote_node_name_remote_media_id_idx ON public.remote_media_cache USING btree (remote_node_name, remote_media_id) WHERE (node_id IS NULL);
+
+
+--
+-- Name: remote_media_files_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX remote_media_files_deadline_idx ON public.remote_media_files USING btree (deadline);
+
+
+--
+-- Name: remote_media_files_node_id_lease_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX remote_media_files_node_id_lease_id_idx ON public.remote_media_files USING btree (node_id, lease_id) WHERE (lease_id IS NOT NULL);
 
 
 --
@@ -3705,6 +3881,13 @@ CREATE TRIGGER update_deadline BEFORE INSERT OR UPDATE OF usage_count, deadline 
 
 
 --
+-- Name: remote_media_files update_deadline; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_deadline BEFORE INSERT OR UPDATE OF usage_count, deadline ON public.remote_media_files FOR EACH ROW EXECUTE FUNCTION public.update_media_file_deadline();
+
+
+--
 -- Name: avatars update_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
 --
 
@@ -3744,6 +3927,13 @@ CREATE TRIGGER update_media_file_owner_id AFTER INSERT OR DELETE OR UPDATE OF me
 --
 
 CREATE TRIGGER update_media_file_owner_usage AFTER UPDATE OF current_revision_id, deleted_at, view_principal ON public.entries FOR EACH ROW EXECUTE FUNCTION public.update_entry_media_file_owner_usage();
+
+
+--
+-- Name: media_leases update_media_lease_media_file_owner_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_media_lease_media_file_owner_id AFTER INSERT OR DELETE OR UPDATE OF media_file_owner_id ON public.media_leases FOR EACH ROW EXECUTE FUNCTION public.update_media_lease_media_file_owner_id();
 
 
 --
@@ -3814,6 +4004,13 @@ CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDA
 --
 
 CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.stories FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+
+
+--
+-- Name: entry_attachments update_remote_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_media_file_id ON public.entry_attachments FOR EACH ROW EXECUTE FUNCTION public.update_entry_attachments_remote_media_file_id();
 
 
 --
@@ -4053,6 +4250,14 @@ ALTER TABLE ONLY public.entry_attachments
 
 
 --
+-- Name: entry_attachments entry_attachments_remote_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_attachments
+    ADD CONSTRAINT entry_attachments_remote_media_file_id_fkey FOREIGN KEY (remote_media_file_id) REFERENCES public.remote_media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: entry_revision_upgrades entry_revision_upgrades_entry_revision_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -4138,6 +4343,30 @@ ALTER TABLE ONLY public.media_file_previews
 
 ALTER TABLE ONLY public.media_file_previews
     ADD CONSTRAINT media_file_previews_original_media_file_id_fkey FOREIGN KEY (original_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: media_leases media_leases_comment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_leases
+    ADD CONSTRAINT media_leases_comment_id_fkey FOREIGN KEY (comment_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: media_leases media_leases_media_file_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_leases
+    ADD CONSTRAINT media_leases_media_file_owner_id_fkey FOREIGN KEY (media_file_owner_id) REFERENCES public.media_file_owners(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: media_leases media_leases_posting_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_leases
+    ADD CONSTRAINT media_leases_posting_id_fkey FOREIGN KEY (posting_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -4344,5 +4573,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict dNUfzYGXClMaxxabxjEFYfOp4U977isP3wudfzrGYkeoBzsuYkWjzdATvo0ZwSd
+\unrestrict R6Dbk6n43fXngguU9jksGoOkv1PVPWaycBCBDMDUquKAuxDoj7gb9PkOC8f9y0U
 
