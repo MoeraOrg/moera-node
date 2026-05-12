@@ -369,7 +369,7 @@ public class CommentController {
         String ownerName,
         byte[] repliedToDigest
     ) {
-        normalizeBodySource(commentText);
+        normalizeBodySource(comment, commentText);
         byte[] digest = null;
         boolean isSenior;
         if (Rules.ANONYMOUS_NODE_NAME.equals(ownerName) && comment == null) {
@@ -408,11 +408,14 @@ public class CommentController {
                 }
             }
 
-            ValidationUtil.assertion(hasBodyTextOrMedia(commentText), "comment.body-src.blank");
-            ValidationUtil.assertion(
-                commentText.getBodySrc().getEncoded().length() <= getMaxCommentSize(),
-                "comment.body-src.wrong-size"
-            );
+            ValidationUtil.assertion(comment != null || hasBodyTextOrMedia(commentText), "comment.body-src.blank");
+            if (commentText.getBodySrc() != null) {
+                ValidationUtil.maxSize(
+                    commentText.getBodySrc().getEncoded(),
+                    getMaxCommentSize(),
+                    "comment.body-src.wrong-size"
+                );
+            }
         } else {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
             byte[] fingerprint = CommentFingerprintBuilder.build(
@@ -481,11 +484,14 @@ public class CommentController {
         return digest;
     }
 
-    private static void normalizeBodySource(CommentText commentText) {
-        ValidationUtil.notNull(commentText.getBodySrc(), "comment.body-src.blank");
+    private static void normalizeBodySource(Comment comment, CommentText commentText) {
+        if (comment == null) {
+            ValidationUtil.notNull(commentText.getBodySrc(), "comment.body-src.blank");
+        }
         if (
             commentText.getSignature() == null
             && commentText.getBodySrcFormat() != SourceFormat.APPLICATION
+            && commentText.getBodySrc() != null
             && commentText.getBodySrc().getText() == null
         ) {
             commentText.getBodySrc().setText("");
