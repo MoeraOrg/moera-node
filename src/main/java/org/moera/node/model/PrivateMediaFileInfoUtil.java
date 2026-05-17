@@ -64,10 +64,11 @@ public class PrivateMediaFileInfoUtil {
             : null;
         ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
         String grant = grantSupplier != null
-            ? grantSupplier.generate(null, info.getId(), valid, download, fileName)
+            ? grantSupplier.generateLocal(info.getId(), valid, download, fileName)
             : null;
         info.setGrant(grant);
         info.setPath(MediaUtil.privatePath(info, null, grant));
+        info.setGrantExpiresAt(grantSupplier != null ? Util.toEpochSecond(grantSupplier.expires(valid)) : null);
     }
 
     public static void fillDirectPath(PrivateMediaFileInfo info, DirectServeConfig config) {

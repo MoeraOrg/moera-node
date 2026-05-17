@@ -15,6 +15,7 @@ import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.MediaLeaseAttributes;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryAttributes;
@@ -314,20 +315,21 @@ public class Picker extends Task {
     ) throws MoeraNodeException {
         int ordinal = 0;
         for (MediaAttachment attach : postingInfo.getMedia()) {
-            downloadMedia(attach, ordinal++, entryId, revision, picks);
+            downloadMedia(attach, postingInfo.getId(), ordinal++, entryId, revision, picks);
         }
     }
 
     private void downloadMedia(
         MediaAttachment attach,
+        String remotePostingId,
         int ordinal,
         UUID entryId,
         EntryRevision revision,
         List<Pick> picks
     ) throws MoeraNodeException {
         MediaFileOwner media = null;
-        long maxSize = universalContext.getOptions().getLong("posting.media.max-size");
-        if (attach.getMedia().getSize() <= maxSize) {
+        String leaseId = leaseMedia(attach, remotePostingId);
+        if (leaseId == null) {
             media = mediaManager.downloadPrivateMedia(
                 remoteNodeName,
                 generateCarte(remoteNodeName, Scope.VIEW_MEDIA),
@@ -335,7 +337,7 @@ public class Picker extends Task {
                 entryId
             );
         }
-        RemoteMediaFile remoteMedia = remoteMediaOperations.store(remoteNodeName, attach.getMedia());
+        RemoteMediaFile remoteMedia = remoteMediaOperations.store(remoteNodeName, attach.getMedia(), leaseId);
 
         EntryAttachment attachment = new EntryAttachment(revision, media, remoteMedia, ordinal);
         attachment.setEmbedded(attach.isEmbedded());
@@ -360,6 +362,30 @@ public class Picker extends Task {
         pick.setRemoteMediaFile(remoteMedia);
         pick.setParentMediaEntry(parentMediaEntry);
         return pick;
+    }
+
+    private String leaseMedia(MediaAttachment attach, String remotePostingId) {
+        long maxSize = universalContext.getOptions().getLong("posting.media.max-size");
+        if (attach.getMedia().getSize() <= maxSize) {
+            return null;
+        }
+
+        var attrs = new MediaLeaseAttributes();
+        attrs.setNodeName(universalContext.nodeName());
+        attrs.setMediaId(attach.getMedia().getId());
+        attrs.setPostingId(remotePostingId);
+        try {
+            var lease = nodeApi
+                .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA))
+                .createMediaLease(attrs);
+            return lease.getId();
+        } catch (MoeraNodeException e) {
+            log.warn(
+                "Failed to lease media {} from posting {} at node {}: {}",
+                attach.getMedia().getId(), remotePostingId, remoteNodeName, e.getMessage()
+            );
+            return null;
+        }
     }
 
     private void publish(

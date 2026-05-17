@@ -10,10 +10,16 @@ import org.moera.node.util.Util;
 
 public class RemoteMediaInfoUtil {
 
-    public static RemoteMediaInfo build(RemoteMediaFile remoteMediaFile, MediaGrantSupplier grantSupplier) {
+    public static RemoteMediaInfo buildMinimal(RemoteMediaFile remoteMediaFile) {
         RemoteMediaInfo info = new RemoteMediaInfo();
+        info.setId(remoteMediaFile.getId().toString());
         info.setNodeName(remoteMediaFile.getNodeName());
-        info.setId(remoteMediaFile.getMediaId());
+        info.setMediaId(remoteMediaFile.getMediaId());
+        return info;
+    }
+
+    public static RemoteMediaInfo build(RemoteMediaFile remoteMediaFile, MediaGrantSupplier grantSupplier) {
+        RemoteMediaInfo info = buildMinimal(remoteMediaFile);
         info.setHash(remoteMediaFile.getHash());
         info.setDigest(Util.base64encode(remoteMediaFile.getDigest()));
         info.setMimeType(remoteMediaFile.getMimeType());
@@ -28,7 +34,7 @@ public class RemoteMediaInfoUtil {
     public static void fillGrant(RemoteMediaInfo info, MediaGrantSupplier grantSupplier) {
         ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
         String grant = grantSupplier != null
-            ? grantSupplier.generate(info.getNodeName(), info.getId(), valid, false, null)
+            ? grantSupplier.generateRemote(info.getMediaId(), valid, false, null)
             : null;
         info.setGrant(grant);
     }

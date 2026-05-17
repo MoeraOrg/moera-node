@@ -19,12 +19,14 @@ public class MediaAttachmentUtil {
             mediaAttachment.setMedia(
                 PrivateMediaFileInfoUtil.build(attachment.getMediaFileOwner(), config, grantSupplier)
             );
+            if (attachment.getRemoteMediaFile() != null) {
+                mediaAttachment.setRemoteMedia(RemoteMediaInfoUtil.buildMinimal(attachment.getRemoteMediaFile()));
+            }
             Posting mediaPosting = attachment.getMediaFileOwner().getPostingByParentMediaEntry(
                 attachment.getEntryRevision() != null ? attachment.getEntryRevision().getEntry() : null
             );
             mediaAttachment.setPostingId(mediaPosting != null ? mediaPosting.getId().toString() : null);
-        }
-        if (attachment.getRemoteMediaFile() != null) {
+        } else if (attachment.getRemoteMediaFile() != null) {
             mediaAttachment.setRemoteMedia(RemoteMediaInfoUtil.build(attachment.getRemoteMediaFile(), grantSupplier));
         }
         mediaAttachment.setEmbedded(attachment.isEmbedded());
@@ -47,8 +49,7 @@ public class MediaAttachmentUtil {
                     MediaFilePreviewInfoUtil.fillDirectPath(preview, config);
                 }
             }
-        }
-        if (mediaAttachment.getRemoteMedia() != null) {
+        } else if (mediaAttachment.getRemoteMedia() != null) {
             RemoteMediaInfoUtil.fillGrant(mediaAttachment.getRemoteMedia(), grantSupplier);
         }
     }

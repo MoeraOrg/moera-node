@@ -21,6 +21,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PrivateMediaFileInfoUtil;
 import org.moera.node.rest.task.RemoteMediaDownloadJob;
@@ -82,7 +83,9 @@ public class RemoteMediaController {
                 mediaFileOwnerRepository.findByAdminFile(requestContext.nodeId(), mediaFile.getId());
             if (!owners.isEmpty()) {
                 return PrivateMediaFileInfoUtil.build(
-                    owners.iterator().next(), config.getMedia().getDirectServe(), null
+                    owners.iterator().next(),
+                    config.getMedia().getDirectServe(),
+                    new MediaGrantGenerator(requestContext.getOptions())
                 );
             }
         }

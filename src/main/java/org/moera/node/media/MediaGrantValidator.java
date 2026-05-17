@@ -91,6 +91,28 @@ public class MediaGrantValidator {
         return properties;
     }
 
+    public Timestamp getExpires(String grantS) {
+        if (ObjectUtils.isEmpty(grantS)) {
+            return null;
+        }
+
+        byte[] grant = decode(grantS);
+        if (grant.length == 0) {
+            return null;
+        }
+
+        try {
+            Fingerprint fingerprint = CryptoUtil.restoreFingerprint(
+                grant, version -> Fingerprints.getSchema("MEDIA_GRANT", version)
+            ).fingerprint();
+            return fingerprint != null ? new MediaGrantProperties(fingerprint).getExpires() : null;
+        } catch (CryptoException | FingerprintException e) {
+            log.info("Media grant: unknown fingerprint");
+            return null;
+        }
+
+    }
+
     private byte[] decode(String grantS) {
         try {
             return Util.base64urldecode(grantS);

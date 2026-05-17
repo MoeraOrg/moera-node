@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.UUID;
 import jakarta.inject.Inject;
@@ -28,7 +29,9 @@ import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.InvalidImageException;
+import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.media.MediaGrantProperties;
+import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.media.MediaGrantValidator;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.ThresholdReachedException;
@@ -40,6 +43,7 @@ import org.moera.node.model.PublicMediaFileInfoUtil;
 import org.moera.node.ocrspace.OcrSpace;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.util.DigestingOutputStream;
+import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -208,7 +212,9 @@ public class MediaController {
                 mediaFile.setRecognizeAt(Util.now());
             }
 
-            return PrivateMediaFileInfoUtil.build(mediaFileOwner, config.getMedia().getDirectServe(), null);
+            return PrivateMediaFileInfoUtil.build(
+                mediaFileOwner, config.getMedia().getDirectServe(), new MediaGrantGenerator(requestContext.getOptions())
+            );
         } catch (InvalidImageException e) {
             throw new ValidationFailure("media.image-invalid");
         } catch (ThresholdReachedException e) {
@@ -269,10 +275,40 @@ public class MediaController {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
 
         UUID mediaId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+
+        MediaGrantSupplier grantSupplier = null;
+        if (grant != null) {
+            var expires = mediaGrantValidator.getExpires(grant);
+            grantSupplier = new MediaGrantSupplier() {
+
+                @Override
+                public String generateLocal(
+                    String mediaId, ExtendedDuration duration, boolean download, String fileName
+                ) {
+                    return grant;
+                }
+
+                @Override
+                public String generateRemote(
+                    String mediaId, ExtendedDuration duration, boolean download, String fileName
+                ) {
+                    return grant;
+                }
+
+                @Override
+                public Timestamp expires(ExtendedDuration duration) {
+                    return expires;
+                }
+
+            };
+        } else if (requestContext.isAdmin(Scope.VIEW_MEDIA)) {
+            grantSupplier = new MediaGrantGenerator(requestContext.getOptions());
+        }
+
         return PrivateMediaFileInfoUtil.build(
             getMediaFileOwner(mediaId, grant),
             config.getMedia().getDirectServe(),
-            (nodeName, id1, duration, download, fileName) -> grant
+            grantSupplier
         );
     }
 
@@ -298,7 +334,9 @@ public class MediaController {
             mediaOperations.mediaTextUpdated(mediaFileOwner);
         }
 
-        return PrivateMediaFileInfoUtil.build(mediaFileOwner, config.getMedia().getDirectServe(), null);
+        return PrivateMediaFileInfoUtil.build(
+            mediaFileOwner, config.getMedia().getDirectServe(), new MediaGrantGenerator(requestContext.getOptions())
+        );
     }
 
     private boolean canEdit(MediaFileOwner mediaFileOwner) {
