@@ -2,7 +2,6 @@ package org.moera.node.media;
 
 import java.util.UUID;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.RemoteMedia;
@@ -10,6 +9,8 @@ import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.data.RemoteMediaFileRepository;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.task.Jobs;
+import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,12 @@ public class RemoteMediaOperations {
 
     @Inject
     private RemoteMediaFileRepository remoteMediaFileRepository;
+
+    @Inject
+    private Jobs jobs;
+
+    @Inject
+    private Transaction tx;
 
     public RemoteMediaFile store(String remoteNodeName, RemoteMedia media) {
         RemoteMediaFile remoteMediaFile = create(remoteNodeName, media.getId());
@@ -62,12 +69,26 @@ public class RemoteMediaOperations {
     }
 
     @Scheduled(fixedDelayString = "PT6H")
-    @Transactional
     public void purgeUnused() {
+        if (!jobs.isReady()) {
+            return;
+        }
+
         try (var ignored = requestCounter.allot()) {
             log.info("Purging unused remote media files");
 
-            remoteMediaFileRepository.deleteUnused(Util.now());
+            var leaseKeys = tx.executeWrite(() -> {
+                var now = Util.now();
+                var keys = remoteMediaFileRepository.findUnusedLeaseKeys(now);
+                remoteMediaFileRepository.deleteUnused(now);
+                return keys;
+            });
+
+            leaseKeys.forEach(leaseKey -> jobs.run(
+                ReleaseRemoteMediaJob.class,
+                new ReleaseRemoteMediaJob.Parameters(leaseKey.remoteNodeName(), leaseKey.leaseId()),
+                leaseKey.nodeId()
+            ));
         }
     }
 
