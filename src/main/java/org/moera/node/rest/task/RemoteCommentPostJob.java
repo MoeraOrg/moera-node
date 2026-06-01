@@ -4,7 +4,9 @@ import java.security.interfaces.ECPrivateKey;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
@@ -15,7 +17,10 @@ import org.moera.lib.node.types.CommentCreated;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentSourceText;
 import org.moera.lib.node.types.CommentText;
+import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.MediaToAttach;
 import org.moera.lib.node.types.PostingInfo;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.data.MediaFile;
@@ -29,10 +34,13 @@ import org.moera.node.liberin.model.RemoteCommentAddingFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentUpdateFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentUpdatedLiberin;
 import org.moera.node.media.MediaManager;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.CommentTextUtil;
+import org.moera.node.model.MediaAttachmentUtil;
+import org.moera.node.model.PostingSourceTextUtil;
 import org.moera.node.operations.CommentOperations;
 import org.moera.node.operations.FavorOperations;
 import org.moera.node.operations.FavorType;
@@ -41,7 +49,7 @@ import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.util.Pair;
+import org.springframework.util.ObjectUtils;
 import tools.jackson.databind.ObjectMapper;
 
 public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, RemoteCommentPostJob.State> {
@@ -107,6 +115,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         private CommentInfo prevCommentInfo;
         private byte[] repliedToDigest;
         private boolean repliedToLoaded;
+        private boolean uploadedRemoteMediaCached;
         private CommentText commentText;
         private CommentInfo commentInfo;
 
@@ -177,6 +186,14 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
             this.repliedToLoaded = repliedToLoaded;
         }
 
+        public boolean isUploadedRemoteMediaCached() {
+            return uploadedRemoteMediaCached;
+        }
+
+        public void setUploadedRemoteMediaCached(boolean uploadedRemoteMediaCached) {
+            this.uploadedRemoteMediaCached = uploadedRemoteMediaCached;
+        }
+
         public CommentText getCommentText() {
             return commentText;
         }
@@ -214,6 +231,9 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
 
     @Inject
     private MediaManager mediaManager;
+
+    @Inject
+    private MediaOperations mediaOperations;
 
     public RemoteCommentPostJob() {
         state = new State();
@@ -314,6 +334,12 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
             checkpoint();
         }
 
+        if (!state.uploadedRemoteMediaCached) {
+            cacheUploadedRemoteMedia();
+            state.uploadedRemoteMediaCached = true;
+            checkpoint();
+        }
+
         if (state.commentText == null) {
             state.commentText = buildComment();
             checkpoint();
@@ -337,6 +363,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
                     )
                 );
             }
+            updateCaptions();
             checkpoint();
         }
 
@@ -349,22 +376,37 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         }
 
         saveComment(state.commentInfo, repliedToAvatarMediaFile);
+        mediaOperations.clearDraftOnlyMediaLeases(parameters.sourceText.getMedia());
     }
 
-    private CommentText buildComment() {
+    private void cacheUploadedRemoteMedia() {
+        var media = parameters.sourceText.getMedia();
+        if (ObjectUtils.isEmpty(media)) {
+            return;
+        }
+        media.stream()
+            .map(MediaToAttach::getRemoteMedia)
+            .filter(Objects::nonNull)
+            .forEach(rm ->
+                mediaManager.cacheUploadedRemoteMedia(
+                    rm.getNodeName(), rm.getMediaId(), Util.base64decode(rm.getDigest())
+                )
+            );
+    }
+
+    private CommentText buildComment() throws MoeraNodeException {
         CommentText commentText = CommentTextUtil.build(
             nodeName(), fullName(), gender(), parameters.sourceText, textConverter
         );
-        Map<UUID, byte[]> mediaDigests = buildMediaDigestsMap();
-        cacheMediaDigests(mediaDigests);
+        var mediaInfos = buildInfoMap();
         byte[] fingerprint = CommentFingerprintBuilder.build(
             commentText,
-            id -> commentMediaDigest(id, mediaDigests),
+            id -> commentMediaDigest(id, mediaInfos),
             CryptoUtil.digest(PostingFingerprintBuilder.build(
                 state.postingInfo.getSignatureVersion(),
                 state.postingInfo,
                 mediaManager.getParentMediaDigest(
-                    state.postingInfo.getParentMedia(),
+                    state.postingInfo,
                     parameters.targetNodeName,
                     nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
                 ),
@@ -381,35 +423,54 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         return commentText;
     }
 
-    private Map<UUID, byte[]> buildMediaDigestsMap() {
-        if (parameters.sourceText.getMedia() == null) {
+    private Map<String, PrivateMediaFileInfo> buildInfoMap() {
+        if (state.prevCommentInfo == null || state.prevCommentInfo.getMedia() == null) {
             return Collections.emptyMap();
         }
 
-        return parameters.sourceText.getMedia()
-            .stream()
-            .filter(md -> md.getDigest() != null)
-            .map(md -> Pair.of(Util.uuid(md.getId()), md.getDigest()))
-            .filter(p -> p.getFirst().isPresent())
-            .collect(Collectors.toMap(p -> p.getFirst().get(), p -> Util.base64decode(p.getSecond())));
+        return state.prevCommentInfo.getMedia().stream()
+            .map(MediaAttachment::getMedia)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toMap(PrivateMediaFileInfo::getId, Function.identity()));
     }
 
-    private void cacheMediaDigests(Map<UUID, byte[]> mediaDigests) {
-        mediaDigests.forEach((id, digest) ->
-            mediaManager.cacheUploadedRemoteMedia(parameters.targetNodeName, id.toString(), digest)
-        );
-    }
-
-    private byte[] commentMediaDigest(UUID id, Map<UUID, byte[]> mediaDigests) {
-        if (mediaDigests.containsKey(id)) {
-            return mediaDigests.get(id);
+    private byte[] commentMediaDigest(UUID id, Map<String, PrivateMediaFileInfo> mediaInfos) {
+        var info = mediaInfos.get(id.toString());
+        if (info == null) {
+            return null;
         }
+
         return mediaManager.getPrivateMediaDigest(
             parameters.targetNodeName,
             generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-            id.toString(),
-            null
+            info
         );
+    }
+
+    private void updateCaptions() {
+        if (ObjectUtils.isEmpty(state.commentInfo.getMedia())) {
+            return;
+        }
+        var mediaPostings = state.commentInfo.getMedia().stream()
+            .filter(ma -> MediaAttachmentUtil.mediaId(ma) != null && ma.getPostingId() != null)
+            .collect(Collectors.toMap(MediaAttachmentUtil::mediaId, MediaAttachment::getPostingId));
+
+        for (var caption : parameters.sourceText.getMediaCaptions()) {
+            var postingId = mediaPostings.get(caption.getMediaId());
+            if (postingId == null) {
+                continue;
+            }
+
+            jobs.run(
+                RemotePostingPostJob.class,
+                new RemotePostingPostJob.Parameters(
+                    parameters.targetNodeName,
+                    postingId,
+                    PostingSourceTextUtil.build(state.postingInfo, state.commentText.getOwnerAvatar(), caption)
+                ),
+                universalContext.nodeId()
+            );
+        }
     }
 
     private void saveComment(CommentInfo info, MediaFile repliedToAvatarMediaFile) {

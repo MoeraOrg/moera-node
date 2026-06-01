@@ -247,7 +247,7 @@ public class RemotePostingReactionPostJob
         saveReaction();
     }
 
-    private ReactionDescription buildReaction() {
+    private ReactionDescription buildReaction() throws MoeraNodeException {
         byte[] fingerprint = ReactionFingerprintBuilder.build(
                 nodeName(),
                 parameters.attributes,
@@ -255,7 +255,7 @@ public class RemotePostingReactionPostJob
                     state.postingInfo.getSignatureVersion(),
                     state.postingInfo,
                     mediaManager.getParentMediaDigest(
-                        state.postingInfo.getParentMedia(),
+                        state.postingInfo,
                         parameters.targetNodeName,
                         nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
                     ),

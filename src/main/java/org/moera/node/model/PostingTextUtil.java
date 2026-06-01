@@ -1,13 +1,11 @@
 package org.moera.node.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.moera.lib.node.types.BodyFormat;
-import org.moera.lib.node.types.MediaWithDigest;
 import org.moera.lib.node.types.PostingSourceText;
 import org.moera.lib.node.types.PostingText;
 import org.moera.lib.node.types.SourceFormat;
@@ -15,10 +13,8 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.ChildOperations;
 import org.moera.node.data.Entry;
-import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.MediaFileOwner;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.text.TextConverter;
 import org.moera.node.text.shorten.Shortener;
@@ -45,14 +41,10 @@ public class PostingTextUtil {
         if (postingText.getBodySrc() != null && postingText.getBodySrcFormat() == null) {
             postingText.setBodySrcFormat(SourceFormat.PLAIN_TEXT);
         }
-        
-        postingText.setMedia(
-            sourceText.getMedia() != null
-                ? sourceText.getMedia().stream()
-                    .map(MediaWithDigest::getId)
-                    .collect(Collectors.toList())
-                : null
-        );
+
+        if (sourceText.getMedia() != null) {
+            postingText.setMedia(new ArrayList<>(sourceText.getMedia()));
+        }
             
         postingText.setCreatedAt(Util.toEpochSecond(Util.now()));
         postingText.setRejectedReactions(sourceText.getRejectedReactions());
@@ -405,16 +397,7 @@ public class PostingTextUtil {
                         ? postingText.getBodySrc().getEncoded().equals(revision.getBodySrc())
                         : postingText.getBodySrc().getEncoded().equals(revision.getBody()))
                 )
-            && (
-                postingText.getMedia() == null
-                || postingText.getMedia().equals(
-                    revision.getAttachments().stream()
-                        .map(EntryAttachment::getMediaFileOwner)
-                        .map(MediaFileOwner::getId)
-                        .map(UUID::toString)
-                        .toList()
-                )
-            )
+            && MediaToAttachUtil.equals(postingText.getMedia(), revision.getAttachments())
             && !(revision.getSignature() == null && postingText.getSignature() != null);
     }
 

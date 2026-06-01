@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict R6Dbk6n43fXngguU9jksGoOkv1PVPWaycBCBDMDUquKAuxDoj7gb9PkOC8f9y0U
+\restrict 4NDCIGuKfICCDiM1Lr5cvlPyxJn3e48qgyH9U6busWL35Ttx0OqPXjqeNIOudgp
 
--- Dumped from database version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
--- Dumped by pg_dump version 14.22 (Ubuntu 14.22-0ubuntu0.22.04.1)
+-- Dumped from database version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1159,7 +1159,8 @@ CREATE TABLE public.entries (
     receiver_trust_comment_principal character varying(70),
     premoderating boolean DEFAULT false NOT NULL,
     client_id character varying(40),
-    parent_media_entry_id uuid
+    parent_media_entry_id uuid,
+    parent_remote_media_id uuid
 );
 
 
@@ -1176,7 +1177,8 @@ CREATE TABLE public.entry_attachments (
     ordinal integer NOT NULL,
     draft_id uuid,
     embedded boolean DEFAULT true NOT NULL,
-    remote_media_file_id uuid
+    remote_media_file_id uuid,
+    media_file_lease_id uuid
 );
 
 
@@ -1442,12 +1444,12 @@ ALTER TABLE public.media_files OWNER TO moera;
 CREATE TABLE public.media_leases (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    node_name character varying(135) NOT NULL,
-    owner_name character varying(135),
+    owner_name character varying(135) NOT NULL,
     media_file_owner_id uuid NOT NULL,
-    posting_id uuid,
-    comment_id uuid,
-    created_at timestamp without time zone NOT NULL
+    created_at timestamp without time zone NOT NULL,
+    entry_id uuid,
+    draft_only boolean DEFAULT false NOT NULL,
+    deadline timestamp without time zone
 );
 
 
@@ -1520,7 +1522,8 @@ CREATE TABLE public.own_postings (
     created_at timestamp without time zone NOT NULL,
     remote_avatar_media_file_id character varying(40),
     remote_avatar_shape character varying(8),
-    remote_parent_media_id character varying(40)
+    remote_parent_media_id character varying(40),
+    remote_parent_media_entry_id character varying(40)
 );
 
 
@@ -1613,7 +1616,8 @@ CREATE TABLE public.picks (
     recommended boolean DEFAULT false NOT NULL,
     viewed boolean DEFAULT false NOT NULL,
     publish_at timestamp without time zone,
-    parent_media_entry_id uuid
+    parent_media_entry_id uuid,
+    remote_media_file_id uuid
 );
 
 
@@ -1809,7 +1813,8 @@ CREATE TABLE public.remote_media_files (
     file_size bigint,
     lease_id character varying(40),
     usage_count integer DEFAULT 0 NOT NULL,
-    deadline timestamp without time zone
+    deadline timestamp without time zone,
+    title character varying(255)
 );
 
 
@@ -2964,6 +2969,13 @@ CREATE UNIQUE INDEX entries_parent_media_entry_id_parent_media_id_idx ON public.
 
 
 --
+-- Name: entries_parent_remote_media_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entries_parent_remote_media_id_idx ON public.entries USING btree (parent_remote_media_id) WHERE (parent_remote_media_id IS NOT NULL);
+
+
+--
 -- Name: entries_receiver_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -2999,10 +3011,24 @@ CREATE INDEX entry_attachments_draft_id_ordinal_idx ON public.entry_attachments 
 
 
 --
+-- Name: entry_attachments_draft_media_file_lease_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_attachments_draft_media_file_lease_id_idx ON public.entry_attachments USING btree (media_file_lease_id) WHERE ((draft_id IS NOT NULL) AND (media_file_lease_id IS NOT NULL));
+
+
+--
 -- Name: entry_attachments_entry_revision_id_ordinal_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
 CREATE INDEX entry_attachments_entry_revision_id_ordinal_idx ON public.entry_attachments USING btree (entry_revision_id, ordinal);
+
+
+--
+-- Name: entry_attachments_media_file_lease_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_attachments_media_file_lease_id_idx ON public.media_leases USING btree (id);
 
 
 --
@@ -3223,6 +3249,13 @@ CREATE INDEX media_files_recognize_idx ON public.media_files USING btree (recogn
 
 
 --
+-- Name: media_leases_draft_only_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_leases_draft_only_deadline_idx ON public.media_leases USING btree (deadline) WHERE ((draft_only = true) AND (deadline IS NOT NULL));
+
+
+--
 -- Name: media_leases_media_file_owner_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -3230,24 +3263,10 @@ CREATE INDEX media_leases_media_file_owner_id_idx ON public.media_leases USING b
 
 
 --
--- Name: media_leases_node_id_owner_name_media_file_owner_id_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE INDEX media_leases_node_id_owner_name_media_file_owner_id_idx ON public.media_leases USING btree (node_id, owner_name, media_file_owner_id);
-
-
---
 -- Name: media_leases_node_name_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX media_leases_node_name_idx ON public.media_leases USING btree (node_id, node_name);
-
-
---
--- Name: media_leases_owner_name_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE INDEX media_leases_owner_name_idx ON public.media_leases USING btree (node_id, owner_name);
+CREATE INDEX media_leases_node_name_idx ON public.media_leases USING btree (node_id, owner_name);
 
 
 --
@@ -3381,6 +3400,13 @@ CREATE INDEX picks_node_id_idx ON public.picks USING btree (node_id);
 --
 
 CREATE INDEX picks_parent_media_entry_id_idx ON public.picks USING btree (parent_media_entry_id) WHERE (parent_media_entry_id IS NOT NULL);
+
+
+--
+-- Name: picks_remote_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX picks_remote_media_file_id_idx ON public.picks USING btree (remote_media_file_id) WHERE (remote_media_file_id IS NOT NULL);
 
 
 --
@@ -4194,6 +4220,14 @@ ALTER TABLE ONLY public.entries
 
 
 --
+-- Name: entries entries_parent_remote_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entries_parent_remote_media_id_fkey FOREIGN KEY (parent_remote_media_id) REFERENCES public.remote_media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: entries entries_receiver_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -4239,6 +4273,14 @@ ALTER TABLE ONLY public.entry_attachments
 
 ALTER TABLE ONLY public.entry_attachments
     ADD CONSTRAINT entry_attachments_entry_revision_id_fkey FOREIGN KEY (entry_revision_id) REFERENCES public.entry_revisions(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: entry_attachments entry_attachments_media_file_lease_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_attachments
+    ADD CONSTRAINT entry_attachments_media_file_lease_id_fkey FOREIGN KEY (media_file_lease_id) REFERENCES public.media_leases(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
@@ -4346,11 +4388,11 @@ ALTER TABLE ONLY public.media_file_previews
 
 
 --
--- Name: media_leases media_leases_comment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+-- Name: media_leases media_leases_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.media_leases
-    ADD CONSTRAINT media_leases_comment_id_fkey FOREIGN KEY (comment_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT media_leases_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -4359,14 +4401,6 @@ ALTER TABLE ONLY public.media_leases
 
 ALTER TABLE ONLY public.media_leases
     ADD CONSTRAINT media_leases_media_file_owner_id_fkey FOREIGN KEY (media_file_owner_id) REFERENCES public.media_file_owners(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: media_leases media_leases_posting_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
---
-
-ALTER TABLE ONLY public.media_leases
-    ADD CONSTRAINT media_leases_posting_id_fkey FOREIGN KEY (posting_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -4415,6 +4449,14 @@ ALTER TABLE ONLY public.picks
 
 ALTER TABLE ONLY public.picks
     ADD CONSTRAINT picks_parent_media_entry_id_fkey FOREIGN KEY (parent_media_entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: picks picks_remote_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.picks
+    ADD CONSTRAINT picks_remote_media_file_id_fkey FOREIGN KEY (remote_media_file_id) REFERENCES public.remote_media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -4573,5 +4615,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict R6Dbk6n43fXngguU9jksGoOkv1PVPWaycBCBDMDUquKAuxDoj7gb9PkOC8f9y0U
+\unrestrict 4NDCIGuKfICCDiM1Lr5cvlPyxJn3e48qgyH9U6busWL35Ttx0OqPXjqeNIOudgp
 

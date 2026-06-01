@@ -43,7 +43,7 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
                 .getPosting(data.getPostingId(), false);
             updateData(data -> data.setOwnerName(postingInfo.getReceiverName()));
             byte[] parentMediaDigest = mediaManager.getParentMediaDigest(
-                postingInfo.getParentMedia(),
+                postingInfo,
                 data.getNodeName(),
                 nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
             );

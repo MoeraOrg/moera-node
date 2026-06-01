@@ -14,7 +14,8 @@ public class MediaAttachmentUtil {
         MediaGrantSupplier grantSupplier
     ) {
         MediaAttachment mediaAttachment = new MediaAttachment();
-        
+
+        Posting mediaPosting = null;
         if (attachment.getMediaFileOwner() != null) {
             mediaAttachment.setMedia(
                 PrivateMediaFileInfoUtil.build(attachment.getMediaFileOwner(), config, grantSupplier)
@@ -22,13 +23,16 @@ public class MediaAttachmentUtil {
             if (attachment.getRemoteMediaFile() != null) {
                 mediaAttachment.setRemoteMedia(RemoteMediaInfoUtil.buildMinimal(attachment.getRemoteMediaFile()));
             }
-            Posting mediaPosting = attachment.getMediaFileOwner().getPostingByParentMediaEntry(
+            mediaPosting = attachment.getMediaFileOwner().getPostingByParentMediaEntry(
                 attachment.getEntryRevision() != null ? attachment.getEntryRevision().getEntry() : null
             );
-            mediaAttachment.setPostingId(mediaPosting != null ? mediaPosting.getId().toString() : null);
         } else if (attachment.getRemoteMediaFile() != null) {
             mediaAttachment.setRemoteMedia(RemoteMediaInfoUtil.build(attachment.getRemoteMediaFile(), grantSupplier));
+            mediaPosting = attachment.getRemoteMediaFile().getPostingByParentMediaEntry(
+                attachment.getEntryRevision() != null ? attachment.getEntryRevision().getEntry() : null
+            );
         }
+        mediaAttachment.setPostingId(mediaPosting != null ? mediaPosting.getId().toString() : null);
         mediaAttachment.setEmbedded(attachment.isEmbedded());
         
         return mediaAttachment;
@@ -52,6 +56,14 @@ public class MediaAttachmentUtil {
         } else if (mediaAttachment.getRemoteMedia() != null) {
             RemoteMediaInfoUtil.fillGrant(mediaAttachment.getRemoteMedia(), grantSupplier);
         }
+    }
+
+    public static String mediaId(MediaAttachment attachment) {
+        return attachment.getMedia() != null
+            ? attachment.getMedia().getId()
+            : attachment.getRemoteMedia() != null
+              ? attachment.getRemoteMedia().getMediaId()
+              : null;
     }
 
 }

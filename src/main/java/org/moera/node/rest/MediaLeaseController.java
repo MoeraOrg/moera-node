@@ -1,5 +1,7 @@
 package org.moera.node.rest;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 import jakarta.inject.Inject;
@@ -25,6 +27,7 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.MediaGrantGenerator;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.MediaLeaseInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.util.Util;
@@ -134,6 +137,10 @@ public class MediaLeaseController {
         mediaLease.setOwnerName(attributes.getNodeName());
         mediaLease.setMediaFileOwner(mediaFileOwner);
         mediaLease.setEntry(entry);
+        if (admin) {
+            mediaLease.setDraftOnly(true);
+            mediaLease.setDeadline(Timestamp.from(Instant.now().plus(MediaOperations.DRAFT_ONLY_LEASE_TTL)));
+        }
         mediaLease = mediaLeaseRepository.save(mediaLease);
 
         var grantSupplier = entry != null ? new MediaGrantGenerator(requestContext.getOptions()) : null;

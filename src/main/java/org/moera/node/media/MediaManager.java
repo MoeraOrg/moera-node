@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -19,7 +20,8 @@ import jakarta.persistence.PersistenceContext;
 import okhttp3.ResponseBody;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.AvatarImage;
-import org.moera.lib.node.types.ParentMediaInfo;
+import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.PublicMediaFileInfo;
 import org.moera.lib.node.types.principal.AccessCheckers;
@@ -39,6 +41,7 @@ import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.ParametrizedLock;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -410,43 +413,51 @@ public class MediaManager {
         );
     }
 
-    public byte[] getPrivateMediaDigest(String nodeName, String carte, PrivateMediaFileInfo info) {
-        return getPrivateMediaDigest(nodeName, carte, info.getId(), info.getGrant(), info.getHash());
+    private record CachedDigest(byte[] digest, boolean error) {
     }
 
-    public byte[] getPrivateMediaDigest(String nodeName, String carte, String id, String hash) {
-        return getPrivateMediaDigest(nodeName, carte, id, null, hash);
-    }
-
-    private byte[] getPrivateMediaDigest(String nodeName, String carte, String id, String grant, String hash) {
+    private CachedDigest getCachedPrivateMediaDigest(String nodeName, String mediaId) {
         Collection<RemoteMediaCache> caches =
-            remoteMediaCacheRepository.findByMedia(universalContext.nodeId(), nodeName, id);
+            remoteMediaCacheRepository.findByMedia(universalContext.nodeId(), nodeName, mediaId);
         RemoteMediaCache cache = caches.stream()
             .filter(remoteMediaCache -> remoteMediaCache.getDigest() != null)
             .findFirst()
             .orElse(null);
         if (cache != null) {
-            return cache.getDigest();
+            return new CachedDigest(cache.getDigest(), false);
+        }
+        if (caches.stream().anyMatch(remoteMediaCache -> remoteMediaCache.getError() != null)) {
+            return new CachedDigest(null, true);
+        }
+        return new CachedDigest(null, false);
+    }
+
+    public byte[] getPrivateMediaDigest(String nodeName, String carte, PrivateMediaFileInfo info) {
+        var cached = getCachedPrivateMediaDigest(nodeName, info.getId());
+        if (cached.digest() != null) {
+            return cached.digest();
         }
 
-        if (hash != null) {
-            MediaFile mediaFile = mediaFileRepository.findById(hash).orElse(null);
+        if (info.getHash() != null) {
+            MediaFile mediaFile = mediaFileRepository.findById(info.getHash()).orElse(null);
             if (mediaFile != null) {
-                remoteMediaCacheOperations.store(null, nodeName, id, mediaFile.getDigest(), mediaFile);
+                remoteMediaCacheOperations.store(null, nodeName, info.getId(), mediaFile.getDigest(), mediaFile);
                 return mediaFile.getDigest();
             }
         }
 
-        if (caches.stream().anyMatch(remoteMediaCache -> remoteMediaCache.getError() != null)) {
+        if (cached.error()) {
             return null;
         }
 
         var tmp = mediaOperations.tmpFile();
         try {
-            var tmpMedia = getPrivateMedia(
-                nodeName, carte, id, grant, tmp, universalContext.getOptions().getInt("media.verification.max-size")
-            );
-            remoteMediaCacheOperations.store(null, nodeName, id, tmpMedia.digest(), null);
+            Integer maxSize = universalContext.getOptions().getInt("media.verification.max-size");
+            if (info.getSize() > maxSize) {
+                return Util.base64decode(info.getDigest());
+            }
+            var tmpMedia = getPrivateMedia(nodeName, carte, info.getId(), info.getGrant(), tmp, maxSize);
+            remoteMediaCacheOperations.store(null, nodeName, info.getId(), tmpMedia.digest(), null);
             return tmpMedia.digest();
         } catch (MoeraNodeException e) {
             return null; // TODO need more graceful approach
@@ -460,22 +471,65 @@ public class MediaManager {
     }
 
     public byte[] getParentMediaDigest(
-        ParentMediaInfo parentMedia,
+        PostingInfo postingInfo,
         String defaultNodeName,
         Function<String, String> carteGenerator
-    ) {
-        if (parentMedia == null) {
+    ) throws MoeraNodeException {
+        var parentMedia = postingInfo.getParentMedia();
+        if (parentMedia == null || parentMedia.getMediaId() == null) {
             return null;
         }
+
         String parentMediaNodeName = parentMedia.getNodeName() != null ? parentMedia.getNodeName() : defaultNodeName;
-        return parentMedia.getMediaId() != null
-            ? getPrivateMediaDigest(
-                parentMediaNodeName,
-                carteGenerator.apply(parentMediaNodeName),
-                parentMedia.getMediaId(),
-                null
-            )
-            : null;
+        var cached = getCachedPrivateMediaDigest(parentMediaNodeName, parentMedia.getMediaId());
+        if (cached.digest() != null) {
+            return cached.digest();
+        }
+
+        if (parentMedia.getPostingId() == null) {
+            return null;
+        }
+        List<MediaAttachment> attachments;
+        var carte = carteGenerator.apply(parentMediaNodeName);
+        if (parentMedia.getCommentId() == null) {
+            var posting = nodeApi.at(parentMediaNodeName, carte).getPosting(parentMedia.getPostingId(), false);
+            attachments = posting != null ? posting.getMedia() : null;
+        } else {
+            var comment = nodeApi.at(parentMediaNodeName, carte)
+                .getComment(parentMedia.getPostingId(), parentMedia.getCommentId(), false);
+            attachments = comment != null ? comment.getMedia() : null;
+        }
+        if (ObjectUtils.isEmpty(attachments)) {
+            return null;
+        }
+        var attachment = attachments.stream().filter(ma -> ma.getPostingId().equals(postingInfo.getId()))
+            .findFirst().orElse(null);
+        if (attachment == null) {
+            return null;
+        }
+
+        var mediaNodeName = parentMediaNodeName;
+        PrivateMediaFileInfo mediaInfo;
+        if (attachment.getMedia() == null) {
+            var remoteMedia = attachment.getRemoteMedia();
+            if (remoteMedia == null) {
+                return null;
+            }
+            mediaNodeName = remoteMedia.getNodeName();
+            cached = getCachedPrivateMediaDigest(mediaNodeName, remoteMedia.getMediaId());
+            if (cached.digest() != null) {
+                return cached.digest();
+            }
+            mediaInfo = nodeApi.at(remoteMedia.getNodeName(), carteGenerator.apply(mediaNodeName))
+                .getPrivateMediaInfo(remoteMedia.getMediaId(), remoteMedia.getGrant());
+        } else {
+            mediaInfo = attachment.getMedia();
+        }
+        if (mediaInfo == null) {
+            return null;
+        }
+
+        return getPrivateMediaDigest(mediaNodeName, carteGenerator.apply(mediaNodeName), mediaInfo);
     }
 
     public void cacheUploadedRemoteMedia(String remoteNodeName, String remoteMediaId, byte[] digest) {

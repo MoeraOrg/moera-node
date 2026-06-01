@@ -38,7 +38,7 @@ public class RemoteMediaOperations {
     private Transaction tx;
 
     public RemoteMediaFile store(String remoteNodeName, RemoteMedia media) {
-        RemoteMediaFile remoteMediaFile = create(remoteNodeName, media.getId());
+        RemoteMediaFile remoteMediaFile = create(remoteNodeName, media.getMediaId());
         remoteMediaFile.setHash(media.getHash());
         remoteMediaFile.setDigest(Util.base64decode(media.getDigest()));
         remoteMediaFile.setMimeType(media.getMimeType());
@@ -55,6 +55,7 @@ public class RemoteMediaOperations {
         remoteMediaFile.setSizeX(media.getWidth());
         remoteMediaFile.setSizeY(media.getHeight());
         remoteMediaFile.setFileSize(media.getSize());
+        remoteMediaFile.setTitle(media.getTitle());
         remoteMediaFile.setLeaseId(leaseId);
         return remoteMediaFile;
     }

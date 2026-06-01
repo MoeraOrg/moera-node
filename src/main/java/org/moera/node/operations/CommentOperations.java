@@ -35,6 +35,8 @@ import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
+import org.moera.node.data.RemoteMediaFile;
+import org.moera.node.data.RemoteMediaFileRepository;
 import org.moera.node.fingerprint.CommentFingerprintBuilder;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.RequestCounter;
@@ -79,6 +81,9 @@ public class CommentOperations {
 
     @Inject
     private EntryAttachmentRepository entryAttachmentRepository;
+
+    @Inject
+    private RemoteMediaFileRepository remoteMediaFileRepository;
 
     @Inject
     private CommentPublicPageOperations commentPublicPageOperations;
@@ -227,19 +232,43 @@ public class CommentOperations {
         if (revisionUpdater != null) {
             revisionUpdater.accept(current);
         }
+        comment = commentRepository.saveAndFlush(comment);
 
         if (!media.isEmpty()) {
             Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(current.getBody()));
+            List<RemoteMediaFile> remoteMedia = latest != null
+                ? latest.getAttachments().stream()
+                    .map(EntryAttachment::getRemoteMediaFile)
+                    .filter(Objects::nonNull)
+                    .toList()
+                : Collections.emptyList();
             int ordinal = 0;
             for (LocalRemoteMedia lrm : media) {
-                EntryAttachment attachment = new EntryAttachment(current, lrm, ordinal++);
+                EntryAttachment attachment = new EntryAttachment(current, lrm.mediaFileOwner(), ordinal++);
+                if (lrm.remoteMediaFile() != null) {
+                    var existing = remoteMedia.stream()
+                        .filter(rmf ->
+                            Objects.equals(rmf.getNodeName(), lrm.remoteMediaFile().getNodeName())
+                            && Objects.equals(rmf.getMediaId(), lrm.remoteMediaFile().getMediaId())
+                        )
+                        .findFirst()
+                        .orElse(null);
+                    if (existing != null) {
+                        attachment.setRemoteMediaFile(existing);
+                    } else {
+                        attachment.setRemoteMediaFile(remoteMediaFileRepository.save(lrm.remoteMediaFile()));
+                    }
+                }
                 attachment.setEmbedded(embedded.contains(lrm.hash()));
                 attachment = entryAttachmentRepository.save(attachment);
                 current.addAttachment(attachment);
 
-                Posting mediaPosting = lrm.postingByParentMediaEntry(comment);
+                var savedLrm = new LocalRemoteMedia(
+                    attachment.getMediaFileOwner(), attachment.getRemoteMediaFile(), lrm.mediaLease()
+                );
+                Posting mediaPosting = savedLrm.postingByParentMediaEntry(comment);
                 if (mediaPosting == null) {
-                    mediaPosting = postingOperations.newPosting(lrm, comment);
+                    mediaPosting = postingOperations.newPosting(savedLrm, comment);
                 }
                 if (mediaEntryUpdater != null) {
                     mediaEntryUpdater.accept(mediaPosting);
@@ -248,7 +277,6 @@ public class CommentOperations {
         }
 
         comment.setEditedAt(Util.now());
-        comment = commentRepository.saveAndFlush(comment);
         signIfOwnedOrAnonymous(comment);
 
         updateRelatedObjects(comment, affectedMedia);

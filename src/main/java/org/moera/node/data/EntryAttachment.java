@@ -26,6 +26,9 @@ public class EntryAttachment {
     private MediaFileOwner mediaFileOwner;
 
     @ManyToOne
+    private MediaLease mediaFileLease;
+
+    @ManyToOne
     private RemoteMediaFile remoteMediaFile;
 
     @NotNull
@@ -47,26 +50,14 @@ public class EntryAttachment {
         this.ordinal = ordinal;
     }
 
-    public EntryAttachment(EntryRevision entryRevision, LocalRemoteMedia media, int ordinal) {
-        this(entryRevision, media.mediaFileOwner(), media.remoteMediaFile(), ordinal);
-    }
-
     public EntryAttachment(EntryRevision entryRevision, MediaFileOwner mediaFileOwner, int ordinal) {
         this(entryRevision, mediaFileOwner, null, ordinal);
     }
 
-    public EntryAttachment(Draft draft, LocalRemoteMedia media, int ordinal) {
+    public EntryAttachment(Draft draft, MediaFileOwner mediaFileOwner, int ordinal) {
         this.id = UUID.randomUUID();
         this.draft = draft;
-        this.mediaFileOwner = media.mediaFileOwner();
-        this.remoteMediaFile = media.remoteMediaFile();
-        this.ordinal = ordinal;
-    }
-
-    public EntryAttachment(Draft draft, RemoteMediaFile remoteMediaFile, int ordinal) {
-        this.id = UUID.randomUUID();
-        this.draft = draft;
-        this.remoteMediaFile = remoteMediaFile;
+        this.mediaFileOwner = mediaFileOwner;
         this.ordinal = ordinal;
     }
 
@@ -100,6 +91,14 @@ public class EntryAttachment {
 
     public void setMediaFileOwner(MediaFileOwner mediaFileOwner) {
         this.mediaFileOwner = mediaFileOwner;
+    }
+
+    public MediaLease getMediaFileLease() {
+        return mediaFileLease;
+    }
+
+    public void setMediaFileLease(MediaLease mediaFileLease) {
+        this.mediaFileLease = mediaFileLease;
     }
 
     public RemoteMediaFile getRemoteMediaFile() {

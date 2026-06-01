@@ -150,7 +150,7 @@ public class RepliedToDigestVerifier {
                 postingInfo,
                 postingRevisionInfo,
                 mediaManager.getParentMediaDigest(
-                    postingInfo.getParentMedia(),
+                    postingInfo,
                     targetNodeName,
                     nodeName -> generateCarte.generate(nodeName, Scope.VIEW_MEDIA)
                 ),

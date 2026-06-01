@@ -3,9 +3,11 @@ package org.moera.node.rest;
 import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -15,7 +17,6 @@ import jakarta.transaction.Transactional;
 import org.moera.lib.node.types.DraftInfo;
 import org.moera.lib.node.types.DraftText;
 import org.moera.lib.node.types.DraftType;
-import org.moera.lib.node.types.RemoteMedia;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
@@ -31,6 +32,7 @@ import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.RemoteMediaFile;
+import org.moera.node.data.RemoteMediaFileRepository;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
@@ -42,7 +44,6 @@ import org.moera.node.liberin.model.DraftDeletedLiberin;
 import org.moera.node.liberin.model.DraftUpdatedLiberin;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.media.RemoteMediaOperations;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.DraftInfoUtil;
 import org.moera.node.model.DraftTextUtil;
@@ -94,6 +95,9 @@ public class DraftController {
     private MediaFileRepository mediaFileRepository;
 
     @Inject
+    private RemoteMediaFileRepository remoteMediaFileRepository;
+
+    @Inject
     private EntryAttachmentRepository entryAttachmentRepository;
 
     @Inject
@@ -101,9 +105,6 @@ public class DraftController {
 
     @Inject
     private MediaOperations mediaOperations;
-
-    @Inject
-    private RemoteMediaOperations remoteMediaOperations;
 
     @GetMapping
     @Admin(Scope.DRAFTS)
@@ -177,7 +178,7 @@ public class DraftController {
                 break;
         }
         return drafts.stream()
-            .map(draft -> DraftInfoUtil.build(draft, config.getMedia().getDirectServe()))
+            .map(draft -> DraftInfoUtil.build(draft, config.getMedia().getDirectServe(), requestContext.getOptions()))
             .collect(Collectors.toList());
     }
 
@@ -222,16 +223,16 @@ public class DraftController {
             draft.setOwnerAvatarShape(requestContext.getAvatar().getShape());
         }
         draft.setCreatedAt(Util.now());
-        DraftTextUtil.toDraft(draftText, draft, textConverter);
+        DraftTextUtil.toDraft(draftText, draft, textConverter, media);
         updateDeadline(draft);
         draft = draftRepository.save(draft);
-        updateAttachments(draft, media, draftText.getMedia());
+        updateAttachments(draft, media);
 
         requestContext.send(new DraftAddedLiberin(draft));
 
         return ResponseEntity
             .created(URI.create("/drafts/" + draft.getId()))
-            .body(DraftInfoUtil.build(draft, config.getMedia().getDirectServe()));
+            .body(DraftInfoUtil.build(draft, config.getMedia().getDirectServe(), requestContext.getOptions()));
     }
 
     @PutMapping("/{id}")
@@ -252,13 +253,13 @@ public class DraftController {
         UUID draftId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
         Draft draft = draftRepository.findById(requestContext.nodeId(), draftId)
             .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
-        DraftTextUtil.toDraft(draftText, draft, textConverter);
+        DraftTextUtil.toDraft(draftText, draft, textConverter, media);
         updateDeadline(draft);
-        updateAttachments(draft, media, draftText.getMedia());
+        updateAttachments(draft, media);
 
         requestContext.send(new DraftUpdatedLiberin(draft));
 
-        return DraftInfoUtil.build(draft, config.getMedia().getDirectServe());
+        return DraftInfoUtil.build(draft, config.getMedia().getDirectServe(), requestContext.getOptions());
     }
 
     private List<LocalRemoteMedia> validate(DraftText draftText) {
@@ -275,23 +276,22 @@ public class DraftController {
             AvatarDescriptionUtil.setMediaFile(draftText.getOwnerAvatar(), mediaFile);
         }
 
-        if (draftText.getReceiverName().equals(requestContext.nodeName())) {
-            return mediaOperations.validateAttachments(
-                draftText.getMedia(),
-                RemoteMedia::getId,
-                false,
-                requestContext.isAdmin(Scope.VIEW_MEDIA),
-                requestContext.isAdmin(Scope.DRAFTS),
-                requestContext.getClientName(Scope.VIEW_MEDIA)
-            );
-        } else {
-            return Collections.emptyList();
-        }
+        return mediaOperations.validateAttachments(
+            draftText.getMedia(),
+            false,
+            requestContext.isAdmin(Scope.VIEW_MEDIA),
+            requestContext.isAdmin(Scope.DRAFTS),
+            requestContext.getClientName(Scope.VIEW_MEDIA)
+        );
     }
 
-    private void updateAttachments(Draft draft, List<LocalRemoteMedia> media, List<RemoteMedia> remoteMedia) {
+    private void updateAttachments(Draft draft, List<LocalRemoteMedia> media) {
         Set<EntryAttachment> attachments = new HashSet<>(draft.getAttachments());
+        List<RemoteMediaFile> remoteMediaFiles = new ArrayList<>();
         for (EntryAttachment ea : attachments) {
+            if (ea.getRemoteMediaFile() != null) {
+                remoteMediaFiles.add(ea.getRemoteMediaFile());
+            }
             draft.removeAttachment(ea);
             entryAttachmentRepository.delete(ea);
         }
@@ -299,21 +299,26 @@ public class DraftController {
         Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(draft.getBody()));
 
         int ordinal = 0;
-        if (draft.getReceiverName().equals(requestContext.nodeName())) {
-            for (LocalRemoteMedia lrm : media) {
-                EntryAttachment attachment = new EntryAttachment(draft, lrm, ordinal++);
-                attachment.setEmbedded(embedded.contains(lrm.hash()));
-                attachment = entryAttachmentRepository.save(attachment);
-                draft.addAttachment(attachment);
+        for (LocalRemoteMedia lrm : media) {
+            EntryAttachment attachment = new EntryAttachment(draft, lrm.mediaFileOwner(), ordinal++);
+            if (lrm.remoteMediaFile() != null) {
+                var existing = remoteMediaFiles.stream()
+                    .filter(rmf ->
+                        Objects.equals(rmf.getNodeName(), lrm.remoteMediaFile().getNodeName())
+                        && Objects.equals(rmf.getMediaId(), lrm.remoteMediaFile().getMediaId())
+                    )
+                    .findFirst()
+                    .orElse(null);
+                if (existing != null) {
+                    attachment.setRemoteMediaFile(existing);
+                } else {
+                    attachment.setRemoteMediaFile(remoteMediaFileRepository.save(lrm.remoteMediaFile()));
+                }
             }
-        } else {
-            for (RemoteMedia md : remoteMedia) {
-                RemoteMediaFile remoteMediaFile = remoteMediaOperations.store(draft.getReceiverName(), md);
-                EntryAttachment attachment = new EntryAttachment(draft, remoteMediaFile, ordinal++);
-                attachment.setEmbedded(embedded.contains(md.getHash()));
-                attachment = entryAttachmentRepository.save(attachment);
-                draft.addAttachment(attachment);
-            }
+            attachment.setEmbedded(embedded.contains(lrm.hash()));
+            attachment.setMediaFileLease(lrm.mediaLease());
+            attachment = entryAttachmentRepository.save(attachment);
+            draft.addAttachment(attachment);
         }
     }
 
@@ -342,7 +347,7 @@ public class DraftController {
         Draft draft = draftRepository.findById(requestContext.nodeId(), draftId)
             .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
 
-        return DraftInfoUtil.build(draft, config.getMedia().getDirectServe());
+        return DraftInfoUtil.build(draft, config.getMedia().getDirectServe(), requestContext.getOptions());
     }
 
     @DeleteMapping("/{id}")

@@ -15,6 +15,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -46,7 +48,9 @@ import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.tika.Tika;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.AvatarDescription;
+import org.moera.lib.node.types.MediaToAttach;
 import org.moera.lib.node.types.PostingFeatures;
+import org.moera.lib.node.types.RemoteMedia;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
@@ -65,7 +69,10 @@ import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFilePreview;
 import org.moera.node.data.MediaFilePreviewRepository;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.data.MediaLease;
+import org.moera.node.data.MediaLeaseRepository;
 import org.moera.node.data.Posting;
+import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.CommentMediaTextUpdatedLiberin;
@@ -75,6 +82,7 @@ import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingFeaturesUtil;
+import org.moera.node.model.RemoteMediaUtil;
 import org.moera.node.operations.OcrJob;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.task.Jobs;
@@ -102,6 +110,8 @@ public class MediaOperations {
 
     public static final String TMP_DIR = "tmp";
 
+    public static final Duration DRAFT_ONLY_LEASE_TTL = Duration.ofDays(1);
+
     private static final Logger log = LoggerFactory.getLogger(MediaOperations.class);
 
     private static final int[] PREVIEW_SIZES = {1400, 900, 150};
@@ -126,6 +136,9 @@ public class MediaOperations {
 
     @Inject
     private MediaFilePreviewRepository mediaFilePreviewRepository;
+
+    @Inject
+    private MediaLeaseRepository mediaLeaseRepository;
 
     @Inject
     private EntryAttachmentRepository entryAttachmentRepository;
@@ -671,62 +684,14 @@ public class MediaOperations {
         }
     }
 
-    public <T> List<LocalRemoteMedia> validateAttachments(
-        Collection<T> records,
-        Function<T, String> idGetter,
-        boolean compressed,
-        boolean isAdminViewMedia,
-        boolean isAdminUncompressedMedia,
-        String clientName
-    ) {
-        if (ObjectUtils.isEmpty(records)) {
-            return Collections.emptyList();
-        }
-
-        UUID[] uuids;
-        try {
-            uuids = records.stream()
-                .map(idGetter)
-                .map(UUID::fromString)
-                .toArray(UUID[]::new);
-        } catch (IllegalArgumentException e) {
-            throw new ObjectNotFoundFailure("media.not-found");
-        }
-
-        return validateAttachments(uuids, compressed, isAdminViewMedia, isAdminUncompressedMedia, clientName);
-    }
-
     public List<LocalRemoteMedia> validateAttachments(
-        Collection<String> ids,
+        Collection<MediaToAttach> mediaList,
         boolean compressed,
         boolean isAdminViewMedia,
         boolean isAdminUncompressedMedia,
         String clientName
     ) {
-        if (ObjectUtils.isEmpty(ids)) {
-            return Collections.emptyList();
-        }
-
-        UUID[] uuids;
-        try {
-            uuids = ids.stream()
-                .map(UUID::fromString)
-                .toArray(UUID[]::new);
-        } catch (IllegalArgumentException e) {
-            throw new ObjectNotFoundFailure("media.not-found");
-        }
-
-        return validateAttachments(uuids, compressed, isAdminViewMedia, isAdminUncompressedMedia, clientName);
-    }
-
-    private List<LocalRemoteMedia> validateAttachments(
-        UUID[] ids,
-        boolean compressed,
-        boolean isAdminViewMedia,
-        boolean isAdminUncompressedMedia,
-        String clientName
-    ) {
-        if (ObjectUtils.isEmpty(ids)) {
+        if (ObjectUtils.isEmpty(mediaList)) {
             return Collections.emptyList();
         }
 
@@ -735,14 +700,42 @@ public class MediaOperations {
 
         List<LocalRemoteMedia> attached = new ArrayList<>();
         Set<UUID> usedIds = new HashSet<>();
-        Map<UUID, MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findByIds(universalContext.nodeId(), ids)
+        UUID[] localMediaIds = mediaList.stream()
+            .map(MediaToAttach::getLocalMediaId)
+            .filter(Objects::nonNull)
+            .map(UUID::fromString)
+            .toArray(UUID[]::new);
+        Map<UUID, MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository
+            .findByIds(universalContext.nodeId(), localMediaIds)
             .stream()
             .collect(Collectors.toMap(MediaFileOwner::getId, Function.identity()));
-        for (UUID id : ids) {
-            if (usedIds.contains(id)) {
+        for (MediaToAttach media : mediaList) {
+            MediaLease mediaLease = null;
+            if (media.getLocalMediaLeaseId() != null) {
+                UUID leaseId = Util.uuid(media.getLocalMediaLeaseId())
+                    .orElseThrow(() -> new ObjectNotFoundFailure("media-lease.not-found"));
+                mediaLease = mediaLeaseRepository.findByNodeIdAndId(universalContext.nodeId(), leaseId)
+                    .orElseThrow(() -> new ObjectNotFoundFailure("media-lease.not-found"));
+            }
+
+            RemoteMediaFile remoteMediaFile = media.getRemoteMedia() != null
+                ? RemoteMediaUtil.toNewRemoteMediaFile(
+                    universalContext.nodeId(), media.getRemoteMedia()
+                )
+                : null;
+            if (media.getLocalMediaId() == null) {
+                if (remoteMediaFile != null) {
+                    attached.add(new LocalRemoteMedia(null, remoteMediaFile, mediaLease));
+                }
                 continue;
             }
-            MediaFileOwner mediaFileOwner = mediaFileOwners.get(id);
+
+            UUID localMediaId = Util.uuid(media.getLocalMediaId())
+                .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+            if (usedIds.contains(localMediaId)) {
+                continue;
+            }
+            MediaFileOwner mediaFileOwner = mediaFileOwners.get(localMediaId);
             if (mediaFileOwner == null) {
                 throw new ObjectNotFoundFailure("media.not-found");
             }
@@ -758,10 +751,32 @@ public class MediaOperations {
                     || mediaFileOwner.getMediaFile().getFileSize() <= recommendedSize,
                 "media.not-compressed"
             );
-            attached.add(new LocalRemoteMedia(mediaFileOwner, null));
-            usedIds.add(id);
+            attached.add(new LocalRemoteMedia(mediaFileOwner, remoteMediaFile, mediaLease));
+            usedIds.add(localMediaId);
         }
         return attached;
+    }
+
+    public void clearDraftOnlyMediaLeases(Collection<MediaToAttach> attachments) {
+        if (ObjectUtils.isEmpty(attachments)) {
+            return;
+        }
+
+        Set<UUID> leaseIds = attachments.stream()
+            .map(MediaToAttach::getRemoteMedia)
+            .filter(Objects::nonNull)
+            .filter(rm -> Objects.equals(rm.getNodeName(), universalContext.nodeName()))
+            .map(RemoteMedia::getLeaseId)
+            .filter(Objects::nonNull)
+            .map(Util::uuid)
+            .flatMap(Optional::stream)
+            .collect(Collectors.toSet());
+
+        if (leaseIds.isEmpty()) {
+            return;
+        }
+
+        tx.executeWrite(() -> mediaLeaseRepository.clearDraftOnly(universalContext.nodeId(), leaseIds));
     }
 
     @Scheduled(fixedDelayString = "PT6H")
@@ -804,6 +819,22 @@ public class MediaOperations {
                     break;
                 }
             }
+        }
+    }
+
+    @Scheduled(fixedDelayString = "PT12H")
+    public void purgeExpiredDraftOnlyLeases() {
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging expired draft-only media leases");
+
+            Timestamp now = Util.now();
+            tx.executeWrite(() -> {
+                mediaLeaseRepository.deleteExpiredDraftOnlyUnused(now);
+                mediaLeaseRepository.findExpiredDraftOnlyUsed(now)
+                    .forEach(ml -> ml.setDeadline(
+                        Timestamp.from(ml.getDeadline().toInstant().plus(DRAFT_ONLY_LEASE_TTL))
+                    ));
+            });
         }
     }
 

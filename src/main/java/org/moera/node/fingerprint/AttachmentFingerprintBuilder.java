@@ -10,11 +10,13 @@ import java.util.function.Function;
 
 import org.moera.lib.node.Fingerprints;
 import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.MediaToAttach;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.media.LocalRemoteMedia;
+import org.moera.node.util.Util;
 
 public class AttachmentFingerprintBuilder {
 
@@ -94,20 +96,26 @@ public class AttachmentFingerprintBuilder {
 
     public static List<byte[]> buildFromIds(
         byte[] parentMediaDigest,
-        Collection<String> mediaIds,
+        Collection<MediaToAttach> mediaToAttach,
         Function<UUID, byte[]> mediaDigest
     ) {
-        if (mediaIds == null) {
-            mediaIds = Collections.emptyList();
+        if (mediaToAttach == null) {
+            mediaToAttach = Collections.emptyList();
         }
 
         List<byte[]> digests = new ArrayList<>();
         if (parentMediaDigest != null) {
             digests.add(build(parentMediaDigest));
         }
-        mediaIds.stream()
-            .map(UUID::fromString)
-            .map(mediaDigest)
+        mediaToAttach.stream()
+            .filter(ma ->
+                ma.getLocalMediaId() != null || ma.getRemoteMedia() != null && ma.getRemoteMedia().getDigest() != null
+            )
+            .map(ma ->
+                ma.getLocalMediaId() != null
+                    ? mediaDigest.apply(UUID.fromString(ma.getLocalMediaId()))
+                    : Util.base64decode(ma.getRemoteMedia().getDigest())
+            )
             .map(AttachmentFingerprintBuilder::build)
             .forEach(digests::add);
         return digests;

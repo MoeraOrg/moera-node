@@ -11,6 +11,8 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Draft;
 import org.moera.node.data.EntryAttachment;
+import org.moera.node.media.MediaGrantGenerator;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +24,7 @@ public class DraftInfoUtil {
 
     private static final Logger log = LoggerFactory.getLogger(DraftInfoUtil.class);
 
-    public static DraftInfo build(Draft draft, DirectServeConfig config) {
+    public static DraftInfo build(Draft draft, DirectServeConfig config, Options options) {
         DraftInfo draftInfo = new DraftInfo();
         
         draftInfo.setId(draft.getId().toString());
@@ -57,10 +59,11 @@ public class DraftInfoUtil {
         draftInfo.setBody(new Body(draft.getBody()));
         draftInfo.setBodyFormat(BodyFormat.forValue(draft.getBodyFormat()));
 
+        var grantSupplier = options != null ? new MediaGrantGenerator(options) : null;
         draftInfo.setMedia(
             draft.getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> MediaAttachmentUtil.build(ea, config, null))
+                .map(ea -> MediaAttachmentUtil.build(ea, config, grantSupplier))
                 .collect(Collectors.toList())
         );
 

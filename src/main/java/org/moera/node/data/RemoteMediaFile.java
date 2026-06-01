@@ -51,6 +51,9 @@ public class RemoteMediaFile {
 
     private Long fileSize;
 
+    @Size(max = 255)
+    private String title;
+
     @Size(max = 40)
     private String leaseId;
 
@@ -150,6 +153,14 @@ public class RemoteMediaFile {
 
     public void setFileSize(Long fileSize) {
         this.fileSize = fileSize;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getLeaseId() {

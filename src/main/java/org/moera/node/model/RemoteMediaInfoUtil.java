@@ -23,10 +23,11 @@ public class RemoteMediaInfoUtil {
         info.setHash(remoteMediaFile.getHash());
         info.setDigest(Util.base64encode(remoteMediaFile.getDigest()));
         info.setMimeType(remoteMediaFile.getMimeType());
-        info.setAttachment(remoteMediaFile.isAttachment());
         info.setWidth(remoteMediaFile.getSizeX());
         info.setHeight(remoteMediaFile.getSizeY());
         info.setSize(remoteMediaFile.getFileSize());
+        info.setTitle(remoteMediaFile.getTitle());
+        info.setAttachment(remoteMediaFile.isAttachment());
         fillGrant(info, grantSupplier);
         return info;
     }

@@ -210,9 +210,9 @@ public class RemoteCommentReactionPostJob
         favorOperations.addFavor(state.commentInfo.getOwnerName(), FavorType.LIKE_COMMENT);
     }
 
-    private ReactionDescription buildReaction() {
+    private ReactionDescription buildReaction() throws MoeraNodeException {
         byte[] parentMediaDigest = mediaManager.getParentMediaDigest(
-            state.postingInfo.getParentMedia(),
+            state.postingInfo,
             parameters.targetNodeName,
             nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
         );

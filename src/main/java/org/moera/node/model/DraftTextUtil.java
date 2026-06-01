@@ -5,11 +5,11 @@ import java.util.Set;
 
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.DraftText;
-import org.moera.lib.node.types.RemoteMedia;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.body.Body;
 import org.moera.node.data.Draft;
 import org.moera.node.data.MediaFile;
+import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.TextConverter;
@@ -24,7 +24,9 @@ public class DraftTextUtil {
 
     private static final Logger log = LoggerFactory.getLogger(DraftTextUtil.class);
 
-    public static void toDraft(DraftText draftText, Draft draft, TextConverter textConverter) {
+    public static void toDraft(
+        DraftText draftText, Draft draft, TextConverter textConverter, List<LocalRemoteMedia> media
+    ) {
         draft.setDraftType(draftText.getDraftType());
         draft.setEditedAt(Util.now());
         draft.setRepliedToId(draftText.getRepliedToId());
@@ -69,7 +71,7 @@ public class DraftTextUtil {
                 draft.setBodyFormat(BodyFormat.MESSAGE.getValue());
                 String heading = HeadingExtractor.extractHeading(body, null, true);
                 if (ObjectUtils.isEmpty(heading)) {
-                    heading = getAttachmentIcons(body, draftText.getMedia());
+                    heading = getAttachmentIcons(body, media);
                 }
                 if (heading == null) {
                     heading = "";
@@ -120,7 +122,7 @@ public class DraftTextUtil {
         }
     }
 
-    private static String getAttachmentIcons(Body body, List<RemoteMedia> media) {
+    private static String getAttachmentIcons(Body body, List<LocalRemoteMedia> media) {
         if (ObjectUtils.isEmpty(media)) {
             return null;
         }
@@ -132,11 +134,11 @@ public class DraftTextUtil {
 
         boolean hasGallery = false;
         boolean hasAttachedFiles = false;
-        for (RemoteMedia item : media) {
-            if (embeds.contains(item.getHash())) {
+        for (var item : media) {
+            if (embeds.contains(item.hash())) {
                 continue;
             }
-            if (Boolean.TRUE.equals(item.getAttachment())) {
+            if (item.attachment()) {
                 hasAttachedFiles = true;
             } else {
                 hasGallery = true;

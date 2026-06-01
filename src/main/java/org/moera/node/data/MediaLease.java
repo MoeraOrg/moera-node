@@ -36,6 +36,11 @@ public class MediaLease {
     @NotNull
     private Timestamp createdAt = Util.now();
 
+    @NotNull
+    private boolean draftOnly;
+
+    private Timestamp deadline;
+
     public UUID getId() {
         return id;
     }
@@ -82,6 +87,22 @@ public class MediaLease {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public boolean isDraftOnly() {
+        return draftOnly;
+    }
+
+    public void setDraftOnly(boolean draftOnly) {
+        this.draftOnly = draftOnly;
+    }
+
+    public Timestamp getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(Timestamp deadline) {
+        this.deadline = deadline;
     }
 
 }

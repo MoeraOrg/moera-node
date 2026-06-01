@@ -1,24 +1,20 @@
 package org.moera.node.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.CommentSourceText;
 import org.moera.lib.node.types.CommentText;
-import org.moera.lib.node.types.MediaWithDigest;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.ChildOperations;
 import org.moera.node.data.Entry;
-import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.MediaFileOwner;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.text.TextConverter;
 import org.moera.node.text.shorten.Shortener;
@@ -47,12 +43,7 @@ public class CommentTextUtil {
         );
         
         if (sourceText.getMedia() != null) {
-            commentText.setMedia(
-                sourceText.getMedia()
-                    .stream()
-                    .map(MediaWithDigest::getId)
-                    .collect(Collectors.toList())
-            );
+            commentText.setMedia(new ArrayList<>(sourceText.getMedia()));
         }
         
         commentText.setCreatedAt(Util.toEpochSecond(Util.now()));
@@ -365,16 +356,7 @@ public class CommentTextUtil {
                         : commentText.getBodySrc().getEncoded().equals(revision.getBody())
                 )
             )
-            && (
-                commentText.getMedia() == null
-                || commentText.getMedia().equals(
-                    revision.getAttachments().stream()
-                        .map(EntryAttachment::getMediaFileOwner)
-                        .map(MediaFileOwner::getId)
-                        .map(UUID::toString)
-                        .toList()
-                )
-            )
+            && MediaToAttachUtil.equals(commentText.getMedia(), revision.getAttachments())
             && !(revision.getSignature() == null && commentText.getSignature() != null);
     }
 

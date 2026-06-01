@@ -127,7 +127,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
                 postingInfo,
                 revisionInfo,
                 mediaManager.getParentMediaDigest(
-                    postingInfo.getParentMedia(),
+                    postingInfo,
                     remoteNodeName,
                     nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
                 ),
@@ -189,7 +189,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
                 postingInfo,
                 postingRevisionInfo,
                 mediaManager.getParentMediaDigest(
-                    postingInfo.getParentMedia(),
+                    postingInfo,
                     remoteNodeName,
                     nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
                 ),

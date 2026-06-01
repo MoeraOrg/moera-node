@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
+import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentRevisionInfo;
 import org.moera.lib.node.types.PostingInfo;
@@ -92,7 +93,11 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         }
     }
 
-    private void verify(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo, ReactionInfo reactionInfo) {
+    private void verify(
+        PostingInfo postingInfo,
+        PostingRevisionInfo postingRevisionInfo,
+        ReactionInfo reactionInfo
+    ) throws MoeraNodeException {
         if (postingRevisionInfo.getSignature() == null) {
             succeeded(false);
             return;
@@ -112,7 +117,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                 postingInfo,
                 postingRevisionInfo,
                 mediaManager.getParentMediaDigest(
-                    postingInfo.getParentMedia(),
+                    postingInfo,
                     data.getNodeName(),
                     nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
                 ),
@@ -130,7 +135,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         CommentInfo commentInfo,
         CommentRevisionInfo commentRevisionInfo,
         ReactionInfo reactionInfo
-    ) {
+    ) throws MoeraNodeException {
         if (postingRevisionInfo.getSignature() == null || commentRevisionInfo.getSignature() == null) {
             succeeded(false);
             return;
@@ -160,7 +165,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                     postingInfo,
                     postingRevisionInfo,
                     mediaManager.getParentMediaDigest(
-                        postingInfo.getParentMedia(),
+                        postingInfo,
                         data.getNodeName(),
                         nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
                     ),

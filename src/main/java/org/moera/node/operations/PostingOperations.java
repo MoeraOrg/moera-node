@@ -35,6 +35,8 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.RemoteMediaFile;
+import org.moera.node.data.RemoteMediaFileRepository;
 import org.moera.node.data.Story;
 import org.moera.node.domain.Domains;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
@@ -82,6 +84,9 @@ public class PostingOperations {
 
     @Inject
     private EntryAttachmentRepository entryAttachmentRepository;
+
+    @Inject
+    private RemoteMediaFileRepository remoteMediaFileRepository;
 
     @Inject
     private MediaOperations mediaOperations;
@@ -183,9 +188,29 @@ public class PostingOperations {
 
         if (!media.isEmpty()) {
             Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(current.getBody()));
+            List<RemoteMediaFile> remoteMedia = latest != null
+                ? latest.getAttachments().stream()
+                    .map(EntryAttachment::getRemoteMediaFile)
+                    .filter(Objects::nonNull)
+                    .toList()
+                : Collections.emptyList();
             int ordinal = 0;
             for (LocalRemoteMedia lrm : media) {
-                EntryAttachment attachment = new EntryAttachment(current, lrm, ordinal++);
+                var attachment = new EntryAttachment(current, lrm.mediaFileOwner(), ordinal++);
+                if (lrm.remoteMediaFile() != null) {
+                    var existing = remoteMedia.stream()
+                            .filter(rmf ->
+                                Objects.equals(rmf.getNodeName(), lrm.remoteMediaFile().getNodeName())
+                                && Objects.equals(rmf.getMediaId(), lrm.remoteMediaFile().getMediaId())
+                            )
+                            .findFirst()
+                            .orElse(null);
+                    if (existing != null) {
+                        attachment.setRemoteMediaFile(existing);
+                    } else {
+                        attachment.setRemoteMediaFile(remoteMediaFileRepository.save(lrm.remoteMediaFile()));
+                    }
+                }
                 attachment.setEmbedded(embedded.contains(lrm.hash()));
                 attachment = entryAttachmentRepository.save(attachment);
                 current.addAttachment(attachment);
