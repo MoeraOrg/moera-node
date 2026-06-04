@@ -1,11 +1,9 @@
 package org.moera.node.model;
 
-import java.time.Duration;
-
 import org.moera.lib.node.types.RemoteMediaInfo;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.media.MediaGrantSupplier;
-import org.moera.node.util.ExtendedDuration;
+import org.moera.node.media.MediaUtil;
 import org.moera.node.util.Util;
 
 public class RemoteMediaInfoUtil {
@@ -33,9 +31,8 @@ public class RemoteMediaInfoUtil {
     }
 
     public static void fillGrant(RemoteMediaInfo info, MediaGrantSupplier grantSupplier) {
-        ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
         String grant = grantSupplier != null
-            ? grantSupplier.generateRemote(info.getMediaId(), valid, false, null)
+            ? grantSupplier.generateRemote(info.getMediaId(), MediaUtil.MEDIA_GRANT_TTL, false, null)
             : null;
         info.setGrant(grant);
     }

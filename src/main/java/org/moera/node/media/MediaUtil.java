@@ -24,6 +24,11 @@ import org.springframework.util.ObjectUtils;
 
 public class MediaUtil {
 
+    /**
+     * Media grants are valid for three days and expire at the next UTC midnight.
+     */
+    public static final ExtendedDuration MEDIA_GRANT_TTL = new ExtendedDuration(Duration.ofDays(3));
+
     public static String publicPath(String fileName) {
         return "public/" + fileName;
     }
@@ -201,7 +206,7 @@ public class MediaUtil {
         return directPath(
             mediaFileOwner.getMediaFile().getFileName(),
             mediaFileOwner.getMediaFile().getId(),
-            new ExtendedDuration(Duration.ofDays(3)),
+            MEDIA_GRANT_TTL,
             userFileName,
             config
         );

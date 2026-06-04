@@ -1,6 +1,5 @@
 package org.moera.node.model;
 
-import java.time.Duration;
 import java.util.stream.Collectors;
 
 import org.moera.lib.node.types.PrivateMediaFileInfo;
@@ -10,7 +9,6 @@ import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.media.MimeUtil;
-import org.moera.node.util.ExtendedDuration;
 import org.moera.node.media.MediaUtil;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
@@ -62,22 +60,22 @@ public class PrivateMediaFileInfoUtil {
         String fileName = !ObjectUtils.isEmpty(info.getTitle())
             ? MimeUtil.fileName(info.getTitle(), info.getMimeType())
             : null;
-        ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
         String grant = grantSupplier != null
-            ? grantSupplier.generateLocal(info.getId(), valid, download, fileName)
+            ? grantSupplier.generateLocal(info.getId(), MediaUtil.MEDIA_GRANT_TTL, download, fileName)
             : null;
         info.setGrant(grant);
         info.setPath(MediaUtil.privatePath(info, null, grant));
-        info.setGrantExpiresAt(grantSupplier != null ? Util.toEpochSecond(grantSupplier.expires(valid)) : null);
+        info.setGrantExpiresAt(
+            grantSupplier != null ? Util.toEpochSecond(grantSupplier.expires(MediaUtil.MEDIA_GRANT_TTL)) : null
+        );
     }
 
     public static void fillDirectPath(PrivateMediaFileInfo info, DirectServeConfig config) {
         var fileName = MimeUtil.fileName(info.getHash(), info.getMimeType());
-        ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
         var userFileName = !ObjectUtils.isEmpty(info.getTitle())
             ? MimeUtil.fileName(info.getTitle(), info.getMimeType())
             : null;
-        var pu = MediaUtil.directPath(fileName, info.getHash(), valid, userFileName, config);
+        var pu = MediaUtil.directPath(fileName, info.getHash(), MediaUtil.MEDIA_GRANT_TTL, userFileName, config);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }

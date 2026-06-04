@@ -1,6 +1,5 @@
 package org.moera.node.model;
 
-import java.time.Duration;
 import java.util.List;
 
 import org.moera.lib.node.types.MediaFilePreviewInfo;
@@ -10,7 +9,6 @@ import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
 import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.media.MimeUtil;
-import org.moera.node.util.ExtendedDuration;
 import org.moera.node.media.MediaUtil;
 
 public class MediaFilePreviewInfoUtil {
@@ -65,9 +63,8 @@ public class MediaFilePreviewInfoUtil {
         String originalMimeType,
         MediaGrantSupplier grantSupplier
     ) {
-        ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
         String grant = grantSupplier != null
-            ? grantSupplier.generateLocal(originalId, valid, false, null)
+            ? grantSupplier.generateLocal(originalId, MediaUtil.MEDIA_GRANT_TTL, false, null)
             : null;
         String fileName = MimeUtil.fileName(originalId, originalMimeType);
         info.setPath(MediaUtil.privatePath(fileName, info.getTargetWidth(), grant));
@@ -75,8 +72,7 @@ public class MediaFilePreviewInfoUtil {
 
     public static void fillDirectPath(MediaFilePreviewInfo info, DirectServeConfig config) {
         var fileName = MimeUtil.fileName(info.getHash(), info.getMimeType());
-        ExtendedDuration valid = new ExtendedDuration(Duration.ofDays(3));
-        var pu = MediaUtil.directPath(fileName, info.getHash(), valid, config);
+        var pu = MediaUtil.directPath(fileName, info.getHash(), MediaUtil.MEDIA_GRANT_TTL, config);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }

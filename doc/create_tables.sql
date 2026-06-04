@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 4NDCIGuKfICCDiM1Lr5cvlPyxJn3e48qgyH9U6busWL35Ttx0OqPXjqeNIOudgp
+\restrict WGqnXEFugS2tDalyiYlDP29TFfAWEnz9IUrrQzVwQpoZJGeiOvKidfRbsMYdDhn
 
 -- Dumped from database version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
@@ -531,7 +531,7 @@ CREATE FUNCTION public.update_media_file_deadline() RETURNS trigger
             NEW.usage_count := 0;
         END IF;
         IF NEW.usage_count = 0 AND NEW.deadline IS NULL THEN
-            NEW.deadline := NOW() + interval '1 day';
+            NEW.deadline := NOW() + interval '4 days';
         ELSIF NEW.usage_count > 0 AND NEW.deadline IS NOT NULL THEN
             NEW.deadline := NULL;
         END IF;
@@ -4615,5 +4615,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 4NDCIGuKfICCDiM1Lr5cvlPyxJn3e48qgyH9U6busWL35Ttx0OqPXjqeNIOudgp
+\unrestrict WGqnXEFugS2tDalyiYlDP29TFfAWEnz9IUrrQzVwQpoZJGeiOvKidfRbsMYdDhn
 
