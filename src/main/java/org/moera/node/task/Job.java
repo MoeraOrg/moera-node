@@ -60,7 +60,7 @@ public abstract class Job<P, S> extends Task {
         this.id = id;
     }
 
-    int getRetries() {
+    protected int getRetries() {
         return retries;
     }
 

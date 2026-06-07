@@ -48,6 +48,7 @@ import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.CommentTextUtil;
+import org.moera.node.task.Jobs;
 import org.moera.node.text.MediaExtractor;
 import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.ExtendedDuration;
@@ -58,6 +59,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class CommentOperations {
@@ -102,6 +104,9 @@ public class CommentOperations {
 
     @Inject
     private LiberinManager liberinManager;
+
+    @Inject
+    private Jobs jobs;
 
     private final MomentFinder momentFinder = new MomentFinder();
 
@@ -280,6 +285,7 @@ public class CommentOperations {
         signIfOwnedOrAnonymous(comment);
 
         updateRelatedObjects(comment, affectedMedia);
+        startDownloadingRemoteMedia(comment, media);
 
         return comment;
     }
@@ -350,6 +356,24 @@ public class CommentOperations {
         ) {
             commentPublicPageOperations.updatePublicPages(comment.getPosting().getId(), comment.getMoment());
         }
+    }
+
+    private void startDownloadingRemoteMedia(Comment comment, List<LocalRemoteMedia> media) {
+        if (comment.getCurrentRevision().getSignature() == null || ObjectUtils.isEmpty(media)) {
+            return;
+        }
+        boolean hasMediaToDownload = media.stream().anyMatch(m ->
+            m.mediaFileOwner() == null && m.remoteMediaFile() != null
+        );
+        if (!hasMediaToDownload) {
+            return;
+        }
+
+        jobs.run(
+            DownloadEntryAttachmentsJob.class,
+            new DownloadEntryAttachmentsJob.Parameters(comment.getPosting().getId(), comment.getId()),
+            requestContext.nodeId()
+        );
     }
 
     private ECPrivateKey getSigningKey(boolean anonymous) {

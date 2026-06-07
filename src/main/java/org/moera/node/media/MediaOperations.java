@@ -591,7 +591,7 @@ public class MediaOperations {
     }
 
     public void mediaTextUpdated(MediaFileOwner mediaFileOwner) {
-        entryRevisionRepository.clearAttachmentsCache(mediaFileOwner.getId());
+        entryRevisionRepository.clearAttachmentsCacheByMedia(mediaFileOwner.getId());
 
         Set<UUID> updatedEntries = new HashSet<>();
         entryRevisionRepository.findByMedia(mediaFileOwner.getId()).forEach(revision -> {

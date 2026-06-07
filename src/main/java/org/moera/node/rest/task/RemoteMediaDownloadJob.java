@@ -13,6 +13,7 @@ import org.moera.node.data.RemoteMediaCacheRepository;
 import org.moera.node.data.RemoteMediaError;
 import org.moera.node.liberin.model.RemoteMediaDownloadFailedLiberin;
 import org.moera.node.liberin.model.RemoteMediaDownloadedLiberin;
+import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.media.MediaManager;
 import org.moera.node.media.RemoteMediaCacheOperations;
 import org.moera.node.model.PrivateMediaFileInfoUtil;
@@ -151,8 +152,11 @@ public class RemoteMediaDownloadJob extends Job<RemoteMediaDownloadJob.Parameter
         if (mediaFileOwner == null) {
             fail();
         }
-        state.downloadedMediaInfo =
-            PrivateMediaFileInfoUtil.build(mediaFileOwner, config.getMedia().getDirectServe(), null);
+        state.downloadedMediaInfo = PrivateMediaFileInfoUtil.build(
+            mediaFileOwner,
+            config.getMedia().getDirectServe(),
+            new MediaGrantGenerator(universalContext.getOptions())
+        );
     }
 
     @Override

@@ -98,6 +98,16 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
         + "select ea from EntryAttachment ea where ea.entryRevision.id = r.id and ea.mediaFileOwner.id = ?1"
         + ")"
     )
-    void clearAttachmentsCache(UUID mediaFileOwnerId);
+    void clearAttachmentsCacheByMedia(UUID mediaFileOwnerId);
+
+    @Modifying
+    @Query(
+        "update EntryRevision r set r.attachmentsCache = null"
+        + " where r.entry.nodeId = ?1 and exists("
+        + "select ea from EntryAttachment ea"
+        + " where ea.entryRevision = r and ea.remoteMediaFile.nodeName = ?2 and ea.remoteMediaFile.mediaId = ?3"
+        + ")"
+    )
+    void clearAttachmentsCacheByRemoteMedia(UUID nodeId, String remoteNodeName, String remoteMediaId);
 
 }

@@ -18,8 +18,21 @@ public interface RemoteMediaFileRepository extends JpaRepository<RemoteMediaFile
     )
     Set<RemoteMediaLeaseKey> findUnusedLeaseKeys(Timestamp deadline);
 
-    @Query("select count(*) from RemoteMediaFile rmf where rmf.nodeId = ?1 and rmf.nodeName = ?2 and rmf.leaseId = ?2")
+    @Query("select count(*) from RemoteMediaFile rmf where rmf.nodeId = ?1 and rmf.nodeName = ?2 and rmf.leaseId = ?3")
     int countUsedByNodeIdAndLeaseId(UUID nodeId, String remoteNodeName, String leaseId);
+
+    @Query(
+        "select distinct rmf.leaseId from RemoteMediaFile rmf"
+        + " where rmf.nodeId = ?1 and rmf.nodeName = ?2 and rmf.mediaId = ?3 and rmf.leaseId is not null"
+    )
+    Set<String> findLeaseIdsByMedia(UUID nodeId, String remoteNodeName, String remoteMediaId);
+
+    @Modifying
+    @Query(
+        "update RemoteMediaFile rmf set rmf.leaseId = null"
+        + " where rmf.nodeId = ?1 and rmf.nodeName = ?2 and rmf.leaseId = ?3"
+    )
+    void clearLeaseId(UUID nodeId, String remoteNodeName, String leaseId);
 
     @Query("delete from RemoteMediaFile rmf where rmf.deadline is not null and rmf.deadline < ?1")
     @Modifying

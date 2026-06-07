@@ -123,7 +123,7 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
         for (var owner : owners) {
             universalContext.associate(owner.getNodeId());
 
-            entryRevisionRepository.clearAttachmentsCache(owner.getId());
+            entryRevisionRepository.clearAttachmentsCacheByMedia(owner.getId());
 
             Set<UUID> updatedEntries = new HashSet<>();
             var revisions = entryRevisionRepository.findByMedia(owner.getId());

@@ -46,6 +46,21 @@ public class ParametrizedLock<K> {
         return new AutoUnlock(key);
     }
 
+    public AutoUnlock tryLock(K key) {
+        synchronized (mapLock) {
+            if (locks.containsKey(key)) {
+                return null;
+            }
+
+            CountedLock lock = new CountedLock();
+            lock.counter = 1;
+            lock.lock.lock();
+            locks.put(key, lock);
+        }
+
+        return new AutoUnlock(key);
+    }
+
     public void unlock(K key) {
         CountedLock lock;
         synchronized (mapLock) {
@@ -53,6 +68,7 @@ public class ParametrizedLock<K> {
             if (lock == null) {
                 throw new LockUnderflowException(key.toString());
             }
+            lock.lock.unlock();
             lock.counter--;
             if (lock.counter < 0) {
                 throw new LockUnderflowException(key.toString());
@@ -61,7 +77,6 @@ public class ParametrizedLock<K> {
                 locks.remove(key);
             }
         }
-        lock.lock.unlock();
     }
 
     public static void main(String[] args) {

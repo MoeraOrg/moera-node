@@ -377,6 +377,10 @@ public class Picker extends Task {
                     mediaNodeName,
                     generateCarte(mediaNodeName, Scope.VIEW_MEDIA),
                     mediaInfo,
+                    Math.min(
+                        universalContext.getOptions().getInt("media.max-size"),
+                        universalContext.getOptions().getInt("posting.media.max-size")
+                    ),
                     entryId
                 );
             }

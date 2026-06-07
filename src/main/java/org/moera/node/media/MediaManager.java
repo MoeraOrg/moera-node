@@ -24,7 +24,6 @@ import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.PublicMediaFileInfo;
-import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.api.node.MoeraNodeLocalStorageException;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.config.Config;
@@ -38,7 +37,6 @@ import org.moera.node.data.RemoteMediaCacheRepository;
 import org.moera.node.data.RemoteMediaError;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.Util;
@@ -258,7 +256,13 @@ public class MediaManager {
     }
 
     private MediaFile getCachedPrivateMedia(
-        String nodeName, String carte, String id, String grant, String mediaFileId, String textContent, int maxSize
+        String nodeName,
+        String carte,
+        String id,
+        String grant,
+        String mediaFileId,
+        String textContent,
+        int maxSize
     ) throws MoeraNodeException, IOException {
         Collection<RemoteMediaCache> caches = remoteMediaCacheRepository.findByMediaWithoutNode(nodeName, id);
 
@@ -308,7 +312,13 @@ public class MediaManager {
     }
 
     private void downloadPrivateMediaForCaching(
-        String nodeName, String carte, String id, String grant, String mediaFileId, String textContent, int maxSize
+        String nodeName,
+        String carte,
+        String id,
+        String grant,
+        String mediaFileId,
+        String textContent,
+        int maxSize
     ) throws MoeraNodeException {
         if (id == null) {
             return;
@@ -326,10 +336,19 @@ public class MediaManager {
     }
 
     public void downloadPrivateMediaForCaching(
-        String nodeName, String carte, PrivateMediaFileInfo info, int maxSize
+        String nodeName,
+        String carte,
+        PrivateMediaFileInfo info,
+        int maxSize
     ) throws MoeraNodeException {
         downloadPrivateMediaForCaching(
-            nodeName, carte, info.getId(), info.getGrant(), info.getHash(), info.getTextContent(), maxSize
+            nodeName,
+            carte,
+            info.getId(),
+            info.getGrant(),
+            info.getHash(),
+            info.getTextContent(),
+            maxSize
         );
     }
 
@@ -350,8 +369,15 @@ public class MediaManager {
     }
 
     private MediaFileOwner downloadPrivateMedia(
-        String nodeName, String carte, String id, String grant, String mediaFileId, String title, String textContent,
-        int maxSize, UUID entryId
+        String nodeName,
+        String carte,
+        String id,
+        String grant,
+        String mediaFileId,
+        String title,
+        String textContent,
+        int maxSize,
+        UUID entryId
     ) throws MoeraNodeException {
         if (id == null) {
             return null;
@@ -395,21 +421,40 @@ public class MediaManager {
     }
 
     public MediaFileOwner downloadPrivateMedia(
-        String nodeName, String carte, PrivateMediaFileInfo info, UUID entryId
+        String nodeName,
+        String carte,
+        PrivateMediaFileInfo info,
+        int maxSize,
+        UUID entryId
     ) throws MoeraNodeException {
-        int maxSize = PostingFeaturesUtil.build(universalContext.getOptions(), AccessCheckers.ADMIN).getMediaMaxSize();
         return downloadPrivateMedia(
-            nodeName, carte, info.getId(), info.getGrant(), info.getHash(), info.getTitle(), info.getTextContent(),
-            maxSize, entryId
+            nodeName,
+            carte,
+            info.getId(),
+            info.getGrant(),
+            info.getHash(),
+            info.getTitle(),
+            info.getTextContent(),
+            maxSize,
+            entryId
         );
     }
 
     public MediaFileOwner downloadPrivateMediaNoLimits(
-        String nodeName, String carte, PrivateMediaFileInfo info
+        String nodeName,
+        String carte,
+        PrivateMediaFileInfo info
     ) throws MoeraNodeException {
         return downloadPrivateMedia(
-            nodeName, carte, info.getId(), info.getGrant(), info.getHash(), info.getTitle(), info.getTextContent(),
-            -1, null
+            nodeName,
+            carte,
+            info.getId(),
+            info.getGrant(),
+            info.getHash(),
+            info.getTitle(),
+            info.getTextContent(),
+            -1,
+            null
         );
     }
 

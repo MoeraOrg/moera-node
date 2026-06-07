@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment, UUID> {
@@ -60,5 +61,25 @@ public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment
         + " order by ea.ordinal"
     )
     List<Posting> findAttachedPostings(UUID nodeId, UUID entryRevisionId);
+
+    @Query(
+        "select ea from EntryAttachment ea join fetch ea.remoteMediaFile rmf"
+        + " where ea.entryRevision.id = ?1 and ea.mediaFileOwner is null"
+        + " and rmf.nodeName is not null and rmf.mediaId is not null and rmf.leaseId is not null"
+        + " and (rmf.fileSize is null or rmf.fileSize <= ?2)"
+        + " order by ea.ordinal"
+    )
+    List<EntryAttachment> findRemoteMediaToDownload(UUID entryRevisionId, long maxSize);
+
+    @Modifying
+    @Query(
+        "update EntryAttachment ea set ea.mediaFileOwner = ?4"
+        + " where ea.remoteMediaFile.nodeId = ?1"
+        + " and ea.remoteMediaFile.nodeName = ?2 and ea.remoteMediaFile.mediaId = ?3"
+        + " and ea.mediaFileOwner is null"
+    )
+    void attachDownloadedRemoteMedia(
+        UUID nodeId, String remoteNodeName, String remoteMediaId, MediaFileOwner mediaFileOwner
+    );
 
 }

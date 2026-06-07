@@ -37,7 +37,6 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.media.ThresholdReachedException;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.model.PrivateMediaFileInfoUtil;
 import org.moera.node.model.PublicMediaFileInfoUtil;
 import org.moera.node.ocrspace.OcrSpace;
@@ -112,7 +111,7 @@ public class MediaController {
     }
 
     private DigestingOutputStream transfer(InputStream in, OutputStream out, Long contentLength) throws IOException {
-        int maxSize = PostingFeaturesUtil.build(requestContext.getOptions(), requestContext).getMediaMaxSize();
+        int maxSize = requestContext.getOptions().getInt("media.max-size");
         return MediaOperations.transfer(in, out, contentLength, maxSize);
     }
 

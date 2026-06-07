@@ -221,7 +221,7 @@
 - name: posting.media.max-size
   type: int
   defaultValue: 8388608
-  title: Maximal size of a media attachment in a post
+  title: Maximal size of a media attachment in a Newsfeed post that is copied to the node
   modifiers:
     format: size
     min: 65536
@@ -438,6 +438,15 @@
     format: size
     min: 1024
     max: 4194304
+
+- name: comment.media.max-size
+  type: int
+  defaultValue: 368640
+  title: Maximal size of a media attachment in a comment that is copied to the node
+  modifiers:
+    format: size
+    min: 65536
+    max: 104857600
 
 - name: comment.deleted.lifetime
   type: Duration
