@@ -28,6 +28,7 @@ import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.MediaTitleUpdatedLiberin;
 import org.moera.node.media.InvalidImageException;
 import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.media.MediaGrantProperties;
@@ -331,6 +332,7 @@ public class MediaController {
         if (attributes.getTitle() != null) {
             mediaFileOwner.setTitle(attributes.getTitle().isEmpty() ? null : attributes.getTitle());
             mediaOperations.mediaTextUpdated(mediaFileOwner);
+            requestContext.send(new MediaTitleUpdatedLiberin(mediaFileOwner.getId(), mediaFileOwner.getTitle()));
         }
 
         return PrivateMediaFileInfoUtil.build(

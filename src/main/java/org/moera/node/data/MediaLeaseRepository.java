@@ -20,6 +20,13 @@ public interface MediaLeaseRepository extends JpaRepository<MediaLease, UUID> {
     )
     int countByOwnerNameAndMediaId(UUID nodeId, String ownerName, UUID mediaId);
 
+    @Query("select ml from MediaLease ml where ml.nodeId = ?1 and ml.mediaFileOwner.id = ?2")
+    List<MediaLease> findAllByMedia(UUID nodeId, UUID mediaId);
+
+    @Query("delete from MediaLease ml where ml.nodeId = ?1 and ml.id = ?2")
+    @Modifying
+    void deleteByNodeIdAndId(UUID nodeId, UUID id);
+
     @Query(
         "update MediaLease ml set ml.draftOnly = false, ml.deadline = null"
         + " where ml.nodeId = ?1 and ml.id in (?2)"

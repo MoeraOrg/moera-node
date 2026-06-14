@@ -4,6 +4,7 @@ import java.security.interfaces.ECPrivateKey;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -18,6 +19,7 @@ import org.moera.lib.node.exception.MoeraNodeApiOperationException;
 import org.moera.lib.node.exception.MoeraNodeApiValidationException;
 import org.moera.lib.node.types.NotificationPacket;
 import org.moera.lib.node.types.Result;
+import org.moera.lib.node.types.notifications.LeaseNotification;
 import org.moera.lib.node.types.notifications.Notification;
 import org.moera.lib.node.types.notifications.SubscriberNotification;
 import org.moera.lib.util.LogUtil;
@@ -242,7 +244,9 @@ public class NotificationSender extends Task {
 
         NotificationSenderError errorType;
 
-        if (isUnsubscribeError(e) && notification instanceof SubscriberNotification sn) {
+        if (isStaleMediaLeaseError(e, notification)) {
+            errorType = NotificationSenderError.FATAL;
+        } else if (isUnsubscribeError(e) && notification instanceof SubscriberNotification sn) {
             if (sn.getSubscriptionCreatedAt() != null
                     && sn.getSubscriptionCreatedAt().toInstant().plus(SUBSCRIPTION_DELAY).isAfter(Instant.now())) {
                 // Subscription may not be registered by the node yet
@@ -261,6 +265,24 @@ public class NotificationSender extends Task {
         log.error(e.getMessage());
 
         return errorType;
+    }
+
+    private boolean isStaleMediaLeaseError(Throwable e, Notification notification) {
+        if (
+            !(notification instanceof LeaseNotification ln)
+            || !(e instanceof MoeraNodeApiNotFoundException nfe)
+            || !Objects.equals(nfe.getErrorCode(), "media-lease.not-found")
+        ) {
+            return false;
+        }
+
+        UUID mediaLeaseId = Util.uuid(ln.getLeaseId()).orElse(null);
+        if (mediaLeaseId == null) {
+            return false;
+        }
+
+        pool.deleteMediaLease(nodeId, mediaLeaseId);
+        return true;
     }
 
     private boolean isUnsubscribeError(Throwable e) {

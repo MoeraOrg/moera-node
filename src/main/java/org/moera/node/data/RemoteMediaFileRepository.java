@@ -34,6 +34,15 @@ public interface RemoteMediaFileRepository extends JpaRepository<RemoteMediaFile
     )
     void clearLeaseId(UUID nodeId, String remoteNodeName, String leaseId);
 
+    @Modifying
+    @Query(
+        "update RemoteMediaFile rmf set rmf.title = ?5"
+        + " where rmf.nodeId = ?1 and rmf.nodeName = ?2 and rmf.mediaId = ?3 and rmf.leaseId = ?4"
+    )
+    int updateTitleByMediaAndLease(
+        UUID nodeId, String remoteNodeName, String remoteMediaId, String leaseId, String title
+    );
+
     @Query("delete from RemoteMediaFile rmf where rmf.deadline is not null and rmf.deadline < ?1")
     @Modifying
     void deleteUnused(Timestamp deadline);

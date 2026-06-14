@@ -15,6 +15,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SubscriptionType;
+import org.moera.lib.node.types.notifications.LeaseNotification;
 import org.moera.lib.node.types.notifications.Notification;
 import org.moera.lib.node.types.notifications.SubscriberNotification;
 import org.moera.lib.util.LogUtil;
@@ -22,6 +23,8 @@ import org.moera.node.config.Config;
 import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.Friend;
 import org.moera.node.data.FriendRepository;
+import org.moera.node.data.MediaLease;
+import org.moera.node.data.MediaLeaseRepository;
 import org.moera.node.data.PendingNotification;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.data.Subscriber;
@@ -89,6 +92,9 @@ public class NotificationSenderPool {
 
     @Inject
     private PendingNotificationRepository pendingNotificationRepository;
+
+    @Inject
+    private MediaLeaseRepository mediaLeaseRepository;
 
     @Inject
     private FriendCache friendCache;
@@ -197,6 +203,26 @@ public class NotificationSenderPool {
             }
             return;
         }
+        if (direction instanceof LeasesDirection ld) {
+            log.info(
+                "Sending to holders of media leases (mediaId = {}), if {}",
+                LogUtil.format(ld.getMediaId()),
+                direction.getPrincipalFilter()
+            );
+
+            List<MediaLease> mediaLeases = mediaLeaseRepository.findAllByMedia(ld.getNodeId(), ld.getMediaId());
+            for (MediaLease mediaLease : mediaLeases) {
+                SingleDirection dir = new SingleDirection(
+                    ld.getNodeId(), mediaLease.getOwnerName(), direction.getPrincipalFilter()
+                );
+                Notification nt = notification.clone();
+                if (nt instanceof LeaseNotification ln) {
+                    ln.setLeaseId(mediaLease.getId().toString());
+                }
+                sendSingle(dir, nt);
+            }
+            return;
+        }
         throw new IllegalArgumentException("Unknown direction type");
     }
 
@@ -286,6 +312,10 @@ public class NotificationSenderPool {
         if (subscriber != null) {
             liberinManager.send(new SubscriberDeletedLiberin(subscriber).withNodeId(subscriber.getNodeId()));
         }
+    }
+
+    void deleteMediaLease(UUID nodeId, UUID mediaLeaseId) {
+        tx.executeWriteQuietly(() -> mediaLeaseRepository.deleteByNodeIdAndId(nodeId, mediaLeaseId));
     }
 
     private void storePending(NotificationSender sender, Notification notification) {

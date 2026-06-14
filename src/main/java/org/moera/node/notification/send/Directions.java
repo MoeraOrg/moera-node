@@ -55,6 +55,10 @@ public class Directions {
         return new FriendGroupDirection(nodeId, friendGroupId, filter);
     }
 
+    public static Direction leases(UUID nodeId, UUID mediaId) {
+        return new LeasesDirection(nodeId, mediaId);
+    }
+
     public static Direction userListSubscribers(UUID nodeId, String listName) {
         return new SubscribersDirection(nodeId, SubscriptionType.USER_LIST, listName);
     }

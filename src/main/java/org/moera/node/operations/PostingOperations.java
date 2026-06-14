@@ -199,13 +199,14 @@ public class PostingOperations {
                 var attachment = new EntryAttachment(current, lrm.mediaFileOwner(), ordinal++);
                 if (lrm.remoteMediaFile() != null) {
                     var existing = remoteMedia.stream()
-                            .filter(rmf ->
-                                Objects.equals(rmf.getNodeName(), lrm.remoteMediaFile().getNodeName())
-                                && Objects.equals(rmf.getMediaId(), lrm.remoteMediaFile().getMediaId())
-                            )
-                            .findFirst()
-                            .orElse(null);
+                        .filter(rmf ->
+                            Objects.equals(rmf.getNodeName(), lrm.remoteMediaFile().getNodeName())
+                            && Objects.equals(rmf.getMediaId(), lrm.remoteMediaFile().getMediaId())
+                        )
+                        .findFirst()
+                        .orElse(null);
                     if (existing != null) {
+                        existing.setTitle(lrm.remoteMediaFile().getTitle());
                         attachment.setRemoteMediaFile(existing);
                     } else {
                         attachment.setRemoteMediaFile(remoteMediaFileRepository.save(lrm.remoteMediaFile()));

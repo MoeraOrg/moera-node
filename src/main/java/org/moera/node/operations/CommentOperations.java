@@ -259,6 +259,7 @@ public class CommentOperations {
                         .findFirst()
                         .orElse(null);
                     if (existing != null) {
+                        existing.setTitle(lrm.remoteMediaFile().getTitle());
                         attachment.setRemoteMediaFile(existing);
                     } else {
                         attachment.setRemoteMediaFile(remoteMediaFileRepository.save(lrm.remoteMediaFile()));

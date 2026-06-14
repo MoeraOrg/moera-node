@@ -55,6 +55,7 @@ public class MediaToAttachUtil {
                     !Objects.equals(currRemote.getNodeName(), prevRemote.getNodeName())
                     || !Objects.equals(currRemote.getMediaId(), prevRemote.getMediaId())
                     || !Objects.equals(currRemote.getHash(), prevRemote.getHash())
+                    || !Objects.equals(currRemote.getTitle(), prevRemote.getTitle())
                 ) {
                     return false;
                 }
