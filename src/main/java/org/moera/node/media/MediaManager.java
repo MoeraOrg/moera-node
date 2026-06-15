@@ -17,7 +17,7 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
-import okhttp3.ResponseBody;
+import org.moera.lib.http.Response;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.MediaAttachment;
@@ -112,18 +112,17 @@ public class MediaManager {
     }
 
     private TemporaryMediaFile receiveMediaFile(
-        String remoteNodeName, String mediaId, ResponseBody responseBody, TemporaryFile tmpFile, int maxSize
+        String remoteNodeName, String mediaId, Response responseBody, TemporaryFile tmpFile, int maxSize
     ) throws MoeraNodeException {
-        String contentType = Objects.toString(responseBody.contentType(), null);
-        if (contentType == null) {
+        if (responseBody.contentType() == null) {
             throw new MoeraNodeException("Response has no Content-Type");
         }
         Long contentLength = responseBody.contentLength() >= 0 ? responseBody.contentLength() : null;
         try {
             DigestingOutputStream out = MediaOperations.transfer(
-                responseBody.byteStream(), tmpFile.outputStream(), contentLength, maxSize
+                responseBody.bodyStream(), tmpFile.outputStream(), contentLength, maxSize
             );
-            return new TemporaryMediaFile(out.getHash(), contentType, out.getDigest());
+            return new TemporaryMediaFile(out.getHash(), responseBody.contentType(), out.getDigest());
         } catch (ThresholdReachedException e) {
             throw new MoeraNodeLocalStorageException(
                 "Media %s at %s reports a wrong size or larger than %d bytes"

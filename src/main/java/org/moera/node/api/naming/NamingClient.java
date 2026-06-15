@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.jsonrpc.OkHttpJsonRpcFetcher;
 import org.moera.lib.naming.Fingerprints;
 import org.moera.lib.naming.MoeraNaming;
 import org.moera.lib.naming.NodeName;
@@ -79,7 +80,7 @@ public class NamingClient {
     }
 
     private MoeraNaming getNamingService(String location) {
-        return namingServices.computeIfAbsent(location, MoeraNaming::new);
+        return namingServices.computeIfAbsent(location, url -> new MoeraNaming(new OkHttpJsonRpcFetcher(url)));
     }
 
     private void monitorOperation(Options options) {

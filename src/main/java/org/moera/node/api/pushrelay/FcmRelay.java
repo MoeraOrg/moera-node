@@ -10,6 +10,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.jsonrpc.OkHttpJsonRpcFetcher;
 import org.moera.lib.node.Fingerprints;
 import org.moera.lib.node.types.PushContent;
 import org.moera.lib.node.types.PushContentType;
@@ -42,7 +43,7 @@ public class FcmRelay {
 
     @PostConstruct
     public void init() {
-        service = new PushRelay(config.getFcmRelay());
+        service = new PushRelay(new OkHttpJsonRpcFetcher(config.getFcmRelay()));
 
         Thread.ofPlatform().name("fcmDelivery").daemon().start(this::deliver);
     }

@@ -2,6 +2,7 @@ package org.moera.node.api.node;
 
 import jakarta.inject.Inject;
 
+import org.moera.lib.http.OkHttpTransport;
 import org.moera.lib.node.MoeraNode;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.api.naming.RegisteredNameDetails;
@@ -28,7 +29,7 @@ public class NodeApi {
         if (nodeUri == null) {
             throw new MoeraNodeUnknownNameException(remoteNodeName);
         }
-        MoeraNode node = new MoeraNode(nodeUri);
+        MoeraNode node = new MoeraNode(new OkHttpTransport(), nodeUri);
         node.userAgent(config.getUserAgent());
         return node;
     }

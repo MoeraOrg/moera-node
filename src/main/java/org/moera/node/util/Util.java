@@ -67,7 +67,7 @@ public class Util {
     }
 
     public static String ue(Object s) {
-        return URLEncoder.encode(s.toString(), StandardCharsets.UTF_8);
+        return URLEncoder.encode(s.toString(), StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     public static SafeString he(Object s) {
