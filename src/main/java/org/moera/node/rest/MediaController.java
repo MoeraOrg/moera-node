@@ -19,6 +19,7 @@ import org.moera.lib.node.types.PublicMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.validate.ValidationFailure;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.UserBlockedException;
 import org.moera.node.config.Config;
@@ -51,7 +52,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -166,33 +166,19 @@ public class MediaController {
             && blockedUserOperations.isBlocked(BlockedOperation.COMMENT);
     }
 
-    @PostMapping({"/private", "/private/{clientName}"})
+    @PostMapping("/private")
+    @Admin(Scope.UPLOAD_PRIVATE_MEDIA)
     @Transactional
     public PrivateMediaFileInfo postPrivate(
         @RequestHeader(value = "Content-Type", required = false) MediaType mediaType,
         @RequestHeader(value = "Content-Length", required = false) Long contentLength,
         @RequestHeader(value = "Content-Disposition", required = false) String contentDisposition,
-        @PathVariable(required = false) String clientName,
         InputStream in
     ) throws IOException {
         log.info(
             "POST /media/private (Content-Type: {}, Content-Length: {})",
             LogUtil.format(Objects.toString(mediaType, null)), LogUtil.format(contentLength)
         );
-
-        if (Objects.equals(clientName, requestContext.nodeName())) {
-            clientName = null;
-        }
-
-        boolean mediaUploadScope = clientName == null
-            ? requestContext.isAdmin(Scope.UPLOAD_PRIVATE_MEDIA)
-            : requestContext.isClient(clientName, Scope.UPLOAD_PRIVATE_MEDIA);
-        if (!mediaUploadScope) {
-            throw new AuthenticationException();
-        }
-        if (clientName != null && isBlocked()) {
-            throw new UserBlockedException();
-        }
 
         var tmp = mediaOperations.tmpFile();
         try {
@@ -205,9 +191,7 @@ public class MediaController {
             );
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
-            MediaFileOwner mediaFileOwner = mediaOperations.own(
-                mediaFile, clientName, uploadedFileName(contentDisposition)
-            );
+            MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, uploadedFileName(contentDisposition));
             if (isSuitableForOcr(mediaFile)) {
                 mediaFile.setRecognizeAt(Util.now());
             }
@@ -313,6 +297,7 @@ public class MediaController {
     }
 
     @PutMapping("/private/{id}/info")
+    @Admin(Scope.UPLOAD_PRIVATE_MEDIA)
     @Transactional
     public PrivateMediaFileInfo updatePrivateMediaInfo(
         @PathVariable String id,
@@ -325,9 +310,6 @@ public class MediaController {
         UUID mediaId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
         MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), mediaId)
             .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
-        if (!canEdit(mediaFileOwner)) {
-            throw new AuthenticationException();
-        }
 
         if (attributes.getTitle() != null) {
             mediaFileOwner.setTitle(attributes.getTitle().isEmpty() ? null : attributes.getTitle());
@@ -338,15 +320,6 @@ public class MediaController {
         return PrivateMediaFileInfoUtil.build(
             mediaFileOwner, config.getMedia().getDirectServe(), new MediaGrantGenerator(requestContext.getOptions())
         );
-    }
-
-    private boolean canEdit(MediaFileOwner mediaFileOwner) {
-        if (ObjectUtils.isEmpty(mediaFileOwner.getOwnerName())) {
-            return requestContext.isAdmin(Scope.UPLOAD_PRIVATE_MEDIA);
-        }
-        return requestContext.isClient(mediaFileOwner.getOwnerName(), Scope.UPLOAD_PRIVATE_MEDIA)
-            || mediaFileOwner.getOwnerName().equals(requestContext.nodeName())
-                && requestContext.isAdmin(Scope.UPLOAD_PRIVATE_MEDIA);
     }
 
     @GetMapping("/public/{id}/data")

@@ -247,6 +247,9 @@ public class MediaManager {
     private TemporaryMediaFile getPrivateMedia(
         String nodeName, String carte, String id, String grant, TemporaryFile tmpFile, int maxSize
     ) throws MoeraNodeException {
+        if (!Objects.equals(nodeName, universalContext.nodeName()) && grant != null) {
+            carte = null; // use the grant for authentication
+        }
         var result = new AtomicReference<TemporaryMediaFile>();
         nodeApi.at(nodeName, carte).getPrivateMedia(
             id, null, null, grant, null,
@@ -311,50 +314,32 @@ public class MediaManager {
         return mediaFile;
     }
 
-    private void downloadPrivateMediaForCaching(
-        String nodeName,
-        String carte,
-        String id,
-        String grant,
-        String mediaFileId,
-        String textContent,
-        int maxSize
-    ) throws MoeraNodeException {
-        if (id == null) {
-            return;
-        }
-
-        try (var ignored = mediaFileLocks.lock(mediaFileId)) {
-            try {
-                getCachedPrivateMedia(nodeName, carte, id, grant, mediaFileId, textContent, maxSize);
-            } catch (IOException e) {
-                throw new MoeraNodeLocalStorageException(
-                    "Error storing private media %s: %s".formatted(id, e.getMessage())
-                );
-            }
-        }
-    }
-
     public void downloadPrivateMediaForCaching(
         String nodeName,
         String carte,
         PrivateMediaFileInfo info,
         int maxSize
     ) throws MoeraNodeException {
-        downloadPrivateMediaForCaching(
-            nodeName,
-            carte,
-            info.getId(),
-            info.getGrant(),
-            info.getHash(),
-            info.getTextContent(),
-            maxSize
-        );
+        if (info == null || info.getId() == null) {
+            return;
+        }
+
+        try (var ignored = mediaFileLocks.lock(info.getHash())) {
+            try {
+                getCachedPrivateMedia(
+                    nodeName, carte, info.getId(), info.getGrant(), info.getHash(), info.getTextContent(), maxSize
+                );
+            } catch (IOException e) {
+                throw new MoeraNodeLocalStorageException(
+                    "Error storing private media %s: %s".formatted(info.getId(), e.getMessage())
+                );
+            }
+        }
     }
 
     private MediaFileOwner findAttachedMedia(String mediaFileId, UUID entryId) {
         Collection<MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository
-            .findByAdminFile(universalContext.nodeId(), mediaFileId);
+            .findByFile(universalContext.nodeId(), mediaFileId);
         for (MediaFileOwner mediaFileOwner : mediaFileOwners) {
             if (entryId != null) {
                 if (mediaOperations.isAttached(mediaFileOwner, entryId)) {
@@ -409,7 +394,7 @@ public class MediaManager {
                 // for MediaFileOwner
 
                 mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
-                mediaFileOwner = mediaOperations.own(mediaFile, null, title);
+                mediaFileOwner = mediaOperations.own(mediaFile, title);
 
                 return mediaFileOwner;
             } catch (IOException e) {

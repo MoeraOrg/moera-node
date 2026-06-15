@@ -278,10 +278,7 @@ public class DraftController {
 
         return mediaOperations.validateAttachments(
             draftText.getMedia(),
-            false,
-            requestContext.isAdmin(Scope.VIEW_MEDIA),
-            requestContext.isAdmin(Scope.DRAFTS),
-            requestContext.getClientName(Scope.VIEW_MEDIA)
+            requestContext.isAdmin(Scope.VIEW_MEDIA)
         );
     }
 

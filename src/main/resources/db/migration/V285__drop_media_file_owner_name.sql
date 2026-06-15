@@ -1,0 +1,3 @@
+DROP INDEX media_file_owners_node_id_owner_name_media_file_id_idx;
+ALTER TABLE media_file_owners DROP COLUMN owner_name;
+CREATE INDEX media_file_owners_node_id_media_file_id_idx ON media_file_owners(node_id, media_file_id);

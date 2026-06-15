@@ -231,10 +231,7 @@ public class CommentController {
         mediaOperations.validateAvatar(commentText.getOwnerAvatar());
         List<LocalRemoteMedia> media = mediaOperations.validateAttachments(
             commentText.getMedia(),
-            true,
-            requestContext.isAdmin(Scope.VIEW_CONTENT),
-            requestContext.isAdmin(Scope.ADD_COMMENT),
-            commentText.getOwnerName()
+            requestContext.isAdmin(Scope.VIEW_CONTENT)
         );
 
         Comment comment = commentOperations.newComment(posting, commentText, repliedTo);
@@ -322,10 +319,7 @@ public class CommentController {
         mediaOperations.validateAvatar(commentText.getOwnerAvatar());
         List<LocalRemoteMedia> media = mediaOperations.validateAttachments(
             commentText.getMedia(),
-            true,
-            requestContext.isAdmin(Scope.VIEW_CONTENT),
-            requestContext.isAdmin(Scope.UPDATE_COMMENT),
-            comment.getOwnerName()
+            requestContext.isAdmin(Scope.VIEW_CONTENT)
         );
 
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);

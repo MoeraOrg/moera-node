@@ -49,12 +49,9 @@ import org.apache.tika.Tika;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.MediaToAttach;
-import org.moera.lib.node.types.PostingFeatures;
 import org.moera.lib.node.types.RemoteMedia;
 import org.moera.lib.node.types.Scope;
-import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.config.Config;
@@ -81,7 +78,6 @@ import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.model.RemoteMediaUtil;
 import org.moera.node.operations.OcrJob;
 import org.moera.node.operations.PostingOperations;
@@ -405,7 +401,7 @@ public class MediaOperations {
         original.addPreview(preview);
     }
 
-    public MediaFileOwner own(MediaFile mediaFile, String ownerName, String title) throws IOException {
+    public MediaFileOwner own(MediaFile mediaFile, String title) throws IOException {
         MediaFile croppedFile = cropOriginal(mediaFile);
         for (int size : PREVIEW_SIZES) {
             createPreview(mediaFile, croppedFile, size);
@@ -414,7 +410,6 @@ public class MediaOperations {
         MediaFileOwner mediaFileOwner = new MediaFileOwner();
         mediaFileOwner.setId(UUID.randomUUID());
         mediaFileOwner.setNodeId(universalContext.nodeId());
-        mediaFileOwner.setOwnerName(ownerName);
         mediaFileOwner.setTitle(title);
         mediaFileOwner.setMediaFile(mediaFile);
 
@@ -686,17 +681,11 @@ public class MediaOperations {
 
     public List<LocalRemoteMedia> validateAttachments(
         Collection<MediaToAttach> mediaList,
-        boolean compressed,
-        boolean isAdminViewMedia,
-        boolean isAdminUncompressedMedia,
-        String clientName
+        boolean isAdminViewMedia
     ) {
         if (ObjectUtils.isEmpty(mediaList)) {
             return Collections.emptyList();
         }
-
-        PostingFeatures features = PostingFeaturesUtil.build(universalContext.getOptions(), AccessCheckers.ADMIN);
-        int recommendedSize = features.getImageRecommendedSize();
 
         List<LocalRemoteMedia> attached = new ArrayList<>();
         Set<UUID> usedIds = new HashSet<>();
@@ -736,21 +725,9 @@ public class MediaOperations {
                 continue;
             }
             MediaFileOwner mediaFileOwner = mediaFileOwners.get(localMediaId);
-            if (mediaFileOwner == null) {
+            if (mediaFileOwner == null || !isAdminViewMedia) {
                 throw new ObjectNotFoundFailure("media.not-found");
             }
-            if (
-                mediaFileOwner.getOwnerName() == null && !isAdminViewMedia
-                || mediaFileOwner.getOwnerName() != null && !mediaFileOwner.getOwnerName().equals(clientName)
-            ) {
-                throw new ObjectNotFoundFailure("media.not-found");
-            }
-            ValidationUtil.assertion(
-                !compressed
-                    || isAdminUncompressedMedia
-                    || mediaFileOwner.getMediaFile().getFileSize() <= recommendedSize,
-                "media.not-compressed"
-            );
             attached.add(new LocalRemoteMedia(mediaFileOwner, remoteMediaFile, mediaLease));
             usedIds.add(localMediaId);
         }

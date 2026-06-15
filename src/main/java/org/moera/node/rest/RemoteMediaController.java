@@ -80,7 +80,7 @@ public class RemoteMediaController {
             .orElse(null);
         if (mediaFile != null) {
             Collection<MediaFileOwner> owners =
-                mediaFileOwnerRepository.findByAdminFile(requestContext.nodeId(), mediaFile.getId());
+                mediaFileOwnerRepository.findByFile(requestContext.nodeId(), mediaFile.getId());
             if (!owners.isEmpty()) {
                 return PrivateMediaFileInfoUtil.build(
                     owners.iterator().next(),

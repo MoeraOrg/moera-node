@@ -29,9 +29,6 @@ public class MediaFileOwner {
     @NotNull
     private UUID nodeId;
 
-    @Size(max = 135)
-    private String ownerName;
-
     @Size(max = 255)
     private String title;
 
@@ -83,14 +80,6 @@ public class MediaFileOwner {
 
     public void setNodeId(UUID nodeId) {
         this.nodeId = nodeId;
-    }
-
-    public String getOwnerName() {
-        return ownerName;
-    }
-
-    public void setOwnerName(String ownerName) {
-        this.ownerName = ownerName;
     }
 
     public String getTitle() {

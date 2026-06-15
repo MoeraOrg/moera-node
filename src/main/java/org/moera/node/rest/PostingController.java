@@ -180,10 +180,7 @@ public class PostingController {
         }
         List<LocalRemoteMedia> media = mediaOperations.validateAttachments(
             postingText.getMedia(),
-            true,
-            requestContext.isAdmin(Scope.VIEW_MEDIA),
-            requestContext.isAdmin(Scope.ADD_POST),
-            requestContext.getClientName(Scope.VIEW_MEDIA)
+            requestContext.isAdmin(Scope.VIEW_MEDIA)
         );
 
         Posting posting = postingOperations.newPosting(postingText);
@@ -246,10 +243,7 @@ public class PostingController {
         );
         List<LocalRemoteMedia> media = mediaOperations.validateAttachments(
             postingText.getMedia(),
-            true,
-            requestContext.isAdmin(Scope.VIEW_MEDIA),
-            requestContext.isAdmin(Scope.UPDATE_POST),
-            requestContext.getClientName(Scope.VIEW_MEDIA)
+            requestContext.isAdmin(Scope.VIEW_MEDIA)
         );
 
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
