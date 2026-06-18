@@ -31,7 +31,6 @@ import org.moera.node.auth.UserBlockedException;
 import org.moera.node.config.Config;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
-import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
@@ -51,6 +50,7 @@ import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingReadLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.LocalRemoteMedia;
+import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -140,6 +140,9 @@ public class PostingController {
 
     @Inject
     private SheriffUserListOperations sheriffUserListOperations;
+
+    @Inject
+    private MediaManager mediaManager;
 
     @Inject
     private TextConverter textConverter;
@@ -317,7 +320,10 @@ public class PostingController {
         } else {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
             byte[] fingerprint = PostingFingerprintBuilder.build(
-                postingText.getSignatureVersion(), postingText, parentMediaDigest(posting), this::mediaDigest
+                postingText.getSignatureVersion(),
+                postingText,
+                parentMediaDigest(posting),
+                mediaManager::getTrustedPrivateMediaDigest
             );
             if (!CryptoUtil.verifySignature(fingerprint, postingText.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
@@ -390,11 +396,6 @@ public class PostingController {
         return posting != null
             ? new LocalRemoteMedia(posting.getParentMedia(), posting.getParentRemoteMedia()).digest()
             : null;
-    }
-
-    private byte[] mediaDigest(UUID id) {
-        MediaFileOwner media = mediaFileOwnerRepository.findById(id).orElse(null);
-        return media != null ? media.getMediaFile().getDigest() : null;
     }
 
     @GetMapping

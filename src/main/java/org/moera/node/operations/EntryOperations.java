@@ -132,6 +132,7 @@ public class EntryOperations implements MediaAttachmentsProvider {
 
         Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
         return attachments.stream()
+            .filter(MediaAttachmentUtil::isVisible)
             .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
             .map(ea -> MediaAttachmentUtil.build(ea, config.getMedia().getDirectServe(), grantSupplier))
             .collect(Collectors.toList());

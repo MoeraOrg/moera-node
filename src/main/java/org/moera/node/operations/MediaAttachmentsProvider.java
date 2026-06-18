@@ -19,6 +19,7 @@ public interface MediaAttachmentsProvider {
     static MediaAttachmentsProvider relations(DirectServeConfig config) {
         return (revision, grantSupplier) ->
             revision.getAttachments().stream()
+                .filter(MediaAttachmentUtil::isVisible)
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
                 .map(ea -> MediaAttachmentUtil.build(ea, config, grantSupplier))
                 .collect(Collectors.toList());

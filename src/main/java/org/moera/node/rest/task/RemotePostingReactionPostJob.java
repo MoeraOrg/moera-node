@@ -257,14 +257,13 @@ public class RemotePostingReactionPostJob
                     mediaManager.getParentMediaDigest(
                         state.postingInfo,
                         parameters.targetNodeName,
-                        nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                        carteGenerator(Scope.VIEW_MEDIA)
                     ),
-                    pmf ->
-                        mediaManager.getPrivateMediaDigest(
-                            parameters.targetNodeName,
-                            generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                            pmf
-                        )
+                    pmf -> mediaManager.getPrivateMediaDigest(
+                        parameters.targetNodeName,
+                        carteGenerator(Scope.VIEW_MEDIA),
+                        pmf
+                    )
                 )
         );
         ReactionDescription description = ReactionDescriptionUtil.build(

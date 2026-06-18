@@ -8,6 +8,10 @@ import org.moera.node.media.MediaGrantSupplier;
 
 public class MediaAttachmentUtil {
 
+    public static boolean isVisible(EntryAttachment attachment) {
+        return attachment.getRemoteMediaFile() == null || !attachment.getRemoteMediaFile().isInvalid();
+    }
+
     public static MediaAttachment build(
         EntryAttachment attachment,
         DirectServeConfig config,

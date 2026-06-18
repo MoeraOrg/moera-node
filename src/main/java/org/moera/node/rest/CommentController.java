@@ -50,8 +50,6 @@ import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
-import org.moera.node.data.MediaFileOwner;
-import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.QComment;
@@ -71,6 +69,7 @@ import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.liberin.model.CommentsReadLiberin;
 import org.moera.node.media.LocalRemoteMedia;
+import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.CommentCreatedUtil;
@@ -137,9 +136,6 @@ public class CommentController {
     private EntryAttachmentRepository entryAttachmentRepository;
 
     @Inject
-    private MediaFileOwnerRepository mediaFileOwnerRepository;
-
-    @Inject
     private StoryRepository storyRepository;
 
     @Inject
@@ -171,6 +167,9 @@ public class CommentController {
 
     @Inject
     private TextConverter textConverter;
+
+    @Inject
+    private MediaManager mediaManager;
 
     @Inject
     @PersistenceContext
@@ -421,7 +420,7 @@ public class CommentController {
             byte[] fingerprint = CommentFingerprintBuilder.build(
                 commentText.getSignatureVersion(),
                 commentText,
-                this::mediaDigest,
+                mediaManager::getTrustedPrivateMediaDigest,
                 posting.getCurrentRevision().getDigest(),
                 repliedToDigest
             );
@@ -502,11 +501,6 @@ public class CommentController {
         return commentText.getBodySrcFormat() == SourceFormat.APPLICATION
             || !ObjectUtils.isEmpty(commentText.getBodySrc().getText())
             || !ObjectUtils.isEmpty(commentText.getMedia());
-    }
-
-    private byte[] mediaDigest(UUID id) {
-        MediaFileOwner media = mediaFileOwnerRepository.findById(id).orElse(null);
-        return media != null ? media.getMediaFile().getDigest() : null;
     }
 
     @PutMapping

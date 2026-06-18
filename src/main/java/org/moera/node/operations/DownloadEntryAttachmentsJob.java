@@ -1,6 +1,9 @@
 package org.moera.node.operations;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -23,8 +26,10 @@ import org.moera.node.data.RemoteMediaFileRepository;
 import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaUtil;
+import org.moera.node.media.RemoteMediaOperations;
 import org.moera.node.task.Job;
 import org.moera.node.util.ParametrizedLock;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;
@@ -113,6 +118,9 @@ public class DownloadEntryAttachmentsJob
     private RemoteMediaFileRepository remoteMediaFileRepository;
 
     @Inject
+    private RemoteMediaOperations remoteMediaOperations;
+
+    @Inject
     private MediaManager mediaManager;
 
     public DownloadEntryAttachmentsJob() {
@@ -168,16 +176,124 @@ public class DownloadEntryAttachmentsJob
         try (unlock) {
             releaseLeases();
 
-            int maxSize = getMediaMaxSize();
+            validateRemoteMedia();
 
+            int maxSize = getMediaMaxSize();
             while (true) {
                 AttachmentLocation attachmentLocation = tx.executeRead(() -> findDownloadableAttachment(maxSize));
                 if (attachmentLocation == null) {
                     return;
                 }
                 download(attachmentLocation, maxSize);
-                releaseLeases();
             }
+        }
+    }
+
+    private Entry findEntry() {
+        if (parameters.commentId == null) {
+            return postingRepository.findByNodeIdAndId(nodeId, parameters.postingId).orElse(null);
+        }
+
+        Comment comment = commentRepository.findByNodeIdAndId(nodeId, parameters.commentId).orElse(null);
+        return comment != null
+                && comment.getPosting() != null
+                && Objects.equals(comment.getPosting().getId(), parameters.postingId)
+            ? comment
+            : null;
+    }
+
+    private List<RemoteMediaFile> findRemoteMediaToValidate() {
+        return tx.executeRead(() -> {
+            Entry entry = findEntry();
+            if (entry == null || entry.getCurrentRevision() == null) {
+                return List.of();
+            }
+
+            List<EntryAttachment> list =
+                entryAttachmentRepository.findRemoteMediaToValidate(entry.getCurrentRevision().getId());
+            Set<UUID> seen = new HashSet<>();
+            List<RemoteMediaFile> files = new ArrayList<>();
+            for (EntryAttachment attachment : list) {
+                RemoteMediaFile remoteMediaFile = attachment.getRemoteMediaFile();
+                if (!seen.add(remoteMediaFile.getId())) {
+                    continue;
+                }
+                files.add(remoteMediaFile);
+            }
+            return files;
+        });
+    }
+
+    private void validateRemoteMedia() throws Exception {
+        List<RemoteMediaFile> remoteMedia = findRemoteMediaToValidate();
+
+        for (RemoteMediaFile remoteMediaFile : remoteMedia) {
+            PrivateMediaFileInfo mediaInfo;
+            try {
+                mediaInfo = getPrivateMediaInfo(remoteMediaFile.getNodeName(), remoteMediaFile.getMediaId());
+            } catch (MoeraNodeApiNotFoundException e) {
+                invalidateRemoteMedia(remoteMediaFile, true);
+                continue;
+            }
+
+            byte[] digest = Util.base64decode(mediaInfo.getDigest());
+            if (!Arrays.equals(remoteMediaFile.getDigest(), digest)) {
+                invalidateRemoteMedia(remoteMediaFile, false);
+                continue;
+            }
+
+            if (remoteMediaInfoDiffers(remoteMediaFile, mediaInfo)) {
+                tx.executeWrite(() -> remoteMediaOperations.update(remoteMediaFile.getId(), mediaInfo));
+            }
+        }
+    }
+
+    private PrivateMediaFileInfo getPrivateMediaInfo(String remoteNodeName, String remoteMediaId) throws Exception {
+        String grant = new MediaGrantGenerator(getOptions()).generateRemote(
+            remoteMediaId, MediaUtil.MEDIA_GRANT_TTL, false, null
+        );
+        var info = nodeApi.at(remoteNodeName).getPrivateMediaInfo(remoteMediaId, grant);
+        if (info == null) {
+            log.error("Failed to retrieve private media info for media {} at node {}", remoteNodeName, remoteMediaId);
+            retry();
+        }
+        return info;
+    }
+
+    private static boolean remoteMediaInfoDiffers(
+        RemoteMediaFile remoteMediaFile, PrivateMediaFileInfo mediaInfo
+    ) {
+        return !Objects.equals(remoteMediaFile.getHash(), mediaInfo.getHash())
+            || !Objects.equals(remoteMediaFile.getMimeType(), mediaInfo.getMimeType())
+            || remoteMediaFile.isAttachment() != Boolean.TRUE.equals(mediaInfo.getAttachment())
+            || !Objects.equals(remoteMediaFile.getSizeX(), mediaInfo.getWidth())
+            || !Objects.equals(remoteMediaFile.getSizeY(), mediaInfo.getHeight())
+            || !Objects.equals(remoteMediaFile.getFileSize(), mediaInfo.getSize())
+            || !Objects.equals(remoteMediaFile.getTitle(), mediaInfo.getTitle());
+    }
+
+    private void invalidateRemoteMedia(RemoteMediaFile remoteMediaFile, boolean notFound) throws Exception {
+        String leaseId = tx.executeWrite(() -> remoteMediaOperations.invalidate(remoteMediaFile.getId()));
+
+        if (notFound) {
+            log.warn(
+                "Remote media {} at node {} was not found, marking it invalid",
+                LogUtil.format(remoteMediaFile.getMediaId()),
+                LogUtil.format(remoteMediaFile.getNodeName())
+            );
+        } else {
+            log.warn(
+                "Remote media {} at node {} has a different digest, marking it invalid",
+                LogUtil.format(remoteMediaFile.getMediaId()),
+                LogUtil.format(remoteMediaFile.getNodeName())
+            );
+        }
+
+        if (leaseId != null) {
+            state.remoteNodeName = remoteMediaFile.getNodeName();
+            state.leaseIds.add(leaseId);
+            checkpoint();
+            releaseLeases();
         }
     }
 
@@ -191,17 +307,7 @@ public class DownloadEntryAttachmentsJob
     }
 
     private AttachmentLocation findDownloadableAttachment(int maxSize) {
-        Entry entry;
-        if (parameters.commentId == null) {
-            entry = postingRepository.findByNodeIdAndId(nodeId, parameters.postingId).orElse(null);
-        } else {
-            Comment comment = commentRepository.findByNodeIdAndId(nodeId, parameters.commentId).orElse(null);
-            entry = comment != null
-                    && comment.getPosting() != null
-                    && Objects.equals(comment.getPosting().getId(), parameters.postingId)
-                ? comment
-                : null;
-        }
+        Entry entry = findEntry();
         if (entry == null || entry.getCurrentRevision() == null) {
             return null;
         }
@@ -220,20 +326,9 @@ public class DownloadEntryAttachmentsJob
     }
 
     private void download(AttachmentLocation attachmentLocation, int maxSize) throws Exception {
-        String carte = generateCarte(attachmentLocation.nodeName, Scope.VIEW_MEDIA);
-        String grant = new MediaGrantGenerator(getOptions()).generateRemote(
-            attachmentLocation.mediaId, MediaUtil.MEDIA_GRANT_TTL, false, null
-        );
-        PrivateMediaFileInfo mediaInfo = nodeApi.at(attachmentLocation.nodeName, carte)
-            .getPrivateMediaInfo(attachmentLocation.mediaId, grant);
-        if (mediaInfo == null) {
-            log.error(
-                "Failed to retrieve private media info for media {} at node {}",
-                attachmentLocation.mediaId, attachmentLocation.nodeName
-            );
-            fail();
-        }
+        PrivateMediaFileInfo mediaInfo = getPrivateMediaInfo(attachmentLocation.nodeName, attachmentLocation.mediaId);
 
+        String carte = generateCarte(attachmentLocation.nodeName, Scope.VIEW_MEDIA);
         MediaFileOwner mediaFileOwner = tx.executeWriteWithExceptions(() ->
             mediaManager.downloadPrivateMedia(
                 attachmentLocation.nodeName, carte, mediaInfo, maxSize, attachmentLocation.entryId
@@ -244,7 +339,7 @@ public class DownloadEntryAttachmentsJob
                 "Failed to download private media for media {} at node {}",
                 attachmentLocation.mediaId, attachmentLocation.nodeName
             );
-            fail();
+            retry();
         }
 
         Set<String> leaseIds = tx.executeWrite(() -> {
@@ -260,14 +355,15 @@ public class DownloadEntryAttachmentsJob
         });
 
         state.remoteNodeName = attachmentLocation.nodeName;
-        state.leaseIds = new HashSet<>(leaseIds);
+        state.leaseIds.addAll(leaseIds);
         checkpoint();
+        releaseLeases();
     }
 
     private void releaseLeases() throws Exception {
         if (state.remoteNodeName == null || ObjectUtils.isEmpty(state.leaseIds)) {
             state.remoteNodeName = null;
-            state.leaseIds = new HashSet<>();
+            state.leaseIds.clear();
             checkpoint();
             return;
         }

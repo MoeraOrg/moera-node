@@ -11,9 +11,9 @@ import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentRevisionInfo;
+import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PostingRevisionInfo;
-import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.VerificationStatus;
 import org.moera.node.data.RemoteCommentVerification;
@@ -104,10 +104,8 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
 
         updateData(data -> data.setRevisionId(commentInfo.getRevisionId()));
 
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest =
-                pmf -> mediaManager.getPrivateMediaDigest(
-                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), pmf
-                );
+        Function<MediaAttachment, byte[]> mediaDigest =
+            pmf -> mediaManager.getPrivateMediaDigest(remoteNodeName, carteGenerator(Scope.VIEW_MEDIA), pmf);
 
         String repliedToId = null;
         String repliedToRevisionId = null;
@@ -129,7 +127,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
                 mediaManager.getParentMediaDigest(
                     postingInfo,
                     remoteNodeName,
-                    nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                    carteGenerator(Scope.VIEW_MEDIA)
                 ),
                 mediaDigest
             ),
@@ -165,10 +163,8 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             return;
         }
 
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest =
-            pmf -> mediaManager.getPrivateMediaDigest(
-                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), pmf
-            );
+        Function<MediaAttachment, byte[]> mediaDigest =
+            pmf -> mediaManager.getPrivateMediaDigest(remoteNodeName, carteGenerator(Scope.VIEW_MEDIA), pmf);
 
         String repliedToId = null;
         String repliedToRevisionId = null;
@@ -191,7 +187,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
                 mediaManager.getParentMediaDigest(
                     postingInfo,
                     remoteNodeName,
-                    nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                    carteGenerator(Scope.VIEW_MEDIA)
                 ),
                 mediaDigest
             ),

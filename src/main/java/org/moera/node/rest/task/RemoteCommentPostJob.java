@@ -1,12 +1,9 @@
 package org.moera.node.rest.task;
 
 import java.security.interfaces.ECPrivateKey;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
@@ -20,7 +17,6 @@ import org.moera.lib.node.types.CommentText;
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.MediaToAttach;
 import org.moera.lib.node.types.PostingInfo;
-import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.data.MediaFile;
@@ -398,22 +394,21 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         CommentText commentText = CommentTextUtil.build(
             nodeName(), fullName(), gender(), parameters.sourceText, textConverter
         );
-        var mediaInfos = buildInfoMap();
         byte[] fingerprint = CommentFingerprintBuilder.build(
             commentText,
-            id -> commentMediaDigest(id, mediaInfos),
+            mediaManager::getTrustedPrivateMediaDigest,
             CryptoUtil.digest(PostingFingerprintBuilder.build(
                 state.postingInfo.getSignatureVersion(),
                 state.postingInfo,
                 mediaManager.getParentMediaDigest(
                     state.postingInfo,
                     parameters.targetNodeName,
-                    nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                    carteGenerator(Scope.VIEW_MEDIA)
                 ),
-                pmf -> mediaManager.getPrivateMediaDigest(
+                ma -> mediaManager.getPrivateMediaDigest(
                     parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                    pmf
+                    carteGenerator(Scope.VIEW_MEDIA),
+                    ma
                 )
             )),
             state.repliedToDigest
@@ -421,30 +416,6 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         commentText.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         commentText.setSignatureVersion(CommentFingerprintBuilder.LATEST_VERSION);
         return commentText;
-    }
-
-    private Map<String, PrivateMediaFileInfo> buildInfoMap() {
-        if (state.prevCommentInfo == null || state.prevCommentInfo.getMedia() == null) {
-            return Collections.emptyMap();
-        }
-
-        return state.prevCommentInfo.getMedia().stream()
-            .map(MediaAttachment::getMedia)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toMap(PrivateMediaFileInfo::getId, Function.identity()));
-    }
-
-    private byte[] commentMediaDigest(UUID id, Map<String, PrivateMediaFileInfo> mediaInfos) {
-        var info = mediaInfos.get(id.toString());
-        if (info == null) {
-            return null;
-        }
-
-        return mediaManager.getPrivateMediaDigest(
-            parameters.targetNodeName,
-            generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-            info
-        );
     }
 
     private void updateCaptions() {

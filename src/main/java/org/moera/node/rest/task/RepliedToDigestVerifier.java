@@ -12,9 +12,9 @@ import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentRevisionInfo;
+import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PostingRevisionInfo;
-import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.fingerprint.CommentFingerprintBuilder;
@@ -135,9 +135,9 @@ public class RepliedToDigestVerifier {
             postingRevisions.put(commentRevisionInfo.getPostingRevisionId(), postingRevisionInfo);
         }
 
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest =
+        Function<MediaAttachment, byte[]> mediaDigest =
             pmf -> mediaManager.getPrivateMediaDigest(
-                targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_MEDIA), pmf
+                targetNodeName, nodeName -> generateCarte.generate(nodeName, Scope.VIEW_MEDIA), pmf
             );
 
         byte[] fingerprint = CommentFingerprintBuilder.build(

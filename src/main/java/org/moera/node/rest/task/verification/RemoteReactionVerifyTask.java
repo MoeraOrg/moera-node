@@ -9,9 +9,9 @@ import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentRevisionInfo;
+import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PostingRevisionInfo;
-import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.ReactionInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.VerificationStatus;
@@ -119,11 +119,9 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                 mediaManager.getParentMediaDigest(
                     postingInfo,
                     data.getNodeName(),
-                    nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                    carteGenerator(Scope.VIEW_MEDIA)
                 ),
-                pmf -> mediaManager.getPrivateMediaDigest(
-                    data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf
-                )
+                pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), carteGenerator(Scope.VIEW_MEDIA), pmf)
             )
         );
         succeeded(CryptoUtil.verifySignature(fingerprint, reactionInfo.getSignature(), signingKey));
@@ -147,10 +145,8 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
             return;
         }
 
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest =
-            pmf -> mediaManager.getPrivateMediaDigest(
-                data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf
-            );
+        Function<MediaAttachment, byte[]> mediaDigest =
+            pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), carteGenerator(Scope.VIEW_MEDIA), pmf);
 
         byte[] fingerprint = ReactionFingerprintBuilder.build(
             reactionInfo.getSignatureVersion(),
@@ -167,7 +163,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                     mediaManager.getParentMediaDigest(
                         postingInfo,
                         data.getNodeName(),
-                        nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                        carteGenerator(Scope.VIEW_MEDIA)
                     ),
                     mediaDigest
                 )

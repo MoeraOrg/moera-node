@@ -5,9 +5,9 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PostingRevisionInfo;
-import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.VerificationStatus;
 import org.moera.node.data.RemotePostingVerification;
@@ -45,12 +45,10 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
             byte[] parentMediaDigest = mediaManager.getParentMediaDigest(
                 postingInfo,
                 data.getNodeName(),
-                nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                carteGenerator(Scope.VIEW_MEDIA)
             );
-            Function<PrivateMediaFileInfo, byte[]> mediaDigest =
-                pmf -> mediaManager.getPrivateMediaDigest(
-                    data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf
-                );
+            Function<MediaAttachment, byte[]> mediaDigest =
+                pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), carteGenerator(Scope.VIEW_MEDIA), pmf);
 
             if (data.getRevisionId() == null) {
                 verifySignature(postingInfo, parentMediaDigest, mediaDigest);
@@ -66,7 +64,7 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
     }
 
     private void verifySignature(
-        PostingInfo postingInfo, byte[] parentMediaDigest, Function<PrivateMediaFileInfo, byte[]> mediaDigest
+        PostingInfo postingInfo, byte[] parentMediaDigest, Function<MediaAttachment, byte[]> mediaDigest
     ) {
         byte[] signingKey = fetchSigningKey(postingInfo.getOwnerName(), postingInfo.getEditedAt());
         if (signingKey == null) {
@@ -81,8 +79,10 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
     }
 
     private void verifySignature(
-        PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo, byte[] parentMediaDigest,
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest
+        PostingInfo postingInfo,
+        PostingRevisionInfo postingRevisionInfo,
+        byte[] parentMediaDigest,
+        Function<MediaAttachment, byte[]> mediaDigest
     ) {
         byte [] signingKey = fetchSigningKey(postingInfo.getOwnerName(), postingRevisionInfo.getCreatedAt());
         if (signingKey == null) {
@@ -90,7 +90,11 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
             return;
         }
         byte[] fingerprint = PostingFingerprintBuilder.build(
-            postingInfo.getSignatureVersion(), postingInfo, postingRevisionInfo, parentMediaDigest, mediaDigest
+            postingInfo.getSignatureVersion(),
+            postingInfo,
+            postingRevisionInfo,
+            parentMediaDigest,
+            mediaDigest
         );
         succeeded(CryptoUtil.verifySignature(fingerprint, postingRevisionInfo.getSignature(), signingKey));
     }

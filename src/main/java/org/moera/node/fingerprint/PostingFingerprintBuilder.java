@@ -1,15 +1,15 @@
 package org.moera.node.fingerprint;
 
-import java.util.UUID;
 import java.util.function.Function;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.crypto.FingerprintException;
 import org.moera.lib.node.Fingerprints;
+import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.MediaToAttach;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PostingRevisionInfo;
 import org.moera.lib.node.types.PostingText;
-import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
@@ -70,7 +70,7 @@ public class PostingFingerprintBuilder {
         short version,
         PostingInfo postingInfo,
         byte[] parentMediaDigest,
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest
+        Function<MediaAttachment, byte[]> mediaDigest
     ) {
         return switch (version) {
             case 1 ->
@@ -116,7 +116,7 @@ public class PostingFingerprintBuilder {
         PostingInfo postingInfo,
         PostingRevisionInfo postingRevisionInfo,
         byte[] parentMediaDigest,
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest
+        Function<MediaAttachment, byte[]> mediaDigest
     ) {
         return switch (version) {
             case 1 ->
@@ -159,7 +159,11 @@ public class PostingFingerprintBuilder {
         };
     }
 
-    public static byte[] build(PostingText postingText, byte[] parentMediaDigest, Function<UUID, byte[]> mediaDigest) {
+    public static byte[] build(
+        PostingText postingText,
+        byte[] parentMediaDigest,
+        Function<MediaToAttach, byte[]> mediaDigest
+    ) {
         return build(LATEST_VERSION, postingText, parentMediaDigest, mediaDigest);
     }
 
@@ -167,7 +171,7 @@ public class PostingFingerprintBuilder {
         short version,
         PostingText postingText,
         byte[] parentMediaDigest,
-        Function<UUID, byte[]> mediaDigest
+        Function<MediaToAttach, byte[]> mediaDigest
     ) {
         return switch (version) {
             case 1 ->
@@ -181,7 +185,7 @@ public class PostingFingerprintBuilder {
                     Util.toTimestamp(postingText.getCreatedAt()),
                     (byte) 0,
                     CryptoUtil.digest(
-                        AttachmentFingerprintBuilder.buildFromIds(parentMediaDigest, postingText.getMedia(), mediaDigest)
+                        AttachmentFingerprintBuilder.build(parentMediaDigest, postingText.getMedia(), mediaDigest)
                     )
                 );
             case 0 ->

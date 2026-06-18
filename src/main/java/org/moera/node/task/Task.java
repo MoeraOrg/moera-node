@@ -5,6 +5,7 @@ import java.security.PrivateKey;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.Rules;
@@ -94,6 +95,10 @@ public abstract class Task implements Runnable {
         return !Rules.ANONYMOUS_NODE_NAME.equals(remoteNodeName)
             ? fetchSigningKey(remoteNodeName, at)
             : Rules.ANONYMOUS_NODE_PUBLIC_KEY;
+    }
+
+    protected Function<String, String> carteGenerator(Scope clientScope) {
+        return nodeName -> generateCarte(nodeName, clientScope);
     }
 
     protected String generateCarte(String targetNodeName, Scope clientScope) {

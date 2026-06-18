@@ -57,6 +57,9 @@ public class RemoteMediaFile {
     @Size(max = 40)
     private String leaseId;
 
+    @NotNull
+    private boolean invalid;
+
     @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "parentRemoteMedia")
     private Set<Posting> postings = new HashSet<>();
 
@@ -169,6 +172,14 @@ public class RemoteMediaFile {
 
     public void setLeaseId(String leaseId) {
         this.leaseId = leaseId;
+    }
+
+    public boolean isInvalid() {
+        return invalid;
+    }
+
+    public void setInvalid(boolean invalid) {
+        this.invalid = invalid;
     }
 
     public Set<Posting> getPostings() {

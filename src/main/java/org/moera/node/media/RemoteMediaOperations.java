@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.RemoteMedia;
+import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.data.RemoteMediaFileRepository;
 import org.moera.node.global.RequestCounter;
@@ -30,6 +31,9 @@ public class RemoteMediaOperations {
 
     @Inject
     private RemoteMediaFileRepository remoteMediaFileRepository;
+
+    @Inject
+    private EntryRevisionRepository entryRevisionRepository;
 
     @Inject
     private Jobs jobs;
@@ -67,6 +71,44 @@ public class RemoteMediaOperations {
         remoteMediaFile.setNodeName(remoteNodeName);
         remoteMediaFile.setMediaId(remoteMediaId);
         return remoteMediaFileRepository.save(remoteMediaFile);
+    }
+
+    public void update(UUID remoteMediaFileId, PrivateMediaFileInfo mediaInfo) {
+        RemoteMediaFile remoteMediaFile = remoteMediaFileRepository
+            .findByNodeIdAndId(universalContext.nodeId(), remoteMediaFileId)
+            .orElse(null);
+        if (remoteMediaFile == null || remoteMediaFile.isInvalid()) {
+            return;
+        }
+
+        remoteMediaFile.setHash(mediaInfo.getHash());
+        remoteMediaFile.setMimeType(mediaInfo.getMimeType());
+        remoteMediaFile.setAttachment(Boolean.TRUE.equals(mediaInfo.getAttachment()));
+        remoteMediaFile.setSizeX(mediaInfo.getWidth());
+        remoteMediaFile.setSizeY(mediaInfo.getHeight());
+        remoteMediaFile.setFileSize(mediaInfo.getSize());
+        remoteMediaFile.setTitle(mediaInfo.getTitle());
+
+        entryRevisionRepository.clearAttachmentsCacheByRemoteMedia(
+            universalContext.nodeId(), remoteMediaFile.getNodeName(), remoteMediaFile.getMediaId()
+        );
+    }
+
+    public String invalidate(UUID remoteMediaFileId) {
+        RemoteMediaFile remoteMediaFile = remoteMediaFileRepository
+            .findByNodeIdAndId(universalContext.nodeId(), remoteMediaFileId)
+            .orElse(null);
+        if (remoteMediaFile == null) {
+            return null;
+        }
+
+        remoteMediaFile.setInvalid(true);
+
+        entryRevisionRepository.clearAttachmentsCacheByRemoteMedia(
+            universalContext.nodeId(), remoteMediaFile.getNodeName(), remoteMediaFile.getMediaId()
+        );
+
+        return remoteMediaFile.getLeaseId();
     }
 
     @Scheduled(fixedDelayString = "PT6H")

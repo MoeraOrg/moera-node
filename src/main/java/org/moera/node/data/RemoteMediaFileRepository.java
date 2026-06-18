@@ -1,6 +1,7 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -9,6 +10,9 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface RemoteMediaFileRepository extends JpaRepository<RemoteMediaFile, UUID> {
+
+    @Query("select rmf from RemoteMediaFile rmf where rmf.nodeId = ?1 and rmf.id = ?2")
+    Optional<RemoteMediaFile> findByNodeIdAndId(UUID nodeId, UUID id);
 
     @Query(
         "select distinct"

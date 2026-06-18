@@ -65,7 +65,16 @@ public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment
     @Query(
         "select ea from EntryAttachment ea join fetch ea.remoteMediaFile rmf"
         + " where ea.entryRevision.id = ?1 and ea.mediaFileOwner is null"
+        + " and rmf.nodeName is not null and rmf.mediaId is not null and rmf.invalid = false"
+        + " order by ea.ordinal"
+    )
+    List<EntryAttachment> findRemoteMediaToValidate(UUID entryRevisionId);
+
+    @Query(
+        "select ea from EntryAttachment ea join fetch ea.remoteMediaFile rmf"
+        + " where ea.entryRevision.id = ?1 and ea.mediaFileOwner is null"
         + " and rmf.nodeName is not null and rmf.mediaId is not null and rmf.leaseId is not null"
+        + " and rmf.invalid = false"
         + " and (rmf.fileSize is null or rmf.fileSize <= ?2)"
         + " order by ea.ordinal"
     )

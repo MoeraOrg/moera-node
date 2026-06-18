@@ -1,11 +1,8 @@
 package org.moera.node.rest.task;
 
 import java.security.interfaces.ECPrivateKey;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
@@ -16,7 +13,6 @@ import org.moera.lib.node.types.MediaToAttach;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PostingSourceText;
 import org.moera.lib.node.types.PostingText;
-import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.data.MediaFile;
@@ -295,46 +291,21 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
         PostingText postingText = PostingTextUtil.build(
             nodeName(), fullName(), gender(), parameters.sourceText, textConverter
         );
-        var mediaInfos = buildInfoMap();
         byte[] parentMediaDigest = state.prevPostingInfo != null
             ? mediaManager.getParentMediaDigest(
                 state.prevPostingInfo,
                 parameters.targetNodeName,
-                nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+                carteGenerator(Scope.VIEW_MEDIA)
             )
             : null;
         byte[] fingerprint = PostingFingerprintBuilder.build(
             postingText,
             parentMediaDigest,
-            id -> postingMediaDigest(id, mediaInfos)
+            mediaManager::getTrustedPrivateMediaDigest
         );
         postingText.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         postingText.setSignatureVersion(PostingFingerprintBuilder.LATEST_VERSION);
         return postingText;
-    }
-
-    private Map<String, PrivateMediaFileInfo> buildInfoMap() {
-        if (state.prevPostingInfo == null || state.prevPostingInfo.getMedia() == null) {
-            return Collections.emptyMap();
-        }
-
-        return state.prevPostingInfo.getMedia().stream()
-            .map(MediaAttachment::getMedia)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toMap(PrivateMediaFileInfo::getId, Function.identity()));
-    }
-
-    private byte[] postingMediaDigest(UUID id, Map<String, PrivateMediaFileInfo> mediaInfos) {
-        var info = mediaInfos.get(id.toString());
-        if (info == null) {
-            return null;
-        }
-
-        return mediaManager.getPrivateMediaDigest(
-            parameters.targetNodeName,
-            generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-            info
-        );
     }
 
     private void updateCaptions() {

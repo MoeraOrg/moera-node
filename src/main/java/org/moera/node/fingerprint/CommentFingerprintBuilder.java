@@ -1,6 +1,5 @@
 package org.moera.node.fingerprint;
 
-import java.util.UUID;
 import java.util.function.Function;
 
 import org.moera.lib.crypto.CryptoUtil;
@@ -9,7 +8,8 @@ import org.moera.lib.node.Fingerprints;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentRevisionInfo;
 import org.moera.lib.node.types.CommentText;
-import org.moera.lib.node.types.PrivateMediaFileInfo;
+import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.MediaToAttach;
 import org.moera.node.data.Comment;
 import org.moera.node.util.Util;
 
@@ -61,7 +61,7 @@ public class CommentFingerprintBuilder {
 
     public static byte[] build(
         CommentText commentText,
-        Function<UUID, byte[]> mediaDigest,
+        Function<MediaToAttach, byte[]> mediaDigest,
         byte[] postingDigest,
         byte[] repliedToDigest
     ) {
@@ -71,7 +71,7 @@ public class CommentFingerprintBuilder {
     public static byte[] build(
         short version,
         CommentText commentText,
-        Function<UUID, byte[]> mediaDigest,
+        Function<MediaToAttach, byte[]> mediaDigest,
         byte[] postingDigest,
         byte[] repliedToDigest
     ) {
@@ -88,7 +88,7 @@ public class CommentFingerprintBuilder {
                     Util.toTimestamp(commentText.getCreatedAt()),
                     (byte) 0,
                     CryptoUtil.digest(
-                        AttachmentFingerprintBuilder.buildFromIds(null, commentText.getMedia(), mediaDigest)
+                        AttachmentFingerprintBuilder.build(null, commentText.getMedia(), mediaDigest)
                     )
                 );
             case 0 ->
@@ -103,7 +103,7 @@ public class CommentFingerprintBuilder {
                     Util.toTimestamp(commentText.getCreatedAt()),
                     (byte) 0,
                     CryptoUtil.digest(
-                        AttachmentFingerprintBuilder.buildFromIds(null, commentText.getMedia(), mediaDigest)
+                        AttachmentFingerprintBuilder.build(null, commentText.getMedia(), mediaDigest)
                     )
                 );
             default -> throw new FingerprintException("Unknown fingerprint version: " + version);
@@ -113,7 +113,7 @@ public class CommentFingerprintBuilder {
     public static byte[] build(
         short version,
         CommentInfo commentInfo,
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest,
+        Function<MediaAttachment, byte[]> mediaDigest,
         byte[] postingFingerprint
     ) {
         return switch (version) {
@@ -155,7 +155,7 @@ public class CommentFingerprintBuilder {
         short version,
         CommentInfo commentInfo,
         CommentRevisionInfo commentRevisionInfo,
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest,
+        Function<MediaAttachment, byte[]> mediaDigest,
         byte[] postingFingerprint
     ) {
         return switch (version) {
@@ -196,7 +196,7 @@ public class CommentFingerprintBuilder {
     public static byte[] build(
         short version,
         CommentInfo commentInfo,
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest,
+        Function<MediaAttachment, byte[]> mediaDigest,
         byte[] postingFingerprint,
         byte[] repliedToDigest
     ) {
@@ -239,7 +239,7 @@ public class CommentFingerprintBuilder {
         short version,
         CommentInfo commentInfo,
         CommentRevisionInfo commentRevisionInfo,
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest,
+        Function<MediaAttachment, byte[]> mediaDigest,
         byte[] postingFingerprint,
         byte[] repliedToDigest
     ) {

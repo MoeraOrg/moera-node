@@ -7,9 +7,9 @@ import jakarta.inject.Inject;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.CommentInfo;
+import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PostingRevisionInfo;
-import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.ReactionAttributes;
 import org.moera.lib.node.types.ReactionCreated;
 import org.moera.lib.node.types.ReactionDescription;
@@ -214,11 +214,11 @@ public class RemoteCommentReactionPostJob
         byte[] parentMediaDigest = mediaManager.getParentMediaDigest(
             state.postingInfo,
             parameters.targetNodeName,
-            nodeName -> generateCarte(nodeName, Scope.VIEW_MEDIA)
+            carteGenerator(Scope.VIEW_MEDIA)
         );
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest =
+        Function<MediaAttachment, byte[]> mediaDigest =
             pmf -> mediaManager.getPrivateMediaDigest(
-                parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA), pmf
+                parameters.targetNodeName, carteGenerator(Scope.VIEW_MEDIA), pmf
             );
         byte[] postingFingerprint = state.postingRevisionInfo == null
             ? PostingFingerprintBuilder.build(
