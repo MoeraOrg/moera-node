@@ -10,10 +10,12 @@ public class MediaGrantGenerator implements MediaGrantSupplier {
 
     private final String nodeName;
     private final PrivateKey signingKey;
+    private final Options options;
 
     public MediaGrantGenerator(Options options) {
         this.nodeName = options.nodeName();
         this.signingKey = options.getPrivateKey("profile.signing-key");
+        this.options = options;
     }
 
     @Override
@@ -23,7 +25,7 @@ public class MediaGrantGenerator implements MediaGrantSupplier {
         boolean download,
         String fileName
     ) {
-        return MediaGrantUtil.generate(null, mediaId, expires(duration), download, fileName, signingKey);
+        return MediaGrantUtil.generate(null, mediaId, expires(duration), download, fileName, salt(), signingKey);
     }
 
     @Override
@@ -33,12 +35,16 @@ public class MediaGrantGenerator implements MediaGrantSupplier {
         boolean download,
         String fileName
     ) {
-        return MediaGrantUtil.generate(nodeName, mediaId, expires(duration), download, fileName, signingKey);
+        return MediaGrantUtil.generate(nodeName, mediaId, expires(duration), download, fileName, salt(), signingKey);
     }
 
     @Override
     public Timestamp expires(ExtendedDuration duration) {
         return MediaUtil.expirationTimestamp(duration);
+    }
+
+    private byte[] salt() {
+        return options.mediaGrantSalt();
     }
 
 }

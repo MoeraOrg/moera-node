@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict WGqnXEFugS2tDalyiYlDP29TFfAWEnz9IUrrQzVwQpoZJGeiOvKidfRbsMYdDhn
+\restrict QoCOoyaeaNCtmj1odJbUULBgcfGiMA5aLF0CjtAWin9QSf9MgIe3XMVg9aPIGJ6
 
 -- Dumped from database version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
@@ -1384,7 +1384,6 @@ ALTER TABLE public.initial_recommendations OWNER TO moera;
 CREATE TABLE public.media_file_owners (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    owner_name character varying(135),
     media_file_id character varying(40) NOT NULL,
     created_at timestamp without time zone NOT NULL,
     usage_count integer DEFAULT 0 NOT NULL,
@@ -3207,10 +3206,10 @@ CREATE INDEX media_file_owners_media_file_id_idx ON public.media_file_owners USI
 
 
 --
--- Name: media_file_owners_node_id_owner_name_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: media_file_owners_node_id_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX media_file_owners_node_id_owner_name_media_file_id_idx ON public.media_file_owners USING btree (node_id, owner_name, media_file_id);
+CREATE INDEX media_file_owners_node_id_media_file_id_idx ON public.media_file_owners USING btree (node_id, media_file_id);
 
 
 --
@@ -4615,5 +4614,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict WGqnXEFugS2tDalyiYlDP29TFfAWEnz9IUrrQzVwQpoZJGeiOvKidfRbsMYdDhn
+\unrestrict QoCOoyaeaNCtmj1odJbUULBgcfGiMA5aLF0CjtAWin9QSf9MgIe3XMVg9aPIGJ6
 

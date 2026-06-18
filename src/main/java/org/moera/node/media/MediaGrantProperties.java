@@ -1,8 +1,11 @@
 package org.moera.node.media;
 
 import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
 
 import org.moera.lib.crypto.Fingerprint;
+import org.moera.node.util.ExtendedDuration;
 
 public class MediaGrantProperties {
 
@@ -46,6 +49,15 @@ public class MediaGrantProperties {
 
     public String getFileName() {
         return (String) fingerprint.get("file_name");
+    }
+
+    public static ExtendedDuration cacheDuration(MediaGrantProperties grant, boolean unrestrictedMedia) {
+        if (grant == null) {
+            return unrestrictedMedia ? ExtendedDuration.ALWAYS : ExtendedDuration.NEVER;
+        }
+
+        Duration duration = Duration.between(Instant.now(), grant.getExpires().toInstant());
+        return duration.isNegative() ? ExtendedDuration.NEVER : new ExtendedDuration(duration);
     }
 
 }

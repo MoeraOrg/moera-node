@@ -196,7 +196,7 @@
 - name: avatar.max-size
   type: int
   privileged: true
-  defaultValue: 102400
+  defaultValue: 204800
   title: Maximal size of avatars
   modifiers:
     format: size

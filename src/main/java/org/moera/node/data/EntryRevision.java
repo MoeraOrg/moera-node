@@ -92,19 +92,19 @@ public class EntryRevision {
 
     private String attachmentsCache;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entryRevision")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entryRevision")
     private Set<EntryAttachment> attachments = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entryRevision")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entryRevision")
     private Set<Reaction> reactions = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entryRevision")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entryRevision")
     private Set<ReactionTotal> reactionTotals = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "parent")
     private Set<EntryRevision> children = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "repliedToRevision")
+    @OneToMany(mappedBy = "repliedToRevision")
     private Set<Entry> replies = new HashSet<>();
 
     public UUID getId() {

@@ -36,7 +36,7 @@ public class MediaFileOwner {
     @NotNull
     private MediaFile mediaFile;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parentMedia")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "parentMedia")
     private Set<Posting> postings = new HashSet<>();
 
     @NotNull

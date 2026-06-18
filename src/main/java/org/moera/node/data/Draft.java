@@ -112,7 +112,7 @@ public class Draft {
     @NotNull
     private String childOperations = "{}";
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "draft")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "draft")
     private Set<EntryAttachment> attachments = new HashSet<>();
 
     public UUID getId() {

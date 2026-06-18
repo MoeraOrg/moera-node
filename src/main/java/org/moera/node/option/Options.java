@@ -20,6 +20,7 @@ import org.moera.lib.node.types.SettingDescriptor;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Option;
 import org.moera.node.data.OptionRepository;
+import org.moera.node.media.MediaGrantSalt;
 import org.moera.node.option.exception.DeserializeOptionValueException;
 import org.moera.node.option.exception.TransactionAbsentException;
 import org.moera.node.option.type.OptionTypeBase;
@@ -38,6 +39,7 @@ public class Options {
     private final ReadWriteLock valuesLock = new ReentrantReadWriteLock();
     private final ThreadLocal<Map<String, Object>> transaction = new ThreadLocal<>();
     private final ThreadLocal<Integer> transactionDepth = new ThreadLocal<>();
+    private final MediaGrantSalt mediaGrantSalt = new MediaGrantSalt();
 
     private final UUID nodeId;
     private final OptionsMetadata optionsMetadata;
@@ -396,6 +398,10 @@ public class Options {
 
     public String nodeName() {
         return getString("profile.node-name");
+    }
+
+    public byte[] mediaGrantSalt() {
+        return mediaGrantSalt.get();
     }
 
     public boolean isFrozen() {

@@ -41,6 +41,9 @@ public class OwnPosting {
     @Size(max = 40)
     private String remoteParentMediaId;
 
+    @Size(max = 135)
+    private String remoteParentMediaNodeName;
+
     @Size(max = 40)
     private String remoteParentMediaEntryId;
 
@@ -113,6 +116,14 @@ public class OwnPosting {
 
     public void setRemoteParentMediaId(String remoteParentMediaId) {
         this.remoteParentMediaId = remoteParentMediaId;
+    }
+
+    public String getRemoteParentMediaNodeName() {
+        return remoteParentMediaNodeName;
+    }
+
+    public void setRemoteParentMediaNodeName(String remoteParentMediaNodeName) {
+        this.remoteParentMediaNodeName = remoteParentMediaNodeName;
     }
 
     public String getRemoteParentMediaEntryId() {

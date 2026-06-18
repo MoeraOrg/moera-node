@@ -180,6 +180,7 @@ public class PostingController {
         }
         List<LocalRemoteMedia> media = mediaOperations.validateAttachments(
             postingText.getMedia(),
+            null,
             requestContext.isAdmin(Scope.VIEW_MEDIA)
         );
 
@@ -243,6 +244,7 @@ public class PostingController {
         );
         List<LocalRemoteMedia> media = mediaOperations.validateAttachments(
             postingText.getMedia(),
+            latest.getAttachments(),
             requestContext.isAdmin(Scope.VIEW_MEDIA)
         );
 

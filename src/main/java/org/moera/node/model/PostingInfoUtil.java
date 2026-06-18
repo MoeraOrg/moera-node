@@ -615,6 +615,7 @@ public class PostingInfoUtil {
         ownPosting.setRemotePostingId(info.getId());
         if (info.getParentMedia() != null) {
             ownPosting.setRemoteParentMediaId(info.getParentMedia().getMediaId());
+            ownPosting.setRemoteParentMediaNodeName(info.getParentMedia().getNodeName());
             ownPosting.setRemoteParentMediaEntryId(
                 info.getParentMedia().getCommentId() != null
                     ? info.getParentMedia().getCommentId()

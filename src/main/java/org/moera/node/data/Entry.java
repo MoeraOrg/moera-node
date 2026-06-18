@@ -289,31 +289,31 @@ public class Entry {
     @Size(max = 1024)
     private String externalSourceUri = "";
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entry")
     private Set<ReactionTotal> reactionTotals = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entry")
     private Set<Story> stories = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entry")
     private Set<EntrySource> sources = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entry")
     private Set<Subscriber> subscribers = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "parent")
     private Set<Entry> children = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "repliedTo")
+    @OneToMany(mappedBy = "repliedTo")
     private Set<Entry> replies = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entry")
     private Set<PublicPage> publicPages = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entry")
     private Set<BlockedInstant> blockedInstants = new HashSet<>();
 
     public UUID getId() {

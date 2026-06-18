@@ -16,7 +16,6 @@ import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.global.MaxCache;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
@@ -26,6 +25,7 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
+import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +73,6 @@ public class MediaUiController {
     private MediaGrantValidator mediaGrantValidator;
 
     @GetMapping("/public/{id}.{ext}")
-    @MaxCache
     @Transactional
     @ResponseBody
     public ResponseEntity<Resource> getDataPublic(
@@ -91,7 +90,7 @@ public class MediaUiController {
             throw new PageNotFoundException();
         }
 
-        return mediaOperations.serve(mediaFile, width, null, download);
+        return mediaOperations.serve(mediaFile, width, null, download, ExtendedDuration.ALWAYS);
     }
 
     private boolean includesAdmin(Principal viewPrincipal) {
@@ -99,7 +98,6 @@ public class MediaUiController {
     }
 
     @GetMapping("/private/{id}.{ext}")
-    @MaxCache
     @Transactional
     @ResponseBody
     public ResponseEntity<Resource> getDataPrivate(
@@ -135,7 +133,13 @@ public class MediaUiController {
             }
         }
 
-        return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, title, download);
+        return mediaOperations.serve(
+            mediaFileOwner.getMediaFile(),
+            width,
+            title,
+            download,
+            MediaGrantProperties.cacheDuration(grant, mediaFileOwner.isUnrestricted())
+        );
     }
 
     @GetMapping(path = "/private/caption/{postingId}", produces = "text/html")

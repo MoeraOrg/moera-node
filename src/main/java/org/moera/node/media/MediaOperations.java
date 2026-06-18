@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
@@ -58,6 +59,7 @@ import org.moera.node.config.Config;
 import org.moera.node.data.ChildOperationsUtil;
 import org.moera.node.data.DraftRepository;
 import org.moera.node.data.Entry;
+import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.MediaFile;
@@ -84,6 +86,7 @@ import org.moera.node.operations.PostingOperations;
 import org.moera.node.task.Jobs;
 import org.moera.node.userlist.MalwareListOperations;
 import org.moera.node.util.DigestingOutputStream;
+import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -92,6 +95,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -621,9 +625,21 @@ public class MediaOperations {
         }
     }
 
-    private ResponseEntity<Resource> serve(MediaFile mediaFile, String fileName, boolean download) {
+    private void setCacheControl(HttpHeaders headers, ExtendedDuration cacheDuration) {
+        CacheControl cacheControl = switch (cacheDuration.getZone()) {
+            case ALWAYS -> CacheControl.maxAge(3650, TimeUnit.DAYS);
+            case NEVER -> CacheControl.noStore();
+            case FIXED -> CacheControl.maxAge(cacheDuration.getSeconds(), TimeUnit.SECONDS);
+        };
+        headers.setCacheControl(cacheControl);
+    }
+
+    private ResponseEntity<Resource> serve(
+        MediaFile mediaFile, String fileName, boolean download, ExtendedDuration cacheDuration
+    ) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(mediaFile.getMimeType()));
+        setCacheControl(headers, cacheDuration);
         if (download) {
             var builder = ContentDisposition.attachment();
             if (!ObjectUtils.isEmpty(fileName)) {
@@ -653,14 +669,16 @@ public class MediaOperations {
         }
     }
 
-    public ResponseEntity<Resource> serve(MediaFile mediaFile, Integer width, String fileName, Boolean download) {
+    public ResponseEntity<Resource> serve(
+        MediaFile mediaFile, Integer width, String fileName, Boolean download, ExtendedDuration cacheDuration
+    ) {
         download = download != null ? download : false;
         if (width == null) {
-            return serve(mediaFile, fileName, download);
+            return serve(mediaFile, fileName, download, cacheDuration);
         }
 
         MediaFilePreview preview = mediaFile.findLargerPreview(width);
-        return serve(preview != null ? preview.getMediaFile() : mediaFile, null, download);
+        return serve(preview != null ? preview.getMediaFile() : mediaFile, null, download, cacheDuration);
     }
 
     public void validateAvatar(AvatarDescription avatar) {
@@ -681,6 +699,7 @@ public class MediaOperations {
 
     public List<LocalRemoteMedia> validateAttachments(
         Collection<MediaToAttach> mediaList,
+        Collection<EntryAttachment> prevMediaList,
         boolean isAdminViewMedia
     ) {
         if (ObjectUtils.isEmpty(mediaList)) {
@@ -688,7 +707,13 @@ public class MediaOperations {
         }
 
         List<LocalRemoteMedia> attached = new ArrayList<>();
-        Set<UUID> usedIds = new HashSet<>();
+        Set<UUID> usedIds = prevMediaList != null
+            ? prevMediaList.stream()
+                .map(EntryAttachment::getMediaFileOwner)
+                .filter(Objects::nonNull)
+                .map(MediaFileOwner::getId)
+                .collect(Collectors.toSet())
+            : new HashSet<>();
         UUID[] localMediaIds = mediaList.stream()
             .map(MediaToAttach::getLocalMediaId)
             .filter(Objects::nonNull)
@@ -721,11 +746,8 @@ public class MediaOperations {
 
             UUID localMediaId = Util.uuid(media.getLocalMediaId())
                 .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
-            if (usedIds.contains(localMediaId)) {
-                continue;
-            }
             MediaFileOwner mediaFileOwner = mediaFileOwners.get(localMediaId);
-            if (mediaFileOwner == null || !isAdminViewMedia) {
+            if (!usedIds.contains(localMediaId) && (mediaFileOwner == null || !isAdminViewMedia)) {
                 throw new ObjectNotFoundFailure("media.not-found");
             }
             attached.add(new LocalRemoteMedia(mediaFileOwner, remoteMediaFile, mediaLease));

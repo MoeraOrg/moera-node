@@ -231,6 +231,7 @@ public class CommentController {
         mediaOperations.validateAvatar(commentText.getOwnerAvatar());
         List<LocalRemoteMedia> media = mediaOperations.validateAttachments(
             commentText.getMedia(),
+            null,
             requestContext.isAdmin(Scope.VIEW_CONTENT)
         );
 
@@ -319,6 +320,7 @@ public class CommentController {
         mediaOperations.validateAvatar(commentText.getOwnerAvatar());
         List<LocalRemoteMedia> media = mediaOperations.validateAttachments(
             commentText.getMedia(),
+            latest.getAttachments(),
             requestContext.isAdmin(Scope.VIEW_CONTENT)
         );
 

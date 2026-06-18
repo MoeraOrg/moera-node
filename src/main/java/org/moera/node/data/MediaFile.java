@@ -60,10 +60,10 @@ public class MediaFile {
     @Column(insertable = false, updatable = false)
     private Timestamp deadline;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediaFile")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "mediaFile")
     private Set<MediaFileOwner> owners = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "originalMediaFile")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "originalMediaFile")
     private Set<MediaFilePreview> previews = new HashSet<>();
 
     public String getId() {

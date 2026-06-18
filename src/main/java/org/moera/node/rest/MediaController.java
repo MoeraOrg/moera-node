@@ -36,6 +36,7 @@ import org.moera.node.media.MediaGrantProperties;
 import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.media.MediaGrantValidator;
 import org.moera.node.media.MediaOperations;
+import org.moera.node.media.MimeUtil;
 import org.moera.node.media.ThresholdReachedException;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -98,8 +99,8 @@ public class MediaController {
         return mediaType != null ? mediaType.getType() + "/" + mediaType.getSubtype() : null;
     }
 
-    private String uploadedFileName(String contentDisposition) {
-        if (contentDisposition == null) {
+    private String uploadedFileName(String contentType, String contentDisposition) {
+        if (MimeUtil.isSupportedImage(contentType) || contentDisposition == null) {
             return null;
         }
 
@@ -111,8 +112,12 @@ public class MediaController {
         }
     }
 
-    private DigestingOutputStream transfer(InputStream in, OutputStream out, Long contentLength) throws IOException {
-        int maxSize = requestContext.getOptions().getInt("media.max-size");
+    private DigestingOutputStream transfer(
+        InputStream in, OutputStream out, Long contentLength, Integer maxSize
+    ) throws IOException {
+        if (maxSize == null) {
+            maxSize = requestContext.getOptions().getInt("media.max-size");
+        }
         return MediaOperations.transfer(in, out, contentLength, maxSize);
     }
 
@@ -128,10 +133,8 @@ public class MediaController {
             LogUtil.format(mediaType.toString()), LogUtil.format(contentLength)
         );
 
-        if (
-            !requestContext.isAdmin(Scope.UPLOAD_PUBLIC_MEDIA)
-            && requestContext.getClientName(Scope.UPLOAD_PUBLIC_MEDIA) == null
-        ) {
+        boolean admin = requestContext.isAdmin(Scope.UPLOAD_PUBLIC_MEDIA);
+        if (!admin && requestContext.getClientName(Scope.UPLOAD_PUBLIC_MEDIA) == null) {
             throw new AuthenticationException();
         }
         if (isBlocked()) {
@@ -139,8 +142,9 @@ public class MediaController {
         }
 
         var tmp = mediaOperations.tmpFile();
+        Integer maxSize = admin ? null : requestContext.getOptions().getInt("avatar.max-size");
         try {
-            DigestingOutputStream out = transfer(in, tmp.outputStream(), contentLength);
+            DigestingOutputStream out = transfer(in, tmp.outputStream(), contentLength, maxSize);
             MediaFile mediaFile = mediaOperations.putInPlace(
                 out.getHash(), toContentType(mediaType), tmp.path(), out.getDigest(), true
             );
@@ -182,16 +186,16 @@ public class MediaController {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            DigestingOutputStream out = transfer(in, tmp.outputStream(), contentLength);
+            DigestingOutputStream out = transfer(in, tmp.outputStream(), contentLength, null);
             String id = out.getHash();
             byte[] digest = out.getDigest();
+            String contentType = toContentType(mediaType);
 
-            MediaFile mediaFile = mediaOperations.putInPlace(
-                id, toContentType(mediaType), tmp.path(), digest, false
-            );
+            MediaFile mediaFile = mediaOperations.putInPlace(id, contentType, tmp.path(), digest, false);
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
-            MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, uploadedFileName(contentDisposition));
+            String fileName = uploadedFileName(contentType, contentDisposition);
+            MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, fileName);
             if (isSuitableForOcr(mediaFile)) {
                 mediaFile.setRecognizeAt(Util.now());
             }
@@ -228,10 +232,9 @@ public class MediaController {
         }
     }
 
-    private MediaFileOwner getMediaFileOwner(UUID id, String grantS) {
+    private MediaFileOwner getMediaFileOwner(UUID id, MediaGrantProperties grant) {
         MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
             .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
-        MediaGrantProperties grant = mediaGrantValidator.validate(grantS, id);
         if (
             grant == null
             && !mediaFileOwner.isUnrestricted()
@@ -254,29 +257,30 @@ public class MediaController {
     @Transactional
     public PrivateMediaFileInfo getInfoPrivate(
         @PathVariable String id,
-        @RequestParam(required = false) String grant
+        @RequestParam(name = "grant", required = false) String grantS
     ) {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
 
         UUID mediaId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+        MediaGrantProperties grant = mediaGrantValidator.validate(grantS, mediaId);
 
         MediaGrantSupplier grantSupplier = null;
-        if (grant != null) {
-            var expires = mediaGrantValidator.getExpires(grant);
+        if (grantS != null) {
+            var expires = mediaGrantValidator.getExpires(grantS);
             grantSupplier = new MediaGrantSupplier() {
 
                 @Override
                 public String generateLocal(
                     String mediaId, ExtendedDuration duration, boolean download, String fileName
                 ) {
-                    return grant;
+                    return grantS;
                 }
 
                 @Override
                 public String generateRemote(
                     String mediaId, ExtendedDuration duration, boolean download, String fileName
                 ) {
-                    return grant;
+                    return grantS;
                 }
 
                 @Override
@@ -290,9 +294,7 @@ public class MediaController {
         }
 
         return PrivateMediaFileInfoUtil.build(
-            getMediaFileOwner(mediaId, grant),
-            config.getMedia().getDirectServe(),
-            grantSupplier
+            getMediaFileOwner(mediaId, grant), config.getMedia().getDirectServe(), grantSupplier
         );
     }
 
@@ -331,7 +333,7 @@ public class MediaController {
     ) {
         log.info("GET /media/public/{id}/data (id = {})", LogUtil.format(id));
 
-        return mediaOperations.serve(getMediaFile(id), width, null, download);
+        return mediaOperations.serve(getMediaFile(id), width, null, download, ExtendedDuration.ALWAYS);
     }
 
     @GetMapping("/private/{id}/data")
@@ -340,16 +342,23 @@ public class MediaController {
         @PathVariable String id,
         @RequestParam(required = false) Integer width,
         @RequestParam(required = false) Boolean download,
-        @RequestParam(required = false) String grant,
+        @RequestParam(name = "grant", required = false) String grantS,
         @RequestParam(name = "ignoremalware", required = false) Boolean ignoreMalware
     ) {
         log.info("GET /media/private/{id}/data (id = {})", LogUtil.format(id));
 
         UUID mediaId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+        MediaGrantProperties grant = mediaGrantValidator.validate(grantS, mediaId);
         MediaFileOwner mediaFileOwner = getMediaFileOwner(mediaId, grant);
         mediaOperations.blockMalware(mediaFileOwner, ignoreMalware);
 
-        return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, mediaFileOwner.getUserFileName(), download);
+        return mediaOperations.serve(
+            mediaFileOwner.getMediaFile(),
+            width,
+            mediaFileOwner.getUserFileName(),
+            download,
+            MediaGrantProperties.cacheDuration(grant, mediaFileOwner.isUnrestricted())
+        );
     }
 
 }

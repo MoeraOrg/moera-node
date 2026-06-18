@@ -1,7 +1,6 @@
 package org.moera.node.media;
 
 import java.security.PrivateKey;
-import java.security.SecureRandom;
 import java.security.interfaces.ECPrivateKey;
 import java.sql.Timestamp;
 
@@ -24,6 +23,7 @@ public class MediaGrantUtil {
      * @param expires    timestamp when the grant expires
      * @param download   whether the media should be downloaded
      * @param fileName   the preferred name of the media file when it is downloaded
+     * @param salt       salt used in the media grant signature
      * @param signingKey the private key used to sign the media grant
      * @return the signed media grant
      */
@@ -33,10 +33,9 @@ public class MediaGrantUtil {
         Timestamp expires,
         boolean download,
         String fileName,
+        byte[] salt,
         PrivateKey signingKey
     ) {
-        var salt = new byte[8];
-        new SecureRandom().nextBytes(salt);
         byte[] fingerprint = Fingerprints.mediaGrant(
             NodeName.expand(nodeName),
             mediaId,

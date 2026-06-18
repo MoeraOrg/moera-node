@@ -57,7 +57,7 @@ public class RemoteMediaFile {
     @Size(max = 40)
     private String leaseId;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parentRemoteMedia")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "parentRemoteMedia")
     private Set<Posting> postings = new HashSet<>();
 
     @NotNull

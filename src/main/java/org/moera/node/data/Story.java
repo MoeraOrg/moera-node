@@ -129,7 +129,7 @@ public class Story {
     @ManyToOne(fetch = FetchType.LAZY)
     private Entry entry;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "parent")
     private Set<Story> substories = new HashSet<>();
 
     public Story() {
