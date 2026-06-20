@@ -38,7 +38,7 @@
         <flyway.version>12.1.1</flyway.version>
         <guava.version>33.5.0-jre</guava.version>
         <hamcrest.version>3.0</hamcrest.version>
-        <handlebars.version>4.5.0</handlebars.version>
+        <handlebars.version>4.5.2</handlebars.version>
         <handlebars-springmvc.version>4.5.0</handlebars-springmvc.version>
         <hypersistence-utils-hibernate-71.version>3.15.2</hypersistence-utils-hibernate-71.version>
         <icu4j.version>78.3</icu4j.version>
