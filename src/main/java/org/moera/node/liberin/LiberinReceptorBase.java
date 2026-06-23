@@ -24,7 +24,7 @@ public abstract class LiberinReceptorBase {
     protected UniversalContext universalContext;
 
     @Inject
-    private EventManager eventManager;
+    protected EventManager eventManager;
 
     @Inject
     private NotificationSenderPool notificationSenderPool;

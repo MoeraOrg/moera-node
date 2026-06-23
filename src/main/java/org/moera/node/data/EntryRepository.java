@@ -29,4 +29,11 @@ public interface EntryRepository extends JpaRepository<Entry, UUID> {
     @Modifying
     void indexedNow(Set<UUID> ids, Timestamp now);
 
+    @Query("select e.viewCount from Entry e where e.nodeId = ?1 and e.id = ?2")
+    Optional<Integer> findViewCountByNodeIdAndId(UUID nodeId, UUID id);
+
+    @Query("update Entry e set e.viewCount = e.viewCount + 1 where e.nodeId = ?1 and e.id = ?2")
+    @Modifying
+    void incrementViewCount(UUID nodeId, UUID id);
+
 }

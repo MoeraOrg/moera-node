@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict QoCOoyaeaNCtmj1odJbUULBgcfGiMA5aLF0CjtAWin9QSf9MgIe3XMVg9aPIGJ6
+\restrict yhcsqeoTyOBGiMNtnc77zxBEycdw0NL0D3tkP80zFWGg3CKKQnxoKI2PabxxYfj
 
 -- Dumped from database version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
@@ -1160,7 +1160,8 @@ CREATE TABLE public.entries (
     premoderating boolean DEFAULT false NOT NULL,
     client_id character varying(40),
     parent_media_entry_id uuid,
-    parent_remote_media_id uuid
+    parent_remote_media_id uuid,
+    view_count integer DEFAULT 0 NOT NULL
 );
 
 
@@ -1264,6 +1265,23 @@ CREATE TABLE public.entry_sources (
 
 
 ALTER TABLE public.entry_sources OWNER TO moera;
+
+--
+-- Name: entry_visits; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.entry_visits (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    entry_id uuid NOT NULL,
+    client_id character varying(24),
+    client_name character varying(135),
+    visited_at timestamp without time zone NOT NULL,
+    deadline timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.entry_visits OWNER TO moera;
 
 --
 -- Name: favors; Type: TABLE; Schema: public; Owner: moera
@@ -1522,7 +1540,8 @@ CREATE TABLE public.own_postings (
     remote_avatar_media_file_id character varying(40),
     remote_avatar_shape character varying(8),
     remote_parent_media_id character varying(40),
-    remote_parent_media_entry_id character varying(40)
+    remote_parent_media_entry_id character varying(40),
+    remote_parent_media_node_name character varying(135)
 );
 
 
@@ -1813,7 +1832,8 @@ CREATE TABLE public.remote_media_files (
     lease_id character varying(40),
     usage_count integer DEFAULT 0 NOT NULL,
     deadline timestamp without time zone,
-    title character varying(255)
+    title character varying(255),
+    invalid boolean DEFAULT false NOT NULL
 );
 
 
@@ -1892,7 +1912,8 @@ CREATE TABLE public.search_engine_statistics (
     media_id character varying(40),
     clicked_at timestamp without time zone NOT NULL,
     node_name character varying(135) DEFAULT ''::character varying NOT NULL,
-    heading character varying(255)
+    heading character varying(255),
+    node_id uuid NOT NULL
 );
 
 
@@ -2302,6 +2323,14 @@ ALTER TABLE ONLY public.entry_revisions
 
 ALTER TABLE ONLY public.entry_sources
     ADD CONSTRAINT entry_sources_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: entry_visits entry_visits_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_visits
+    ADD CONSTRAINT entry_visits_pkey PRIMARY KEY (id);
 
 
 --
@@ -3094,6 +3123,20 @@ CREATE INDEX entry_sources_remote_avatar_media_file_id_idx ON public.entry_sourc
 
 
 --
+-- Name: entry_visits_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_visits_deadline_idx ON public.entry_visits USING btree (deadline);
+
+
+--
+-- Name: entry_visits_entry_id_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_visits_entry_id_deadline_idx ON public.entry_visits USING btree (entry_id, deadline);
+
+
+--
 -- Name: favors_deadline_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -3626,10 +3669,10 @@ CREATE INDEX schema_history_s_idx ON public.schema_history USING btree (success)
 
 
 --
--- Name: search_engine_statistics_owner_clicked_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: search_engine_statistics_node_id_clicked_at_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX search_engine_statistics_owner_clicked_idx ON public.search_engine_statistics USING btree (owner_name, clicked_at);
+CREATE INDEX search_engine_statistics_node_id_clicked_at_idx ON public.search_engine_statistics USING btree (node_id, clicked_at);
 
 
 --
@@ -4339,6 +4382,14 @@ ALTER TABLE ONLY public.entry_sources
 
 
 --
+-- Name: entry_visits entry_visits_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_visits
+    ADD CONSTRAINT entry_visits_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: friend_ofs friend_ofs_contact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -4614,5 +4665,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict QoCOoyaeaNCtmj1odJbUULBgcfGiMA5aLF0CjtAWin9QSf9MgIe3XMVg9aPIGJ6
+\unrestrict yhcsqeoTyOBGiMNtnc77zxBEycdw0NL0D3tkP80zFWGg3CKKQnxoKI2PabxxYfj
 

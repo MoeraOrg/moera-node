@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
@@ -24,6 +26,7 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.SubscribedCache;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
@@ -34,6 +37,7 @@ import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
 import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
+import org.moera.node.liberin.model.PostingViewedLiberin;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.event.PostingAddedEvent;
@@ -41,6 +45,7 @@ import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.event.PostingDeletedEvent;
 import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
+import org.moera.node.model.event.PostingViewedEvent;
 import org.moera.node.model.notification.MentionPostingAddedNotificationUtil;
 import org.moera.node.model.notification.MentionPostingDeletedNotificationUtil;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotificationUtil;
@@ -56,9 +61,15 @@ import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.ExtendedDuration;
+import org.springframework.scheduling.annotation.Scheduled;
 
 @LiberinReceptor
 public class PostingReceptor extends LiberinReceptorBase {
+
+    private record ViewedPosting(UUID nodeId, UUID postingId) {
+    }
+
+    private final ConcurrentHashMap<ViewedPosting, Integer> viewCounts = new ConcurrentHashMap<>();
 
     @Inject
     private PostingRepository postingRepository;
@@ -74,6 +85,9 @@ public class PostingReceptor extends LiberinReceptorBase {
 
     @Inject
     private SheriffUserListOperations sheriffUserListOperations;
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @LiberinMapping
     public void added(PostingAddedLiberin liberin) {
@@ -306,6 +320,11 @@ public class PostingReceptor extends LiberinReceptorBase {
     }
 
     @LiberinMapping
+    public void viewed(PostingViewedLiberin liberin) {
+        viewCounts.put(new ViewedPosting(liberin.getNodeId(), liberin.getPostingId()), liberin.getViewCount());
+    }
+
+    @LiberinMapping
     public void headingUpdated(PostingHeadingUpdatedLiberin liberin) {
         Posting posting = postingRepository.findByNodeIdAndId(liberin.getNodeId(), liberin.getPostingId()).orElse(null);
         if (posting == null) {
@@ -346,6 +365,21 @@ public class PostingReceptor extends LiberinReceptorBase {
                     posting.getId(), liberin.getMediaId(), liberin.getTitle(), liberin.getTextContent()
                 )
             );
+        }
+    }
+
+    @Scheduled(fixedDelayString = "PT1M")
+    public void sendVisited() {
+        try (var ignored = requestCounter.allot()) {
+            for (var entry : viewCounts.entrySet()) {
+                if (viewCounts.remove(entry.getKey(), entry.getValue())) {
+                    eventManager.send(
+                        entry.getKey().nodeId(),
+                        null,
+                        new PostingViewedEvent(entry.getKey().postingId(), entry.getValue())
+                    );
+                }
+            }
         }
     }
 

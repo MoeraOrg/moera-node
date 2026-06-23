@@ -111,8 +111,10 @@ public class SearchEngineStatisticsOperations {
                     Timestamp currentReport = Util.now();
 
                     List<SearchEngineClicks> clicks = tx.executeRead(() ->
-                            searchEngineStatisticsRepository.calculateClicks(ownerName, prevReport, currentReport,
-                                    PageRequest.of(0, REPORT_LINES)));
+                        searchEngineStatisticsRepository.calculateClicks(
+                            nodeId, prevReport, currentReport, PageRequest.of(0, REPORT_LINES)
+                        )
+                    );
                     if (ObjectUtils.isEmpty(clicks)) {
                         domains.getDomainOptions(domainName).set("search-engines.report.generated", currentReport);
                         continue;

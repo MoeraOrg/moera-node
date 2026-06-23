@@ -334,6 +334,9 @@ public class PostingInfoUtil {
         info.setTotalComments(
             accessChecker.isPrincipal(viewComments, Scope.VIEW_CONTENT) ? posting.getTotalChildren() : 0
         );
+        if (accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_CONTENT)) {
+            info.setViewCount(posting.getViewCount());
+        }
         info.setRecommended(posting.isRecommended());
         if (
             accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_CONTENT)

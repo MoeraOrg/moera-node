@@ -147,6 +147,9 @@ public class Entry {
     @NotNull
     private int totalChildren;
 
+    @NotNull
+    private int viewCount;
+
     private Long moment;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -656,6 +659,14 @@ public class Entry {
 
     public void setTotalChildren(int totalChildren) {
         this.totalChildren = totalChildren;
+    }
+
+    public int getViewCount() {
+        return viewCount;
+    }
+
+    public void setViewCount(int viewCount) {
+        this.viewCount = viewCount;
     }
 
     public Long getMoment() {

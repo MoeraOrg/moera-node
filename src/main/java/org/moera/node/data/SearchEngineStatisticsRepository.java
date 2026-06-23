@@ -11,16 +11,19 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface SearchEngineStatisticsRepository extends JpaRepository<SearchEngineStatistics, UUID> {
 
-    @Query("select new org.moera.node.data.SearchEngineClicks("
-            + "st.nodeName, st.postingId, st.commentId, st.mediaId, max(st.heading), count(*) as clicks,"
-            + " max(st.clickedAt) as lastClickedAt"
-            + ")"
-            + " from SearchEngineStatistics st"
-            + " where st.ownerName = ?1 and st.clickedAt >= ?2 and st.clickedAt < ?3"
-            + " group by st.nodeName, st.postingId, st.commentId, st.mediaId"
-            + " order by clicks desc, lastClickedAt desc")
-    List<SearchEngineClicks> calculateClicks(String ownerName, Timestamp fromTime, Timestamp tillTime,
-                                             Pageable pageable);
+    @Query(
+        "select new org.moera.node.data.SearchEngineClicks("
+        + "st.nodeName, st.postingId, st.commentId, st.mediaId, max(st.heading), count(*) as clicks,"
+        + " max(st.clickedAt) as lastClickedAt"
+        + ")"
+        + " from SearchEngineStatistics st"
+        + " where st.nodeId = ?1 and st.clickedAt >= ?2 and st.clickedAt < ?3"
+        + " group by st.nodeName, st.postingId, st.commentId, st.mediaId"
+        + " order by clicks desc, lastClickedAt desc"
+    )
+    List<SearchEngineClicks> calculateClicks(
+        UUID nodeId, Timestamp fromTime, Timestamp tillTime, Pageable pageable
+    );
 
     @Modifying
     @Query("delete SearchEngineStatistics st where st.clickedAt < ?1")

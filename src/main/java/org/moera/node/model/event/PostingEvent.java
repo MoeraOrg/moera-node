@@ -1,6 +1,7 @@
 package org.moera.node.model.event;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.PrincipalFilter;
@@ -26,9 +27,13 @@ public class PostingEvent extends Event {
         this.id = posting.getId().toString();
     }
 
-    protected PostingEvent(EventType type, Entry posting, PrincipalFilter filter) {
+    protected PostingEvent(EventType type, UUID id, PrincipalFilter filter) {
         super(type, Scope.VIEW_CONTENT, filter);
-        this.id = posting.getId().toString();
+        this.id = id.toString();
+    }
+
+    protected PostingEvent(EventType type, Entry posting, PrincipalFilter filter) {
+        this(type, posting.getId(), filter);
     }
 
     public String getId() {

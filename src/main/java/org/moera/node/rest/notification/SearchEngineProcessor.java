@@ -36,6 +36,7 @@ public class SearchEngineProcessor {
 
         SearchEngineStatistics searchEngineStatistics = new SearchEngineStatistics();
         searchEngineStatistics.setId(UUID.randomUUID());
+        searchEngineStatistics.setNodeId(universalContext.nodeId());
         searchEngineStatistics.setNodeName(notification.getSenderNodeName());
         searchEngineStatistics.setEngine(notification.getSearchEngine());
         searchEngineStatistics.setOwnerName(universalContext.nodeName());

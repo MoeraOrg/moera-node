@@ -20,6 +20,9 @@ public class SearchEngineStatistics {
     private UUID id;
 
     @NotNull
+    private UUID nodeId;
+
+    @NotNull
     @Size(max = 135)
     private String nodeName;
 
@@ -52,6 +55,14 @@ public class SearchEngineStatistics {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public UUID getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(UUID nodeId) {
+        this.nodeId = nodeId;
     }
 
     public String getNodeName() {
