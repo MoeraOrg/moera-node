@@ -20,3 +20,5 @@
    the beginning of the file.
 2. `Job.success()`, `Job.fail()`, `Job.retry()` always throw an exception, so there is no need to write `return` after
    them.
+3. `UniversalContext` automatically puts liberins on hold during a transaction and commits them after committing the
+   transaction, so don't add an external mechanism for this.

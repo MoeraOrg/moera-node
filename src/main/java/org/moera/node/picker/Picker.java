@@ -42,6 +42,7 @@ import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
+import org.moera.node.global.ServeContext;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.model.PostingAddedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
@@ -303,7 +304,9 @@ public class Picker extends Task {
     }
 
     private void updateRevision(Posting posting, PostingInfo postingInfo, EntryRevision revision) {
-        PostingInfoUtil.toPickedEntryRevision(postingInfo, revision, config.getMedia().getDirectServe());
+        PostingInfoUtil.toPickedEntryRevision(
+            postingInfo, revision, new ServeContext(config.getMedia().getDirectServe(), getOptions())
+        );
 
         byte[] fingerprint = PostingFingerprintBuilder.build(revision.getSignatureVersion(), posting, revision);
         revision.setDigest(CryptoUtil.digest(fingerprint));

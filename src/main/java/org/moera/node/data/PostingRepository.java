@@ -96,4 +96,12 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     )
     List<Posting> findByExternalSourceUri(UUID nodeId, String externalSourceUri);
 
+    @Query(
+        "update Posting p set p.recommended = false"
+        + " where p.nodeId = ?1 and p.ownerName = ?2 and p.deletedAt is null and p.recommended = true"
+        + " and exists(select s from Story s where s.nodeId = ?1 and s.entry = p and s.feedName = ?3)"
+    )
+    @Modifying
+    void resetRecommendedByOwnerNameAndFeed(UUID nodeId, String ownerName, String feedName);
+
 }

@@ -7,8 +7,9 @@ import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.body.Body;
 import org.moera.node.config.Config;
-import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.EntryRevision;
+import org.moera.node.global.ServeContext;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.text.shorten.Shortener;
@@ -20,6 +21,9 @@ public class TextConverter {
 
     @Inject
     private Config config;
+
+    @Inject
+    private UniversalContext universalContext;
 
     @Inject
     private MarkdownConverter markdownConverter;
@@ -51,7 +55,7 @@ public class TextConverter {
         boolean noFollowOnLinks,
         EntryRevision revision
     ) {
-        DirectServeConfig dsConfig = config.getMedia().getDirectServe();
+        ServeContext serveContext = new ServeContext(config.getMedia().getDirectServe(), universalContext.getOptions());
         Body body = new Body();
         if (!isSigned && sourceBody == null) {
             if (bodySrc != null) {
@@ -59,18 +63,20 @@ public class TextConverter {
                     revision.setBodySrc(bodySrc.getEncoded());
                     body = toHtml(revision.getBodySrcFormat(), bodySrc);
                     revision.setBody(body.getEncoded());
-                    revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media, noFollowOnLinks, dsConfig));
+                    revision.setSaneBody(
+                        HtmlSanitizer.sanitizeIfNeeded(body, false, media, noFollowOnLinks, serveContext)
+                    );
                     revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
                     Body bodyPreview = Shortener.shorten(body, hasAttachedGallery(body, media));
                     if (bodyPreview != null) {
                         revision.setBodyPreview(bodyPreview.getEncoded());
                         revision.setSaneBodyPreview(
-                            HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true, media, noFollowOnLinks, dsConfig)
+                            HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true, media, noFollowOnLinks, serveContext)
                         );
                     } else {
                         revision.setBodyPreview(Body.EMPTY);
                         revision.setSaneBodyPreview(
-                            HtmlSanitizer.sanitizeIfNeeded(body, true, media, noFollowOnLinks, dsConfig)
+                            HtmlSanitizer.sanitizeIfNeeded(body, true, media, noFollowOnLinks, serveContext)
                         );
                     }
                 } else {
@@ -86,14 +92,16 @@ public class TextConverter {
             if (BodyFormat.MESSAGE.equals(bodyFormat)) {
                 body = sourceBody.clone();
                 revision.setBody(sourceBody.getEncoded());
-                revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media, noFollowOnLinks, dsConfig));
+                revision.setSaneBody(
+                    HtmlSanitizer.sanitizeIfNeeded(body, false, media, noFollowOnLinks, serveContext)
+                );
 
                 Body bodyPreview = sourceBodyPreview.clone();
                 revision.setBodyPreview(sourceBodyPreview.getEncoded());
                 revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
                     !ObjectUtils.isEmpty(bodyPreview.getText())
                         ? bodyPreview
-                        : body, true, media, noFollowOnLinks, dsConfig)
+                        : body, true, media, noFollowOnLinks, serveContext)
                 );
             } else {
                 revision.setBody(sourceBody.getEncoded());

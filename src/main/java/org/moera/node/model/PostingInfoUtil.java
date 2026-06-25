@@ -26,6 +26,7 @@ import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.OwnPosting;
 import org.moera.node.data.Story;
+import org.moera.node.global.ServeContext;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.operations.FeedOperations;
@@ -580,7 +581,7 @@ public class PostingInfoUtil {
         posting.setReceiverSheriffMarks(SheriffUtil.serializeSheriffMarks(info.getSheriffMarks()).orElse(null));
     }
 
-    public static void toPickedEntryRevision(PostingInfo info, EntryRevision entryRevision, DirectServeConfig config) {
+    public static void toPickedEntryRevision(PostingInfo info, EntryRevision entryRevision, ServeContext serveContext) {
         List<LocalRemoteMedia> media = entryRevision.getAttachments().stream()
             .map(EntryAttachment::getLocalRemoteMedia)
             .toList();
@@ -593,14 +594,14 @@ public class PostingInfoUtil {
                 true,
                 media,
                 false,
-                config
+                serveContext
             )
         );
         entryRevision.setBodySrcFormat(info.getBodySrcFormat());
         entryRevision.setReceiverBodySrcHash(info.getBodySrcHash());
         entryRevision.setBodyFormat(info.getBodyFormat().getValue());
         entryRevision.setBody(info.getBody().getEncoded());
-        entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(info.getBody(), false, media, false, config));
+        entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(info.getBody(), false, media, false, serveContext));
         entryRevision.setHeading(info.getHeading());
         entryRevision.setDescription(info.getDescription());
         if (info.getDeletedAt() != null) {

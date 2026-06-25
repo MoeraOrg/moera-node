@@ -7,9 +7,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.MediaFileOwner;
+import org.moera.node.global.ServeContext;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaUtil;
 import org.owasp.html.HtmlStreamEventReceiver;
@@ -17,17 +16,17 @@ import org.owasp.html.HtmlStreamEventReceiverWrapper;
 
 class ImageProcessor extends HtmlStreamEventReceiverWrapper {
 
-    private final DirectServeConfig config;
+    private final ServeContext serveContext;
     private final Map<String, LocalRemoteMedia> media;
 
     ImageProcessor(
-        DirectServeConfig config,
+        ServeContext serveContext,
         HtmlStreamEventReceiver underlying,
         List<LocalRemoteMedia> mediaAttachments
     ) {
         super(underlying);
 
-        this.config = config;
+        this.serveContext = serveContext;
         media = mediaAttachments != null
                 ? mediaAttachments.stream()
                     .collect(
@@ -44,7 +43,7 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
     public void openTag(String elementName, List<String> attrs) {
         if (elementName.equalsIgnoreCase("img")) {
             List<String> newAttrs = new ArrayList<>();
-            MediaFileOwner mediaFileOwner = null;
+            LocalRemoteMedia localRemoteMedia = null;
             String src = null;
             Integer width = null;
             Integer height = null;
@@ -54,8 +53,7 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                 if (attrName.equalsIgnoreCase("src")) {
                     src = attrValue;
                     if (attrValue.startsWith("hash:")) {
-                        LocalRemoteMedia localRemoteMedia = media.get(attrValue.substring(5));
-                        mediaFileOwner = localRemoteMedia != null ? localRemoteMedia.mediaFileOwner() : null;
+                        localRemoteMedia = media.get(attrValue.substring(5));
                     }
                 } else if (attrName.equalsIgnoreCase("width")) {
                     try {
@@ -74,7 +72,10 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                     newAttrs.add(attrValue);
                 }
             }
-            if (mediaFileOwner == null) {
+            if (
+                localRemoteMedia == null
+                || localRemoteMedia.mediaFileOwner() == null && localRemoteMedia.remoteMediaFile() == null
+            ) {
                 if (width == null && height == null) {
                     super.openTag(elementName, attrs);
                     return;
@@ -101,31 +102,52 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                 return;
             }
 
-            String directPath = MediaUtil.directPath(mediaFileOwner, config).url();
-            boolean directServing = directPath != null;
-            String mediaLocation =
-                "/moera/media/" + (directServing ? directPath : MediaUtil.privatePath(mediaFileOwner, null, null));
-
+            String mediaLocation = localRemoteMedia.path(serveContext, null);
+            String mediaId = localRemoteMedia.mediaId();
             super.openTag("a", new ArrayList<>(List.of(
-                "href", mediaLocation,
+                "href", mediaLocation != null ? mediaLocation : "",
                 "class", "entry-image",
-                "data-id", mediaFileOwner.getId().toString()
+                "data-id", mediaId != null ? mediaId : ""
             )));
 
             newAttrs.add("src");
-            newAttrs.add(
-                "/moera/media/" + (directServing ? directPath : MediaUtil.privatePath(mediaFileOwner, 900, null))
-            );
-            newAttrs.add("srcset");
-            newAttrs.add(MediaUtil.mediaSources(mediaLocation, mediaFileOwner, config));
-            newAttrs.add("sizes");
-            newAttrs.add(MediaUtil.mediaSizes(mediaFileOwner.getMediaFile()));
+            String mediaSrc = localRemoteMedia.path(serveContext, 900);
+            newAttrs.add(mediaSrc != null ? mediaSrc : "");
+            if (localRemoteMedia.mediaFileOwner() != null) {
+                newAttrs.add("srcset");
+                newAttrs.add(
+                    MediaUtil.mediaSources(
+                        mediaLocation,
+                        localRemoteMedia.mediaFileOwner(),
+                        serveContext.directServeConfig()
+                    )
+                );
+                newAttrs.add("sizes");
+                newAttrs.add(MediaUtil.mediaSizes(localRemoteMedia.mediaFileOwner().getMediaFile()));
+            }
 
             width = width == null || width == 0 ? null : width;
             height = height == null || height == 0 ? null : height;
-            MediaFile mediaFile = mediaFileOwner.getMediaFile().findLargerPreview(900).getMediaFile();
-            Integer sizeX = mediaFile.getSizeX();
-            Integer sizeY = mediaFile.getSizeY();
+            Integer sizeX;
+            Integer sizeY;
+            if (localRemoteMedia.mediaFileOwner() != null) {
+                MediaFile mediaFile =
+                    localRemoteMedia.mediaFileOwner().getMediaFile().findLargerPreview(900).getMediaFile();
+                sizeX = mediaFile.getSizeX();
+                sizeY = mediaFile.getSizeY();
+            } else {
+                sizeX = localRemoteMedia.remoteMediaFile().getSizeX();
+                sizeY = localRemoteMedia.remoteMediaFile().getSizeY();
+                sizeX = sizeX != null ? sizeX : 900;
+                sizeY = sizeY != null ? sizeY : 900;
+                double scaleX = 900.0 / sizeX;
+                double scaleY = 900.0 / sizeY;
+                if (scaleX < 1 || scaleY < 1) {
+                    double scale = Math.min(scaleX, scaleY);
+                    sizeX = (int) Math.round(scale * sizeX);
+                    sizeY = (int) Math.round(scale * sizeY);
+                }
+            }
             double scale;
             if (width == null && height == null) {
                 scale = 1;

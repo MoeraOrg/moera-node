@@ -67,7 +67,7 @@ public class MediaFilePreviewInfoUtil {
             ? grantSupplier.generateLocal(originalId, MediaUtil.MEDIA_GRANT_TTL, false, null)
             : null;
         String fileName = MimeUtil.fileName(originalId, originalMimeType);
-        info.setPath(MediaUtil.privatePath(fileName, info.getTargetWidth(), grant));
+        info.setPath(MediaUtil.privatePath(fileName, info.getTargetWidth(), grant, false));
     }
 
     public static void fillDirectPath(MediaFilePreviewInfo info, DirectServeConfig config) {

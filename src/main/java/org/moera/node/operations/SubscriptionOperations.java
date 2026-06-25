@@ -6,14 +6,19 @@ import java.util.function.Consumer;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.SubscriptionReason;
+import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.Contact;
 import org.moera.node.data.Feed;
+import org.moera.node.data.PostingRepository;
+import org.moera.node.data.Story;
+import org.moera.node.data.StoryRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.UserSubscription;
 import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.SubscriptionAddedLiberin;
+import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.rest.task.RemoteFeedFetchJob;
 import org.moera.node.task.Jobs;
@@ -30,6 +35,12 @@ public class SubscriptionOperations {
 
     @Inject
     private UserSubscriptionRepository userSubscriptionRepository;
+
+    @Inject
+    private PostingRepository postingRepository;
+
+    @Inject
+    private StoryRepository storyRepository;
 
     @Inject
     private ContactOperations contactOperations;
@@ -59,6 +70,7 @@ public class SubscriptionOperations {
                 if (userSubscription.getSubscriptionType() == SubscriptionType.FEED) {
                     contactOperations.updateFeedSubscriptionCount(userSubscription.getRemoteNodeName(), 1);
                     contact = contactOperations.updateViewPrincipal(userSubscription);
+                    resetRecommendedPostings(userSubscription);
                 } else {
                     contact = contactOperations.find(userSubscription.getRemoteNodeName());
                 }
@@ -93,6 +105,25 @@ public class SubscriptionOperations {
         }
 
         return subscription;
+    }
+
+    private void resetRecommendedPostings(UserSubscription userSubscription) {
+        postingRepository.resetRecommendedByOwnerNameAndFeed(
+            userSubscription.getNodeId(), userSubscription.getRemoteNodeName(), userSubscription.getFeedName()
+        );
+        if (!Feed.EXPLORE.equals(userSubscription.getFeedName())) {
+            postingRepository.resetRecommendedByOwnerNameAndFeed(
+                userSubscription.getNodeId(), userSubscription.getRemoteNodeName(), Feed.EXPLORE
+            );
+        }
+
+        List<Story> stories = storyRepository.findByFeedAndTypeAndOwnerName(
+            userSubscription.getNodeId(), Feed.EXPLORE, StoryType.POSTING_ADDED, userSubscription.getRemoteNodeName()
+        );
+        for (Story story : stories) {
+            universalContext.send(new StoryDeletedLiberin(story));
+            storyRepository.delete(story);
+        }
     }
 
     public void autoSubscribe() {

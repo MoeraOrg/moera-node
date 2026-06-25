@@ -38,6 +38,16 @@ public class MediaGrantGenerator implements MediaGrantSupplier {
         return MediaGrantUtil.generate(nodeName, mediaId, expires(duration), download, fileName, salt(), signingKey);
     }
 
+    public String generatePublicRemote(
+        String mediaId,
+        boolean download,
+        String fileName
+    ) {
+        return MediaGrantUtil.generate(
+            nodeName, mediaId, expires(ExtendedDuration.ALWAYS), download, fileName, new byte[0], signingKey
+        );
+    }
+
     @Override
     public Timestamp expires(ExtendedDuration duration) {
         return MediaUtil.expirationTimestamp(duration);

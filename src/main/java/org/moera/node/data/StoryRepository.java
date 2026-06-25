@@ -31,6 +31,12 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     Collection<Story> findByFeedAndType(UUID nodeId, String feedName, StoryType storyType);
 
     @Query(
+        "select s from Story s left join fetch s.entry e"
+        + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and e.ownerName = ?4"
+    )
+    List<Story> findByFeedAndTypeAndOwnerName(UUID nodeId, String feedName, StoryType storyType, String ownerName);
+
+    @Query(
         "select count(*) from Story s"
         + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.entry.id = ?4"
     )

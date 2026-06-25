@@ -13,10 +13,12 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.jcajce.provider.util.DigestFactory;
 import org.moera.lib.node.types.MediaFilePreviewInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
+import org.moera.lib.node.types.RemoteMediaInfo;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
+import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Util;
@@ -37,29 +39,41 @@ public class MediaUtil {
         return publicPath(mediaFile.getFileName());
     }
 
-    public static String privatePath(String fileName, Integer width, String grant) {
-        if (width == null) {
-            if (grant == null) {
-                return "private/%s".formatted(fileName);
-            } else {
-                return "private/%s?grant=%s".formatted(fileName, grant);
-            }
-        } else {
-            if (grant == null) {
-                return "private/%s?width=%d".formatted(fileName, width);
-            } else {
-                return "private/%s?width=%d&grant=%s".formatted(fileName, width, grant);
-            }
+    public static String privatePath(String fileName, Integer width, String grant, boolean download) {
+        var buf = new StringBuilder();
+        if (width != null) {
+            buf.append("&width=%d".formatted(width));
         }
+        if (!ObjectUtils.isEmpty(grant)) {
+            buf.append("&grant=%s".formatted(grant));
+        }
+        if (download) {
+            buf.append("&download=true");
+        }
+        return "private/%s".formatted(fileName) + (!buf.isEmpty() ? "?" + buf.substring(1) : "");
     }
 
     public static String privatePath(MediaFileOwner mediaFileOwner, Integer width, String grant) {
-        return privatePath(mediaFileOwner.getFileName(), width, grant);
+        return privatePath(mediaFileOwner.getFileName(), width, grant, false);
+    }
+
+    public static String privatePath(RemoteMediaFile remoteMediaFile, Integer width, String grant) {
+        String fileName = MimeUtil.fileName(remoteMediaFile.getMediaId(), remoteMediaFile.getMimeType());
+        return privatePath(fileName, width, grant, false);
     }
 
     public static String privatePath(PrivateMediaFileInfo mediaFile, Integer width, String grant) {
         String fileName = MimeUtil.fileName(mediaFile.getId(), mediaFile.getMimeType());
-        return privatePath(fileName, width, grant);
+        return privatePath(fileName, width, grant, false);
+    }
+
+    public static String privatePath(RemoteMediaInfo remoteMedia, Integer width, String grant) {
+        return privatePath(remoteMedia, width, grant, false);
+    }
+
+    public static String privatePath(RemoteMediaInfo remoteMedia, Integer width, String grant, boolean download) {
+        String fileName = MimeUtil.fileName(remoteMedia.getMediaId(), remoteMedia.getMimeType());
+        return privatePath(fileName, width, grant, download);
     }
 
     public static String mediaSources(String originalPath, MediaFileOwner mediaFileOwner, DirectServeConfig config) {

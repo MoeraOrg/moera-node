@@ -103,8 +103,8 @@ public class NamingCache {
     public RegisteredNameDetails getFast(String name) {
         RegisteredNameDetails details = getOrRun(getKey(name));
         return details != null
-                ? details.clone()
-                : new RegisteredNameDetails(name, null, null);
+            ? details.clone()
+            : new RegisteredNameDetails(name, null, null);
     }
 
     public RegisteredNameDetails get(String name) {

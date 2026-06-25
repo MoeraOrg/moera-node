@@ -3,18 +3,28 @@ package org.moera.node.ui.helper;
 import static org.moera.node.util.Util.ellipsize;
 
 import java.util.List;
+import java.util.Objects;
+import jakarta.inject.Inject;
 
 import com.github.jknack.handlebars.Handlebars;
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.MediaFilePreviewInfo;
-import org.moera.lib.node.types.PrivateMediaFileInfo;
-import org.moera.node.model.MediaFilePreviewInfoUtil;
+import org.moera.node.api.naming.NamingCache;
+import org.moera.node.global.RequestContext;
+import org.moera.node.media.LocalRemoteMediaInfo;
 import org.moera.node.media.MediaUtil;
+import org.moera.node.model.MediaFilePreviewInfoUtil;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @HelperSource
 public class LinkPreviewHelper {
+
+    @Inject
+    private RequestContext requestContext;
+
+    @Inject
+    private NamingCache namingCache;
 
     public CharSequence linkPreview(
         String siteName,
@@ -42,14 +52,15 @@ public class LinkPreviewHelper {
         }
 
         boolean large = false;
-        PrivateMediaFileInfo mediaFile = null;
+        LocalRemoteMediaInfo mediaFile = null;
         if (imageHash != null && media != null) {
             mediaFile = media.stream()
-                .map(MediaAttachment::getMedia)
-                .filter(mf -> mf != null && mf.getHash().equals(imageHash))
+                .map(LocalRemoteMediaInfo::new)
+                .filter(mf -> Objects.equals(mf.hash(), imageHash))
                 .findFirst()
                 .orElse(null);
-            large = !small && mediaFile != null && mediaFile.getWidth() > 450;
+            Integer width = mediaFile != null ? mediaFile.width() : null;
+            large = !small && width != null && width > 450;
         }
 
         StringBuilder buf = new StringBuilder();
@@ -63,7 +74,7 @@ public class LinkPreviewHelper {
         }
         buf.append('>');
         if (mediaFile != null) {
-            MediaFilePreviewInfo preview = MediaFilePreviewInfoUtil.findLargerPreview(mediaFile.getPreviews(), 800);
+            MediaFilePreviewInfo preview = MediaFilePreviewInfoUtil.findLargerPreview(mediaFile.previews(), 800);
 
             buf.append("<img");
             if (preview != null) {
@@ -78,15 +89,18 @@ public class LinkPreviewHelper {
                 HelperUtil.appendAttr(
                     buf,
                     "src",
-                    "/moera/media/"
-                        + (mediaFile.getDirectPath() != null ? mediaFile.getDirectPath() : mediaFile.getPath())
+                    mediaFile.path(namingCache, requestContext.getOptions())
                 );
-                HelperUtil.appendAttr(buf, "width", mediaFile.getWidth());
-                HelperUtil.appendAttr(buf, "height", mediaFile.getHeight());
+                HelperUtil.appendAttr(buf, "width", mediaFile.width());
+                HelperUtil.appendAttr(buf, "height", mediaFile.height());
             }
-            HelperUtil.appendAttr(buf, "srcset", MediaUtil.mediaSources(mediaFile));
-            HelperUtil.appendAttr(buf, "sizes", MediaUtil.mediaSizes(mediaFile));
-            if (mediaFile.getHeight() > mediaFile.getWidth()) {
+            if (mediaFile.local() != null) {
+                HelperUtil.appendAttr(buf, "srcset", MediaUtil.mediaSources(mediaFile.local()));
+                HelperUtil.appendAttr(buf, "sizes", MediaUtil.mediaSizes(mediaFile.local()));
+            }
+            Integer width = mediaFile.width();
+            Integer height = mediaFile.height();
+            if (width != null && height != null && height > width) {
                 HelperUtil.appendAttr(buf, "class", "vertical");
             }
             buf.append('>');

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.moera.lib.node.types.body.Body;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.global.ServeContext;
 import org.moera.node.media.LocalRemoteMedia;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
@@ -74,7 +74,7 @@ public class HtmlSanitizer {
         boolean preview,
         List<LocalRemoteMedia> media,
         boolean noFollowOnLinks,
-        DirectServeConfig config
+        ServeContext serveContext
     ) {
         if (html == null) {
             return null;
@@ -90,7 +90,7 @@ public class HtmlSanitizer {
         }
         policyFactory = policyFactory.and(
             new HtmlPolicyBuilder()
-                .withPreprocessor(u -> new ImageProcessor(config, u, media))
+                .withPreprocessor(u -> new ImageProcessor(serveContext, u, media))
                 .toFactory()
         );
         return policyFactory.sanitize(html);
@@ -101,9 +101,9 @@ public class HtmlSanitizer {
         boolean preview,
         List<LocalRemoteMedia> media,
         boolean noFollowOnLinks,
-        DirectServeConfig config
+        ServeContext serveContext
     ) {
-        String saneHtml = sanitize(html, preview, media, noFollowOnLinks, config);
+        String saneHtml = sanitize(html, preview, media, noFollowOnLinks, serveContext);
         return saneHtml == null || saneHtml.equals(html) ? null : saneHtml;
     }
 
@@ -112,9 +112,9 @@ public class HtmlSanitizer {
         boolean preview,
         List<LocalRemoteMedia> media,
         boolean noFollowOnLinks,
-        DirectServeConfig config
+        ServeContext serveContext
     ) {
-        return sanitizeIfNeeded(body.getText(), preview, media, noFollowOnLinks, config);
+        return sanitizeIfNeeded(body.getText(), preview, media, noFollowOnLinks, serveContext);
     }
 
 }
