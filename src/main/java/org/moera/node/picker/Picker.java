@@ -370,7 +370,7 @@ public class Picker extends Task {
         if (existing == null) {
             PrivateMediaFileInfo mediaInfo = attach.getMedia();
             if (attach.getMedia() == null) {
-                mediaInfo = nodeApi.at(mediaNodeName, generateCarte(mediaNodeName, Scope.VIEW_MEDIA))
+                mediaInfo = nodeApi.at(mediaNodeName, generateCarte(mediaNodeName, Scope.VIEW_CONTENT))
                     .getPrivateMediaInfo(mediaId, attach.getRemoteMedia().getGrant());
             }
 
@@ -378,7 +378,7 @@ public class Picker extends Task {
             if (leaseId == null) {
                 media = mediaManager.downloadPrivateMedia(
                     mediaNodeName,
-                    generateCarte(mediaNodeName, Scope.VIEW_MEDIA),
+                    generateCarte(mediaNodeName, Scope.VIEW_CONTENT),
                     mediaInfo,
                     Math.min(
                         universalContext.getOptions().getInt("media.max-size"),
@@ -430,7 +430,7 @@ public class Picker extends Task {
         attrs.setPostingId(remotePostingId);
         try {
             var lease = nodeApi
-                .at(mediaNodeName, generateCarte(mediaNodeName, Scope.VIEW_MEDIA))
+                .at(mediaNodeName, generateCarte(mediaNodeName, Scope.VIEW_CONTENT))
                 .createMediaLease(attrs);
             return lease.getId();
         } catch (MoeraNodeException e) {

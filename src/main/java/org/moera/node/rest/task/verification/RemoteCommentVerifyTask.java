@@ -105,7 +105,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         updateData(data -> data.setRevisionId(commentInfo.getRevisionId()));
 
         Function<MediaAttachment, byte[]> mediaDigest =
-            pmf -> mediaManager.getPrivateMediaDigest(remoteNodeName, carteGenerator(Scope.VIEW_MEDIA), pmf);
+            pmf -> mediaManager.getPrivateMediaDigest(remoteNodeName, carteGenerator(Scope.VIEW_CONTENT), pmf);
 
         String repliedToId = null;
         String repliedToRevisionId = null;
@@ -127,7 +127,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
                 mediaManager.getParentMediaDigest(
                     postingInfo,
                     remoteNodeName,
-                    carteGenerator(Scope.VIEW_MEDIA)
+                    carteGenerator(Scope.VIEW_CONTENT)
                 ),
                 mediaDigest
             ),
@@ -164,7 +164,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         }
 
         Function<MediaAttachment, byte[]> mediaDigest =
-            pmf -> mediaManager.getPrivateMediaDigest(remoteNodeName, carteGenerator(Scope.VIEW_MEDIA), pmf);
+            pmf -> mediaManager.getPrivateMediaDigest(remoteNodeName, carteGenerator(Scope.VIEW_CONTENT), pmf);
 
         String repliedToId = null;
         String repliedToRevisionId = null;
@@ -187,7 +187,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
                 mediaManager.getParentMediaDigest(
                     postingInfo,
                     remoteNodeName,
-                    carteGenerator(Scope.VIEW_MEDIA)
+                    carteGenerator(Scope.VIEW_CONTENT)
                 ),
                 mediaDigest
             ),

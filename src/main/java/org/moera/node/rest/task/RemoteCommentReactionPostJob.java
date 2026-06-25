@@ -214,11 +214,11 @@ public class RemoteCommentReactionPostJob
         byte[] parentMediaDigest = mediaManager.getParentMediaDigest(
             state.postingInfo,
             parameters.targetNodeName,
-            carteGenerator(Scope.VIEW_MEDIA)
+            carteGenerator(Scope.VIEW_CONTENT)
         );
         Function<MediaAttachment, byte[]> mediaDigest =
             pmf -> mediaManager.getPrivateMediaDigest(
-                parameters.targetNodeName, carteGenerator(Scope.VIEW_MEDIA), pmf
+                parameters.targetNodeName, carteGenerator(Scope.VIEW_CONTENT), pmf
             );
         byte[] postingFingerprint = state.postingRevisionInfo == null
             ? PostingFingerprintBuilder.build(

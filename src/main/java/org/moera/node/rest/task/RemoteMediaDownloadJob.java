@@ -145,7 +145,7 @@ public class RemoteMediaDownloadJob extends Job<RemoteMediaDownloadJob.Parameter
         MediaFileOwner mediaFileOwner = tx.executeWriteWithExceptions(() ->
             mediaManager.downloadPrivateMediaNoLimits(
                 parameters.nodeName,
-                generateCarte(parameters.nodeName, Scope.VIEW_MEDIA),
+                generateCarte(parameters.nodeName, Scope.VIEW_CONTENT),
                 state.mediaInfo
             )
         );

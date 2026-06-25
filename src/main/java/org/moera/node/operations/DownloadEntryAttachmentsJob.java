@@ -328,7 +328,7 @@ public class DownloadEntryAttachmentsJob
     private void download(AttachmentLocation attachmentLocation, int maxSize) throws Exception {
         PrivateMediaFileInfo mediaInfo = getPrivateMediaInfo(attachmentLocation.nodeName, attachmentLocation.mediaId);
 
-        String carte = generateCarte(attachmentLocation.nodeName, Scope.VIEW_MEDIA);
+        String carte = generateCarte(attachmentLocation.nodeName, Scope.VIEW_CONTENT);
         MediaFileOwner mediaFileOwner = tx.executeWriteWithExceptions(() ->
             mediaManager.downloadPrivateMedia(
                 attachmentLocation.nodeName, carte, mediaInfo, maxSize, attachmentLocation.entryId

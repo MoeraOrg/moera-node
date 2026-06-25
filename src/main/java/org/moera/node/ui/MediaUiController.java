@@ -116,8 +116,8 @@ public class MediaUiController {
         if (
             grant == null
             && !mediaFileOwner.isUnrestricted()
-            && !requestContext.isAdmin(Scope.VIEW_MEDIA)
-            && !requestContext.isClient(requestContext.nodeName(), Scope.VIEW_MEDIA)
+            && !requestContext.isAdmin(Scope.VIEW_CONTENT)
+            && !requestContext.isClient(requestContext.nodeName(), Scope.VIEW_CONTENT)
         ) {
             throw new PageNotFoundException();
         }

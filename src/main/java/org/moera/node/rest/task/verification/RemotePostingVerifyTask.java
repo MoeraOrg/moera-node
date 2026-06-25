@@ -45,10 +45,10 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
             byte[] parentMediaDigest = mediaManager.getParentMediaDigest(
                 postingInfo,
                 data.getNodeName(),
-                carteGenerator(Scope.VIEW_MEDIA)
+                carteGenerator(Scope.VIEW_CONTENT)
             );
             Function<MediaAttachment, byte[]> mediaDigest =
-                pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), carteGenerator(Scope.VIEW_MEDIA), pmf);
+                pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), carteGenerator(Scope.VIEW_CONTENT), pmf);
 
             if (data.getRevisionId() == null) {
                 verifySignature(postingInfo, parentMediaDigest, mediaDigest);

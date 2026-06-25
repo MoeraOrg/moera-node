@@ -119,9 +119,9 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                 mediaManager.getParentMediaDigest(
                     postingInfo,
                     data.getNodeName(),
-                    carteGenerator(Scope.VIEW_MEDIA)
+                    carteGenerator(Scope.VIEW_CONTENT)
                 ),
-                pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), carteGenerator(Scope.VIEW_MEDIA), pmf)
+                pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), carteGenerator(Scope.VIEW_CONTENT), pmf)
             )
         );
         succeeded(CryptoUtil.verifySignature(fingerprint, reactionInfo.getSignature(), signingKey));
@@ -146,7 +146,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         }
 
         Function<MediaAttachment, byte[]> mediaDigest =
-            pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), carteGenerator(Scope.VIEW_MEDIA), pmf);
+            pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), carteGenerator(Scope.VIEW_CONTENT), pmf);
 
         byte[] fingerprint = ReactionFingerprintBuilder.build(
             reactionInfo.getSignatureVersion(),
@@ -163,7 +163,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                     mediaManager.getParentMediaDigest(
                         postingInfo,
                         data.getNodeName(),
-                        carteGenerator(Scope.VIEW_MEDIA)
+                        carteGenerator(Scope.VIEW_CONTENT)
                     ),
                     mediaDigest
                 )

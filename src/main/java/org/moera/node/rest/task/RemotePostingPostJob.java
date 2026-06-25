@@ -295,7 +295,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
             ? mediaManager.getParentMediaDigest(
                 state.prevPostingInfo,
                 parameters.targetNodeName,
-                carteGenerator(Scope.VIEW_MEDIA)
+                carteGenerator(Scope.VIEW_CONTENT)
             )
             : null;
         byte[] fingerprint = PostingFingerprintBuilder.build(

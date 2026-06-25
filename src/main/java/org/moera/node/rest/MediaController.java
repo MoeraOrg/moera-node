@@ -238,7 +238,7 @@ public class MediaController {
         if (
             grant == null
             && !mediaFileOwner.isUnrestricted()
-            && !requestContext.isAdmin(Scope.VIEW_MEDIA)
+            && !requestContext.isAdmin(Scope.VIEW_CONTENT)
         ) {
             throw new ObjectNotFoundFailure("media.not-found");
         }
@@ -289,7 +289,7 @@ public class MediaController {
                 }
 
             };
-        } else if (requestContext.isAdmin(Scope.VIEW_MEDIA)) {
+        } else if (requestContext.isAdmin(Scope.VIEW_CONTENT)) {
             grantSupplier = new MediaGrantGenerator(requestContext.getOptions());
         }
 

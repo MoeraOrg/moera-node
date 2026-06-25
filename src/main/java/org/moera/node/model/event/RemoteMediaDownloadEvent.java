@@ -13,11 +13,11 @@ public abstract class RemoteMediaDownloadEvent extends Event {
     private String mediaId;
 
     protected RemoteMediaDownloadEvent(EventType type) {
-        super(type, Scope.VIEW_MEDIA, Principal.ADMIN);
+        super(type, Scope.VIEW_CONTENT, Principal.ADMIN);
     }
 
     protected RemoteMediaDownloadEvent(EventType type, String nodeName, String mediaId) {
-        super(type, Scope.VIEW_MEDIA, Principal.ADMIN);
+        super(type, Scope.VIEW_CONTENT, Principal.ADMIN);
         this.nodeName = nodeName;
         this.mediaId = mediaId;
     }

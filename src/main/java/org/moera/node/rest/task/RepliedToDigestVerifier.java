@@ -137,7 +137,7 @@ public class RepliedToDigestVerifier {
 
         Function<MediaAttachment, byte[]> mediaDigest =
             pmf -> mediaManager.getPrivateMediaDigest(
-                targetNodeName, nodeName -> generateCarte.generate(nodeName, Scope.VIEW_MEDIA), pmf
+                targetNodeName, nodeName -> generateCarte.generate(nodeName, Scope.VIEW_CONTENT), pmf
             );
 
         byte[] fingerprint = CommentFingerprintBuilder.build(
@@ -152,7 +152,7 @@ public class RepliedToDigestVerifier {
                 mediaManager.getParentMediaDigest(
                     postingInfo,
                     targetNodeName,
-                    nodeName -> generateCarte.generate(nodeName, Scope.VIEW_MEDIA)
+                    nodeName -> generateCarte.generate(nodeName, Scope.VIEW_CONTENT)
                 ),
                 mediaDigest
             ),

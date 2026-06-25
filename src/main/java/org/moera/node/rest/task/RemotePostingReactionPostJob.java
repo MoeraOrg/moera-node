@@ -257,11 +257,11 @@ public class RemotePostingReactionPostJob
                     mediaManager.getParentMediaDigest(
                         state.postingInfo,
                         parameters.targetNodeName,
-                        carteGenerator(Scope.VIEW_MEDIA)
+                        carteGenerator(Scope.VIEW_CONTENT)
                     ),
                     pmf -> mediaManager.getPrivateMediaDigest(
                         parameters.targetNodeName,
-                        carteGenerator(Scope.VIEW_MEDIA),
+                        carteGenerator(Scope.VIEW_CONTENT),
                         pmf
                     )
                 )

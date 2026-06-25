@@ -403,11 +403,11 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
                 mediaManager.getParentMediaDigest(
                     state.postingInfo,
                     parameters.targetNodeName,
-                    carteGenerator(Scope.VIEW_MEDIA)
+                    carteGenerator(Scope.VIEW_CONTENT)
                 ),
                 ma -> mediaManager.getPrivateMediaDigest(
                     parameters.targetNodeName,
-                    carteGenerator(Scope.VIEW_MEDIA),
+                    carteGenerator(Scope.VIEW_CONTENT),
                     ma
                 )
             )),

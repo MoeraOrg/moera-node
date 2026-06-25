@@ -79,8 +79,8 @@ public class MediaLeaseController {
 
         attributes.validate();
 
-        String clientName = requestContext.getClientName(Scope.VIEW_MEDIA);
-        boolean admin = requestContext.isAdmin(Scope.LEASE_MEDIA) && requestContext.isAdmin(Scope.VIEW_MEDIA);
+        String clientName = requestContext.getClientName(Scope.VIEW_CONTENT);
+        boolean admin = requestContext.isAdmin(Scope.LEASE_MEDIA) && requestContext.isAdmin(Scope.VIEW_CONTENT);
         if ((clientName == null || !Objects.equals(attributes.getNodeName(), clientName)) && !admin) {
             throw new AuthenticationException();
         }
