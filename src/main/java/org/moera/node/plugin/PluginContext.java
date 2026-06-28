@@ -1,12 +1,12 @@
 package org.moera.node.plugin;
 
-import java.net.http.HttpRequest;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import okhttp3.Request;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
@@ -164,7 +164,7 @@ public class PluginContext {
         this.options = options;
     }
 
-    public void addContextHeaders(HttpRequest.Builder requestBuilder) {
+    public void addContextHeaders(Request.Builder requestBuilder) {
         String headerValue = "";
         headerValue += "root-admin=" + rootAdmin + ";";
         headerValue += "admin-scope=" + (adminScope != null ? String.join(",", adminScope) : "") + ";";

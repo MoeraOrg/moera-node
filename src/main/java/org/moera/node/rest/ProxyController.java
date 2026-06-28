@@ -1,11 +1,7 @@
 package org.moera.node.rest;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,8 +9,14 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import jakarta.inject.Inject;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -22,7 +24,6 @@ import org.jsoup.select.Elements;
 import org.moera.lib.node.types.LinkPreviewInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.validate.ValidationFailure;
-import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.config.Config;
@@ -66,27 +67,28 @@ public class ProxyController {
     public ResponseEntity<Resource> getMedia(@RequestParam String url) {
         log.info("GET /proxy/media, (url = {})", LogUtil.format(url));
 
-        HttpClient client = buildClient();
-        HttpRequest request;
+        OkHttpClient client = buildClient();
+        Request request;
         try {
-            request = HttpRequest.newBuilder()
-                .header("User-Agent", config.getUserAgent())
-                .GET()
-                .uri(URI.create(url))
-                .timeout(REQUEST_TIMEOUT)
+            request = new Request.Builder()
+                .header(HttpHeaders.USER_AGENT, config.getUserAgent())
+                .get()
+                .url(url)
                 .build();
         } catch (IllegalArgumentException e) {
             throw new ValidationFailure("proxy.url.invalid");
         }
-        HttpResponse<InputStream> response;
+        Response response;
         try {
-            response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
-        } catch (IOException | InterruptedException e) {
+            response = client.newCall(request).execute();
+        } catch (IOException e) {
             throw new OperationFailure("proxy.request-failed");
         }
 
-        if (response.statusCode() != HttpStatus.OK.value()) {
-            if (response.statusCode() == HttpStatus.NOT_FOUND.value()) {
+        int statusCode = response.code();
+        if (statusCode != HttpStatus.OK.value()) {
+            response.close();
+            if (statusCode == HttpStatus.NOT_FOUND.value()) {
                 throw new ObjectNotFoundFailure("proxy.resource-not-found");
             } else {
                 throw new OperationFailure("proxy.error-status");
@@ -94,21 +96,31 @@ public class ProxyController {
         }
 
         HttpHeaders headers = new HttpHeaders();
-        String contentType = response.headers().firstValue("Content-Type").orElse(null);
-        ValidationUtil.assertion(
-            contentType != null && MimeUtil.isSupportedImage(contentType), "proxy.resource-not-media"
-        );
+        String contentType = response.header(HttpHeaders.CONTENT_TYPE);
+        if (contentType == null || !MimeUtil.isSupportedImage(contentType)) {
+            response.close();
+            throw new ValidationFailure("proxy.resource-not-media");
+        }
         headers.setContentType(MediaType.valueOf(contentType));
-        response.headers().firstValueAsLong("Content-Length").ifPresent(headers::setContentLength);
+        ResponseBody body = response.body();
+        if (body == null) {
+            response.close();
+            throw new OperationFailure("proxy.request-failed");
+        }
+        long contentLength = body.contentLength();
+        if (contentLength >= 0) {
+            headers.setContentLength(contentLength);
+        }
 
-        return new ResponseEntity<>(new InputStreamResource(response.body()), headers, HttpStatus.OK);
+        return new ResponseEntity<>(new InputStreamResource(body.byteStream()), headers, HttpStatus.OK);
     }
 
-    private static HttpClient buildClient() {
-        return HttpClient.newBuilder()
-            .version(HttpClient.Version.HTTP_1_1)
-            .followRedirects(HttpClient.Redirect.NORMAL)
+    private static OkHttpClient buildClient() {
+        return new OkHttpClient.Builder()
+            .protocols(List.of(Protocol.HTTP_1_1))
+            .followRedirects(true)
             .connectTimeout(CONNECTION_TIMEOUT)
+            .callTimeout(REQUEST_TIMEOUT)
             .build();
     }
 

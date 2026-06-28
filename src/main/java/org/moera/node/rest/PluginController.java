@@ -2,9 +2,6 @@ package org.moera.node.rest;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
@@ -16,6 +13,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 
 import io.hypersistence.utils.hibernate.type.basic.Inet;
+import okhttp3.Headers;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.moera.lib.node.types.PluginDescription;
 import org.moera.lib.node.types.PluginInfo;
 import org.moera.lib.node.types.Result;
@@ -64,7 +66,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -189,28 +190,26 @@ public class PluginController {
         }
 
         try {
-            HttpResponse<String> response = getPluginClient().send(
-                getPluginRequest(descriptor, body, method, request),
-                HttpResponse.BodyHandlers.ofString()
-            );
-            return ResponseEntity
-                .status(response.statusCode())
-                .headers(convertHeaders(response.headers()))
-                .body(response.body());
-        } catch (HttpClientErrorException e) {
-            return ResponseEntity
-                .status(e.getStatusCode())
-                .headers(e.getResponseHeaders())
-                .body(e.getResponseBodyAsString());
-        } catch (IOException | InterruptedException e) {
+            Request pluginRequest = getPluginRequest(descriptor, body, method, request);
+            try (Response response = getPluginClient().newCall(pluginRequest).execute()) {
+                ResponseBody responseBody = response.body();
+                String responseText = responseBody != null ? responseBody.string() : null;
+                return ResponseEntity
+                    .status(response.code())
+                    .headers(convertHeaders(response.headers()))
+                    .body(responseText);
+            }
+        } catch (IOException e) {
             throw new PluginInvocationException(e);
         }
     }
 
-    private HttpClient getPluginClient() {
-        return HttpClient.newBuilder()
-            .followRedirects(HttpClient.Redirect.NEVER)
+    private OkHttpClient getPluginClient() {
+        return new OkHttpClient.Builder()
+            .followRedirects(false)
+            .followSslRedirects(false)
             .connectTimeout(PLUGIN_CONNECTION_TIMEOUT)
+            .callTimeout(PLUGIN_REQUEST_TIMEOUT)
             .build();
     }
 
@@ -233,21 +232,18 @@ public class PluginController {
         return uriBuilder.build().toUri();
     }
 
-    private HttpRequest getPluginRequest(
+    private Request getPluginRequest(
         PluginDescriptor descriptor, String body, HttpMethod method, HttpServletRequest request
     ) {
-        var bodyPublisher = body != null
-            ? HttpRequest.BodyPublishers.ofString(body)
-            : HttpRequest.BodyPublishers.noBody();
-        var requestBuilder = HttpRequest.newBuilder()
-            .uri(getPluginUri(descriptor, request))
-            .timeout(PLUGIN_REQUEST_TIMEOUT)
-            .header("User-Agent", config.getUserAgent())
-            .method(method.name(), bodyPublisher);
+        String methodName = method.name();
+        var requestBuilder = new Request.Builder()
+            .url(getPluginUri(descriptor, request).toString())
+            .header(HttpHeaders.USER_AGENT, config.getUserAgent())
+            .method(methodName, getPluginRequestBody(methodName, body));
         request.getHeaderNames().asIterator().forEachRemaining(name -> {
             if (!name.equalsIgnoreCase(HttpHeaders.HOST) && !name.equalsIgnoreCase(HttpHeaders.AUTHORIZATION)) {
                 request.getHeaders(name).asIterator().forEachRemaining(value ->
-                    requestBuilder.header(name, value)
+                    requestBuilder.addHeader(name, value)
                 );
             }
         });
@@ -255,9 +251,23 @@ public class PluginController {
         return requestBuilder.build();
     }
 
-    private HttpHeaders convertHeaders(java.net.http.HttpHeaders headers) {
+    private static okhttp3.RequestBody getPluginRequestBody(String method, String body) {
+        if (body != null) {
+            return okhttp3.RequestBody.create(body, null);
+        }
+        return requiresRequestBody(method) ? okhttp3.RequestBody.create("", null) : null;
+    }
+
+    private static boolean requiresRequestBody(String method) {
+        return switch (method) {
+            case "POST", "PUT", "PATCH", "PROPPATCH", "REPORT" -> true;
+            default -> false;
+        };
+    }
+
+    private HttpHeaders convertHeaders(Headers headers) {
         HttpHeaders responseHeaders = new HttpHeaders();
-        headers.map().forEach(responseHeaders::addAll);
+        headers.toMultimap().forEach(responseHeaders::addAll);
         return responseHeaders;
     }
 

@@ -1,18 +1,18 @@
 package org.moera.node.linkpreviewnet;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import jakarta.inject.Inject;
 
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.moera.node.config.Config;
-import org.moera.node.util.Util;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -23,7 +23,7 @@ public class LinkPreviewNet {
     private static final Duration CALL_API_CONNECTION_TIMEOUT = Duration.ofSeconds(20);
     private static final Duration CALL_API_REQUEST_TIMEOUT = Duration.ofMinutes(1);
 
-    private static final URI API_ENDPOINT = URI.create("https://api.linkpreview.net");
+    private static final String API_ENDPOINT = "https://api.linkpreview.net";
 
     @Inject
     private Config config;
@@ -31,50 +31,54 @@ public class LinkPreviewNet {
     @Inject
     private ObjectMapper objectMapper;
 
-    private HttpClient buildClient() {
-        return HttpClient.newBuilder()
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(CALL_API_CONNECTION_TIMEOUT)
-                .build();
+    private OkHttpClient buildClient() {
+        return new OkHttpClient.Builder()
+            .followRedirects(true)
+            .connectTimeout(CALL_API_CONNECTION_TIMEOUT)
+            .callTimeout(CALL_API_REQUEST_TIMEOUT)
+            .build();
     }
 
-    private HttpRequest buildRequest(String url) {
-        String body = "q=" + Util.ue(url);
+    private Request buildRequest(String url) {
+        RequestBody requestBody = new FormBody.Builder()
+            .add("q", url)
+            .build();
 
-        return HttpRequest.newBuilder()
-                .uri(API_ENDPOINT)
-                .timeout(CALL_API_REQUEST_TIMEOUT)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                .header("X-Linkpreview-Api-Key", config.getLinkPreview().getServiceKey())
-                .header("User-Agent", config.getUserAgent())
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
+        return new Request.Builder()
+            .url(API_ENDPOINT)
+            .header("X-Linkpreview-Api-Key", config.getLinkPreview().getServiceKey())
+            .header(HttpHeaders.USER_AGENT, config.getUserAgent())
+            .post(requestBody)
+            .build();
     }
 
     public LinkPreviewNetInfo query(String url) throws LinkPreviewNetException {
-        HttpRequest request = buildRequest(url);
-        HttpResponse<String> response;
+        Request request = buildRequest(url);
         try {
-            response = buildClient().send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
-            throw new LinkPreviewNetException(e);
-        }
-        if (response.statusCode() == HttpStatus.OK.value()) {
-            try {
-                return objectMapper.readValue(response.body(), LinkPreviewNetInfo.class);
-            } catch (JacksonException e) {
-                throw new LinkPreviewNetException("Error parsing API response", e);
+            try (Response response = buildClient().newCall(request).execute()) {
+                ResponseBody responseBody = response.body();
+                String responseText = responseBody != null ? responseBody.string() : "";
+                int statusCode = response.code();
+                if (statusCode == HttpStatus.OK.value()) {
+                    try {
+                        return objectMapper.readValue(responseText, LinkPreviewNetInfo.class);
+                    } catch (JacksonException e) {
+                        throw new LinkPreviewNetException("Error parsing API response", e);
+                    }
+                } else {
+                    try {
+                        LinkPreviewNetInfo info = objectMapper.readValue(responseText, LinkPreviewNetInfo.class);
+                        int errorCode = info.getError() != null ? info.getError() : statusCode;
+                        throw new LinkPreviewNetException(
+                            "Error returned (%d): %s".formatted(errorCode, info.getDescription())
+                        );
+                    } catch (JacksonException e) {
+                        throw new LinkPreviewNetException("Error status returned: " + statusCode);
+                    }
+                }
             }
-        } else {
-            try {
-                LinkPreviewNetInfo info = objectMapper.readValue(response.body(), LinkPreviewNetInfo.class);
-                int errorCode = info.getError() != null ? info.getError() : response.statusCode();
-                throw new LinkPreviewNetException(
-                    "Error returned (%d): %s".formatted(errorCode, info.getDescription())
-                );
-            } catch (JacksonException e) {
-                throw new LinkPreviewNetException("Error status returned: " + response.statusCode());
-            }
+        } catch (IOException e) {
+            throw new LinkPreviewNetException("Connection error", e);
         }
     }
 

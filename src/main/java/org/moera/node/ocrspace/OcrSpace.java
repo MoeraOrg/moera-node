@@ -27,6 +27,7 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.media.MediaOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import tools.jackson.databind.ObjectMapper;
@@ -94,8 +95,8 @@ public class OcrSpace {
             .build();
         Request request = new Request.Builder()
             .post(multipartBody)
-            .addHeader("Accept", "application/json")
-            .addHeader("User-Agent", config.getUserAgent())
+            .addHeader(HttpHeaders.ACCEPT, "application/json")
+            .addHeader(HttpHeaders.USER_AGENT, config.getUserAgent())
             .url(API_ENDPOINT)
             .build();
 
