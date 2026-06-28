@@ -143,8 +143,8 @@ public class UniversalContext {
 
     public boolean isOwner() {
         return isBackground()
-                ? admin.get() || Objects.equals(clientName.get(), getOptions().nodeName())
-                : requestContext.isOwner();
+            ? admin.get() || Objects.equals(clientName.get(), getOptions().nodeName())
+            : requestContext.isOwner();
     }
 
     public boolean isMemberOf(UUID friendGroupId, Scope scope) {
@@ -159,7 +159,8 @@ public class UniversalContext {
 
     public boolean isPrincipal(PrincipalFilter principal, Scope scope) {
         return principal.includes(
-                isAdmin(scope), getClientName(scope), isSubscribedToClient(scope), getFriendGroups(scope));
+            isAdmin(scope), getClientName(scope), isSubscribedToClient(scope), getFriendGroups(scope)
+        );
     }
 
     public void authenticatedWithSignature(String nodeName) {

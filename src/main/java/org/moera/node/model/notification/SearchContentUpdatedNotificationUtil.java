@@ -6,11 +6,13 @@ import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.SearchBlockUpdate;
 import org.moera.lib.node.types.SearchCommentHeadingUpdate;
 import org.moera.lib.node.types.SearchCommentMediaTextUpdate;
+import org.moera.lib.node.types.SearchCommentMediaUpdate;
 import org.moera.lib.node.types.SearchCommentUpdate;
 import org.moera.lib.node.types.SearchContentUpdateType;
 import org.moera.lib.node.types.SearchFriendUpdate;
 import org.moera.lib.node.types.SearchPostingHeadingUpdate;
 import org.moera.lib.node.types.SearchPostingMediaTextUpdate;
+import org.moera.lib.node.types.SearchPostingMediaUpdate;
 import org.moera.lib.node.types.SearchPostingUpdate;
 import org.moera.lib.node.types.SearchReactionUpdate;
 import org.moera.lib.node.types.SearchSubscriptionUpdate;
@@ -157,6 +159,50 @@ public class SearchContentUpdatedNotificationUtil {
         details.setCommentId(commentId.toString());
         details.setHeading(heading);
         notification.setCommentHeadingUpdate(details);
+        return notification;
+    }
+
+    public static SearchContentUpdatedNotification buildPostingMediaUpdate(
+        UUID postingId,
+        UUID mediaId,
+        String remoteMediaNodeName,
+        String remoteMediaId,
+        String title,
+        String textContent
+    ) {
+        var notification = new SearchContentUpdatedNotification();
+        notification.setUpdateType(SearchContentUpdateType.POSTING_UPDATE_MEDIA);
+        var details = new SearchPostingMediaUpdate();
+        details.setPostingId(postingId.toString());
+        details.setMediaId(mediaId.toString());
+        details.setRemoteMediaNodeName(remoteMediaNodeName);
+        details.setRemoteMediaId(remoteMediaId);
+        details.setTitle(title);
+        details.setTextContent(textContent);
+        notification.setPostingMediaUpdate(details);
+        return notification;
+    }
+
+    public static SearchContentUpdatedNotification buildCommentMediaUpdate(
+        UUID postingId,
+        UUID commentId,
+        UUID mediaId,
+        String remoteMediaNodeName,
+        String remoteMediaId,
+        String title,
+        String textContent
+    ) {
+        var notification = new SearchContentUpdatedNotification();
+        notification.setUpdateType(SearchContentUpdateType.COMMENT_UPDATE_MEDIA);
+        var details = new SearchCommentMediaUpdate();
+        details.setPostingId(postingId.toString());
+        details.setCommentId(commentId.toString());
+        details.setMediaId(mediaId.toString());
+        details.setRemoteMediaNodeName(remoteMediaNodeName);
+        details.setRemoteMediaId(remoteMediaId);
+        details.setTitle(title);
+        details.setTextContent(textContent);
+        notification.setCommentMediaUpdate(details);
         return notification;
     }
 

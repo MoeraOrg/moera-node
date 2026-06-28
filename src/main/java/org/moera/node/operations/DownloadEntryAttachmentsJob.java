@@ -23,6 +23,7 @@ import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.data.RemoteMediaFileRepository;
+import org.moera.node.liberin.model.EntryMediaDownloadedLiberin;
 import org.moera.node.media.MediaGrantGenerator;
 import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaUtil;
@@ -357,6 +358,17 @@ public class DownloadEntryAttachmentsJob
         state.remoteNodeName = attachmentLocation.nodeName;
         state.leaseIds.addAll(leaseIds);
         checkpoint();
+
+        send(new EntryMediaDownloadedLiberin(
+            parameters.postingId,
+            parameters.commentId,
+            mediaFileOwner.getId(),
+            attachmentLocation.nodeName,
+            attachmentLocation.mediaId,
+            mediaFileOwner.getTitle(),
+            mediaFileOwner.getMediaFile().getRecognizedText()
+        ));
+
         releaseLeases();
     }
 
