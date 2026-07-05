@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgent;
 import org.moera.node.global.UserAgentOs;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -19,7 +20,7 @@ public class UserAgentInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        String userAgent = request.getHeader("User-Agent");
+        String userAgent = request.getHeader(HttpHeaders.USER_AGENT);
         if (ObjectUtils.isEmpty(userAgent)) {
             return true;
         }
@@ -27,7 +28,7 @@ public class UserAgentInterceptor implements HandlerInterceptor {
         if (userAgent.contains("Firefox")) {
             requestContext.setUserAgent(UserAgent.FIREFOX);
         } else if (userAgent.contains("Opera")) {
-            requestContext.setUserAgent(UserAgent.OPERA);
+            requestContext.setUserAgent(UserAgent.OPERA_PRESTO);
         } else if (userAgent.contains("Googlebot")) {
             requestContext.setUserAgent(UserAgent.GOOGLEBOT);
         } else if (userAgent.contains("bingbot")) {
@@ -55,6 +56,8 @@ public class UserAgentInterceptor implements HandlerInterceptor {
                 requestContext.setUserAgent(UserAgent.VIVALDI);
             } else if (userAgent.contains("Edge")) {
                 requestContext.setUserAgent(UserAgent.EDGE);
+            } else if (userAgent.contains("OPR")) {
+                requestContext.setUserAgent(UserAgent.OPERA);
             } else {
                 requestContext.setUserAgent(UserAgent.CHROME);
             }

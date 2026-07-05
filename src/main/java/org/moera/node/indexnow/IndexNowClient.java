@@ -65,8 +65,8 @@ public class IndexNowClient {
         try {
             Request request = new Request.Builder()
                 .post(RequestBody.create(objectMapper.writeValueAsString(body), MediaType.parse("application/json")))
-                .addHeader("Accept", "application/json")
-                .addHeader("User-Agent", config.getUserAgent())
+                .addHeader(HttpHeaders.ACCEPT, "application/json")
+                .addHeader(HttpHeaders.USER_AGENT, config.getUserAgent())
                 .url(config.getIndexNow().getEndpoint())
                 .build();
             try (Response response = this.client.newCall(request).execute()) {

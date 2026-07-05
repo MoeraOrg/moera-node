@@ -355,9 +355,10 @@ public class CommentTextUtil {
                         ? commentText.getBodySrc().getEncoded().equals(revision.getBodySrc())
                         : commentText.getBodySrc().getEncoded().equals(revision.getBody())
                 )
-            )
-            && MediaToAttachUtil.equals(commentText.getMedia(), revision.getAttachments())
-            && !(revision.getSignature() == null && commentText.getSignature() != null);
+            ) && (
+                commentText.getMedia() == null
+                || MediaToAttachUtil.equals(commentText.getMedia(), revision.getAttachments())
+            ) && !(revision.getSignature() == null && commentText.getSignature() != null);
     }
 
 }

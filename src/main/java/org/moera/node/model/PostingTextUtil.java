@@ -389,16 +389,17 @@ public class PostingTextUtil {
             (
                 ObjectUtils.isEmpty(postingText.getBodySrcFormat())
                 || postingText.getBodySrcFormat() == revision.getBodySrcFormat()
-            )
-            && (
+            ) && (
                 postingText.getBodySrc() == null
                 || (
                     revision.getBodySrcFormat() != SourceFormat.APPLICATION
                         ? postingText.getBodySrc().getEncoded().equals(revision.getBodySrc())
-                        : postingText.getBodySrc().getEncoded().equals(revision.getBody()))
+                        : postingText.getBodySrc().getEncoded().equals(revision.getBody())
                 )
-            && MediaToAttachUtil.equals(postingText.getMedia(), revision.getAttachments())
-            && !(revision.getSignature() == null && postingText.getSignature() != null);
+            ) && (
+                postingText.getMedia() == null
+                || MediaToAttachUtil.equals(postingText.getMedia(), revision.getAttachments())
+            ) && !(revision.getSignature() == null && postingText.getSignature() != null);
     }
 
 }

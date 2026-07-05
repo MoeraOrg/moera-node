@@ -295,10 +295,7 @@ public class RequestContextImpl implements RequestContext {
         if (!redirectToClient) {
             return false;
         }
-        return switch (getUserAgent()) {
-            case FIREFOX, CHROME, YANDEX, BRAVE -> true;
-            default -> false;
-        };
+        return !getUserAgent().isBot();
     }
 
     @Override

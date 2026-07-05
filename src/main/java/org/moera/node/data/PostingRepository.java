@@ -76,8 +76,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
 
     @Query(
         "select p from Posting p"
-        + " where p.nodeId = ?1 and p.deletedAt is null"
-        + " and (p.parentMedia is null and p.parentRemoteMedia is null or p.parentMediaEntry is null)"
+        + " where p.nodeId = ?1 and p.deletedAt is null and p.parentMediaEntry is null"
         + " and not exists(select s from Story s where s.entry.id = p.id)"
     )
     List<Posting> findUnlinked(UUID nodeId);

@@ -152,7 +152,7 @@ public class ProxyController {
 
     private Document fetchDocument(String url) throws IOException {
         return Jsoup.connect(url)
-            .header("User-Agent", config.getUserAgent("link preview"))
+            .header(HttpHeaders.USER_AGENT, config.getUserAgent("link preview"))
             .followRedirects(true)
             .timeout((int) REQUEST_TIMEOUT.toMillis())
             .get();
