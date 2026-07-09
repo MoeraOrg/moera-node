@@ -5,7 +5,7 @@
 
     <groupId>org.moera</groupId>
     <artifactId>moera-node</artifactId>
-    <version>0.18.6.1</version>
+    <version>0.18.7-SNAPSHOT</version>
     <name>moera-node</name>
     <description>Moera node</description>
     <packaging>jar</packaging>
@@ -51,7 +51,7 @@
         <languagetool.uk.version>6.7</languagetool.uk.version>
         <lingua.version>1.2.2</lingua.version>
         <metadata-extractor.version>2.19.0</metadata-extractor.version>
-        <moeralib.version>0.18.6</moeralib.version>
+        <moeralib.version>0.18.7-SNAPSHOT</moeralib.version>
         <okhttp.version>4.12.0</okhttp.version>
         <owasp-java-html-sanitizer.version>20260313.1</owasp-java-html-sanitizer.version>
         <postgresql.version>42.7.11</postgresql.version>

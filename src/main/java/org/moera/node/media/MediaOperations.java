@@ -219,8 +219,10 @@ public class MediaOperations {
                 int height = reader.getHeight(reader.getMinIndex());
                 return new Dimension(width, height);
             } catch (IOException e) {
-                log.warn("Error reading image file {} (Content-Type: {}): {}",
-                        LogUtil.format(path.toString()), LogUtil.format(contentType), e.getMessage());
+                log.warn(
+                    "Error reading image file {} (Content-Type: {}): {}",
+                    LogUtil.format(path.toString()), LogUtil.format(contentType), e.getMessage()
+                );
             } finally {
                 reader.dispose();
             }
@@ -322,6 +324,13 @@ public class MediaOperations {
         return new Rectangle(width, height);
     }
 
+    /**
+     * Crop the original image for preview. Images that are too wide or too high need to be cropped for preview.
+     *
+     * @param original the original image
+     * @return the cropped image (may be the same as the original
+     * @throws IOException
+     */
     private MediaFile cropOriginal(MediaFile original) throws IOException {
         var previewFormat = MimeUtil.thumbnail(original.getMimeType());
         if (previewFormat == null) {
@@ -343,7 +352,7 @@ public class MediaOperations {
                 .toOutputStream(out);
 
             MediaFile cropped = putInPlace(
-                out.getHash(), previewFormat.mimeType, tmp.path(), out.getDigest(), false
+                out.getHash(), previewFormat.mimeType(), tmp.path(), out.getDigest(), false
             );
             cropped = mediaFileRepository.save(cropped);
 
@@ -372,7 +381,7 @@ public class MediaOperations {
 
                 ThumbnailUtil.thumbnailOf(getPath(cropped).toFile(), cropped.getMimeType())
                     .width(width)
-                    .outputFormat(previewFormat.format)
+                    .outputFormat(previewFormat.format())
                     .toOutputStream(out);
 
                 long fileSize = Files.size(tmp.path());
@@ -387,7 +396,7 @@ public class MediaOperations {
                     // otherwise original will be used in preview
                 } else {
                     previewFile = putInPlace(
-                        out.getHash(), previewFormat.mimeType, tmp.path(), out.getDigest(), false
+                        out.getHash(), previewFormat.mimeType(), tmp.path(), out.getDigest(), false
                     );
                     previewFile = mediaFileRepository.save(previewFile);
                 }
@@ -406,9 +415,11 @@ public class MediaOperations {
     }
 
     public MediaFileOwner own(MediaFile mediaFile, String title) throws IOException {
-        MediaFile croppedFile = cropOriginal(mediaFile);
-        for (int size : PREVIEW_SIZES) {
-            createPreview(mediaFile, croppedFile, size);
+        if (mediaFile.isReasonableImage()) {
+            MediaFile croppedFile = cropOriginal(mediaFile);
+            for (int size : PREVIEW_SIZES) {
+                createPreview(mediaFile, croppedFile, size);
+            }
         }
 
         MediaFileOwner mediaFileOwner = new MediaFileOwner();

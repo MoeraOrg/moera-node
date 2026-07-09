@@ -9,16 +9,7 @@ import org.springframework.util.ObjectUtils;
 
 public class MimeUtil {
 
-    public static class ThumbnailFormat {
-
-        public String mimeType;
-        public String format;
-
-        public ThumbnailFormat(String mimeType, String format) {
-            this.mimeType = mimeType;
-            this.format = format;
-        }
-
+    public record ThumbnailFormat(String mimeType, String format) {
     }
 
     private static final MimeTypes MIME_TYPES = MimeTypes.getDefaultMimeTypes();
@@ -76,8 +67,30 @@ public class MimeUtil {
         return THUMBNAIL_FORMATS.containsKey(mimeType);
     }
 
+    public static boolean isLossyImage(String mimeType) {
+        var format = thumbnail(mimeType);
+        return format != null && format.format().equals("JPEG");
+    }
+
     public static ThumbnailFormat thumbnail(String mimeType) {
         return THUMBNAIL_FORMATS.getOrDefault(mimeType, null);
+    }
+
+    public static boolean isReasonableImage(String mimeType, Integer sizeX, Integer sizeY, Long fileSize) {
+        if (!isSupportedImage(mimeType)) {
+            return false;
+        }
+        if (sizeX != null && sizeY != null && (sizeX > 8192 || sizeY > 8192 || sizeX * sizeY > 25_000_000)) {
+            return false;
+        }
+        if (fileSize == null) {
+            return true;
+        }
+        if (MimeUtil.isLossyImage(mimeType)) {
+            return fileSize <= 5_242_880;
+        } else {
+            return fileSize <= 3_145_728;
+        }
     }
 
 }

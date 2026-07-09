@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict yhcsqeoTyOBGiMNtnc77zxBEycdw0NL0D3tkP80zFWGg3CKKQnxoKI2PabxxYfj
+\restrict vXzECoYnB4guusAdkVy4O8EbKLlqR8xaYU6wBaB8mHFvxatXrteKR7hfLxqYnBr
 
 -- Dumped from database version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
@@ -1473,6 +1473,25 @@ CREATE TABLE public.media_leases (
 ALTER TABLE public.media_leases OWNER TO moera;
 
 --
+-- Name: media_uploads; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.media_uploads (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    mime_type character varying(80) NOT NULL,
+    title character varying(255),
+    file_size integer NOT NULL,
+    chunk_size integer NOT NULL,
+    uploaded_chunks integer[] NOT NULL,
+    deadline timestamp without time zone NOT NULL,
+    completed_at timestamp without time zone
+);
+
+
+ALTER TABLE public.media_uploads OWNER TO moera;
+
+--
 -- Name: option_defaults; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -2422,6 +2441,14 @@ ALTER TABLE ONLY public.media_leases
 
 
 --
+-- Name: media_uploads media_uploads_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_uploads
+    ADD CONSTRAINT media_uploads_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: option_defaults option_defaults_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -3309,6 +3336,20 @@ CREATE INDEX media_leases_media_file_owner_id_idx ON public.media_leases USING b
 --
 
 CREATE INDEX media_leases_node_name_idx ON public.media_leases USING btree (node_id, owner_name);
+
+
+--
+-- Name: media_uploads_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_uploads_deadline_idx ON public.media_uploads USING btree (deadline);
+
+
+--
+-- Name: media_uploads_node_id_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_uploads_node_id_deadline_idx ON public.media_uploads USING btree (node_id, deadline);
 
 
 --
@@ -4665,5 +4706,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict yhcsqeoTyOBGiMNtnc77zxBEycdw0NL0D3tkP80zFWGg3CKKQnxoKI2PabxxYfj
+\unrestrict vXzECoYnB4guusAdkVy4O8EbKLlqR8xaYU6wBaB8mHFvxatXrteKR7hfLxqYnBr
 

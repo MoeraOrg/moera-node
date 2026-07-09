@@ -32,7 +32,7 @@ public class PrivateMediaFileInfoUtil {
         info.setSize(mediaFileOwner.getMediaFile().getFileSize());
         info.setTitle(mediaFileOwner.getTitle());
         info.setTextContent(mediaFileOwner.getMediaFile().getRecognizedText());
-        info.setAttachment(!mediaFileOwner.getMediaFile().isImage());
+        info.setAttachment(!mediaFileOwner.getMediaFile().isReasonableImage());
         if (mediaFileOwner.getMalwareMarks().isEmpty()) {
             fillPath(info, grantSupplier);
             fillDirectPath(info, config);

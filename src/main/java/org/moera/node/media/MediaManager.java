@@ -97,18 +97,25 @@ public class MediaManager {
             if (!Files.isWritable(path)) {
                 throw new MediaPathNotSetException("Not writable");
             }
-            path = path.resolve(MediaOperations.TMP_DIR);
-            if (!Files.exists(path)) {
-                try {
-                    Files.createDirectory(path);
-                } catch (FileAlreadyExistsException e) {
-                    // ok
-                } catch (Exception e) {
-                    throw new MediaPathNotSetException("Cannot create tmp/ subdirectory: " + e.getMessage());
-                }
-            }
+            initMediaSubdirectory(MediaOperations.TMP_DIR);
+            initMediaSubdirectory(MediaUploadOperations.UPLOADS_DIR);
         } catch (InvalidPathException e) {
             throw new MediaPathNotSetException("Path is invalid");
+        }
+    }
+
+    private void initMediaSubdirectory(String dirName) throws MediaPathNotSetException {
+        Path path = FileSystems.getDefault().getPath(config.getMedia().getPath(), dirName);
+        if (!Files.exists(path)) {
+            try {
+                Files.createDirectory(path);
+            } catch (FileAlreadyExistsException e) {
+                // ok
+            } catch (Exception e) {
+                throw new MediaPathNotSetException(
+                    String.format("Cannot create %s/ subdirectory: %s", dirName, e.getMessage())
+                );
+            }
         }
     }
 

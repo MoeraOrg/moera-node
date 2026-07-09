@@ -86,6 +86,10 @@ public class MediaFile {
         return MimeUtil.isSupportedImage(mimeType);
     }
 
+    public boolean isReasonableImage() {
+        return MimeUtil.isReasonableImage(mimeType, sizeX, sizeY, fileSize);
+    }
+
     public String getFileName() {
         return MimeUtil.fileName(id, mimeType);
     }

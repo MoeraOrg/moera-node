@@ -16,7 +16,11 @@ public class DigestingOutputStream extends OutputStream {
     public DigestingOutputStream(OutputStream outputStream) {
         hashStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
         digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-256"));
-        stream = new TeeOutputStream(outputStream, new TeeOutputStream(hashStream, digestStream));
+        if (outputStream != null) {
+            stream = new TeeOutputStream(outputStream, new TeeOutputStream(hashStream, digestStream));
+        } else {
+            stream = new TeeOutputStream(hashStream, digestStream);
+        }
     }
 
     public String getHash() {

@@ -119,11 +119,11 @@ public class AvatarController {
                     avatarAttributes.getClipSize(), avatarAttributes.getClipSize()
                 )
                 .size(avatarAttributes.getAvatarSize(), avatarAttributes.getAvatarSize())
-                .outputFormat(thumbnailFormat.format)
+                .outputFormat(thumbnailFormat.format())
                 .toOutputStream(out);
 
             MediaFile avatarFile = mediaOperations.putInPlace(
-                out.getHash(), thumbnailFormat.mimeType, tmp.path(), out.getDigest(), true
+                out.getHash(), thumbnailFormat.mimeType(), tmp.path(), out.getDigest(), true
             );
             avatarFile = mediaFileRepository.save(avatarFile);
 

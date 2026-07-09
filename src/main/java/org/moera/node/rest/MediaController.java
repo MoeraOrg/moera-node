@@ -1,9 +1,11 @@
 package org.moera.node.rest;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.UUID;
@@ -27,6 +29,8 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.data.MediaUpload;
+import org.moera.node.data.MediaUploadRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.MediaTitleUpdatedLiberin;
@@ -36,6 +40,7 @@ import org.moera.node.media.MediaGrantProperties;
 import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.media.MediaGrantValidator;
 import org.moera.node.media.MediaOperations;
+import org.moera.node.media.MediaUploadOperations;
 import org.moera.node.media.MimeUtil;
 import org.moera.node.media.ThresholdReachedException;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -53,6 +58,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -82,7 +88,13 @@ public class MediaController {
     private MediaFileOwnerRepository mediaFileOwnerRepository;
 
     @Inject
+    private MediaUploadRepository mediaUploadRepository;
+
+    @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    private MediaUploadOperations mediaUploadOperations;
 
     @Inject
     private BlockedUserOperations blockedUserOperations;
@@ -99,17 +111,18 @@ public class MediaController {
         return mediaType != null ? mediaType.getType() + "/" + mediaType.getSubtype() : null;
     }
 
-    private String uploadedFileName(String contentType, String contentDisposition) {
-        if (MimeUtil.isSupportedImage(contentType) || contentDisposition == null) {
-            return null;
-        }
-
+    private String contentFileName(String contentDisposition) {
         try {
-            String filename = ContentDisposition.parse(contentDisposition).getFilename();
-            return filename != null ? StringUtils.stripFilenameExtension(StringUtils.getFilename(filename)) : null;
+            return contentDisposition != null ? ContentDisposition.parse(contentDisposition).getFilename() : null;
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    private String uploadedFileName(String contentType, String fileName) {
+        return !MimeUtil.isSupportedImage(contentType) && fileName != null
+            ? StringUtils.stripFilenameExtension(StringUtils.getFilename(fileName))
+            : null;
     }
 
     private DigestingOutputStream transfer(
@@ -177,13 +190,39 @@ public class MediaController {
         @RequestHeader(value = "Content-Type", required = false) MediaType mediaType,
         @RequestHeader(value = "Content-Length", required = false) Long contentLength,
         @RequestHeader(value = "Content-Disposition", required = false) String contentDisposition,
+        @RequestParam(required = false) String upload,
         InputStream in
-    ) throws IOException {
+    ) {
         log.info(
             "POST /media/private (Content-Type: {}, Content-Length: {})",
             LogUtil.format(Objects.toString(mediaType, null)), LogUtil.format(contentLength)
         );
 
+        try {
+            MediaFileOwner mediaFileOwner = ObjectUtils.isEmpty(upload)
+                ? ownMediaFromBody(in, mediaType, contentLength, contentDisposition)
+                : ownMediaFromUpload(upload);
+            if (isSuitableForOcr(mediaFileOwner.getMediaFile())) {
+                mediaFileOwner.getMediaFile().setRecognizeAt(Util.now());
+            }
+            return PrivateMediaFileInfoUtil.build(
+                mediaFileOwner, config.getMedia().getDirectServe(), new MediaGrantGenerator(requestContext.getOptions())
+            );
+        } catch (InvalidImageException e) {
+            throw new ValidationFailure("media.image-invalid");
+        } catch (ThresholdReachedException e) {
+            throw new ValidationFailure("media.wrong-size");
+        } catch (IOException e) {
+            throw new OperationFailure("media.storage-error");
+        }
+    }
+
+    private MediaFileOwner ownMediaFromBody(
+        InputStream in,
+        MediaType mediaType,
+        Long contentLength,
+        String contentDisposition
+    ) throws IOException {
         var tmp = mediaOperations.tmpFile();
         try {
             DigestingOutputStream out = transfer(in, tmp.outputStream(), contentLength, null);
@@ -194,23 +233,37 @@ public class MediaController {
             MediaFile mediaFile = mediaOperations.putInPlace(id, contentType, tmp.path(), digest, false);
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
-            String fileName = uploadedFileName(contentType, contentDisposition);
-            MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, fileName);
-            if (isSuitableForOcr(mediaFile)) {
-                mediaFile.setRecognizeAt(Util.now());
-            }
-
-            return PrivateMediaFileInfoUtil.build(
-                mediaFileOwner, config.getMedia().getDirectServe(), new MediaGrantGenerator(requestContext.getOptions())
-            );
-        } catch (InvalidImageException e) {
-            throw new ValidationFailure("media.image-invalid");
-        } catch (ThresholdReachedException e) {
-            throw new ValidationFailure("media.wrong-size");
-        } catch (IOException e) {
-            throw new OperationFailure("media.storage-error");
+            String fileName = uploadedFileName(contentType, contentFileName(contentDisposition));
+            return mediaOperations.own(mediaFile, fileName);
         } finally {
             Files.deleteIfExists(tmp.path());
+        }
+    }
+
+    private MediaFileOwner ownMediaFromUpload(String id) throws IOException {
+        UUID uploadId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("media-upload.not-found"));
+        try (var ignored = mediaUploadOperations.lock(uploadId)) {
+            MediaUpload mediaUpload = mediaUploadRepository.findByNodeIdAndId(requestContext.nodeId(), uploadId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("media-upload.not-found"));
+            if (!mediaUpload.isCompleted()) {
+                throw new OperationFailure("media-upload.not-completed");
+            }
+            Path path = mediaUploadOperations.getPath(mediaUpload);
+            DigestingOutputStream out = transfer(new FileInputStream(path.toFile()), null, null, null);
+            String mediaFileId = out.getHash();
+            byte[] digest = out.getDigest();
+            String contentType = mediaUpload.getMimeType();
+
+            MediaFile mediaFile = mediaOperations.putInPlace(mediaFileId, contentType, path, digest, false);
+            // the entity is detached after putInPlace() transaction closed
+            mediaFile = entityManager.merge(mediaFile);
+            String fileName = uploadedFileName(contentType, mediaUpload.getTitle());
+            MediaFileOwner mediaFileOwner =  mediaOperations.own(mediaFile, fileName);
+            // if the file already exists, the uploaded one will not be moved out
+            mediaUploadOperations.deleteUploadFileQuietly(mediaUpload);
+            mediaUploadRepository.deleteByNodeIdAndId(requestContext.nodeId(), uploadId);
+
+            return mediaFileOwner;
         }
     }
 
