@@ -30,7 +30,7 @@
         <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
 
         <bootstrap.version>5.3.8</bootstrap.version>
-        <bouncycastle.bcprov-lts8on.version>2.73.10</bouncycastle.bcprov-lts8on.version>
+        <bouncycastle.bcprov-lts8on.version>2.73.11</bouncycastle.bcprov-lts8on.version>
         <bucket4j.version>8.17.0</bucket4j.version>
         <checkstyle.version>12.3.1</checkstyle.version>
         <commons-io.version>2.21.0</commons-io.version>
