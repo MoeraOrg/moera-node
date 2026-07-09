@@ -20,19 +20,6 @@ public class PostingFeaturesUtil {
         );
         postingFeatures.setSubjectPresent(options.getBool("posting.subject.present"));
         postingFeatures.setSourceFormats(Arrays.asList(SourceFormat.values()));
-        postingFeatures.setImageRecommendedSize(
-            Math.min(
-                Math.min(
-                    options.getInt("media.max-size"),
-                    options.getInt("posting.media.max-size")
-                ),
-                Math.min(
-                    options.getInt("comment.media.max-size"),
-                    options.getInt("posting.image.recommended-size")
-                )
-            )
-        );
-        postingFeatures.setImageRecommendedPixels(options.getInt("posting.image.recommended-pixels"));
         postingFeatures.setImageFormats(Arrays.asList(ImageIO.getReaderMIMETypes()));
         return postingFeatures;
     }

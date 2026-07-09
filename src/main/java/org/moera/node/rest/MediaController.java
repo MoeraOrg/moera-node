@@ -191,17 +191,21 @@ public class MediaController {
         @RequestHeader(value = "Content-Length", required = false) Long contentLength,
         @RequestHeader(value = "Content-Disposition", required = false) String contentDisposition,
         @RequestParam(required = false) String upload,
+        @RequestParam(required = false, defaultValue = "false") boolean downsize,
         InputStream in
     ) {
         log.info(
-            "POST /media/private (Content-Type: {}, Content-Length: {})",
-            LogUtil.format(Objects.toString(mediaType, null)), LogUtil.format(contentLength)
+            "POST /media/private (Content-Type: {}, Content-Length: {}, upload = {}, downsize = {})",
+            LogUtil.format(Objects.toString(mediaType, null)),
+            LogUtil.format(contentLength),
+            LogUtil.format(upload),
+            LogUtil.format(downsize)
         );
 
         try {
             MediaFileOwner mediaFileOwner = ObjectUtils.isEmpty(upload)
-                ? ownMediaFromBody(in, mediaType, contentLength, contentDisposition)
-                : ownMediaFromUpload(upload);
+                ? ownMediaFromBody(in, mediaType, contentLength, contentDisposition, downsize)
+                : ownMediaFromUpload(upload, downsize);
             if (isSuitableForOcr(mediaFileOwner.getMediaFile())) {
                 mediaFileOwner.getMediaFile().setRecognizeAt(Util.now());
             }
@@ -221,16 +225,23 @@ public class MediaController {
         InputStream in,
         MediaType mediaType,
         Long contentLength,
-        String contentDisposition
+        String contentDisposition,
+        boolean downsize
     ) throws IOException {
         var tmp = mediaOperations.tmpFile();
         try {
             DigestingOutputStream out = transfer(in, tmp.outputStream(), contentLength, null);
-            String id = out.getHash();
-            byte[] digest = out.getDigest();
             String contentType = toContentType(mediaType);
+            if (downsize) {
+                contentType = downsizeImage(tmp.path(), contentType);
+                try (InputStream tmpIn = new FileInputStream(tmp.path().toFile())) {
+                    out = transfer(tmpIn, null, null, null);
+                }
+            }
 
-            MediaFile mediaFile = mediaOperations.putInPlace(id, contentType, tmp.path(), digest, false);
+            MediaFile mediaFile = mediaOperations.putInPlace(
+                out.getHash(), contentType, tmp.path(), out.getDigest(), false
+            );
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
             String fileName = uploadedFileName(contentType, contentFileName(contentDisposition));
@@ -240,7 +251,7 @@ public class MediaController {
         }
     }
 
-    private MediaFileOwner ownMediaFromUpload(String id) throws IOException {
+    private MediaFileOwner ownMediaFromUpload(String id, boolean downsize) throws IOException {
         UUID uploadId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("media-upload.not-found"));
         try (var ignored = mediaUploadOperations.lock(uploadId)) {
             MediaUpload mediaUpload = mediaUploadRepository.findByNodeIdAndId(requestContext.nodeId(), uploadId)
@@ -249,22 +260,34 @@ public class MediaController {
                 throw new OperationFailure("media-upload.not-completed");
             }
             Path path = mediaUploadOperations.getPath(mediaUpload);
-            DigestingOutputStream out = transfer(new FileInputStream(path.toFile()), null, null, null);
-            String mediaFileId = out.getHash();
-            byte[] digest = out.getDigest();
             String contentType = mediaUpload.getMimeType();
+            if (downsize) {
+                contentType = downsizeImage(path, contentType);
+            }
+            DigestingOutputStream out;
+            try (InputStream tmpIn = new FileInputStream(path.toFile())) {
+                out = transfer(tmpIn, null, null, null);
+            }
 
-            MediaFile mediaFile = mediaOperations.putInPlace(mediaFileId, contentType, path, digest, false);
+            MediaFile mediaFile = mediaOperations.putInPlace(
+                out.getHash(), contentType, path, out.getDigest(), false
+            );
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
             String fileName = uploadedFileName(contentType, mediaUpload.getTitle());
-            MediaFileOwner mediaFileOwner =  mediaOperations.own(mediaFile, fileName);
+            MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, fileName);
             // if the file already exists, the uploaded one will not be moved out
             mediaUploadOperations.deleteUploadFileQuietly(mediaUpload);
             mediaUploadRepository.deleteByNodeIdAndId(requestContext.nodeId(), uploadId);
 
             return mediaFileOwner;
         }
+    }
+
+    private String downsizeImage(Path path, String contentType) throws IOException {
+        return mediaOperations.downsizeImage(
+            path, contentType, requestContext.getOptions().getInt("media.image.recommended-size")
+        );
     }
 
     private boolean isSuitableForOcr(MediaFile mediaFile) {

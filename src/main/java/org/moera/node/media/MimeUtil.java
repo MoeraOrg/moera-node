@@ -10,6 +10,11 @@ import org.springframework.util.ObjectUtils;
 public class MimeUtil {
 
     public record ThumbnailFormat(String mimeType, String format) {
+
+        public boolean isJpeg() {
+            return MimeUtil.isJpeg(mimeType);
+        }
+
     }
 
     private static final MimeTypes MIME_TYPES = MimeTypes.getDefaultMimeTypes();
@@ -69,7 +74,11 @@ public class MimeUtil {
 
     public static boolean isLossyImage(String mimeType) {
         var format = thumbnail(mimeType);
-        return format != null && format.format().equals("JPEG");
+        return format != null && format.isJpeg();
+    }
+
+    public static boolean isJpeg(String mimeType) {
+        return "image/jpeg".equals(mimeType) || "image/pjpeg".equals(mimeType);
     }
 
     public static ThumbnailFormat thumbnail(String mimeType) {
@@ -87,9 +96,26 @@ public class MimeUtil {
             return true;
         }
         if (MimeUtil.isLossyImage(mimeType)) {
-            return fileSize <= 5_242_880;
+            return fileSize <= 5_242_880L;
         } else {
-            return fileSize <= 3_145_728;
+            return fileSize <= 3_145_728L;
+        }
+    }
+
+    public static boolean isReasonableImageForDownsize(String mimeType, Integer sizeX, Integer sizeY, Long fileSize) {
+        if (!isSupportedImage(mimeType)) {
+            return false;
+        }
+        if (sizeX != null && sizeY != null && (sizeX > 8192 || sizeY > 8192 || sizeX * sizeY > 40_000_000)) {
+            return false;
+        }
+        if (fileSize == null) {
+            return true;
+        }
+        if (MimeUtil.isJpeg(mimeType)) {
+            return fileSize <= 20_971_520L;
+        } else {
+            return fileSize <= 3_145_728L;
         }
     }
 

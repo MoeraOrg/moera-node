@@ -227,23 +227,6 @@
     min: 65536
     max: 104857600
 
-- name: posting.image.recommended-size
-  type: int
-  defaultValue: 368640
-  title: Maximal size of a compressed image in a post
-  modifiers:
-    format: size
-    min: 65536
-    max: 104857600
-
-- name: posting.image.recommended-pixels
-  type: int
-  defaultValue: 1280
-  title: Maximal resolution of a compressed image in a post (in pixels)
-  modifiers:
-    min: 600
-    max: 10240
-
 - name: posting.subject.present
   type: bool
   defaultValue: false
@@ -515,12 +498,12 @@
 - name: media.max-size
   type: int
   privileged: true
-  defaultValue: 8388608
+  defaultValue: 157286400
   title: Maximal size of an uploaded media
   modifiers:
     format: size
     min: 65536
-    max: 104857600
+    max: 157286400
 
 - name: media.preview-gain
   type: int
@@ -530,6 +513,16 @@
     min: 5
     max: 50
 
+- name: media.upload.max-chunk-size
+  type: int
+  privileged: true
+  defaultValue: 8388608
+  title: Maximal size of a media upload chunk
+  modifiers:
+    format: size
+    min: 65536
+    max: 8388608
+
 - name: media.verification.max-size
   type: int
   privileged: true
@@ -538,6 +531,15 @@
   modifiers:
     format: size
     min: 1048576
+    max: 104857600
+
+- name: media.image.recommended-size
+  type: int
+  defaultValue: 524288
+  title: Maximal size of a compressed image
+  modifiers:
+    format: size
+    min: 65536
     max: 104857600
 
 - name: friends.view

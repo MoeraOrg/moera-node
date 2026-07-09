@@ -24,4 +24,27 @@ public class MimeUtilTest {
         Assertions.assertEquals("media.jpg", MimeUtil.fileName("media", "image/jpeg"));
     }
 
+    @Test
+    void reasonableImageUsesAttachmentLimits() {
+        Assertions.assertTrue(MimeUtil.isReasonableImage("image/jpeg", 2000, 1500, 5_242_880L));
+        Assertions.assertFalse(MimeUtil.isReasonableImage("image/jpeg", 2000, 1500, 5_242_881L));
+        Assertions.assertTrue(MimeUtil.isReasonableImage("image/png", 2000, 1500, 3_145_728L));
+        Assertions.assertFalse(MimeUtil.isReasonableImage("image/png", 2000, 1500, 3_145_729L));
+    }
+
+    @Test
+    void reasonableImageForDownsizeAllowsLargeJpeg() {
+        Assertions.assertFalse(MimeUtil.isReasonableImage("image/jpeg", 2000, 1500, 20_971_520L));
+        Assertions.assertTrue(MimeUtil.isReasonableImageForDownsize("image/jpeg", 2000, 1500, 20_971_520L));
+        Assertions.assertTrue(MimeUtil.isReasonableImageForDownsize("image/pjpeg", 2000, 1500, 20_971_520L));
+        Assertions.assertFalse(MimeUtil.isReasonableImageForDownsize("image/jpeg", 2000, 1500, 20_971_521L));
+    }
+
+    @Test
+    void reasonableImageForDownsizeKeepsOtherLimits() {
+        Assertions.assertFalse(MimeUtil.isReasonableImageForDownsize("image/png", 2000, 1500, 3_145_729L));
+        Assertions.assertFalse(MimeUtil.isReasonableImageForDownsize("image/jpeg", 9000, 1500, 5_242_880L));
+        Assertions.assertFalse(MimeUtil.isReasonableImageForDownsize("image/jpeg", 6000, 5000, 5_242_880L));
+    }
+
 }

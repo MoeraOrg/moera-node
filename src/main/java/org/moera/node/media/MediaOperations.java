@@ -6,6 +6,7 @@ import static java.nio.file.StandardOpenOption.CREATE;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -45,6 +46,7 @@ import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifIFD0Directory;
+import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.tika.Tika;
 import org.moera.lib.crypto.CryptoUtil;
@@ -118,6 +120,54 @@ public class MediaOperations {
 
     private static final int PERMISSIONS_REFRESH_BATCH_SIZE = 100;
     private static final int PERMISSIONS_REFRESH_BATCHES_PER_CALL = 5;
+
+    private class PreviewSource {
+
+        private final MediaFile mediaFile;
+        private BufferedImage image;
+
+        PreviewSource(MediaFile mediaFile) {
+            this.mediaFile = mediaFile;
+        }
+
+        PreviewSource(MediaFile mediaFile, BufferedImage image) {
+            this.mediaFile = mediaFile;
+            this.image = image;
+        }
+
+        public MediaFile getMediaFile() {
+            return mediaFile;
+        }
+
+        public BufferedImage loadImage() throws IOException {
+            if (image == null) {
+                image = readImage(mediaFile);
+            }
+            return image;
+        }
+
+        private BufferedImage readImage(MediaFile mediaFile) throws IOException {
+            return ThumbnailUtil.thumbnailOf(getPath(mediaFile).toFile(), mediaFile.getMimeType())
+                .scale(1)
+                .useExifOrientation(true)
+                .asBufferedImage();
+        }
+
+        public PreviewSource from(MediaFile mediaFile) {
+            if (Objects.equals(this.mediaFile.getId(), mediaFile.getId())) {
+                return this;
+            }
+            return new PreviewSource(mediaFile);
+        }
+
+        public PreviewSource or(MediaFilePreview largerPreview) {
+            if (largerPreview != null) {
+                return from(largerPreview.getMediaFile());
+            }
+            return this;
+        }
+
+    }
 
     @Inject
     private RequestCounter requestCounter;
@@ -212,8 +262,7 @@ public class MediaOperations {
         Iterator<ImageReader> it = ImageIO.getImageReadersByMIMEType(contentType);
         while (it.hasNext()) {
             ImageReader reader = it.next();
-            try {
-                ImageInputStream stream = new FileImageInputStream(path.toFile());
+            try (ImageInputStream stream = new FileImageInputStream(path.toFile())) {
                 reader.setInput(stream);
                 int width = reader.getWidth(reader.getMinIndex());
                 int height = reader.getHeight(reader.getMinIndex());
@@ -231,6 +280,38 @@ public class MediaOperations {
         throw new InvalidImageException();
     }
 
+    public String downsizeImage(Path path, String contentType, long targetSize) throws IOException {
+        contentType = detectContentType(path, contentType);
+        if (!MimeUtil.isSupportedImage(contentType)) {
+            return contentType;
+        }
+
+        long fileSize = Files.size(path);
+        if (fileSize <= targetSize) {
+            return contentType;
+        }
+
+        Dimension dimension = getImageDimension(contentType, path);
+        if (!MimeUtil.isReasonableImageForDownsize(contentType, dimension.width, dimension.height, fileSize)) {
+            return contentType;
+        }
+
+        var tmp = tmpFile();
+        try {
+            tmp.outputStream().close();
+            String downsizedContentType = ImageScaler.downsize(
+                path.toFile(), tmp.path().toFile(), contentType, dimension, fileSize, targetSize
+            );
+            if (Files.size(tmp.path()) >= fileSize) {
+                return contentType;
+            }
+            Files.move(tmp.path(), path, REPLACE_EXISTING);
+            return downsizedContentType;
+        } finally {
+            Files.deleteIfExists(tmp.path());
+        }
+    }
+
     @Transactional(REQUIRES_NEW)
     public MediaFile putInPlace(
         String id, String contentType, Path tmpPath, byte[] digest, boolean exposed
@@ -241,15 +322,7 @@ public class MediaOperations {
                 digest = digest(tmpPath);
             }
             // image type may be wrong, autodetection will give more accurate result
-            if (contentType == null || contentType.startsWith("image/")) {
-                contentType = detectContentType(tmpPath, contentType);
-            }
-            if (contentType == null) {
-                contentType = new Tika().detect(tmpPath);
-            }
-            if (contentType == null) {
-                contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
-            }
+            contentType = detectContentType(tmpPath, contentType);
             if (exposed && !MimeUtil.isSupportedImage(contentType)) {
                 throw new InvalidImageException();
             }
@@ -292,9 +365,20 @@ public class MediaOperations {
         return orientation;
     }
 
-    private String detectContentType(Path path, String defaultContentType) throws IOException {
-        FileType fileType = FileTypeDetector.detectFileType(new BufferedInputStream(new FileInputStream(path.toFile())));
-        return fileType != null ? fileType.getMimeType() : defaultContentType;
+    private String detectContentType(Path path, String contentType) throws IOException {
+        if (contentType == null || contentType.startsWith("image/")) {
+            FileType fileType = FileTypeDetector.detectFileType(
+                new BufferedInputStream(new FileInputStream(path.toFile()))
+            );
+            contentType = fileType != null ? fileType.getMimeType() : contentType;
+        }
+        if (contentType == null) {
+            contentType = new Tika().detect(path);
+        }
+        if (contentType == null) {
+            contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        }
+        return contentType;
     }
 
     public byte[] digest(MediaFile mediaFile) throws IOException {
@@ -362,36 +446,38 @@ public class MediaOperations {
         }
     }
 
-    private void createPreview(MediaFile original, MediaFile cropped, int width) throws IOException {
+    private PreviewSource createPreview(
+        MediaFile original, MediaFile cropped, PreviewSource previewSource, int width
+    ) throws IOException {
         var previewFormat = MimeUtil.thumbnail(original.getMimeType());
         if (previewFormat == null) {
-            return;
+            return previewSource;
         }
 
         MediaFilePreview largerPreview = original.findLargerPreview(width);
+        PreviewSource source = previewSource != null ? previewSource : new PreviewSource(cropped);
         if (largerPreview != null && largerPreview.getWidth() == width) {
-            return;
+            return source.from(largerPreview.getMediaFile());
         }
 
-        MediaFile previewFile = cropped;
-        if (cropped.getSizeX() > width) {
+        source = source.or(largerPreview);
+        MediaFile previewFile = source.getMediaFile();
+        if (source.getMediaFile().getSizeX() > width) {
             var tmp = tmpFile();
             try {
                 DigestingOutputStream out = new DigestingOutputStream(tmp.outputStream());
 
-                ThumbnailUtil.thumbnailOf(getPath(cropped).toFile(), cropped.getMimeType())
+                BufferedImage previewImage = Thumbnails.of(source.loadImage())
                     .width(width)
-                    .outputFormat(previewFormat.format())
-                    .toOutputStream(out);
+                    .asBufferedImage();
+                ThumbnailUtil.toOutputStream(Thumbnails.of(previewImage).scale(1), out, previewFormat);
 
                 long fileSize = Files.size(tmp.path());
-                long prevFileSize = largerPreview != null
-                    ? largerPreview.getMediaFile().getFileSize()
-                    : cropped.getFileSize();
+                long prevFileSize = source.getMediaFile().getFileSize();
                 long gain = (prevFileSize - fileSize) * 100 / prevFileSize; // negative, if fileSize > prevFileSize
                 if (gain < universalContext.getOptions().getInt("media.preview-gain")) {
                     if (largerPreview != null) {
-                        return;
+                        return source;
                     }
                     // otherwise original will be used in preview
                 } else {
@@ -399,6 +485,7 @@ public class MediaOperations {
                         out.getHash(), previewFormat.mimeType(), tmp.path(), out.getDigest(), false
                     );
                     previewFile = mediaFileRepository.save(previewFile);
+                    source = new PreviewSource(previewFile, previewImage);
                 }
             } finally {
                 Files.deleteIfExists(tmp.path());
@@ -412,13 +499,16 @@ public class MediaOperations {
         preview.setMediaFile(previewFile);
         preview = mediaFilePreviewRepository.save(preview);
         original.addPreview(preview);
+
+        return source.from(previewFile);
     }
 
     public MediaFileOwner own(MediaFile mediaFile, String title) throws IOException {
         if (mediaFile.isReasonableImage()) {
             MediaFile croppedFile = cropOriginal(mediaFile);
+            PreviewSource previewSource = null;
             for (int size : PREVIEW_SIZES) {
-                createPreview(mediaFile, croppedFile, size);
+                previewSource = createPreview(mediaFile, croppedFile, previewSource, size);
             }
         }
 
