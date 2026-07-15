@@ -280,6 +280,10 @@ public class MediaOperations {
         throw new InvalidImageException();
     }
 
+    public String downsizeImage(Path path, String contentType) throws IOException {
+        return downsizeImage(path, contentType, universalContext.getOptions().getInt("media.image.recommended-size"));
+    }
+
     public String downsizeImage(Path path, String contentType, long targetSize) throws IOException {
         contentType = detectContentType(path, contentType);
         if (!MimeUtil.isSupportedImage(contentType)) {

@@ -1,6 +1,7 @@
 package org.moera.node.util;
 
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.UnknownHostException;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -37,17 +38,38 @@ public class UriUtil {
         return builder;
     }
 
-    public static UriComponentsBuilder createLocalBuilderFromRequest(HttpServletRequest request) {
-        return UriComponentsBuilder
-            .fromPath(request.getRequestURI())
-            .query(request.getQueryString());
-    }
-
     public static String normalize(String uri) {
         if (uri == null) {
             return null;
         }
         return uri.endsWith("/") ? uri.substring(0, uri.length() - 1) : uri;
+    }
+
+    public static String resolve(String uri, String baseUri) {
+        if (uri == null) {
+            return null;
+        }
+        URI parsed = URI.create(uri);
+        return parsed.isAbsolute() ? uri : URI.create(baseUri).resolve(parsed).toString();
+    }
+
+    public static String fileName(String uri) {
+        if (uri == null) {
+            return null;
+        }
+        String path = UriComponentsBuilder.fromUriString(uri).build().getPath();
+        if (path == null) {
+            return null;
+        }
+        int end = path.length() - 1;
+        while (end >= 0 && path.charAt(end) == '/') {
+            end--;
+        }
+        if (end < 0) {
+            return "";
+        }
+        int pos = path.lastIndexOf('/', end);
+        return pos >= 0 ? path.substring(pos + 1, end + 1) : path.substring(0, end + 1);
     }
 
     public static InetAddress remoteAddress(HttpServletRequest request) throws UnknownHostException {

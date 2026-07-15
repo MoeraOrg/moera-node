@@ -1,6 +1,9 @@
 package org.moera.node.media;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -33,18 +36,26 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.data.MediaUpload;
+import org.moera.node.data.MediaUploadRepository;
 import org.moera.node.data.RemoteMediaCache;
 import org.moera.node.data.RemoteMediaCacheRepository;
 import org.moera.node.data.RemoteMediaError;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarImageUtil;
+import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.OperationFailure;
+import org.moera.node.ocrspace.OcrSpace;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.ParametrizedLock;
+import org.moera.node.util.UriUtil;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 @Component
 public class MediaManager {
@@ -70,10 +81,19 @@ public class MediaManager {
     private RemoteMediaCacheRepository remoteMediaCacheRepository;
 
     @Inject
+    private MediaUploadRepository mediaUploadRepository;
+
+    @Inject
     private MediaOperations mediaOperations;
 
     @Inject
+    private MediaUploadOperations mediaUploadOperations;
+
+    @Inject
     private RemoteMediaCacheOperations remoteMediaCacheOperations;
+
+    @Inject
+    private MediaDownloadOperations mediaDownloadOperations;
 
     @Inject
     @PersistenceContext
@@ -627,6 +647,146 @@ public class MediaManager {
                 universalContext.nodeId(), remoteNodeName, remoteMediaId, digest, null
             );
         }
+    }
+
+    public MediaFileOwner ownMedia(
+        MediaType mediaType,
+        Long contentLength,
+        String contentDisposition,
+        String upload,
+        String url,
+        boolean downsize,
+        InputStream in
+    ) throws IOException {
+        MediaFileOwner mediaFileOwner;
+        if (!ObjectUtils.isEmpty(url)) {
+            mediaFileOwner = ownMediaFromUrl(url, downsize);
+        } else if (!ObjectUtils.isEmpty(upload)) {
+            mediaFileOwner = ownMediaFromUpload(upload, downsize);
+        } else {
+            mediaFileOwner = ownMediaFromStream(in, mediaType, contentLength, contentDisposition, downsize);
+        }
+
+        if (isSuitableForOcr(mediaFileOwner.getMediaFile())) {
+            mediaFileOwner.getMediaFile().setRecognizeAt(Util.now());
+        }
+
+        return mediaFileOwner;
+    }
+
+    private MediaFileOwner ownMediaFromStream(
+        InputStream in,
+        MediaType mediaType,
+        Long contentLength,
+        String fileName,
+        boolean downsize
+    ) throws IOException {
+        var tmp = mediaOperations.tmpFile();
+        try {
+            DigestingOutputStream out = transfer(in, tmp.outputStream(), contentLength, null);
+            String contentType = toContentType(mediaType);
+            if (downsize) {
+                contentType = mediaOperations.downsizeImage(tmp.path(), contentType);
+                try (InputStream tmpIn = new FileInputStream(tmp.path().toFile())) {
+                    out = transfer(tmpIn, null, null, null);
+                }
+            }
+
+            MediaFile mediaFile = mediaOperations.putInPlace(
+                out.getHash(), contentType, tmp.path(), out.getDigest(), false
+            );
+            // the entity is detached after putInPlace() transaction closed
+            mediaFile = entityManager.merge(mediaFile);
+            String title = uploadedFileName(contentType, fileName);
+            return mediaOperations.own(mediaFile, title);
+        } finally {
+            Files.deleteIfExists(tmp.path());
+        }
+    }
+
+    private MediaFileOwner ownMediaFromUpload(String id, boolean downsize) throws IOException {
+        UUID uploadId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("media-upload.not-found"));
+        try (var ignored = mediaUploadOperations.lock(uploadId)) {
+            MediaUpload mediaUpload = mediaUploadRepository.findByNodeIdAndId(universalContext.nodeId(), uploadId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("media-upload.not-found"));
+            if (!mediaUpload.isCompleted()) {
+                throw new OperationFailure("media-upload.not-completed");
+            }
+            Path path = mediaUploadOperations.getPath(mediaUpload);
+            String contentType = mediaUpload.getMimeType();
+            if (downsize) {
+                contentType = mediaOperations.downsizeImage(path, contentType);
+            }
+            DigestingOutputStream out;
+            try (InputStream tmpIn = new FileInputStream(path.toFile())) {
+                out = transfer(tmpIn, null, null, null);
+            }
+
+            MediaFile mediaFile = mediaOperations.putInPlace(
+                out.getHash(), contentType, path, out.getDigest(), false
+            );
+            // the entity is detached after putInPlace() transaction closed
+            mediaFile = entityManager.merge(mediaFile);
+            String fileName = uploadedFileName(contentType, mediaUpload.getTitle());
+            MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, fileName);
+            // if the file already exists, the uploaded one will not be moved out
+            mediaUploadOperations.deleteUploadFileQuietly(mediaUpload);
+            mediaUploadRepository.deleteByNodeIdAndId(universalContext.nodeId(), uploadId);
+
+            return mediaFileOwner;
+        }
+    }
+
+    private MediaFileOwner ownMediaFromUrl(String url, boolean downsize) throws IOException {
+        var mediaStream = mediaDownloadOperations.fetchMedia(url);
+
+        var tmp = mediaOperations.tmpFile();
+        try {
+            DigestingOutputStream out = transfer(
+                mediaStream.stream(), tmp.outputStream(), mediaStream.contentLength(), null
+            );
+            String contentType = toContentType(mediaStream.contentType());
+            if (downsize) {
+                contentType = mediaOperations.downsizeImage(tmp.path(), contentType);
+                try (InputStream tmpIn = new FileInputStream(tmp.path().toFile())) {
+                    out = transfer(tmpIn, null, null, null);
+                }
+            }
+
+            MediaFile mediaFile = mediaOperations.putInPlace(
+                out.getHash(), contentType, tmp.path(), out.getDigest(), false
+            );
+            // the entity is detached after putInPlace() transaction closed
+            mediaFile = entityManager.merge(mediaFile);
+            String fileName = uploadedFileName(contentType, UriUtil.fileName(url));
+            return mediaOperations.own(mediaFile, fileName);
+        } finally {
+            Files.deleteIfExists(tmp.path());
+        }
+    }
+
+    private DigestingOutputStream transfer(
+        InputStream in, OutputStream out, Long contentLength, Integer maxSize
+    ) throws IOException {
+        if (maxSize == null) {
+            maxSize = universalContext.getOptions().getInt("media.max-size");
+        }
+        return MediaOperations.transfer(in, out, contentLength, maxSize);
+    }
+
+    private String toContentType(MediaType mediaType) {
+        return mediaType != null ? mediaType.getType() + "/" + mediaType.getSubtype() : null;
+    }
+
+    private String uploadedFileName(String contentType, String fileName) {
+        return !MimeUtil.isSupportedImage(contentType) && !ObjectUtils.isEmpty(fileName)
+            ? StringUtils.stripFilenameExtension(StringUtils.getFilename(fileName))
+            : null;
+    }
+
+    private boolean isSuitableForOcr(MediaFile mediaFile) {
+        return (mediaFile.isImage() || MediaType.APPLICATION_PDF_VALUE.equals(mediaFile.getMimeType()))
+            && mediaFile.getFileSize() < OcrSpace.MAX_FILE_SIZE;
     }
 
 }
