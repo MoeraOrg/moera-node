@@ -140,6 +140,7 @@ public class CommentReactionController {
                     reactionDescription, comment, liberin::setDeletedReaction, liberin::setAddedReaction
                 );
                 requestContext.send(liberin);
+                requestContext.visitPosting(comment.getPosting().getId());
 
                 var totalsInfo = reactionTotalOperations.getInfo(comment);
                 return ResponseEntity

@@ -9,6 +9,7 @@ import org.moera.node.friends.SubscribedCache;
 import org.moera.node.global.NoClientId;
 import org.moera.node.global.RequestContext;
 import org.moera.node.operations.BlockedUserOperations;
+import org.moera.node.operations.VisitOperations;
 import org.moera.node.subscriptions.SubscriptionManager;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -39,6 +40,10 @@ public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
     @Lazy
     private BlockedUserOperations blockedUserOperations;
 
+    @Inject
+    @Lazy
+    private VisitOperations visitOperations;
+
     @Override
     public void afterCompletion(
         HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex
@@ -46,6 +51,9 @@ public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
         if (ex == null) {
             requestContext.getFriendCacheInvalidations().forEach(friendCache::invalidate);
             requestContext.getSubscribedCacheInvalidations().forEach(subscribedCache::invalidate);
+            requestContext.getVisitedPostings().forEach(postingId ->
+                visitOperations.recordVisit(postingId.toString(), null, null, null)
+            );
             boolean noClientId = handler instanceof HandlerMethod mtd && mtd.hasMethodAnnotation(NoClientId.class);
             String clientId = noClientId ? null : requestContext.getClientId();
             requestContext.getAfterCommitLiberins().forEach(liberin -> {

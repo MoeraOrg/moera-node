@@ -52,6 +52,7 @@ public class RequestContextImpl implements RequestContext {
     private final List<FriendCacheInvalidation> friendCacheInvalidations = new ArrayList<>();
     private final List<Nodes> subscribedCacheInvalidations = new ArrayList<>();
     private boolean blockedUsersUpdated;
+    private final List<UUID> visitedPostings = new ArrayList<>();
     private final Instant[] times = new Instant[3];
 
     @Inject
@@ -410,6 +411,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public boolean isBlockedUsersUpdated() {
         return blockedUsersUpdated;
+    }
+
+    @Override
+    public void visitPosting(UUID postingId) {
+        visitedPostings.add(postingId);
+    }
+
+    @Override
+    public List<UUID> getVisitedPostings() {
+        return visitedPostings;
     }
 
     @Override

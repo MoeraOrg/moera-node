@@ -130,6 +130,7 @@ public class PostingReactionController {
                     "reaction.operations.wrong-principal"
                 );
 
+                requestContext.visitPosting(posting.getId());
                 if (posting.isOriginal()) {
                     return postToOriginal(reactionDescription, posting);
                 } else if (requestContext.isOwner()) {

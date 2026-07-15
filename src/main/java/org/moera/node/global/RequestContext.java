@@ -144,6 +144,10 @@ public interface RequestContext extends AccessChecker {
 
     boolean isBlockedUsersUpdated();
 
+    void visitPosting(UUID postingId);
+
+    List<UUID> getVisitedPostings();
+
     Instant getTimes(int item);
 
     void setTimes(int item, Instant time);

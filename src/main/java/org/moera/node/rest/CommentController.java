@@ -256,6 +256,7 @@ public class CommentController {
         }
 
         requestContext.send(new CommentAddedLiberin(posting, comment));
+        requestContext.visitPosting(posting.getId());
 
         var blockedOperations = blockedUserOperations.findBlockedOperations(postingUuid);
         return ResponseEntity
