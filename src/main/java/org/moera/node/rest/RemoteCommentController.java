@@ -25,7 +25,7 @@ import org.moera.node.liberin.model.RemoteCommentUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AsyncOperationCreatedUtil;
 import org.moera.node.operations.FavorOperations;
-import org.moera.node.operations.FavorType;
+import org.moera.node.data.FavorType;
 import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.rest.task.RemoteCommentPostJob;
 import org.moera.node.rest.task.verification.RemoteCommentVerifyTask;

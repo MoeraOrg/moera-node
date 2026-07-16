@@ -32,7 +32,7 @@ import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.PostingSourceTextUtil;
 import org.moera.node.model.PostingTextUtil;
 import org.moera.node.operations.FavorOperations;
-import org.moera.node.operations.FavorType;
+import org.moera.node.data.FavorType;
 import org.moera.node.task.Job;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;

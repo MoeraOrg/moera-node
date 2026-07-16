@@ -3,6 +3,7 @@ package org.moera.node.operations;
 import jakarta.inject.Inject;
 
 import org.moera.lib.util.LogUtil;
+import org.moera.node.data.FavorType;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

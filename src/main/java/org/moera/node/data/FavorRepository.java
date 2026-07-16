@@ -13,6 +13,16 @@ public interface FavorRepository extends JpaRepository<Favor, UUID> {
     @Query("select f from Favor f where f.nodeId = ?1 and f.nodeName = ?2")
     Collection<Favor> findByNodeName(UUID nodeId, String nodeName);
 
+    @Query(
+        "select count(f) from Favor f"
+        + " where f.nodeId = ?1 and f.nodeName = ?2 and f.favorType = ?3 and f.deadline >= ?4"
+    )
+    int countByNodeNameAndFavorType(UUID nodeId, String nodeName, FavorType favorType, Timestamp deadline);
+
+    @Query("delete from Favor f where f.nodeId = ?1 and f.nodeName = ?2 and f.favorType = ?3")
+    @Modifying
+    void deleteByNodeNameAndFavorType(UUID nodeId, String nodeName, FavorType favorType);
+
     @Query("delete from Favor f where f.deadline < ?1")
     @Modifying
     void deleteExpired(Timestamp deadline);

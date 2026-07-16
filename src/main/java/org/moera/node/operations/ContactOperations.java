@@ -10,6 +10,7 @@ import org.moera.node.data.BlockedUser;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRelated;
 import org.moera.node.data.ContactRepository;
+import org.moera.node.data.FavorType;
 import org.moera.node.data.MediaFile;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
@@ -166,6 +167,22 @@ public class ContactOperations {
         }
     }
 
+    public Contact updateVisitCount(String remoteNodeName, int delta) {
+        return updateAtomically(
+            universalContext.nodeId(),
+            remoteNodeName,
+            contact -> contact.setVisitCount(Math.max(contact.getVisitCount() + delta, 0))
+        );
+    }
+
+    public Contact assignVisitCount(String remoteNodeName, int count) {
+        return updateAtomically(
+            universalContext.nodeId(),
+            remoteNodeName,
+            contact -> contact.setVisitCount(Math.max(count, 0))
+        );
+    }
+
     public Contact updateViewPrincipal(ContactRelated related) {
         return updateAtomically(universalContext.nodeId(), related.getRemoteNodeName(), related::toContactViewPrincipal);
     }
@@ -223,17 +240,40 @@ public class ContactOperations {
         try (var ignored = requestCounter.allot()) {
             log.info("Recalculating distance of contacts");
 
-            tx.executeWrite(() -> favorOperations.deleteExpired());
+            tx.executeWrite(favorOperations::deleteExpired);
             for (String domainName : domains.getWarmDomainNames()) {
                 UUID nodeId = domains.getDomainNodeId(domainName);
                 universalContext.associate(nodeId);
                 tx.executeWrite(() ->
                     contactRepository
                         .findAllByNodeId(nodeId)
-                        .forEach(contact -> favorOperations.updateDistance(contact))
+                        .forEach(favorOperations::updateDistance)
                 );
             }
         }
+    }
+
+    @Scheduled(fixedDelayString = "P1D")
+    public void visitCountMaintenance() {
+        try (var ignored = requestCounter.allot()) {
+            log.info("Recalculating visit counts of contacts");
+
+            tx.executeWrite(favorOperations::deleteExpired);
+            for (String domainName : domains.getWarmDomainNames()) {
+                UUID nodeId = domains.getDomainNodeId(domainName);
+                universalContext.associate(nodeId);
+                tx.executeWrite(() ->
+                    contactRepository
+                        .findAllVisitedByNodeId(nodeId)
+                        .forEach(this::recomputeVisitCount)
+                );
+            }
+        }
+    }
+
+    private void recomputeVisitCount(Contact contact) {
+        String nodeName = contact.getRemoteNodeName();
+        contact.setVisitCount(favorOperations.countFavors(nodeName, FavorType.VISITED));
     }
 
 }

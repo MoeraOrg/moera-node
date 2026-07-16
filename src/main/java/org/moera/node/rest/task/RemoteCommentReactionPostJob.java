@@ -23,7 +23,7 @@ import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.ReactionDescriptionUtil;
 import org.moera.node.operations.FavorOperations;
-import org.moera.node.operations.FavorType;
+import org.moera.node.data.FavorType;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;

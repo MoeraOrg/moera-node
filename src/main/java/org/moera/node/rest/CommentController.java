@@ -83,7 +83,7 @@ import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.CommentOperations;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.FavorOperations;
-import org.moera.node.operations.FavorType;
+import org.moera.node.data.FavorType;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.OperationsValidator;

@@ -17,6 +17,12 @@ public interface ContactRepository extends JpaRepository<Contact, UUID>, Queryds
 
     @Query(
         "select c from Contact c left join fetch c.remoteAvatarMediaFile"
+        + " where c.nodeId = ?1 and c.visitCount > 0"
+    )
+    Collection<Contact> findAllVisitedByNodeId(UUID nodeId);
+
+    @Query(
+        "select c from Contact c left join fetch c.remoteAvatarMediaFile"
         + " where c.nodeId = ?1 and c.remoteNodeName = ?2"
     )
     Optional<Contact> findByRemoteNode(UUID nodeId, String remoteNodeName);

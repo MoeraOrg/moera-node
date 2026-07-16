@@ -9,6 +9,7 @@ import org.moera.lib.node.types.SubscriptionReason;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.Contact;
+import org.moera.node.data.FavorType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;

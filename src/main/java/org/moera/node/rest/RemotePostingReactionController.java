@@ -22,7 +22,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.RemotePostingReactionDeletedLiberin;
 import org.moera.node.model.AsyncOperationCreatedUtil;
 import org.moera.node.operations.FavorOperations;
-import org.moera.node.operations.FavorType;
+import org.moera.node.data.FavorType;
 import org.moera.node.rest.task.RemotePostingReactionPostJob;
 import org.moera.node.rest.task.verification.RemoteReactionVerifyTask;
 import org.moera.node.task.Jobs;

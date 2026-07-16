@@ -67,6 +67,9 @@ public class Contact {
     private int blockedByUserPostingCount;
 
     @NotNull
+    private int visitCount;
+
+    @NotNull
     private float distance;
 
     @NotNull
@@ -202,6 +205,14 @@ public class Contact {
 
     public void setBlockedByUserPostingCount(int blockedByUserPostingCount) {
         this.blockedByUserPostingCount = blockedByUserPostingCount;
+    }
+
+    public int getVisitCount() {
+        return visitCount;
+    }
+
+    public void setVisitCount(int visitCount) {
+        this.visitCount = visitCount;
     }
 
     public float getDistance() {

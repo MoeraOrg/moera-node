@@ -1,4 +1,4 @@
-package org.moera.node.operations;
+package org.moera.node.data;
 
 public enum FavorType {
 
@@ -14,7 +14,9 @@ public enum FavorType {
     UNCOMMENT(-10f, 7 * 24),
     UNLIKE_COMMENT(-.25f, 3 * 24),
     UNREPLY_TO_COMMENT(-5f, 7 * 24),
-    UNSUBSCRIBE_TO_COMMENTS(-1f, 3 * 24);
+    UNSUBSCRIBE_TO_COMMENTS(-1f, 3 * 24),
+
+    VISITED(10f, 10 * 24);
 
     private final float value;
     private final int decayHours;

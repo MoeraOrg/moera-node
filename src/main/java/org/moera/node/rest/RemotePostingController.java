@@ -25,7 +25,7 @@ import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AsyncOperationCreatedUtil;
 import org.moera.node.operations.FavorOperations;
-import org.moera.node.operations.FavorType;
+import org.moera.node.data.FavorType;
 import org.moera.node.rest.task.RemotePostingPostJob;
 import org.moera.node.rest.task.verification.RemotePostingVerifyTask;
 import org.moera.node.task.Jobs;

@@ -9,6 +9,7 @@ import jakarta.inject.Inject;
 import org.moera.node.data.Contact;
 import org.moera.node.data.Favor;
 import org.moera.node.data.FavorRepository;
+import org.moera.node.data.FavorType;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.Util;
@@ -39,6 +40,7 @@ public class FavorOperations {
         favor.setId(UUID.randomUUID());
         favor.setNodeId(nodeId);
         favor.setNodeName(nodeName);
+        favor.setFavorType(favorType);
         favor.setValue(favorType.getValue());
         favor.setDecayHours(favorType.getDecayHours());
         favor.setDeadline(Timestamp.from(Instant.now().plus(favorType.getDecayHours(), ChronoUnit.HOURS)));
@@ -59,6 +61,14 @@ public class FavorOperations {
         favorRepository.deleteExpired(Util.now());
     }
 
+    public void deleteFavors(String nodeName, FavorType favorType) {
+        favorRepository.deleteByNodeNameAndFavorType(universalContext.nodeId(), nodeName, favorType);
+    }
+
+    public int countFavors(String nodeName, FavorType favorType) {
+        return favorRepository.countByNodeNameAndFavorType(universalContext.nodeId(), nodeName, favorType, Util.now());
+    }
+
     public void updateDistance(Contact contact) {
         var favors = favorRepository.findByNodeName(universalContext.nodeId(), contact.getRemoteNodeName());
         double closeness = 0;
@@ -77,6 +87,9 @@ public class FavorOperations {
             distance = 1;
         }
         if (contact.getFriendCount() > 0) {
+            distance -= .25f;
+        }
+        if (contact.getVisitCount() > 0) {
             distance -= .25f;
         }
         if (contact.getBlockedUserCount() > 0) {

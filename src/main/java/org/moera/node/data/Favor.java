@@ -3,6 +3,7 @@ package org.moera.node.data;
 import java.sql.Timestamp;
 import java.util.UUID;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +24,10 @@ public class Favor {
     @NotNull
     @Size(max = 135)
     private String nodeName;
+
+    @NotNull
+    @Enumerated
+    private FavorType favorType;
 
     @NotNull
     private float value;
@@ -58,6 +63,14 @@ public class Favor {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public FavorType getFavorType() {
+        return favorType;
+    }
+
+    public void setFavorType(FavorType favorType) {
+        this.favorType = favorType;
     }
 
     public float getValue() {

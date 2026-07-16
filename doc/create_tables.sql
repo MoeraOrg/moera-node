@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict vXzECoYnB4guusAdkVy4O8EbKLlqR8xaYU6wBaB8mHFvxatXrteKR7hfLxqYnBr
+\restrict avZ7NEoFicDrZeuaFRNIZ2TFX8wWVJVvi0KisQHcY6qz4JgzpIdrAzT8Bh4766d
 
 -- Dumped from database version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
@@ -952,7 +952,8 @@ CREATE TABLE public.contacts (
     blocked_user_posting_count integer DEFAULT 0 NOT NULL,
     blocked_by_user_count integer DEFAULT 0 NOT NULL,
     blocked_by_user_posting_count integer DEFAULT 0 NOT NULL,
-    distance real DEFAULT 3 NOT NULL
+    distance real DEFAULT 3 NOT NULL,
+    visit_count integer DEFAULT 0 NOT NULL
 );
 
 
@@ -1294,7 +1295,8 @@ CREATE TABLE public.favors (
     value real NOT NULL,
     decay_hours integer NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    deadline timestamp without time zone NOT NULL
+    deadline timestamp without time zone NOT NULL,
+    favor_type smallint NOT NULL
 );
 
 
@@ -2863,6 +2865,13 @@ CREATE UNIQUE INDEX contacts_node_id_remote_node_name_idx ON public.contacts USI
 
 
 --
+-- Name: contacts_node_id_visited_distance_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX contacts_node_id_visited_distance_idx ON public.contacts USING btree (node_id, distance) WHERE (visit_count > 0);
+
+
+--
 -- Name: contacts_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -3175,6 +3184,13 @@ CREATE INDEX favors_deadline_idx ON public.favors USING btree (deadline);
 --
 
 CREATE INDEX favors_node_id_name_idx ON public.favors USING btree (node_id, node_name);
+
+
+--
+-- Name: favors_node_id_type_name_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX favors_node_id_type_name_deadline_idx ON public.favors USING btree (node_id, favor_type, node_name, deadline);
 
 
 --
@@ -4706,5 +4722,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict vXzECoYnB4guusAdkVy4O8EbKLlqR8xaYU6wBaB8mHFvxatXrteKR7hfLxqYnBr
+\unrestrict avZ7NEoFicDrZeuaFRNIZ2TFX8wWVJVvi0KisQHcY6qz4JgzpIdrAzT8Bh4766d
 
