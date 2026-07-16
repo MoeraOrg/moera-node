@@ -4,8 +4,8 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.data.Contact;
@@ -24,9 +24,6 @@ public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingA
     public static class Parameters {
 
         private String senderNodeName;
-        private String senderFullName;
-        private String senderGender;
-        private AvatarImage senderAvatar;
         private BlockedOperation blockedOperation;
         private String postingId;
         private String postingHeading;
@@ -36,13 +33,15 @@ public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingA
         public Parameters() {
         }
 
-        public Parameters(String senderNodeName, String senderFullName, String senderGender, AvatarImage senderAvatar,
-                          BlockedOperation blockedOperation, String postingId, String postingHeading, Long deadline,
-                          String reason) {
+        public Parameters(
+            String senderNodeName,
+            BlockedOperation blockedOperation,
+            String postingId,
+            String postingHeading,
+            Long deadline,
+            String reason
+        ) {
             this.senderNodeName = senderNodeName;
-            this.senderFullName = senderFullName;
-            this.senderGender = senderGender;
-            this.senderAvatar = senderAvatar;
             this.blockedOperation = blockedOperation;
             this.postingId = postingId;
             this.postingHeading = postingHeading;
@@ -56,30 +55,6 @@ public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingA
 
         public void setSenderNodeName(String senderNodeName) {
             this.senderNodeName = senderNodeName;
-        }
-
-        public String getSenderFullName() {
-            return senderFullName;
-        }
-
-        public void setSenderFullName(String senderFullName) {
-            this.senderFullName = senderFullName;
-        }
-
-        public String getSenderGender() {
-            return senderGender;
-        }
-
-        public void setSenderGender(String senderGender) {
-            this.senderGender = senderGender;
-        }
-
-        public AvatarImage getSenderAvatar() {
-            return senderAvatar;
-        }
-
-        public void setSenderAvatar(AvatarImage senderAvatar) {
-            this.senderAvatar = senderAvatar;
         }
 
         public BlockedOperation getBlockedOperation() {
@@ -126,6 +101,7 @@ public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingA
 
     public static class State {
 
+        private WhoAmI sender;
         private boolean contactDetailsUpdated;
         private UUID blockedByUserId;
         private boolean blockedByUserCountsUpdated;
@@ -137,6 +113,14 @@ public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingA
         private BlockedByUser blockedByUser;
 
         public State() {
+        }
+
+        public WhoAmI getSender() {
+            return sender;
+        }
+
+        public void setSender(WhoAmI sender) {
+            this.sender = sender;
         }
 
         public boolean isContactDetailsUpdated() {
@@ -193,13 +177,22 @@ public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingA
 
     @Override
     protected void execute() throws Exception {
+        if (state.sender == null) {
+            state.sender = nodeApi.at(parameters.senderNodeName).whoAmI();
+            checkpoint();
+        }
+
         if (!state.contactDetailsUpdated) {
             state.contact = contactOperations.updateDetails(
-                    parameters.senderNodeName,
-                    parameters.senderFullName,
-                    parameters.senderGender,
-                    () -> universalContext.send(
-                            new RemoteNodeFullNameChangedLiberin(parameters.senderNodeName, parameters.senderFullName))
+                parameters.senderNodeName,
+                state.sender.getFullName(),
+                state.sender.getGender(),
+                state.sender.getTitle(),
+                () -> universalContext.send(
+                    new RemoteNodeFullNameChangedLiberin(
+                        parameters.senderNodeName, state.sender.getFullName(), state.sender.getTitle()
+                    )
+                )
             );
             state.contactDetailsUpdated = true;
             checkpoint();
@@ -208,8 +201,7 @@ public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingA
         if (state.blockedByUserId == null) {
             tx.executeWrite(() -> {
                 if (state.contact == null) {
-                    state.contact = contactRepository.findByRemoteNode(nodeId, parameters.senderNodeName)
-                            .orElse(null);
+                    state.contact = contactRepository.findByRemoteNode(nodeId, parameters.senderNodeName).orElse(null);
                 }
                 state.blockedByUserId = UUID.randomUUID();
 
@@ -227,8 +219,9 @@ public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingA
             checkpoint();
         } else {
             tx.executeRead(() -> {
-                state.blockedByUser = blockedByUserRepository.findByNodeIdAndId(nodeId, state.blockedByUserId)
-                        .orElse(null);
+                state.blockedByUser = blockedByUserRepository
+                    .findByNodeIdAndId(nodeId, state.blockedByUserId)
+                    .orElse(null);
                 if (state.blockedByUser != null) {
                     state.contact = state.blockedByUser.getContact();
                 }
@@ -241,25 +234,26 @@ public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingA
             checkpoint();
         }
 
-        Contact.toAvatar(state.contact, parameters.senderAvatar);
-        if (parameters.senderAvatar != null) {
+        var senderAvatar = state.sender.getAvatar();
+        Contact.toAvatar(state.contact, senderAvatar);
+        if (senderAvatar != null) {
             tx.executeWriteWithExceptions(
                 () -> {
-                    mediaManager.downloadAvatar(parameters.senderNodeName, parameters.senderAvatar);
+                    mediaManager.downloadAvatar(parameters.senderNodeName, senderAvatar);
                     contactRepository.updateRemoteAvatar(
                         universalContext.nodeId(),
                         parameters.senderNodeName,
-                        AvatarImageUtil.getMediaFile(parameters.senderAvatar),
-                        parameters.senderAvatar.getShape()
+                        AvatarImageUtil.getMediaFile(senderAvatar),
+                        senderAvatar.getShape()
                     );
-                    state.contact.setRemoteAvatarMediaFile(AvatarImageUtil.getMediaFile(parameters.senderAvatar));
-                    state.contact.setRemoteAvatarShape(parameters.senderAvatar.getShape());
+                    state.contact.setRemoteAvatarMediaFile(AvatarImageUtil.getMediaFile(senderAvatar));
+                    state.contact.setRemoteAvatarShape(senderAvatar.getShape());
                 }
             );
         }
 
         BlockedByUserAddedLiberin liberin =
-                new BlockedByUserAddedLiberin(state.blockedByUser, parameters.postingHeading);
+            new BlockedByUserAddedLiberin(state.blockedByUser, parameters.postingHeading);
         liberin.getBlockedByUser().setContact(state.contact);
         universalContext.send(liberin);
     }

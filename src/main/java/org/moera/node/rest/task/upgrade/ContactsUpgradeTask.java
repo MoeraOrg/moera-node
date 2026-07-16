@@ -66,9 +66,16 @@ public class ContactsUpgradeTask extends Task {
 
         try {
             WhoAmI whoAmI = nodeApi.at(upgrade.getRemoteNodeName()).whoAmI();
-            if (whoAmI.getFullName() != null || whoAmI.getGender() != null) {
-                contactOperations.updateDetails(upgrade.getRemoteNodeName(), whoAmI.getFullName(), whoAmI.getGender());
-                send(new RemoteNodeFullNameChangedLiberin(upgrade.getRemoteNodeName(), whoAmI.getFullName()));
+            boolean detailsPresent = whoAmI.getFullName() != null || whoAmI.getGender() != null;
+            if (detailsPresent || whoAmI.getTitle() != null) {
+                contactOperations.updateDetails(
+                    upgrade.getRemoteNodeName(), whoAmI.getFullName(), whoAmI.getGender(), whoAmI.getTitle(), null
+                );
+            }
+            if (detailsPresent) {
+                send(new RemoteNodeFullNameChangedLiberin(
+                    upgrade.getRemoteNodeName(), whoAmI.getFullName(), whoAmI.getTitle())
+                );
             }
             AvatarImage targetAvatar = whoAmI.getAvatar();
             MediaFile mediaFile = mediaManager.downloadPublicMedia(upgrade.getRemoteNodeName(), targetAvatar);
@@ -94,6 +101,8 @@ public class ContactsUpgradeTask extends Task {
     }
 
     private void error(ContactUpgrade upgrade, Throwable e) {
+        // FIXME not the best way to handle this; it would be better to retry several times
+        tx.executeWriteQuietly(() -> contactUpgradeRepository.delete(upgrade));
         if (e instanceof MoeraNodeUnknownNameException) {
             log.error("Cannot find a node {}", upgrade.getRemoteNodeName());
         } else {

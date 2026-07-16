@@ -37,11 +37,13 @@ public interface ContactRepository extends JpaRepository<Contact, UUID>, Queryds
     Collection<Contact> findAllUpdatedBefore(Timestamp deadline);
 
     @Query(
-        "update Contact c set c.remoteFullName = ?3, c.remoteGender = ?4"
+        "update Contact c set c.remoteFullName = ?3, c.remoteGender = ?4, c.remoteTitle = ?5"
         + " where c.nodeId = ?1 and c.remoteNodeName = ?2"
     )
     @Modifying
-    void updateRemoteFullNameAndGender(UUID nodeId, String remoteNodeName, String remoteFullName, String remoteGender);
+    void updateRemoteDetails(
+        UUID nodeId, String remoteNodeName, String remoteFullName, String remoteGender, String remoteTitle
+    );
 
     @Query(
         "update Contact c set c.remoteAvatarMediaFile = ?3, c.remoteAvatarShape = ?4"

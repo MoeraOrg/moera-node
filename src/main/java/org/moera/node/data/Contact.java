@@ -33,6 +33,9 @@ public class Contact {
     @Size(max = 96)
     private String remoteFullName;
 
+    @Size(max = 120)
+    private String remoteTitle;
+
     @Size(max = 31)
     private String remoteGender;
 
@@ -117,6 +120,14 @@ public class Contact {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
+    }
+
+    public String getRemoteTitle() {
+        return remoteTitle;
+    }
+
+    public void setRemoteTitle(String remoteTitle) {
+        this.remoteTitle = remoteTitle;
     }
 
     public String getRemoteGender() {

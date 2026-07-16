@@ -26,7 +26,7 @@ import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.option.Options;
 import org.moera.node.rest.task.upgrade.AllRemoteAvatarsDownloadTask;
-import org.moera.node.rest.task.upgrade.AllRemoteGendersDownloadTask;
+import org.moera.node.rest.task.upgrade.AllContactDetailsDownloadTask;
 import org.moera.node.rest.task.upgrade.ContactsUpgradeTask;
 import org.moera.node.rest.task.upgrade.EncryptAllOptionsJob;
 import org.moera.node.rest.task.upgrade.MediaFileRenamePaddedIdsJob;
@@ -97,7 +97,7 @@ public class Updater {
 
     private void executeDomainUpgrades() {
         downloadAvatars();
-        downloadGenders();
+        downloadContactDetails();
         encryptOptions();
         autoSubscribeMalwareLists();
     }
@@ -120,10 +120,10 @@ public class Updater {
         }
     }
 
-    private void downloadGenders() {
+    private void downloadContactDetails() {
         Set<DomainUpgrade> upgrades = domainUpgradeRepository.findPending(UpgradeType.GENDER_DOWNLOAD);
         for (DomainUpgrade upgrade : upgrades) {
-            var task = new AllRemoteGendersDownloadTask();
+            var task = new AllContactDetailsDownloadTask();
             taskAutowire.autowireWithoutRequest(task, upgrade.getNodeId());
             taskExecutor.execute(task);
         }

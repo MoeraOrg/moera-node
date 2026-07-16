@@ -10,15 +10,17 @@ public class RemoteNodeFullNameChangedEvent extends Event {
 
     private String name;
     private String fullName;
+    private String title;
 
     public RemoteNodeFullNameChangedEvent() {
         super(EventType.REMOTE_NODE_FULL_NAME_CHANGED, Scope.VIEW_PEOPLE);
     }
 
-    public RemoteNodeFullNameChangedEvent(String name, String fullName) {
+    public RemoteNodeFullNameChangedEvent(String name, String fullName, String title) {
         this();
         this.name = name;
         this.fullName = fullName;
+        this.title = title;
     }
 
     public String getName() {
@@ -37,11 +39,20 @@ public class RemoteNodeFullNameChangedEvent extends Event {
         this.fullName = fullName;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     @Override
     public void logParameters(List<Pair<String, String>> parameters) {
         super.logParameters(parameters);
         parameters.add(Pair.of("name", LogUtil.format(name)));
         parameters.add(Pair.of("fullName", LogUtil.format(fullName)));
+        parameters.add(Pair.of("title", LogUtil.format(title)));
     }
 
 }

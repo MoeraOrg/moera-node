@@ -98,8 +98,11 @@ public class ProfileUpdateJob extends Job<ProfileUpdateJob.Parameters, ProfileUp
                 parameters.nodeName,
                 state.whoAmI.getFullName(),
                 state.whoAmI.getGender(),
+                state.whoAmI.getTitle(),
                 () -> universalContext.send(
-                    new RemoteNodeFullNameChangedLiberin(parameters.nodeName, state.whoAmI.getFullName())
+                    new RemoteNodeFullNameChangedLiberin(
+                        parameters.nodeName, state.whoAmI.getFullName(), state.whoAmI.getTitle()
+                    )
                 )
             );
             state.detailsUpdated = true;

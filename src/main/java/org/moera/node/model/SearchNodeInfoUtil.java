@@ -10,6 +10,7 @@ public class SearchNodeInfoUtil {
         SearchNodeInfo info = new SearchNodeInfo();
         info.setNodeName(contact.getRemoteNodeName());
         info.setFullName(contact.getRemoteFullName());
+        info.setTitle(contact.getRemoteTitle());
         if (contact.getRemoteAvatarMediaFile() != null) {
             info.setAvatar(
                 AvatarImageUtil.build(contact.getRemoteAvatarMediaFile(), contact.getRemoteAvatarShape(), config)

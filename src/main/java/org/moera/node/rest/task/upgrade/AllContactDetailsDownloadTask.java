@@ -16,9 +16,9 @@ import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AllRemoteGendersDownloadTask extends Task {
+public class AllContactDetailsDownloadTask extends Task {
 
-    private static final Logger log = LoggerFactory.getLogger(AllRemoteGendersDownloadTask.class);
+    private static final Logger log = LoggerFactory.getLogger(AllContactDetailsDownloadTask.class);
 
     @Inject
     private ContactRepository contactRepository;
@@ -26,7 +26,7 @@ public class AllRemoteGendersDownloadTask extends Task {
     @Inject
     private DomainUpgradeRepository domainUpgradeRepository;
 
-    public AllRemoteGendersDownloadTask() {
+    public AllContactDetailsDownloadTask() {
     }
 
     @Override
@@ -66,21 +66,24 @@ public class AllRemoteGendersDownloadTask extends Task {
         WhoAmI target = nodeApi.at(targetNodeName).whoAmI();
         String targetFullName = target.getFullName();
         String targetGender = target.getGender();
-        if (targetGender != null) {
+        String targetTitle = target.getTitle();
+        if (targetGender != null || targetTitle != null) {
             tx.executeWrite(() ->
-                contactRepository.updateRemoteFullNameAndGender(nodeId, targetNodeName, targetFullName, targetGender));
+                contactRepository.updateRemoteDetails(
+                    nodeId, targetNodeName, targetFullName, targetGender, targetTitle
+                ));
         }
     }
 
     private void success(String targetNodeName) {
-        log.info("Succeeded to download gender of node {}", targetNodeName);
+        log.info("Succeeded to download contact details of node {}", targetNodeName);
     }
 
     private void error(String targetNodeName, Throwable e) {
         if (e instanceof MoeraNodeUnknownNameException) {
             log.error("Cannot find a node {}", targetNodeName);
         } else {
-            log.error("Error downloading gender of node {}: {}", targetNodeName, e.getMessage());
+            log.error("Error downloading contact details of node {}: {}", targetNodeName, e.getMessage());
         }
     }
 

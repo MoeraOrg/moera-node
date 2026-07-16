@@ -37,9 +37,6 @@ public class BlockingProcessor {
             BlockingAddedJob.class,
             new BlockingAddedJob.Parameters(
                 notification.getSenderNodeName(),
-                notification.getSenderFullName(),
-                notification.getSenderGender(),
-                notification.getSenderAvatar(),
                 notification.getBlockedOperation(),
                 notification.getPostingId(),
                 notification.getPostingHeading(),

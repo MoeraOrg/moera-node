@@ -187,21 +187,27 @@ public class ContactOperations {
         return updateAtomically(universalContext.nodeId(), related.getRemoteNodeName(), related::toContactViewPrincipal);
     }
 
-    public Contact updateDetails(String remoteNodeName, String remoteFullName, String remoteGender) {
-        return updateDetails(remoteNodeName, remoteFullName, remoteGender, null);
+    public Contact updateDetails(
+        String remoteNodeName, String remoteFullName, String remoteGender, String remoteTitle
+    ) {
+        return updateDetails(remoteNodeName, remoteFullName, remoteGender, remoteTitle, null);
     }
 
-    public Contact updateDetails(String remoteNodeName, String remoteFullName, String remoteGender, Runnable changed) {
+    public Contact updateDetails(
+        String remoteNodeName, String remoteFullName, String remoteGender, String remoteTitle, Runnable changed
+    ) {
         return updateAtomically(
             universalContext.nodeId(),
             remoteNodeName,
             contact -> {
-                if (
+                boolean detailsChanged =
                     !Objects.equals(contact.getRemoteFullName(), remoteFullName)
                     || !Objects.equals(contact.getRemoteGender(), remoteGender)
-                ) {
+                    || !Objects.equals(contact.getRemoteTitle(), remoteTitle);
+                if (detailsChanged) {
                     contact.setRemoteFullName(remoteFullName);
                     contact.setRemoteGender(remoteGender);
+                    contact.setRemoteTitle(remoteTitle);
                     if (changed != null) {
                         changed.run();
                     }

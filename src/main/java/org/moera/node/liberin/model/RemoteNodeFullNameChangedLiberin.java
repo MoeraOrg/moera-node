@@ -8,10 +8,12 @@ public class RemoteNodeFullNameChangedLiberin extends Liberin {
 
     private String nodeName;
     private String fullName;
+    private String title;
 
-    public RemoteNodeFullNameChangedLiberin(String nodeName, String fullName) {
+    public RemoteNodeFullNameChangedLiberin(String nodeName, String fullName, String title) {
         this.nodeName = nodeName;
         this.fullName = fullName;
+        this.title = title;
     }
 
     public String getNodeName() {
@@ -30,11 +32,20 @@ public class RemoteNodeFullNameChangedLiberin extends Liberin {
         this.fullName = fullName;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
         model.put("nodeName", nodeName);
         model.put("fullName", fullName);
+        model.put("title", title);
     }
 
 }

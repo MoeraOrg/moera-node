@@ -13,7 +13,10 @@ public class RemoteProfileReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void fullNameChanged(RemoteNodeFullNameChangedLiberin liberin) {
-        send(liberin, new RemoteNodeFullNameChangedEvent(liberin.getNodeName(), liberin.getFullName()));
+        send(
+            liberin,
+            new RemoteNodeFullNameChangedEvent(liberin.getNodeName(), liberin.getFullName(), liberin.getTitle())
+        );
     }
 
     @LiberinMapping
