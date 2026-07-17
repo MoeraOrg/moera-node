@@ -44,7 +44,7 @@ public class MimeUtilTest {
     void reasonableImageForDownsizeKeepsOtherLimits() {
         Assertions.assertFalse(MimeUtil.isReasonableImageForDownsize("image/png", 2000, 1500, 3_145_729L));
         Assertions.assertFalse(MimeUtil.isReasonableImageForDownsize("image/jpeg", 9000, 1500, 5_242_880L));
-        Assertions.assertFalse(MimeUtil.isReasonableImageForDownsize("image/jpeg", 6000, 5000, 5_242_880L));
+        Assertions.assertFalse(MimeUtil.isReasonableImageForDownsize("image/jpeg", 6000, 7000, 5_242_880L));
     }
 
 }
