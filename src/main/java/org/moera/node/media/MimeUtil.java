@@ -21,31 +21,31 @@ public class MimeUtil {
     private static final Map<String, String> ADDITIONAL_MIME_TYPES = Map.of(
         "text/markdown", "md"
     );
+    private static final ThumbnailFormat LOSSY = new ThumbnailFormat("image/jpeg", "JPEG");
+    private static final ThumbnailFormat LOSSLESS = new ThumbnailFormat("image/png", "PNG");
     private static final Map<String, ThumbnailFormat> THUMBNAIL_FORMATS = new HashMap<>();
 
     static {
-        var lossy = new ThumbnailFormat("image/jpeg", "JPEG");
-        var lossless = new ThumbnailFormat("image/png", "PNG");
-        THUMBNAIL_FORMATS.put("image/avif", lossy);
-        THUMBNAIL_FORMATS.put("image/gif", lossless);
-        THUMBNAIL_FORMATS.put("image/jp2", lossy);
-        THUMBNAIL_FORMATS.put("image/jpeg", lossy);
-        THUMBNAIL_FORMATS.put("image/pcx", lossless);
-        THUMBNAIL_FORMATS.put("image/pjpeg", lossy);
-        THUMBNAIL_FORMATS.put("image/png", lossless);
-        THUMBNAIL_FORMATS.put("image/x-png", lossless);
-        THUMBNAIL_FORMATS.put("image/svg+xml", lossless);
-        THUMBNAIL_FORMATS.put("image/tiff", lossless);
-        THUMBNAIL_FORMATS.put("image/vnd.microsoft.icon", lossless);
-        THUMBNAIL_FORMATS.put("image/vnd.wap.wbmp", lossless);
-        THUMBNAIL_FORMATS.put("image/webp", lossy);
-        THUMBNAIL_FORMATS.put("image/x-ms-bmp", lossless);
-        THUMBNAIL_FORMATS.put("image/x-portable-anymap", lossless);
-        THUMBNAIL_FORMATS.put("image/x-portable-bitmap", lossless);
-        THUMBNAIL_FORMATS.put("image/x-portable-graymap", lossless);
-        THUMBNAIL_FORMATS.put("image/x-portable-pixmap", lossless);
-        THUMBNAIL_FORMATS.put("image/x-xbitmap", lossless);
-        THUMBNAIL_FORMATS.put("image/x-xpixmap", lossless);
+        THUMBNAIL_FORMATS.put("image/avif", LOSSY);
+        THUMBNAIL_FORMATS.put("image/gif", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/jp2", LOSSY);
+        THUMBNAIL_FORMATS.put("image/jpeg", LOSSY);
+        THUMBNAIL_FORMATS.put("image/pcx", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/pjpeg", LOSSY);
+        THUMBNAIL_FORMATS.put("image/png", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/x-png", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/svg+xml", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/tiff", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/vnd.microsoft.icon", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/vnd.wap.wbmp", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/webp", LOSSY);
+        THUMBNAIL_FORMATS.put("image/x-ms-bmp", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/x-portable-anymap", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/x-portable-bitmap", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/x-portable-graymap", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/x-portable-pixmap", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/x-xbitmap", LOSSLESS);
+        THUMBNAIL_FORMATS.put("image/x-xpixmap", LOSSLESS);
     }
 
     public static String extension(String mimeType) {
@@ -85,6 +85,10 @@ public class MimeUtil {
         return THUMBNAIL_FORMATS.getOrDefault(mimeType, null);
     }
 
+    public static ThumbnailFormat downsize(String mimeType) {
+        return LOSSY;
+    }
+
     public static boolean isReasonableImage(String mimeType, Integer sizeX, Integer sizeY, Long fileSize) {
         if (!isSupportedImage(mimeType)) {
             return false;
@@ -95,11 +99,7 @@ public class MimeUtil {
         if (fileSize == null) {
             return true;
         }
-        if (MimeUtil.isLossyImage(mimeType)) {
-            return fileSize <= 5_242_880L;
-        } else {
-            return fileSize <= 3_145_728L;
-        }
+        return fileSize <= 5_242_880L;
     }
 
     public static boolean isReasonableImageForDownsize(String mimeType, Integer sizeX, Integer sizeY, Long fileSize) {
@@ -115,7 +115,7 @@ public class MimeUtil {
         if (MimeUtil.isJpeg(mimeType)) {
             return fileSize <= 20_971_520L;
         } else {
-            return fileSize <= 3_145_728L;
+            return fileSize <= 5_242_880L;
         }
     }
 

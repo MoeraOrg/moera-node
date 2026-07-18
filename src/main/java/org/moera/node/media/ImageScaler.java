@@ -24,7 +24,7 @@ public class ImageScaler {
     public static String downsize(
         File source, File target, String mimeType, Dimension dimension, long fileSize, long targetSize
     ) throws IOException {
-        var targetFormat = MimeUtil.thumbnail(mimeType);
+        var targetFormat = MimeUtil.downsize(mimeType);
         if (targetFormat == null || targetSize <= 0) {
             return mimeType;
         }
