@@ -5,6 +5,7 @@ import java.util.List;
 import org.moera.lib.node.types.MediaFilePreviewInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.config.DirectServeConfig;
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
 import org.moera.node.media.MediaGrantSupplier;
@@ -27,7 +28,7 @@ public class MediaFilePreviewInfoUtil {
         info.setHeight(preview.getMediaFile().getSizeY());
         info.setOriginal(preview.isOriginal());
         fillPath(info, original, grantSupplier);
-        fillDirectPath(info, config);
+        fillDirectPath(info, preview.getMediaFile(), config);
         return info;
     }
 
@@ -70,9 +71,18 @@ public class MediaFilePreviewInfoUtil {
         info.setPath(MediaUtil.privatePath(fileName, info.getTargetWidth(), grant, false));
     }
 
-    public static void fillDirectPath(MediaFilePreviewInfo info, DirectServeConfig config) {
-        var fileName = MimeUtil.fileName(info.getHash(), info.getMimeType());
-        var pu = MediaUtil.directPath(fileName, info.getHash(), MediaUtil.MEDIA_GRANT_TTL, config);
+    public static void fillDirectPath(
+        MediaFilePreviewInfo info, MediaFile mediaFile, DirectServeConfig config
+    ) {
+        var pu = MediaUtil.directPath(mediaFile, MediaUtil.MEDIA_GRANT_TTL, config);
+        info.setDirectPath(pu.url());
+        info.setDirectPathExpiresAt(pu.expires());
+    }
+
+    public static void refreshDirectPath(MediaFilePreviewInfo info, DirectServeConfig config) {
+        var pu = MediaUtil.refreshDirectPath(
+            info.getDirectPath(), info.getHash(), MediaUtil.MEDIA_GRANT_TTL, config
+        );
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }

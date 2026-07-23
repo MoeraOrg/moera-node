@@ -156,7 +156,7 @@ public class MoeraHelperSource {
             buf.append("</div>");
         } else {
             AvatarImage avatarImage = switch (avatar) {
-                case AvatarInfo info -> AvatarImageUtil.build(info, config.getMedia().getDirectServe());
+                case AvatarInfo info -> AvatarImageUtil.build(info);
                 case AvatarImage image -> image;
                 default -> throw new TypeMismatchException("avatar", "AvatarImage", avatar);
             };

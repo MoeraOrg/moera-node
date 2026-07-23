@@ -2,7 +2,9 @@ package org.moera.node.util;
 
 import java.net.InetAddress;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.server.ServerHttpRequest;
@@ -70,6 +72,37 @@ public class UriUtil {
         }
         int pos = path.lastIndexOf('/', end);
         return pos >= 0 ? path.substring(pos + 1, end + 1) : path.substring(0, end + 1);
+    }
+
+    public static String stripQueryAndFragment(String uri) {
+        if (uri == null) {
+            return null;
+        }
+        int suffixStart = uri.indexOf('?');
+        if (suffixStart < 0) {
+            suffixStart = uri.indexOf('#');
+        }
+        return suffixStart >= 0 ? uri.substring(0, suffixStart) : uri;
+    }
+
+    public static String query(String uri) {
+        return uri != null ? URI.create(uri).getRawQuery() : null;
+    }
+
+    public static String queryParameter(String query, String name) {
+        String value = encodedQueryParameter(query, name);
+        return value != null ? URLDecoder.decode(value, StandardCharsets.UTF_8) : null;
+    }
+
+    public static String encodedQueryParameter(String query, String name) {
+        String encodedName = Util.ue(name);
+        for (String parameter : query.split("&")) {
+            int equals = parameter.indexOf('=');
+            if (equals >= 0 && parameter.substring(0, equals).equals(encodedName)) {
+                return parameter.substring(equals + 1);
+            }
+        }
+        return null;
     }
 
     public static InetAddress remoteAddress(HttpServletRequest request) throws UnknownHostException {

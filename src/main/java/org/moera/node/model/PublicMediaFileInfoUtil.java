@@ -3,7 +3,6 @@ package org.moera.node.model;
 import org.moera.lib.node.types.PublicMediaFileInfo;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.MediaFile;
-import org.moera.node.media.MimeUtil;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.media.MediaUtil;
 
@@ -18,13 +17,14 @@ public class PublicMediaFileInfoUtil {
         info.setHeight(mediaFile.getSizeY());
         info.setOrientation(mediaFile.getOrientation());
         info.setSize(mediaFile.getFileSize());
-        fillDirectPath(info, config);
+        fillDirectPath(info, mediaFile, config);
         return info;
     }
 
-    private static void fillDirectPath(PublicMediaFileInfo info, DirectServeConfig config) {
-        var fileName = MimeUtil.fileName(info.getId(), info.getMimeType());
-        var pu = MediaUtil.directPath(fileName, info.getId(), ExtendedDuration.ALWAYS, config);
+    private static void fillDirectPath(
+        PublicMediaFileInfo info, MediaFile mediaFile, DirectServeConfig config
+    ) {
+        var pu = MediaUtil.directPath(mediaFile, ExtendedDuration.ALWAYS, config);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict avZ7NEoFicDrZeuaFRNIZ2TFX8wWVJVvi0KisQHcY6qz4JgzpIdrAzT8Bh4766d
+\restrict 1QDmSkyKc1hzJ57BGRS1vCJrnIAbAUnKq18RyEqpGd49k0PtIV1hDhrcZ8PUGxt
 
 -- Dumped from database version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
@@ -953,7 +953,8 @@ CREATE TABLE public.contacts (
     blocked_by_user_count integer DEFAULT 0 NOT NULL,
     blocked_by_user_posting_count integer DEFAULT 0 NOT NULL,
     distance real DEFAULT 3 NOT NULL,
-    visit_count integer DEFAULT 0 NOT NULL
+    visit_count integer DEFAULT 0 NOT NULL,
+    remote_title character varying(120)
 );
 
 
@@ -1433,6 +1434,62 @@ CREATE TABLE public.media_file_previews (
 ALTER TABLE public.media_file_previews OWNER TO moera;
 
 --
+-- Name: media_file_removals; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.media_file_removals (
+    id bigint NOT NULL,
+    media_file_id character varying(40) NOT NULL,
+    file_name character varying(50),
+    cloud_file_name character varying(65),
+    created_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.media_file_removals OWNER TO moera;
+
+--
+-- Name: media_file_removals_seq; Type: SEQUENCE; Schema: public; Owner: moera
+--
+
+CREATE SEQUENCE public.media_file_removals_seq
+    START WITH 1
+    INCREMENT BY 50
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.media_file_removals_seq OWNER TO moera;
+
+--
+-- Name: media_file_upgrades; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.media_file_upgrades (
+    id bigint NOT NULL,
+    upgrade_type smallint NOT NULL,
+    media_file_id character varying(40) NOT NULL
+);
+
+
+ALTER TABLE public.media_file_upgrades OWNER TO moera;
+
+--
+-- Name: media_file_upgrades_seq; Type: SEQUENCE; Schema: public; Owner: moera
+--
+
+CREATE SEQUENCE public.media_file_upgrades_seq
+    START WITH 1
+    INCREMENT BY 50
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.media_file_upgrades_seq OWNER TO moera;
+
+--
 -- Name: media_files; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -1450,7 +1507,9 @@ CREATE TABLE public.media_files (
     orientation smallint DEFAULT 1 NOT NULL,
     recognize_at timestamp without time zone,
     recognized_text text,
-    recognized_at timestamp without time zone
+    recognized_at timestamp without time zone,
+    file_name character varying(50),
+    cloud_file_name character varying(65)
 );
 
 
@@ -2427,6 +2486,22 @@ ALTER TABLE ONLY public.media_file_previews
 
 
 --
+-- Name: media_file_removals media_file_removals_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_file_removals
+    ADD CONSTRAINT media_file_removals_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: media_file_upgrades media_file_upgrades_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_file_upgrades
+    ADD CONSTRAINT media_file_upgrades_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: media_files media_files_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -3310,6 +3385,20 @@ CREATE INDEX media_file_previews_media_file_id_idx ON public.media_file_previews
 --
 
 CREATE INDEX media_file_previews_original_media_file_id_idx ON public.media_file_previews USING btree (original_media_file_id);
+
+
+--
+-- Name: media_file_removals_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_file_removals_media_file_id_idx ON public.media_file_removals USING btree (media_file_id);
+
+
+--
+-- Name: media_file_upgrades_upgrade_type_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_file_upgrades_upgrade_type_idx ON public.media_file_upgrades USING btree (upgrade_type);
 
 
 --
@@ -4495,6 +4584,14 @@ ALTER TABLE ONLY public.media_file_previews
 
 
 --
+-- Name: media_file_upgrades media_file_upgrades_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_file_upgrades
+    ADD CONSTRAINT media_file_upgrades_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: media_leases media_leases_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -4722,5 +4819,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict avZ7NEoFicDrZeuaFRNIZ2TFX8wWVJVvi0KisQHcY6qz4JgzpIdrAzT8Bh4766d
+\unrestrict 1QDmSkyKc1hzJ57BGRS1vCJrnIAbAUnKq18RyEqpGd49k0PtIV1hDhrcZ8PUGxt
 

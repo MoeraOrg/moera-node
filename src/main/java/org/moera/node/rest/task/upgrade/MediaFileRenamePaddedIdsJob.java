@@ -2,8 +2,6 @@ package org.moera.node.rest.task.upgrade;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import jakarta.inject.Inject;
@@ -11,7 +9,6 @@ import jakarta.inject.Inject;
 import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
-import org.moera.node.media.MimeUtil;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +56,7 @@ public class MediaFileRenamePaddedIdsJob extends Job<MediaFileRenamePaddedIdsJob
     }
 
     @Override
-    protected void execute() throws IOException {
+    protected void execute() throws Exception {
         Pageable pageable = PageRequest.of(0, PAGE_SIZE);
         Page<MediaFile> page;
         do {
@@ -71,27 +68,64 @@ public class MediaFileRenamePaddedIdsJob extends Job<MediaFileRenamePaddedIdsJob
         } while (!page.isEmpty());
     }
 
-    private void rename(MediaFile mediaFile) throws IOException {
+    private void rename(MediaFile mediaFile) throws Exception {
         String newId = mediaFile.getId().substring(0, mediaFile.getId().length() - 1);
+        String newFileName = renamedFileName(mediaFile, newId);
         try {
             log.debug("Quering media file {}", newId);
             var dupMediaFile = tx.executeRead(() -> mediaFileRepository.findById(newId).orElse(null));
             if (dupMediaFile != null) {
                 log.warn("Duplicate media file {}", dupMediaFile.getId());
-                tx.executeWrite(() -> mediaFileRepository.deleteById(dupMediaFile.getId()));
-                log.debug("Removed {} successfully", dupMediaFile.getId());
+                if (
+                    dupMediaFile.getFileName() != null
+                    && !dupMediaFile.getFileName().equals(newFileName)
+                ) {
+                    log.warn(
+                        "Duplicate local file {} will be left for manual cleanup",
+                        dupMediaFile.getFileName()
+                    );
+                }
+                if (
+                    dupMediaFile.getCloudFileName() != null
+                    && !dupMediaFile.getCloudFileName().equals(mediaFile.getCloudFileName())
+                ) {
+                    log.warn(
+                        "Duplicate cloud file {} will be left for manual cleanup",
+                        dupMediaFile.getCloudFileName()
+                    );
+                }
             }
             log.debug("Renaming {} -> {}", mediaFile.getId(), newId);
-            tx.executeWrite(() -> mediaFileRepository.updateId(mediaFile.getId(), newId));
-        } catch (RuntimeException e) {
+            tx.executeWriteWithExceptions(() -> {
+                if (dupMediaFile != null) {
+                    mediaFileRepository.deleteById(dupMediaFile.getId());
+                }
+                mediaFileRepository.updateId(mediaFile.getId(), newId, newFileName);
+                if (newFileName != null) {
+                    Path oldPath = Path.of(config.getMedia().getPath(), mediaFile.getFileName());
+                    Path newPath = Path.of(config.getMedia().getPath(), newFileName);
+                    Files.move(oldPath, newPath, REPLACE_EXISTING);
+                }
+            });
+            if (dupMediaFile != null) {
+                log.debug("Removed {} successfully", dupMediaFile.getId());
+            }
+        } catch (Exception e) {
             log.error("Error renaming {} -> {}", mediaFile.getId(), newId);
             throw e;
         }
-        Path oldPath = FileSystems.getDefault().getPath(
-                config.getMedia().getPath(), MimeUtil.fileName(mediaFile.getId(), mediaFile.getMimeType()));
-        Path newPath = FileSystems.getDefault().getPath(
-                config.getMedia().getPath(), MimeUtil.fileName(newId, mediaFile.getMimeType()));
-        Files.move(oldPath, newPath, REPLACE_EXISTING);
+    }
+
+    private String renamedFileName(MediaFile mediaFile, String newId) {
+        String fileName = mediaFile.getFileName();
+        if (fileName == null) {
+            return null;
+        }
+        String prefix = mediaFile.getId() + ".";
+        if (!fileName.startsWith(prefix)) {
+            throw new IllegalStateException("Media filename does not start with its ID: " + fileName);
+        }
+        return newId + fileName.substring(mediaFile.getId().length());
     }
 
     @Override

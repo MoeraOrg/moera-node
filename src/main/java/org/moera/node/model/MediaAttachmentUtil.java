@@ -50,11 +50,11 @@ public class MediaAttachmentUtil {
         if (mediaAttachment.getMedia() != null) {
             var media = mediaAttachment.getMedia();
             PrivateMediaFileInfoUtil.fillPath(media, grantSupplier);
-            PrivateMediaFileInfoUtil.fillDirectPath(media, config);
+            PrivateMediaFileInfoUtil.refreshDirectPath(media, config);
             if (media.getPreviews() != null) {
                 for (var preview : media.getPreviews()) {
                     MediaFilePreviewInfoUtil.fillPath(preview, media, grantSupplier);
-                    MediaFilePreviewInfoUtil.fillDirectPath(preview, config);
+                    MediaFilePreviewInfoUtil.refreshDirectPath(preview, config);
                 }
             }
         } else if (mediaAttachment.getRemoteMedia() != null) {

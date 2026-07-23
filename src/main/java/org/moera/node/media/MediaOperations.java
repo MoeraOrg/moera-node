@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
@@ -69,6 +70,8 @@ import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFilePreview;
 import org.moera.node.data.MediaFilePreviewRepository;
+import org.moera.node.data.MediaFileRemoval;
+import org.moera.node.data.MediaFileRemovalRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.MediaLease;
 import org.moera.node.data.MediaLeaseRepository;
@@ -120,6 +123,10 @@ public class MediaOperations {
 
     private static final int PERMISSIONS_REFRESH_BATCH_SIZE = 100;
     private static final int PERMISSIONS_REFRESH_BATCHES_PER_CALL = 5;
+    private static final int MEDIA_FILE_PURGE_BATCH_SIZE = 1024;
+    private static final int MEDIA_FILE_REMOVAL_BATCH_SIZE = 100;
+
+    private final AtomicBoolean removingMediaFiles = new AtomicBoolean();
 
     private class PreviewSource {
 
@@ -182,6 +189,9 @@ public class MediaOperations {
     private MediaFileRepository mediaFileRepository;
 
     @Inject
+    private MediaFileRemovalRepository mediaFileRemovalRepository;
+
+    @Inject
     private MediaFileOwnerRepository mediaFileOwnerRepository;
 
     @Inject
@@ -228,7 +238,10 @@ public class MediaOperations {
         }
     }
 
-    public Path getPath(MediaFile mediaFile) {
+    public Path getPath(MediaFile mediaFile) throws MediaFileNotAvailableException {
+        if (ObjectUtils.isEmpty(mediaFile.getFileName())) {
+            throw new MediaFileNotAvailableException(mediaFile.getId());
+        }
         return FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
     }
 
@@ -320,6 +333,7 @@ public class MediaOperations {
     public MediaFile putInPlace(
         String id, String contentType, Path tmpPath, byte[] digest, boolean exposed
     ) throws IOException {
+        mediaFileRepository.lockMediaFileId(id);
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
         if (mediaFile == null) {
             if (digest == null) {
@@ -331,14 +345,14 @@ public class MediaOperations {
                 throw new InvalidImageException();
             }
 
-            Path mediaPath = FileSystems.getDefault().getPath(
-                config.getMedia().getPath(), MimeUtil.fileName(id, contentType)
-            );
+            String fileName = MimeUtil.fileName(id, contentType);
+            Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), fileName);
             Files.move(tmpPath, mediaPath, REPLACE_EXISTING);
 
             mediaFile = new MediaFile();
             mediaFile.setId(id);
             mediaFile.setMimeType(contentType);
+            mediaFile.setFileName(fileName);
             if (MimeUtil.isSupportedImage(contentType)) {
                 mediaFile.setDimension(getImageDimension(contentType, mediaPath));
                 mediaFile.setOrientation(getImageOrientation(mediaPath));
@@ -386,11 +400,7 @@ public class MediaOperations {
     }
 
     public byte[] digest(MediaFile mediaFile) throws IOException {
-        return digest(
-            FileSystems.getDefault().getPath(
-                config.getMedia().getPath(), MimeUtil.fileName(mediaFile.getId(), mediaFile.getMimeType())
-            )
-        );
+        return digest(getPath(mediaFile));
     }
 
     private static byte[] digest(Path mediaPath) throws IOException {
@@ -742,6 +752,13 @@ public class MediaOperations {
     private ResponseEntity<Resource> serve(
         MediaFile mediaFile, String fileName, boolean download, ExtendedDuration cacheDuration
     ) {
+        Path mediaPath;
+        try {
+            mediaPath = getPath(mediaFile);
+        } catch (MediaFileNotAvailableException e) {
+            throw new ObjectNotFoundFailure("media.not-found");
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(mediaFile.getMimeType()));
         setCacheControl(headers, cacheDuration);
@@ -758,7 +775,6 @@ public class MediaOperations {
             default:
             case "stream": {
                 headers.setContentLength(mediaFile.getFileSize());
-                Path mediaPath = getPath(mediaFile);
                 return new ResponseEntity<>(new FileSystemResource(mediaPath), headers, HttpStatus.OK);
             }
 
@@ -767,7 +783,6 @@ public class MediaOperations {
                 return new ResponseEntity<>(headers, HttpStatus.OK);
 
             case "sendfile": {
-                Path mediaPath = getPath(mediaFile);
                 headers.add("X-SendFile", mediaPath.toAbsolutePath().toString());
                 return new ResponseEntity<>(headers, HttpStatus.OK);
             }
@@ -890,16 +905,61 @@ public class MediaOperations {
 
             Timestamp now = Util.now();
             tx.executeWrite(() -> mediaFileOwnerRepository.deleteUnused(now));
-            Collection<MediaFile> mediaFiles = tx.executeRead(() -> mediaFileRepository.findUnused(now));
-            tx.executeWrite(() -> mediaFileRepository.deleteUnused(now));
-            for (MediaFile mediaFile : mediaFiles) {
-                Path path = getPath(mediaFile);
-                try {
-                    Files.deleteIfExists(path);
-                } catch (IOException e) {
-                    log.warn("Error deleting {}: {}", path, e.getMessage());
-                }
+            int moved;
+            do {
+                moved = tx.executeWrite(() ->
+                    mediaFileRepository.moveUnusedToRemovals(now, MEDIA_FILE_PURGE_BATCH_SIZE)
+                );
+            } while (moved == MEDIA_FILE_PURGE_BATCH_SIZE);
+        }
+    }
+
+    @Scheduled(fixedDelayString = "PT30M")
+    public void removeMediaFiles() {
+        if (!removingMediaFiles.compareAndSet(false, true)) {
+            return;
+        }
+
+        try {
+            try (var ignored = requestCounter.allot()) {
+                log.info("Removing purged media files");
+
+                List<Long> removalIds = tx.executeRead(() ->
+                    mediaFileRemovalRepository.findPendingIds(Pageable.ofSize(MEDIA_FILE_REMOVAL_BATCH_SIZE))
+                );
+                removalIds.forEach(this::removeMediaFile);
             }
+        } finally {
+            removingMediaFiles.set(false);
+        }
+    }
+
+    private void removeMediaFile(long removalId) {
+        try {
+            tx.executeWriteWithExceptions(() -> {
+                MediaFileRemoval removal = mediaFileRemovalRepository.findById(removalId).orElse(null);
+                if (removal == null) {
+                    return;
+                }
+
+                mediaFileRepository.lockMediaFileId(removal.getMediaFileId());
+                if (mediaFileRepository.countById(removal.getMediaFileId()) > 0) {
+                    mediaFileRemovalRepository.deleteById(removal.getId());
+                    return;
+                }
+
+                if (removal.getFileName() != null) {
+                    Path path = FileSystems.getDefault().getPath(config.getMedia().getPath(), removal.getFileName());
+                    Files.deleteIfExists(path);
+                }
+                if (removal.getCloudFileName() != null) { // TODO
+                    log.warn("Cloud media file removal is not supported yet: {}", removal.getCloudFileName());
+                    return;
+                }
+                mediaFileRemovalRepository.deleteById(removal.getId());
+            });
+        } catch (Exception e) {
+            log.warn("Error removing media file {}: {}", removalId, e.getMessage());
         }
     }
 

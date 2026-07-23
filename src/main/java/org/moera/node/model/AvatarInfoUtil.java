@@ -3,7 +3,7 @@ package org.moera.node.model;
 import org.moera.lib.node.types.AvatarInfo;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Avatar;
-import org.moera.node.media.MimeUtil;
+import org.moera.node.data.MediaFile;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.media.MediaUtil;
 
@@ -17,15 +17,16 @@ public class AvatarInfoUtil {
         avatarInfo.setMimeType(avatar.getMediaFile().getMimeType());
         avatarInfo.setWidth(avatar.getMediaFile().getSizeX());
         avatarInfo.setHeight(avatar.getMediaFile().getSizeY());
-        fillDirectPath(avatarInfo, config);
+        fillDirectPath(avatarInfo, avatar.getMediaFile(), config);
         avatarInfo.setShape(avatar.getShape());
         avatarInfo.setOrdinal(avatar.getOrdinal());
         return avatarInfo;
     }
 
-    private static void fillDirectPath(AvatarInfo info, DirectServeConfig config) {
-        var fileName = MimeUtil.fileName(info.getMediaId(), info.getMimeType());
-        var pu = MediaUtil.directPath(fileName, info.getMediaId(), ExtendedDuration.ALWAYS, config);
+    private static void fillDirectPath(
+        AvatarInfo info, MediaFile mediaFile, DirectServeConfig config
+    ) {
+        var pu = MediaUtil.directPath(mediaFile, ExtendedDuration.ALWAYS, config);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }

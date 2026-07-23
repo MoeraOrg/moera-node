@@ -261,7 +261,13 @@ public class MediaManager {
         if (info != null) {
             return;
         }
-        nodeApi.at(nodeName, carte).uploadPublicMedia(mediaOperations.getPath(mediaFile), mediaFile.getMimeType());
+        try {
+            nodeApi.at(nodeName, carte).uploadPublicMedia(
+                mediaOperations.getPath(mediaFile), mediaFile.getMimeType()
+            );
+        } catch (MediaFileNotAvailableException e) {
+            throw new MoeraNodeLocalStorageException(e);
+        }
     }
 
     public void uploadPublicMedia(String nodeName, String carte, Avatar avatar) throws MoeraNodeException {

@@ -24,6 +24,7 @@ import org.languagetool.rules.Rule;
 import org.languagetool.rules.RuleMatch;
 import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
+import org.moera.node.media.MediaFileNotAvailableException;
 import org.moera.node.media.MediaOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +76,7 @@ public class OcrSpace {
         return langTool;
     }
 
-    public String recognize(MediaFile mediaFile) {
+    public String recognize(MediaFile mediaFile) throws MediaFileNotAvailableException {
         if (
             !Objects.equals(config.getMedia().getOcrService(), "ocrspace")
             || ObjectUtils.isEmpty(config.getMedia().getOcrServiceKey())

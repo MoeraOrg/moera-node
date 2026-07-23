@@ -1,8 +1,11 @@
 package org.moera.node.global;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -11,14 +14,18 @@ import jakarta.transaction.Transactional;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.body.Body;
+import org.moera.node.config.Config;
 import org.moera.node.data.ContactUpgradeRepository;
 import org.moera.node.data.DomainUpgrade;
 import org.moera.node.data.DomainUpgradeRepository;
 import org.moera.node.data.EntryRevision;
+import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntryRevisionUpgrade;
 import org.moera.node.data.EntryRevisionUpgradeRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.data.MediaFileUpgrade;
+import org.moera.node.data.MediaFileUpgradeRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.UpgradeType;
 import org.moera.node.domain.Domains;
@@ -56,16 +63,25 @@ public class Updater {
     private Domains domains;
 
     @Inject
+    private Config config;
+
+    @Inject
     private UniversalContext universalContext;
 
     @Inject
     private EntryRevisionUpgradeRepository entryRevisionUpgradeRepository;
 
     @Inject
+    private EntryRevisionRepository entryRevisionRepository;
+
+    @Inject
     private DomainUpgradeRepository domainUpgradeRepository;
 
     @Inject
     private MediaFileRepository mediaFileRepository;
+
+    @Inject
+    private MediaFileUpgradeRepository mediaFileUpgradeRepository;
 
     @Inject
     private ContactUpgradeRepository contactUpgradeRepository;
@@ -89,9 +105,9 @@ public class Updater {
     @EventListener(JobsManagerInitializedEvent.class)
     @Transactional
     public void execute() {
+        executeMediaUpgrades();
         executeDomainUpgrades();
         executeEntryRevisionUpgrades();
-        executeMediaUpgrades();
         executeContactUpgrades();
     }
 
@@ -204,8 +220,72 @@ public class Updater {
     }
 
     private void executeMediaUpgrades() {
+        updateMediaFileNames();
         updateMediaFileDigests();
         renamePaddedIds();
+    }
+
+    private void updateMediaFileNames() {
+        List<MediaFileUpgrade> firstBatch = mediaFileUpgradeRepository.findPending(
+            UpgradeType.MEDIA_FILE_NAME, Pageable.ofSize(PAGE_SIZE)
+        );
+        if (firstBatch.isEmpty()) {
+            return;
+        }
+
+        int populatedCount = 0;
+        int missingCount = 0;
+        int ambiguousCount = 0;
+        List<MediaFileUpgrade> upgrades = firstBatch;
+        do {
+            for (MediaFileUpgrade upgrade : upgrades) {
+                MediaFile mediaFile = upgrade.getMediaFile();
+                List<Path> paths;
+                try {
+                    paths = findMediaFiles(mediaFile);
+                } catch (IOException e) {
+                    throw new IllegalStateException(
+                        "Cannot scan local files for media file %s".formatted(mediaFile.getId()), e
+                    );
+                }
+                if (paths.size() == 1) {
+                    mediaFile.setFileName(paths.getFirst().getFileName().toString());
+                    populatedCount++;
+                } else if (paths.isEmpty()) {
+                    missingCount++;
+                    log.warn("No local file found for media file {}", mediaFile.getId());
+                } else {
+                    ambiguousCount++;
+                    log.warn("Several local files found for media file {}", mediaFile.getId());
+                }
+                mediaFileUpgradeRepository.deleteById(upgrade.getId());
+            }
+            upgrades = mediaFileUpgradeRepository.findPending(
+                UpgradeType.MEDIA_FILE_NAME, Pageable.ofSize(PAGE_SIZE)
+            );
+        } while (!upgrades.isEmpty());
+
+        log.info(
+            "Media file name upgrade completed: {} populated, {} missing, {} ambiguous",
+            populatedCount, missingCount, ambiguousCount
+        );
+        entryRevisionRepository.clearAttachmentsCache();
+    }
+
+    private List<Path> findMediaFiles(MediaFile mediaFile) throws IOException {
+        List<Path> paths = new ArrayList<>(2);
+        Path mediaPath = Path.of(config.getMedia().getPath());
+        try (var candidates = Files.newDirectoryStream(mediaPath, mediaFile.getId() + ".*")) {
+            for (Path candidate : candidates) {
+                if (Files.isRegularFile(candidate)) {
+                    paths.add(candidate);
+                    if (paths.size() == 2) {
+                        break;
+                    }
+                }
+            }
+        }
+        return paths;
     }
 
     private void updateMediaFileDigests() {

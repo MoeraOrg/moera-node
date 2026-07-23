@@ -12,5 +12,6 @@ public enum UpgradeType {
     PROFILE_DOWNLOAD,       /* 6 */
     ENCRYPT_OPTIONS,        /* 7 */
     MALWARE_AUTO_SUBSCRIBE, /* 8 */
+    MEDIA_FILE_NAME,        /* 9 */
 
 }

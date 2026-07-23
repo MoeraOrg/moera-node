@@ -21,6 +21,7 @@ import org.moera.node.data.MediaFilePreview;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
 import org.moera.node.util.ExtendedDuration;
+import org.moera.node.util.UriUtil;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 
@@ -36,7 +37,7 @@ public class MediaUtil {
     }
 
     public static String publicPath(MediaFile mediaFile) {
-        return publicPath(mediaFile.getFileName());
+        return publicPath(MimeUtil.fileName(mediaFile.getId(), mediaFile.getMimeType()));
     }
 
     public static String privatePath(String fileName, Integer width, String grant, boolean download) {
@@ -86,7 +87,9 @@ public class MediaUtil {
             if (preview.isOriginal()) {
                 url = originalPath;
             } else {
-                String directPath = MediaUtil.directPath(mediaFileOwner, config).url();
+                String directPath = MediaUtil.directPath(
+                    preview.getMediaFile(), MEDIA_GRANT_TTL, config
+                ).url();
                 boolean directServing = directPath != null;
                 url = "/moera/media/"
                     + (directServing ? directPath : MediaUtil.privatePath(mediaFileOwner, preview.getWidth(), null));
@@ -199,18 +202,27 @@ public class MediaUtil {
     ) {
         return switch (config.getSource()) {
             case NONE -> new PresignedUrl(null, null);
-            case FILESYSTEM ->
-                MediaUtil.presignUrl(location, id, valid, userFileName, config.getSecret());
+            case FILESYSTEM -> ObjectUtils.isEmpty(location)
+                ? new PresignedUrl(null, null)
+                : MediaUtil.presignUrl(location, id, valid, userFileName, config.getSecret());
         };
     }
 
     public static PresignedUrl directPath(
-        String location,
-        String id,
+        MediaFile mediaFile,
+        ExtendedDuration valid,
+        String userFileName,
+        DirectServeConfig config
+    ) {
+        return directPath(mediaFile.getFileName(), mediaFile.getId(), valid, userFileName, config);
+    }
+
+    public static PresignedUrl directPath(
+        MediaFile mediaFile,
         ExtendedDuration valid,
         DirectServeConfig config
     ) {
-        return directPath(location, id, valid, null, config);
+        return directPath(mediaFile, valid, null, config);
     }
 
     public static PresignedUrl directPath(MediaFileOwner mediaFileOwner, DirectServeConfig config) {
@@ -218,12 +230,29 @@ public class MediaUtil {
             ? MimeUtil.fileName(mediaFileOwner.getTitle(), mediaFileOwner.getMediaFile().getMimeType())
             : null;
         return directPath(
-            mediaFileOwner.getMediaFile().getFileName(),
-            mediaFileOwner.getMediaFile().getId(),
+            mediaFileOwner.getMediaFile(),
             MEDIA_GRANT_TTL,
             userFileName,
             config
         );
+    }
+
+    public static PresignedUrl refreshDirectPath(
+        String directPath,
+        String id,
+        ExtendedDuration valid,
+        DirectServeConfig config
+    ) {
+        if (ObjectUtils.isEmpty(directPath)) {
+            return new PresignedUrl(null, null);
+        }
+
+        String directFileName = UriUtil.stripQueryAndFragment(directPath);
+        String query = UriUtil.query(directPath);
+        String userFileName = query != null
+            ? UriUtil.queryParameter(query, "fn")
+            : null;
+        return directPath(directFileName, id, valid, userFileName, config);
     }
 
 }

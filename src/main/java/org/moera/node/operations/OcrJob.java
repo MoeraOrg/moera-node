@@ -26,6 +26,7 @@ import org.moera.node.liberin.model.DraftUpdatedLiberin;
 import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
 import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.media.LocalRemoteMedia;
+import org.moera.node.media.MediaFileNotAvailableException;
 import org.moera.node.ocrspace.OcrSpace;
 import org.moera.node.ocrspace.OcrSpaceConnectionException;
 import org.moera.node.ocrspace.OcrSpaceInvalidResponseException;
@@ -112,6 +113,9 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
             if (text != null) {
                 tx.executeWrite(() -> updateText(mediaFile, text));
             }
+        } catch (MediaFileNotAvailableException e) {
+            log.warn("Media file {} has no local copy", LogUtil.format(parameters.mediaFileId));
+            success();
         } catch (OcrSpaceConnectionException | OcrSpaceInvalidResponseException e) {
             log.error("Error during OCR of media file {}: {}", LogUtil.format(parameters.mediaFileId), e.getMessage());
             retry();

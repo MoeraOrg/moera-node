@@ -28,6 +28,12 @@ public class MediaFile {
     @Size(max = 80)
     private String mimeType;
 
+    @Size(max = 50)
+    private String fileName;
+
+    @Size(max = 65)
+    private String cloudFileName;
+
     @Column(name="size_x")
     private Integer sizeX;
 
@@ -91,7 +97,19 @@ public class MediaFile {
     }
 
     public String getFileName() {
-        return MimeUtil.fileName(id, mimeType);
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public String getCloudFileName() {
+        return cloudFileName;
+    }
+
+    public void setCloudFileName(String cloudFileName) {
+        this.cloudFileName = cloudFileName;
     }
 
     public Integer getSizeX() {

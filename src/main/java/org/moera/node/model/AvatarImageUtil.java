@@ -7,7 +7,6 @@ import org.moera.lib.util.LogUtil;
 import org.moera.node.config.DirectServeConfig;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.MediaFile;
-import org.moera.node.media.MimeUtil;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.media.MediaUtil;
 
@@ -17,14 +16,15 @@ public class AvatarImageUtil {
         return build(avatar.getMediaFile(), avatar.getShape(), config);
     }
 
-    public static AvatarImage build(AvatarInfo avatarInfo, DirectServeConfig config) {
+    public static AvatarImage build(AvatarInfo avatarInfo) {
         AvatarImage avatarImage = new AvatarImage();
         avatarImage.setMediaId(avatarInfo.getMediaId());
         avatarImage.setPath(avatarInfo.getPath());
         avatarImage.setMimeType(avatarInfo.getMimeType());
         avatarImage.setWidth(avatarInfo.getWidth());
         avatarImage.setHeight(avatarInfo.getHeight());
-        fillDirectPath(avatarImage, config);
+        avatarImage.setDirectPath(avatarInfo.getDirectPath());
+        avatarImage.setDirectPathExpiresAt(avatarInfo.getDirectPathExpiresAt());
         avatarImage.setShape(avatarInfo.getShape());
         return avatarImage;
     }
@@ -38,15 +38,16 @@ public class AvatarImageUtil {
             avatarImage.setMimeType(mediaFile.getMimeType());
             avatarImage.setWidth(mediaFile.getSizeX());
             avatarImage.setHeight(mediaFile.getSizeY());
-            fillDirectPath(avatarImage, config);
+            fillDirectPath(avatarImage, mediaFile, config);
         }
         avatarImage.setShape(shape);
         return avatarImage;
     }
 
-    private static void fillDirectPath(AvatarImage info, DirectServeConfig config) {
-        var fileName = MimeUtil.fileName(info.getMediaId(), info.getMimeType());
-        var pu = MediaUtil.directPath(fileName, info.getMediaId(), ExtendedDuration.ALWAYS, config);
+    private static void fillDirectPath(
+        AvatarImage info, MediaFile mediaFile, DirectServeConfig config
+    ) {
+        var pu = MediaUtil.directPath(mediaFile, ExtendedDuration.ALWAYS, config);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }

@@ -101,6 +101,10 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
     void clearAttachmentsCacheByMedia(UUID mediaFileOwnerId);
 
     @Modifying
+    @Query("update EntryRevision r set r.attachmentsCache = null where r.attachmentsCache is not null")
+    void clearAttachmentsCache();
+
+    @Modifying
     @Query(
         "update EntryRevision r set r.attachmentsCache = null"
         + " where r.entry.nodeId = ?1 and exists("

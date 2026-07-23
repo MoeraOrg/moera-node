@@ -6,6 +6,7 @@ import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.PrivateMediaFileOperations;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.config.DirectServeConfig;
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.media.MimeUtil;
@@ -35,7 +36,7 @@ public class PrivateMediaFileInfoUtil {
         info.setAttachment(!mediaFileOwner.getMediaFile().isReasonableImage());
         if (mediaFileOwner.getMalwareMarks().isEmpty()) {
             fillPath(info, grantSupplier);
-            fillDirectPath(info, config);
+            fillDirectPath(info, mediaFileOwner.getMediaFile(), config);
         } else {
             info.setPath(MediaUtil.privatePath(mediaFileOwner, null, null));
             info.setMalware(true);
@@ -70,12 +71,21 @@ public class PrivateMediaFileInfoUtil {
         );
     }
 
-    public static void fillDirectPath(PrivateMediaFileInfo info, DirectServeConfig config) {
-        var fileName = MimeUtil.fileName(info.getHash(), info.getMimeType());
+    public static void fillDirectPath(
+        PrivateMediaFileInfo info, MediaFile mediaFile, DirectServeConfig config
+    ) {
         var userFileName = !ObjectUtils.isEmpty(info.getTitle())
             ? MimeUtil.fileName(info.getTitle(), info.getMimeType())
             : null;
-        var pu = MediaUtil.directPath(fileName, info.getHash(), MediaUtil.MEDIA_GRANT_TTL, userFileName, config);
+        var pu = MediaUtil.directPath(mediaFile, MediaUtil.MEDIA_GRANT_TTL, userFileName, config);
+        info.setDirectPath(pu.url());
+        info.setDirectPathExpiresAt(pu.expires());
+    }
+
+    public static void refreshDirectPath(PrivateMediaFileInfo info, DirectServeConfig config) {
+        var pu = MediaUtil.refreshDirectPath(
+            info.getDirectPath(), info.getHash(), MediaUtil.MEDIA_GRANT_TTL, config
+        );
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }
