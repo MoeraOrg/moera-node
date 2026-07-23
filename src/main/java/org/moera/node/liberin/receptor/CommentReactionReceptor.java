@@ -52,7 +52,7 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
                     AvatarImageUtil.build(
                         deletedReaction.getOwnerAvatarMediaFile(),
                         deletedReaction.getOwnerAvatarShape(),
-                        config.getMedia().getDirectServe()
+                        directServeOperations
                     ),
                     deletedReaction.isNegative()
                 )
@@ -71,7 +71,7 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
         if (addedReaction != null && addedReaction.getSignature() != null) {
             Entry posting = comment.getPosting();
             AvatarImage postingOwnerAvatar = AvatarImageUtil.build(
-                posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape(), config.getMedia().getDirectServe()
+                posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape(), directServeOperations
             );
             send(
                 Directions.single(
@@ -92,7 +92,7 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
                     AvatarImageUtil.build(
                         addedReaction.getOwnerAvatarMediaFile(),
                         addedReaction.getOwnerAvatarShape(),
-                        config.getMedia().getDirectServe()
+                        directServeOperations
                     ),
                     addedReaction.isNegative(), addedReaction.getEmoji()
                 )

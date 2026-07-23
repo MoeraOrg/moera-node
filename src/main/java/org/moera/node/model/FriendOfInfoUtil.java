@@ -7,18 +7,18 @@ import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.FriendGroupDetails;
 import org.moera.lib.node.types.FriendOfInfo;
 import org.moera.lib.node.types.principal.AccessChecker;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.FriendOf;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 public class FriendOfInfoUtil {
 
-    public static FriendOfInfo build(FriendOf friendOf, Options options, DirectServeConfig config) {
+    public static FriendOfInfo build(FriendOf friendOf, Options options, DirectServeOperations directServe) {
         FriendOfInfo friendOfInfo = new FriendOfInfo();
         friendOfInfo.setRemoteNodeName(friendOf.getRemoteNodeName());
         if (friendOf.getContact() != null) {
-            friendOfInfo.setContact(ContactInfoUtil.build(friendOf.getContact(), options, config));
+            friendOfInfo.setContact(ContactInfoUtil.build(friendOf.getContact(), options, directServe));
         }
         friendOfInfo.setGroups(Collections.singletonList(
             FriendGroupDetailsUtil.build(
@@ -31,9 +31,9 @@ public class FriendOfInfoUtil {
     }
 
     public static FriendOfInfo build(
-        FriendOf friendOf, Options options, AccessChecker accessChecker, DirectServeConfig config
+        FriendOf friendOf, Options options, AccessChecker accessChecker, DirectServeOperations directServe
     ) {
-        FriendOfInfo friendOfInfo = build(friendOf, options, config);
+        FriendOfInfo friendOfInfo = build(friendOf, options, directServe);
         protect(friendOfInfo, accessChecker);
         return friendOfInfo;
     }

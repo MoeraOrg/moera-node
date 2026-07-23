@@ -29,7 +29,7 @@ public class SubscriberDeletedLiberin extends Liberin {
         model.put(
             "subscriber",
             SubscriberInfoUtil.build(
-                subscriber, getPluginContext().getOptions(), AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe()
+                subscriber, getPluginContext().getOptions(), AccessCheckers.ADMIN, getDirectServeOperations()
             )
         );
     }

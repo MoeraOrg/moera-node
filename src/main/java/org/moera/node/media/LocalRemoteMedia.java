@@ -49,9 +49,10 @@ public record LocalRemoteMedia(
 
     public String path(ServeContext context, Integer width) {
         if (mediaFileOwner != null) {
-            String directPath = MediaUtil.directPath(mediaFileOwner, context.directServeConfig()).url();
-            return "/moera/media/"
-                + (directPath != null ? directPath : MediaUtil.privatePath(mediaFileOwner, width, null));
+            String directPath = context.directServeOperations().directPath(mediaFileOwner).url();
+            return MediaUtil.mediaUrl(
+                directPath != null ? directPath : MediaUtil.privatePath(mediaFileOwner, width, null)
+            );
         }
 
         if (remoteMediaFile == null || remoteMediaFile.getNodeName() == null || remoteMediaFile.getMediaId() == null) {

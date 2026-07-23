@@ -3,6 +3,7 @@ package org.moera.node.ui;
 import jakarta.inject.Inject;
 
 import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
@@ -26,6 +27,9 @@ public class IndexUiController {
     private Config config;
 
     @Inject
+    private DirectServeOperations directServeOperations;
+
+    @Inject
     private RequestContext requestContext;
 
     @Inject
@@ -46,7 +50,7 @@ public class IndexUiController {
         model.addAttribute("menuIndex", "profile");
         model.addAttribute(
             "profile",
-            ProfileInfoUtil.build(requestContext.getPublic(), false, config.getMedia().getDirectServe())
+            ProfileInfoUtil.build(requestContext.getPublic(), false, directServeOperations)
         );
 
         model.addAttribute("ogUrl", requestContext.getSiteUrl() + "/profile");

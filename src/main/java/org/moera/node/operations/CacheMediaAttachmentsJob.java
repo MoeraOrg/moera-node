@@ -9,7 +9,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
@@ -47,7 +47,7 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
     }
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private EntryRevisionRepository entryRevisionRepository;
@@ -98,7 +98,7 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
             List<MediaAttachment> mediaAttachments = attachments.stream()
                 .filter(MediaAttachmentUtil::isVisible)
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> MediaAttachmentUtil.build(ea, config.getMedia().getDirectServe(), null))
+                .map(ea -> MediaAttachmentUtil.build(ea, directServeOperations, null))
                 .collect(Collectors.toList());
             cache.setAttachments(mediaAttachments);
 

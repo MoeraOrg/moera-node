@@ -5,8 +5,7 @@ import java.util.stream.Collectors;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.PrivateMediaFileOperations;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.config.DirectServeConfig;
-import org.moera.node.data.MediaFile;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.media.MediaGrantSupplier;
 import org.moera.node.media.MimeUtil;
@@ -18,7 +17,7 @@ public class PrivateMediaFileInfoUtil {
 
     public static PrivateMediaFileInfo build(
         MediaFileOwner mediaFileOwner,
-        DirectServeConfig config,
+        DirectServeOperations directServe,
         MediaGrantSupplier grantSupplier
     ) {
         PrivateMediaFileInfo info = new PrivateMediaFileInfo();
@@ -36,7 +35,7 @@ public class PrivateMediaFileInfoUtil {
         info.setAttachment(!mediaFileOwner.getMediaFile().isReasonableImage());
         if (mediaFileOwner.getMalwareMarks().isEmpty()) {
             fillPath(info, grantSupplier);
-            fillDirectPath(info, mediaFileOwner.getMediaFile(), config);
+            fillDirectPaths(info, mediaFileOwner, directServe);
         } else {
             info.setPath(MediaUtil.privatePath(mediaFileOwner, null, null));
             info.setMalware(true);
@@ -45,7 +44,7 @@ public class PrivateMediaFileInfoUtil {
         info.setPreviews(
             mediaFileOwner.getMediaFile().getPreviews().stream()
                 .filter(pw -> pw.getMediaFile() != null)
-                .map(pw -> MediaFilePreviewInfoUtil.build(pw, mediaFileOwner, config, grantSupplier))
+                .map(pw -> MediaFilePreviewInfoUtil.build(pw, mediaFileOwner, directServe, grantSupplier))
                 .collect(Collectors.toList())
         );
 
@@ -71,23 +70,40 @@ public class PrivateMediaFileInfoUtil {
         );
     }
 
-    public static void fillDirectPath(
-        PrivateMediaFileInfo info, MediaFile mediaFile, DirectServeConfig config
+    public static void fillDirectPaths(
+        PrivateMediaFileInfo info, MediaFileOwner mediaFileOwner, DirectServeOperations directServe
     ) {
-        var userFileName = !ObjectUtils.isEmpty(info.getTitle())
+        String displayFileName = !ObjectUtils.isEmpty(info.getTitle())
             ? MimeUtil.fileName(info.getTitle(), info.getMimeType())
             : null;
-        var pu = MediaUtil.directPath(mediaFile, MediaUtil.MEDIA_GRANT_TTL, userFileName, config);
-        info.setDirectPath(pu.url());
-        info.setDirectPathExpiresAt(pu.expires());
+        var displayPath = directServe.directPath(
+            mediaFileOwner.getMediaFile(), MediaUtil.MEDIA_GRANT_TTL, displayFileName
+        );
+        info.setDirectPath(displayPath.url());
+        info.setDirectPathExpiresAt(displayPath.expires());
+
+        var downloadPath = directServe.directDownloadPath(
+            mediaFileOwner.getMediaFile(), MediaUtil.MEDIA_GRANT_TTL, mediaFileOwner.getUserFileName()
+        );
+        info.setDirectDownloadPath(downloadPath.url());
+        info.setDirectDownloadPathExpiresAt(downloadPath.expires());
     }
 
-    public static void refreshDirectPath(PrivateMediaFileInfo info, DirectServeConfig config) {
-        var pu = MediaUtil.refreshDirectPath(
-            info.getDirectPath(), info.getHash(), MediaUtil.MEDIA_GRANT_TTL, config
+    public static void refreshDirectPaths(PrivateMediaFileInfo info, DirectServeOperations directServe) {
+        String sourcePath = info.getDirectPath();
+        var displayPath = directServe.refreshDirectPath(sourcePath, info.getHash(), MediaUtil.MEDIA_GRANT_TTL);
+        info.setDirectPath(displayPath.url());
+        info.setDirectPathExpiresAt(displayPath.expires());
+
+        String downloadFileName = MimeUtil.fileName(
+            !ObjectUtils.isEmpty(info.getTitle()) ? info.getTitle() : info.getId(),
+            info.getMimeType()
         );
-        info.setDirectPath(pu.url());
-        info.setDirectPathExpiresAt(pu.expires());
+        var downloadPath = directServe.refreshDirectDownloadPath(
+            sourcePath, info.getHash(), MediaUtil.MEDIA_GRANT_TTL, downloadFileName
+        );
+        info.setDirectDownloadPath(downloadPath.url());
+        info.setDirectDownloadPathExpiresAt(downloadPath.expires());
     }
 
 }

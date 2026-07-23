@@ -30,7 +30,7 @@ public class SubscriptionAddedLiberin extends Liberin {
             SubscriptionInfoUtil.build(
                 subscription,
                 getPluginContext().getOptions(),
-                getConfig().getMedia().getDirectServe()
+                getDirectServeOperations()
             )
         );
     }

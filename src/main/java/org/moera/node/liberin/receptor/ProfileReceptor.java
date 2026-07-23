@@ -27,7 +27,7 @@ public class ProfileReceptor extends LiberinReceptorBase {
         send(
             liberin,
             new NodeNameChangedEvent(
-                liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar(), config.getMedia().getDirectServe()
+                liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar(), directServeOperations
             )
         );
         send(Directions.profileSubscribers(liberin.getNodeId()), new ProfileUpdatedNotification());
@@ -42,7 +42,7 @@ public class ProfileReceptor extends LiberinReceptorBase {
         send(
             liberin,
             new NodeNameChangedEvent(
-                liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar(), config.getMedia().getDirectServe()
+                liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar(), directServeOperations
             )
         );
         if (ObjectUtils.isEmpty(liberin.getPrevNodeName())) {

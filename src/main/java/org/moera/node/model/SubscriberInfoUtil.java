@@ -6,7 +6,7 @@ import org.moera.lib.node.types.SubscriberInfo;
 import org.moera.lib.node.types.SubscriberOperations;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Subscriber;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
@@ -14,10 +14,10 @@ import org.moera.node.util.Util;
 public class SubscriberInfoUtil {
 
     public static SubscriberInfo build(
-        Subscriber subscriber, Options options, AccessChecker accessChecker, DirectServeConfig config
+        Subscriber subscriber, Options options, AccessChecker accessChecker, DirectServeOperations directServe
     ) {
         ContactInfo contactInfo = subscriber.getContact() != null
-            ? ContactInfoUtil.build(subscriber.getContact(), options, accessChecker, config)
+            ? ContactInfoUtil.build(subscriber.getContact(), options, accessChecker, directServe)
             : null;
         return build(subscriber, contactInfo, accessChecker);
     }

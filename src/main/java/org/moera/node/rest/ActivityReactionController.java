@@ -13,7 +13,7 @@ import org.moera.lib.node.types.ActivityReactionInfo;
 import org.moera.lib.node.types.RemotePosting;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.auth.Admin;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.global.ApiController;
@@ -34,7 +34,7 @@ public class ActivityReactionController {
     private static final Logger log = LoggerFactory.getLogger(ActivityReactionController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -62,7 +62,7 @@ public class ActivityReactionController {
         Set<RemotePosting> postingSet = new HashSet<>(filter.getPostings());
         return ownReactions.stream()
             .filter(r -> postingSet.contains(r.getRemotePosting()))
-            .map(r -> ActivityReactionInfoUtil.build(r, config.getMedia().getDirectServe()))
+            .map(r -> ActivityReactionInfoUtil.build(r, directServeOperations))
             .collect(Collectors.toList());
     }
 

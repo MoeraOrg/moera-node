@@ -37,9 +37,9 @@ public class StoryUpdatedLiberin extends Liberin {
                     entityManager.merge(t.getEntry()),
                     AccessCheckers.ADMIN,
                     null,
-                    getConfig().getMedia().getDirectServe()
+                    getDirectServeOperations()
                 ),
-                getConfig().getMedia().getDirectServe()
+                getDirectServeOperations()
             )
         );
     }

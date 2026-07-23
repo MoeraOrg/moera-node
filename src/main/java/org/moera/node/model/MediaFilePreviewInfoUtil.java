@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.moera.lib.node.types.MediaFilePreviewInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
@@ -17,7 +17,7 @@ public class MediaFilePreviewInfoUtil {
     public static MediaFilePreviewInfo build(
         MediaFilePreview preview,
         MediaFileOwner original,
-        DirectServeConfig config,
+        DirectServeOperations directServe,
         MediaGrantSupplier grantSupplier
     ) {
         MediaFilePreviewInfo info = new MediaFilePreviewInfo();
@@ -28,7 +28,7 @@ public class MediaFilePreviewInfoUtil {
         info.setHeight(preview.getMediaFile().getSizeY());
         info.setOriginal(preview.isOriginal());
         fillPath(info, original, grantSupplier);
-        fillDirectPath(info, preview.getMediaFile(), config);
+        fillDirectPath(info, preview.getMediaFile(), directServe);
         return info;
     }
 
@@ -72,17 +72,15 @@ public class MediaFilePreviewInfoUtil {
     }
 
     public static void fillDirectPath(
-        MediaFilePreviewInfo info, MediaFile mediaFile, DirectServeConfig config
+        MediaFilePreviewInfo info, MediaFile mediaFile, DirectServeOperations directServe
     ) {
-        var pu = MediaUtil.directPath(mediaFile, MediaUtil.MEDIA_GRANT_TTL, config);
+        var pu = directServe.directPath(mediaFile, MediaUtil.MEDIA_GRANT_TTL);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }
 
-    public static void refreshDirectPath(MediaFilePreviewInfo info, DirectServeConfig config) {
-        var pu = MediaUtil.refreshDirectPath(
-            info.getDirectPath(), info.getHash(), MediaUtil.MEDIA_GRANT_TTL, config
-        );
+    public static void refreshDirectPath(MediaFilePreviewInfo info, DirectServeOperations directServe) {
+        var pu = directServe.refreshDirectPath(info.getDirectPath(), info.getHash(), MediaUtil.MEDIA_GRANT_TTL);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }

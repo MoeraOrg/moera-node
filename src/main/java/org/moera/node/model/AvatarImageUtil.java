@@ -4,7 +4,7 @@ import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.AvatarInfo;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.MediaFile;
 import org.moera.node.util.ExtendedDuration;
@@ -12,8 +12,8 @@ import org.moera.node.media.MediaUtil;
 
 public class AvatarImageUtil {
 
-    public static AvatarImage build(Avatar avatar, DirectServeConfig config) {
-        return build(avatar.getMediaFile(), avatar.getShape(), config);
+    public static AvatarImage build(Avatar avatar, DirectServeOperations directServe) {
+        return build(avatar.getMediaFile(), avatar.getShape(), directServe);
     }
 
     public static AvatarImage build(AvatarInfo avatarInfo) {
@@ -29,7 +29,7 @@ public class AvatarImageUtil {
         return avatarImage;
     }
 
-    public static AvatarImage build(MediaFile mediaFile, String shape, DirectServeConfig config) {
+    public static AvatarImage build(MediaFile mediaFile, String shape, DirectServeOperations directServe) {
         AvatarImage avatarImage = new AvatarImage();
         setMediaFile(avatarImage, mediaFile);
         if (mediaFile != null) {
@@ -38,24 +38,24 @@ public class AvatarImageUtil {
             avatarImage.setMimeType(mediaFile.getMimeType());
             avatarImage.setWidth(mediaFile.getSizeX());
             avatarImage.setHeight(mediaFile.getSizeY());
-            fillDirectPath(avatarImage, mediaFile, config);
+            fillDirectPath(avatarImage, mediaFile, directServe);
         }
         avatarImage.setShape(shape);
         return avatarImage;
     }
 
     private static void fillDirectPath(
-        AvatarImage info, MediaFile mediaFile, DirectServeConfig config
+        AvatarImage info, MediaFile mediaFile, DirectServeOperations directServe
     ) {
-        var pu = MediaUtil.directPath(mediaFile, ExtendedDuration.ALWAYS, config);
+        var pu = directServe.directPath(mediaFile, ExtendedDuration.ALWAYS);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());
     }
 
     public static AvatarImage build(
-        AvatarDescription avatarDescription, MediaFile mediaFile, DirectServeConfig config
+        AvatarDescription avatarDescription, MediaFile mediaFile, DirectServeOperations directServe
     ) {
-        return build(mediaFile, avatarDescription != null ? avatarDescription.getShape() : null, config);
+        return build(mediaFile, avatarDescription != null ? avatarDescription.getShape() : null, directServe);
     }
 
     public static MediaFile getMediaFile(AvatarImage avatarImage) {

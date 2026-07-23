@@ -1,7 +1,7 @@
 package org.moera.node.model;
 
 import org.moera.lib.node.types.MediaAttachment;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.Posting;
 import org.moera.node.media.MediaGrantSupplier;
@@ -14,7 +14,7 @@ public class MediaAttachmentUtil {
 
     public static MediaAttachment build(
         EntryAttachment attachment,
-        DirectServeConfig config,
+        DirectServeOperations directServe,
         MediaGrantSupplier grantSupplier
     ) {
         MediaAttachment mediaAttachment = new MediaAttachment();
@@ -22,7 +22,7 @@ public class MediaAttachmentUtil {
         Posting mediaPosting = null;
         if (attachment.getMediaFileOwner() != null) {
             mediaAttachment.setMedia(
-                PrivateMediaFileInfoUtil.build(attachment.getMediaFileOwner(), config, grantSupplier)
+                PrivateMediaFileInfoUtil.build(attachment.getMediaFileOwner(), directServe, grantSupplier)
             );
             if (attachment.getRemoteMediaFile() != null) {
                 mediaAttachment.setRemoteMedia(RemoteMediaInfoUtil.buildMinimal(attachment.getRemoteMediaFile()));
@@ -44,17 +44,17 @@ public class MediaAttachmentUtil {
 
     public static void fillPaths(
         MediaAttachment mediaAttachment,
-        DirectServeConfig config,
+        DirectServeOperations directServe,
         MediaGrantSupplier grantSupplier
     ) {
         if (mediaAttachment.getMedia() != null) {
             var media = mediaAttachment.getMedia();
             PrivateMediaFileInfoUtil.fillPath(media, grantSupplier);
-            PrivateMediaFileInfoUtil.refreshDirectPath(media, config);
+            PrivateMediaFileInfoUtil.refreshDirectPaths(media, directServe);
             if (media.getPreviews() != null) {
                 for (var preview : media.getPreviews()) {
                     MediaFilePreviewInfoUtil.fillPath(preview, media, grantSupplier);
-                    MediaFilePreviewInfoUtil.refreshDirectPath(preview, config);
+                    MediaFilePreviewInfoUtil.refreshDirectPath(preview, directServe);
                 }
             }
         } else if (mediaAttachment.getRemoteMedia() != null) {

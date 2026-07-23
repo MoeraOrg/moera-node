@@ -101,7 +101,7 @@ public class SheriffOrderReceivedLiberin extends Liberin {
                     posting,
                     AccessCheckers.ADMIN,
                     null,
-                    getConfig().getMedia().getDirectServe()
+                    getDirectServeOperations()
                 )
             );
         }
@@ -113,7 +113,7 @@ public class SheriffOrderReceivedLiberin extends Liberin {
                     comment,
                     AccessCheckers.ADMIN,
                     null,
-                    getConfig().getMedia().getDirectServe()
+                    getDirectServeOperations()
                 )
             );
         }

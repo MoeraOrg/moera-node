@@ -16,7 +16,7 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.OwnComment;
@@ -30,16 +30,16 @@ public class CommentInfoUtil {
 
     // for liberin models
     public static CommentInfo build(
-        Comment comment, AccessChecker accessChecker, Options options, DirectServeConfig config
+        Comment comment, AccessChecker accessChecker, Options options, DirectServeOperations directServe
     ) {
         return build(
             comment,
             comment.getCurrentRevision(),
-            MediaAttachmentsProvider.relations(config),
+            MediaAttachmentsProvider.relations(directServe),
             false,
             accessChecker,
             options,
-            config
+            directServe
         );
     }
 
@@ -48,7 +48,7 @@ public class CommentInfoUtil {
         MediaAttachmentsProvider mediaAttachmentsProvider,
         AccessChecker accessChecker,
         Options options,
-        DirectServeConfig config
+        DirectServeOperations directServe
     ) {
         return build(
             comment,
@@ -57,7 +57,7 @@ public class CommentInfoUtil {
             false,
             accessChecker,
             options,
-            config
+            directServe
         );
     }
 
@@ -67,7 +67,7 @@ public class CommentInfoUtil {
         boolean includeSource,
         AccessChecker accessChecker,
         Options options,
-        DirectServeConfig config
+        DirectServeOperations directServe
     ) {
         return build(
             comment,
@@ -76,7 +76,7 @@ public class CommentInfoUtil {
             includeSource,
             accessChecker,
             options,
-            config
+            directServe
         );
     }
 
@@ -87,7 +87,7 @@ public class CommentInfoUtil {
         boolean includeSource,
         AccessChecker accessChecker,
         Options options,
-        DirectServeConfig config
+        DirectServeOperations directServe
     ) {
         CommentInfo commentInfo = new CommentInfo();
         buildTo(
@@ -98,7 +98,7 @@ public class CommentInfoUtil {
             includeSource,
             accessChecker,
             options,
-            config
+            directServe
         );
         return commentInfo;
     }
@@ -111,7 +111,7 @@ public class CommentInfoUtil {
         boolean includeSource,
         AccessChecker accessChecker,
         Options options,
-        DirectServeConfig config
+        DirectServeOperations directServe
     ) {
         commentInfo.setId(comment.getId().toString());
         commentInfo.setOwnerName(comment.getOwnerName());
@@ -119,7 +119,7 @@ public class CommentInfoUtil {
         commentInfo.setOwnerGender(comment.getOwnerGender());
         if (comment.getOwnerAvatarMediaFile() != null) {
             commentInfo.setOwnerAvatar(
-                AvatarImageUtil.build(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), config)
+                AvatarImageUtil.build(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), directServe)
             );
         }
         commentInfo.setPostingId(comment.getPosting().getId().toString());
@@ -139,7 +139,7 @@ public class CommentInfoUtil {
         commentInfo.setHeading(revision.getHeading());
         commentInfo.setDescription(revision.getDescription());
         if (comment.getRepliedTo() != null) {
-            commentInfo.setRepliedTo(RepliedToUtil.build(comment, config));
+            commentInfo.setRepliedTo(RepliedToUtil.build(comment, directServe));
         }
         commentInfo.setMoment(comment.getMoment());
         commentInfo.setCreatedAt(Util.toEpochSecond(comment.getCreatedAt()));
@@ -238,7 +238,7 @@ public class CommentInfoUtil {
     public static CommentUiInfo buildForUi(
         Comment comment,
         MediaAttachmentsProvider mediaAttachmentsProvider,
-        DirectServeConfig config
+        DirectServeOperations directServe
     ) {
         CommentUiInfo info = new CommentUiInfo();
 
@@ -250,7 +250,7 @@ public class CommentInfoUtil {
             false,
             AccessCheckers.PUBLIC,
             null,
-            config
+            directServe
         );
         String saneBodyPreview = comment.getCurrentRevision().getSaneBodyPreview();
         setSaneBodyPreview(info, saneBodyPreview != null ? saneBodyPreview : info.getBodyPreview().getText());

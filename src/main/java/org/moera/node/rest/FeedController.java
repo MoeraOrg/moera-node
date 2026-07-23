@@ -38,7 +38,7 @@ import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.Feed;
@@ -93,7 +93,7 @@ public class FeedController {
     private static final int DELETE_BATCH_SIZE = 500;
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -539,9 +539,9 @@ public class FeedController {
                 entryOperations,
                 requestContext,
                 requestContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             ),
-            config.getMedia().getDirectServe()
+            directServeOperations
         );
     }
 

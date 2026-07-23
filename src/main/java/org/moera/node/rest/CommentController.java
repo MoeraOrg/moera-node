@@ -44,7 +44,7 @@ import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.UserBlockedException;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
@@ -118,7 +118,7 @@ public class CommentController {
     private static final int MASS_UPDATE_PAGE_SIZE = 100;
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -264,11 +264,11 @@ public class CommentController {
             .body(CommentCreatedUtil.build(
                 comment,
                 posting.getTotalChildren(),
-                MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
+                MediaAttachmentsProvider.relations(directServeOperations),
                 requestContext,
                 blockedOperations,
                 requestContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             ));
     }
 
@@ -351,10 +351,10 @@ public class CommentController {
                 withClientReaction(
                     CommentInfoUtil.build(
                         comment,
-                        MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
+                        MediaAttachmentsProvider.relations(directServeOperations),
                         requestContext,
                         requestContext.getOptions(),
-                        config.getMedia().getDirectServe()
+                        directServeOperations
                     )
                 ),
                 comment.getPosting().getOwnerName()
@@ -753,7 +753,7 @@ public class CommentController {
             .fetch()
             .stream()
             .map(c -> CommentInfoUtil.build(
-                c, entryOperations, requestContext, requestContext.getOptions(), config.getMedia().getDirectServe()
+                c, entryOperations, requestContext, requestContext.getOptions(), directServeOperations
             ))
             .sorted(Comparator.comparing(CommentInfo::getMoment))
             .collect(Collectors.toList());
@@ -869,7 +869,7 @@ public class CommentController {
                     includeSet.contains("source"),
                     requestContext,
                     requestContext.getOptions(),
-                    config.getMedia().getDirectServe()
+                    directServeOperations
                 )
             ),
             posting.getOwnerName()
@@ -957,7 +957,7 @@ public class CommentController {
         return attached.stream()
             .map(p -> withBlockings(withClientReaction(
                 PostingInfoUtil.build(
-                    p, false, requestContext, requestContext.getOptions(), config.getMedia().getDirectServe()
+                    p, false, requestContext, requestContext.getOptions(), directServeOperations
                 )
             )))
             .collect(Collectors.toList());

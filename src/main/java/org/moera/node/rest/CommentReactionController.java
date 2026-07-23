@@ -19,7 +19,7 @@ import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.UserBlockedException;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Reaction;
@@ -64,7 +64,7 @@ public class CommentReactionController {
     private static final Logger log = LoggerFactory.getLogger(CommentReactionController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -151,7 +151,7 @@ public class CommentReactionController {
                         )
                     )
                     .body(ReactionCreatedUtil.build(
-                        reaction, totalsInfo.getClientInfo(), requestContext, config.getMedia().getDirectServe()
+                        reaction, totalsInfo.getClientInfo(), requestContext, directServeOperations
                     ));
             });
         }
@@ -240,7 +240,7 @@ public class CommentReactionController {
 
         ReactionOverrideUtil.toCommentReaction(reactionOverride, reaction);
 
-        return ReactionInfoUtil.build(reaction, requestContext, config.getMedia().getDirectServe());
+        return ReactionInfoUtil.build(reaction, requestContext, directServeOperations);
     }
 
     @GetMapping
@@ -334,7 +334,7 @@ public class CommentReactionController {
             return ReactionInfoUtil.ofComment(commentUuid); // FIXME ugly, return 404
         }
 
-        return ReactionInfoUtil.build(reaction, requestContext, config.getMedia().getDirectServe());
+        return ReactionInfoUtil.build(reaction, requestContext, directServeOperations);
     }
 
     @DeleteMapping

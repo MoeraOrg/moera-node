@@ -36,7 +36,7 @@ public class FeedReceptor extends LiberinReceptorBase {
                             .forEach(this::send);
                 } else {
                     liberin.getInstantsUpdated().stream()
-                            .map(story -> PushContentBuilder.storyAdded(story, config.getMedia().getDirectServe()))
+                            .map(story -> PushContentBuilder.storyAdded(story, directServeOperations))
                             .forEach(this::send);
                 }
             }

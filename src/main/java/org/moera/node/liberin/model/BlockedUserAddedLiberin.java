@@ -30,7 +30,7 @@ public class BlockedUserAddedLiberin extends Liberin {
             BlockedUserInfoUtil.build(
                 blockedUser,
                 getPluginContext().getOptions(),
-                getConfig().getMedia().getDirectServe()
+                getDirectServeOperations()
             )
         );
     }

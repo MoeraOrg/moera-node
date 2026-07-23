@@ -44,12 +44,12 @@ public class CommentReactionDeletedLiberin extends Liberin {
         model.put(
             "comment",
             CommentInfoUtil.build(
-                comment, AccessCheckers.ADMIN, null, getConfig().getMedia().getDirectServe()
+                comment, AccessCheckers.ADMIN, null, getDirectServeOperations()
             )
         );
         model.put(
             "reaction",
-            ReactionInfoUtil.build(reaction, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+            ReactionInfoUtil.build(reaction, AccessCheckers.ADMIN, getDirectServeOperations())
         );
     }
 

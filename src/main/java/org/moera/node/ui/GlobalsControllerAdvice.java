@@ -4,7 +4,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.naming.NodeName;
 import org.moera.lib.node.types.AvatarImage;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.model.AvatarImageUtil;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 public class GlobalsControllerAdvice {
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -31,14 +31,14 @@ public class GlobalsControllerAdvice {
         model.addAttribute(
             "nodeAvatar",
             requestContext.getPublic().getAvatar() != null
-                ? AvatarImageUtil.build(requestContext.getPublic().getAvatar(), config.getMedia().getDirectServe())
+                ? AvatarImageUtil.build(requestContext.getPublic().getAvatar(), directServeOperations)
                 : null
         );
         model.addAttribute("siteUrl", requestContext.getSiteUrl());
         model.addAttribute("ogType", "website");
         if (requestContext.getAvatar() != null) {
             AvatarImage avatarImage =
-                AvatarImageUtil.build(requestContext.getAvatar(), config.getMedia().getDirectServe());
+                AvatarImageUtil.build(requestContext.getAvatar(), directServeOperations);
             model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + avatarImage.getPath());
             model.addAttribute("ogImageType", AvatarImageUtil.getMediaFile(avatarImage).getMimeType());
             model.addAttribute("ogImageWidth", avatarImage.getWidth());

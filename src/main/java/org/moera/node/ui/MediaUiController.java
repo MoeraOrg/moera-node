@@ -8,7 +8,7 @@ import com.github.jknack.handlebars.Handlebars.SafeString;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -46,7 +46,7 @@ public class MediaUiController {
     private static final Logger log = LoggerFactory.getLogger(MediaUiController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -178,7 +178,7 @@ public class MediaUiController {
                 MediaAttachmentsProvider.NONE,
                 requestContext,
                 requestContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             )
         );
         model.addAttribute("caption", new SafeString(body));

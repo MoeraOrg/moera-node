@@ -38,7 +38,7 @@ public class BlockedByUserLiberin extends Liberin {
         model.put(
             "blockedByUser",
             BlockedByUserInfoUtil.build(
-                blockedByUser, getPluginContext().getOptions(), getConfig().getMedia().getDirectServe()
+                blockedByUser, getPluginContext().getOptions(), getDirectServeOperations()
             )
         );
         model.put("entryHeading", entryHeading);

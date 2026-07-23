@@ -77,7 +77,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
             AvatarImage ownerAvatar = AvatarImageUtil.build(
                 deletedReaction.getOwnerAvatarMediaFile(),
                 deletedReaction.getOwnerAvatarShape(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             );
             if (posting.getParentMediaEntry() == null) {
                 if (!Objects.equals(posting.getOwnerName(), universalContext.nodeName())) {
@@ -148,14 +148,14 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
             AvatarImage ownerAvatar = AvatarImageUtil.build(
                 addedReaction.getOwnerAvatarMediaFile(),
                 addedReaction.getOwnerAvatarShape(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             );
             if (posting.getParentMediaEntry() == null) {
                 if (!Objects.equals(posting.getOwnerName(), universalContext.nodeName())) {
                     AvatarImage postingOwnerAvatar = AvatarImageUtil.build(
                         posting.getOwnerAvatarMediaFile(),
                         posting.getOwnerAvatarShape(),
-                        config.getMedia().getDirectServe()
+                        directServeOperations
                     );
                     send(
                         Directions.single(
@@ -214,7 +214,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                 AvatarImage parentPostingAvatar = AvatarImageUtil.build(
                     parentPosting.getOwnerAvatarMediaFile(),
                     parentPosting.getOwnerAvatarShape(),
-                    config.getMedia().getDirectServe()
+                    directServeOperations
                 );
                 UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
                 send(

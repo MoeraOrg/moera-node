@@ -3,7 +3,7 @@ package org.moera.node.rest;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.WhoAmI;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -21,7 +21,7 @@ public class WhoAmIiController {
     private static final Logger log = LoggerFactory.getLogger(WhoAmIiController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -30,7 +30,7 @@ public class WhoAmIiController {
     public WhoAmI get() {
         log.info("GET /whoami");
 
-        return WhoAmIiUtil.build(requestContext, config.getMedia().getDirectServe());
+        return WhoAmIiUtil.build(requestContext, directServeOperations);
     }
 
 }

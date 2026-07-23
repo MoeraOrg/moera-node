@@ -52,21 +52,21 @@ public class CommentReactionAddedLiberin extends Liberin {
         model.put(
             "comment",
             CommentInfoUtil.build(
-                comment, AccessCheckers.ADMIN, null, getConfig().getMedia().getDirectServe()
+                comment, AccessCheckers.ADMIN, null, getDirectServeOperations()
             )
         );
         if (addedReaction != null) {
             addedReaction = entityManager.merge(addedReaction);
             model.put(
                 "addedReaction",
-                ReactionInfoUtil.build(addedReaction, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+                ReactionInfoUtil.build(addedReaction, AccessCheckers.ADMIN, getDirectServeOperations())
             );
         }
         if (deletedReaction != null) {
             deletedReaction = entityManager.merge(deletedReaction);
             model.put(
                 "deletedReaction",
-                ReactionInfoUtil.build(deletedReaction, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+                ReactionInfoUtil.build(deletedReaction, AccessCheckers.ADMIN, getDirectServeOperations())
             );
         }
     }

@@ -9,14 +9,16 @@ import org.moera.lib.node.types.ProfileOperations;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.global.RequestContext;
 import org.moera.node.option.Options;
 import org.moera.node.option.exception.DeserializeOptionValueException;
 
 public class ProfileInfoUtil {
 
-    public static ProfileInfo build(RequestContext requestContext, boolean includeSource, DirectServeConfig config) {
+    public static ProfileInfo build(
+        RequestContext requestContext, boolean includeSource, DirectServeOperations directServe
+    ) {
         ProfileInfo profileInfo = new ProfileInfo();
         Options options = requestContext.getOptions();
         
@@ -41,7 +43,7 @@ public class ProfileInfoUtil {
         profileInfo.setBioHtml(options.getString("profile.bio.html"));
         
         if (requestContext.getAvatar() != null) {
-            profileInfo.setAvatar(AvatarInfoUtil.build(requestContext.getAvatar(), config));
+            profileInfo.setAvatar(AvatarInfoUtil.build(requestContext.getAvatar(), directServe));
         }
         
         profileInfo.setFundraisers(deserializeFundraisers(options));

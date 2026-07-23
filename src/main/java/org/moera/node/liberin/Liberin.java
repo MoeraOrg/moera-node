@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.UUID;
 import jakarta.persistence.EntityManager;
 
-import org.moera.node.config.Config;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.plugin.PluginContext;
 
 public class Liberin {
@@ -17,7 +17,7 @@ public class Liberin {
     private UUID nodeId;
     private String clientId;
     private PluginContext pluginContext;
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     public Liberin() {
     }
@@ -69,12 +69,12 @@ public class Liberin {
         return this;
     }
 
-    public Config getConfig() {
-        return config;
+    public DirectServeOperations getDirectServeOperations() {
+        return directServeOperations;
     }
 
-    public void setConfig(Config config) {
-        this.config = config;
+    public void setDirectServeOperations(DirectServeOperations directServeOperations) {
+        this.directServeOperations = directServeOperations;
     }
 
     public String getTypeName() {

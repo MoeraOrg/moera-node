@@ -21,6 +21,7 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.linkpreviewnet.LinkPreviewNet;
@@ -50,6 +51,9 @@ public class LinkPreviewController {
 
     @Inject
     private Config config;
+
+    @Inject
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -218,7 +222,7 @@ public class LinkPreviewController {
             var mediaFileOwner = mediaManager.ownMedia(null, null, null, null, imageUrl, true, null);
             var image = PrivateMediaFileInfoUtil.build(
                 mediaFileOwner,
-                config.getMedia().getDirectServe(),
+                directServeOperations,
                 new MediaGrantGenerator(requestContext.getOptions())
             );
             if (!Boolean.TRUE.equals(image.getAttachment())) {

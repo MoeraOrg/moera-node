@@ -24,7 +24,7 @@ import org.moera.lib.node.types.notifications.Notification;
 import org.moera.lib.node.types.notifications.SubscriberNotification;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.node.MoeraNodeUnknownNameException;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.fingerprint.NotificationPacketFingerprintBuilder;
@@ -61,7 +61,7 @@ public class NotificationSender extends Task {
     private ObjectMapper objectMapper;
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private PendingNotificationRepository pendingNotificationRepository;
@@ -209,7 +209,7 @@ public class NotificationSender extends Task {
         packet.setFullName(fullName());
         packet.setGender(gender());
         if (getAvatar() != null) {
-            packet.setAvatar(AvatarImageUtil.build(getAvatar(), config.getMedia().getDirectServe()));
+            packet.setAvatar(AvatarImageUtil.build(getAvatar(), directServeOperations));
         }
         packet.setCreatedAt(Util.toEpochSecond(Util.now()));
         packet.setType(notification.getType().getValue());

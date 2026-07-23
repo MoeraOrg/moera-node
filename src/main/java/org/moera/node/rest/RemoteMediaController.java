@@ -10,7 +10,7 @@ import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -41,7 +41,7 @@ public class RemoteMediaController {
     private static final Logger log = LoggerFactory.getLogger(RemoteMediaController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -84,7 +84,7 @@ public class RemoteMediaController {
             if (!owners.isEmpty()) {
                 return PrivateMediaFileInfoUtil.build(
                     owners.iterator().next(),
-                    config.getMedia().getDirectServe(),
+                    directServeOperations,
                     new MediaGrantGenerator(requestContext.getOptions())
                 );
             }

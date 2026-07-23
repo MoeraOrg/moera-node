@@ -51,7 +51,7 @@ public class FriendshipUpdatedLiberin extends Liberin {
         model.put("friendGroups", friendGroups);
         model.put(
             "contact",
-            ContactInfoUtil.build(contact, getPluginContext().getOptions(), getConfig().getMedia().getDirectServe())
+            ContactInfoUtil.build(contact, getPluginContext().getOptions(), getDirectServeOperations())
         );
     }
 

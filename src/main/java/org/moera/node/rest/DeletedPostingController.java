@@ -11,7 +11,7 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -51,7 +51,7 @@ public class DeletedPostingController {
     private static final Logger log = LoggerFactory.getLogger(DeletedPostingController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -90,7 +90,7 @@ public class DeletedPostingController {
             PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "deletedAt")))
             .stream()
             .map(p -> PostingInfoUtil.build(
-                p, entryOperations, requestContext, requestContext.getOptions(), config.getMedia().getDirectServe()
+                p, entryOperations, requestContext, requestContext.getOptions(), directServeOperations
             ))
             .collect(Collectors.toList());
     }
@@ -106,7 +106,7 @@ public class DeletedPostingController {
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
         return PostingInfoUtil.build(
-            posting, entryOperations, requestContext, requestContext.getOptions(), config.getMedia().getDirectServe()
+            posting, entryOperations, requestContext, requestContext.getOptions(), directServeOperations
         );
     }
 
@@ -136,10 +136,10 @@ public class DeletedPostingController {
         return PostingInfoUtil.build(
             posting,
             stories,
-            MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
+            MediaAttachmentsProvider.relations(directServeOperations),
             requestContext,
             requestContext.getOptions(),
-            config.getMedia().getDirectServe()
+            directServeOperations
         );
     }
 

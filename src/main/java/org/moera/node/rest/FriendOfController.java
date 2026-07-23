@@ -13,7 +13,7 @@ import org.moera.lib.node.types.FriendOfInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.FriendOf;
 import org.moera.node.data.FriendOfRepository;
 import org.moera.node.global.ApiController;
@@ -36,7 +36,7 @@ public class FriendOfController {
     private static final Logger log = LoggerFactory.getLogger(FriendOfController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -64,7 +64,7 @@ public class FriendOfController {
             }
             if (groups == null) {
                 FriendOfInfo info = FriendOfInfoUtil.build(
-                    friendOf, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                    friendOf, requestContext.getOptions(), requestContext, directServeOperations
                 );
                 groups = new ArrayList<>();
                 info.setGroups(groups);
@@ -102,7 +102,7 @@ public class FriendOfController {
             friendOfs.get(0).getContact(),
             requestContext.getOptions(),
             requestContext,
-            config.getMedia().getDirectServe()
+            directServeOperations
         );
         return FriendOfInfoUtil.build(nodeName, contactInfo, groups);
     }

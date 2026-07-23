@@ -10,7 +10,7 @@ import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
@@ -45,7 +45,7 @@ public class StoryController {
     private static final Logger log = LoggerFactory.getLogger(StoryController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -87,9 +87,9 @@ public class StoryController {
                 entryOperations,
                 requestContext,
                 requestContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             ),
-            config.getMedia().getDirectServe()
+            directServeOperations
         );
     }
 
@@ -132,9 +132,9 @@ public class StoryController {
                     entryOperations,
                     requestContext,
                     requestContext.getOptions(),
-                    config.getMedia().getDirectServe()
+                    directServeOperations
                 ),
-                config.getMedia().getDirectServe()
+                directServeOperations
             );
 
             return Pair.of(story, storyInfo);

@@ -60,15 +60,17 @@ public record LocalRemoteMediaInfo(PrivateMediaFileInfo local, RemoteMediaInfo r
 
     public String path(NamingCache namingCache, Options options, boolean download) {
         if (local != null) {
-            String path = "/moera/media/" + (local.getDirectPath() != null ? local.getDirectPath() : local.getPath());
-            if (download) {
-                if (path.contains("?")) {
-                    path += "&download=true";
-                } else {
-                    path += "?download=true";
-                }
+            if (!download) {
+                return MediaUtil.mediaUrl(
+                    local.getDirectPath() != null ? local.getDirectPath() : local.getPath()
+                );
             }
-            return path;
+            if (local.getDirectDownloadPath() != null) {
+                return MediaUtil.mediaUrl(local.getDirectDownloadPath());
+            }
+
+            String path = MediaUtil.mediaUrl(local.getPath());
+            return path + (path.contains("?") ? "&download=true" : "?download=true");
         }
 
         if (remote == null || remote.getNodeName() == null || remote.getMediaId() == null) {

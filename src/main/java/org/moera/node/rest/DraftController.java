@@ -24,7 +24,7 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Draft;
 import org.moera.node.data.DraftRepository;
 import org.moera.node.data.EntryAttachment;
@@ -80,7 +80,7 @@ public class DraftController {
     private static final Logger log = LoggerFactory.getLogger(DraftController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestCounter requestCounter;
@@ -178,7 +178,7 @@ public class DraftController {
                 break;
         }
         return drafts.stream()
-            .map(draft -> DraftInfoUtil.build(draft, config.getMedia().getDirectServe(), requestContext.getOptions()))
+            .map(draft -> DraftInfoUtil.build(draft, directServeOperations, requestContext.getOptions()))
             .collect(Collectors.toList());
     }
 
@@ -232,7 +232,7 @@ public class DraftController {
 
         return ResponseEntity
             .created(URI.create("/drafts/" + draft.getId()))
-            .body(DraftInfoUtil.build(draft, config.getMedia().getDirectServe(), requestContext.getOptions()));
+            .body(DraftInfoUtil.build(draft, directServeOperations, requestContext.getOptions()));
     }
 
     @PutMapping("/{id}")
@@ -259,7 +259,7 @@ public class DraftController {
 
         requestContext.send(new DraftUpdatedLiberin(draft));
 
-        return DraftInfoUtil.build(draft, config.getMedia().getDirectServe(), requestContext.getOptions());
+        return DraftInfoUtil.build(draft, directServeOperations, requestContext.getOptions());
     }
 
     private List<LocalRemoteMedia> validate(DraftText draftText) {
@@ -345,7 +345,7 @@ public class DraftController {
         Draft draft = draftRepository.findById(requestContext.nodeId(), draftId)
             .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
 
-        return DraftInfoUtil.build(draft, config.getMedia().getDirectServe(), requestContext.getOptions());
+        return DraftInfoUtil.build(draft, directServeOperations, requestContext.getOptions());
     }
 
     @DeleteMapping("/{id}")

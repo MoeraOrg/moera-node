@@ -5,16 +5,16 @@ import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 public class BlockedUserInfoUtil {
 
-    public static BlockedUserInfo build(BlockedUser blockedUser, Options options, DirectServeConfig config) {
+    public static BlockedUserInfo build(BlockedUser blockedUser, Options options, DirectServeOperations directServe) {
         ContactInfo contactInfo = blockedUser.getContact() != null
-            ? ContactInfoUtil.build(blockedUser.getContact(), options, config)
+            ? ContactInfoUtil.build(blockedUser.getContact(), options, directServe)
             : null;
         return build(blockedUser, contactInfo);
     }
@@ -39,9 +39,9 @@ public class BlockedUserInfoUtil {
     }
 
     public static BlockedUserInfo build(
-        BlockedUser blockedUser, Options options, AccessChecker accessChecker, DirectServeConfig config
+        BlockedUser blockedUser, Options options, AccessChecker accessChecker, DirectServeOperations directServe
     ) {
-        BlockedUserInfo info = build(blockedUser, options, config);
+        BlockedUserInfo info = build(blockedUser, options, directServe);
         protect(info, accessChecker);
         return info;
     }

@@ -20,7 +20,7 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
@@ -41,17 +41,17 @@ public class PostingInfoUtil {
 
     // for liberin models
     public static PostingInfo build(
-        Entry posting, AccessChecker accessChecker, Options options, DirectServeConfig config
+        Entry posting, AccessChecker accessChecker, Options options, DirectServeOperations directServe
     ) {
         return build(
             posting,
             posting.getCurrentRevision(),
             null,
-            MediaAttachmentsProvider.relations(config),
+            MediaAttachmentsProvider.relations(directServe),
             false,
             accessChecker,
             options,
-            config
+            directServe
         );
     }
 
@@ -60,7 +60,7 @@ public class PostingInfoUtil {
         MediaAttachmentsProvider mediaAttachmentsProvider,
         AccessChecker accessChecker,
         Options options,
-        DirectServeConfig config
+        DirectServeOperations directServe
     ) {
         return build(
             posting,
@@ -70,13 +70,17 @@ public class PostingInfoUtil {
             false,
             accessChecker,
             options,
-            config
+            directServe
         );
     }
 
     // for postings attached to media
     public static PostingInfo build(
-        Entry posting, boolean includeSource, AccessChecker accessChecker, Options options, DirectServeConfig config
+        Entry posting,
+        boolean includeSource,
+        AccessChecker accessChecker,
+        Options options,
+        DirectServeOperations directServe
     ) {
         return build(
             posting,
@@ -86,7 +90,7 @@ public class PostingInfoUtil {
             includeSource,
             accessChecker,
             options,
-            config
+            directServe
         );
     }
 
@@ -96,7 +100,7 @@ public class PostingInfoUtil {
         MediaAttachmentsProvider mediaAttachmentsProvider,
         AccessChecker accessChecker,
         Options options,
-        DirectServeConfig config
+        DirectServeOperations directServe
     ) {
         return build(
             posting,
@@ -106,7 +110,7 @@ public class PostingInfoUtil {
             false,
             accessChecker,
             options,
-            config
+            directServe
         );
     }
 
@@ -117,7 +121,7 @@ public class PostingInfoUtil {
         boolean includeSource,
         AccessChecker accessChecker,
         Options options,
-        DirectServeConfig config
+        DirectServeOperations directServe
     ) {
         return build(
             posting,
@@ -127,7 +131,7 @@ public class PostingInfoUtil {
             includeSource,
             accessChecker,
             options,
-            config
+            directServe
         );
     }
 
@@ -139,11 +143,12 @@ public class PostingInfoUtil {
         boolean includeSource,
         AccessChecker accessChecker,
         Options options,
-        DirectServeConfig config
+        DirectServeOperations directServe
     ) {
         PostingInfo info = new PostingInfo();
         buildTo(
-            info, posting, revision, stories, mediaAttachmentsProvider, includeSource, accessChecker, options, config
+            info, posting, revision, stories, mediaAttachmentsProvider, includeSource, accessChecker, options,
+            directServe
         );
         return info;
     }
@@ -157,7 +162,7 @@ public class PostingInfoUtil {
         boolean includeSource,
         AccessChecker accessChecker,
         Options options,
-        DirectServeConfig config
+        DirectServeOperations directServe
     ) {
         info.setId(posting.getId().toString());
         info.setRevisionId(revision.getId().toString());
@@ -168,7 +173,7 @@ public class PostingInfoUtil {
         info.setReceiverGender(posting.getReceiverGender());
         if (posting.getReceiverAvatarMediaFile() != null) {
             info.setReceiverAvatar(AvatarImageUtil.build(
-                posting.getReceiverAvatarMediaFile(), posting.getReceiverAvatarShape(), config
+                posting.getReceiverAvatarMediaFile(), posting.getReceiverAvatarShape(), directServe
             ));
         }
         info.setReceiverPostingId(posting.getReceiverEntryId());
@@ -180,7 +185,7 @@ public class PostingInfoUtil {
         info.setOwnerGender(posting.getOwnerGender());
         if (posting.getOwnerAvatarMediaFile() != null) {
             info.setOwnerAvatar(
-                AvatarImageUtil.build(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape(), config));
+                AvatarImageUtil.build(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape(), directServe));
         }
         info.setBodyPreview(new Body(revision.getBodyPreview()));
         if (includeSource && !ObjectUtils.isEmpty(revision.getBodySrc())) {
@@ -326,7 +331,7 @@ public class PostingInfoUtil {
 
         info.setReactions(ReactionTotalsInfoUtil.build(posting.getReactionTotals(), posting, accessChecker));
         info.setSources(posting.getSources() != null
-            ? posting.getSources().stream().map(source -> PostingSourceInfoUtil.build(source, config))
+            ? posting.getSources().stream().map(source -> PostingSourceInfoUtil.build(source, directServe))
                 .collect(Collectors.toList())
             : Collections.emptyList());
         Principal viewComments = posting.isOriginal()
@@ -400,16 +405,16 @@ public class PostingInfoUtil {
     }
 
     public static PostingUiInfo buildForUi(
-        Entry posting, MediaAttachmentsProvider mediaAttachmentsProvider, DirectServeConfig config
+        Entry posting, MediaAttachmentsProvider mediaAttachmentsProvider, DirectServeOperations directServe
     ) {
-        return buildForUi(posting, null, mediaAttachmentsProvider, config);
+        return buildForUi(posting, null, mediaAttachmentsProvider, directServe);
     }
 
     public static PostingUiInfo buildForUi(
         Entry posting,
         List<Story> stories,
         MediaAttachmentsProvider mediaAttachmentsProvider,
-        DirectServeConfig config
+        DirectServeOperations directServe
     ) {
         PostingUiInfo info = new PostingUiInfo();
 
@@ -422,7 +427,7 @@ public class PostingInfoUtil {
             false,
             AccessCheckers.PUBLIC,
             null,
-            config
+            directServe
         );
 
         String saneBodyPreview = posting.getCurrentRevision().getSaneBodyPreview();

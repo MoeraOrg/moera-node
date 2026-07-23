@@ -13,7 +13,7 @@ import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
@@ -46,7 +46,7 @@ public class MediaLeaseController {
     private static final Logger log = LoggerFactory.getLogger(MediaLeaseController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -144,7 +144,7 @@ public class MediaLeaseController {
         mediaLease = mediaLeaseRepository.save(mediaLease);
 
         var grantSupplier = entry != null ? new MediaGrantGenerator(requestContext.getOptions()) : null;
-        return MediaLeaseInfoUtil.build(mediaLease, config.getMedia().getDirectServe(), grantSupplier);
+        return MediaLeaseInfoUtil.build(mediaLease, directServeOperations, grantSupplier);
     }
 
     @DeleteMapping("/{id}")

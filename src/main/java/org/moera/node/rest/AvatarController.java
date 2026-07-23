@@ -17,7 +17,7 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.data.MediaFile;
@@ -53,7 +53,7 @@ public class AvatarController {
     private static final Logger log = LoggerFactory.getLogger(AvatarController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -140,7 +140,7 @@ public class AvatarController {
             }
             avatar = avatarRepository.save(avatar);
 
-            AvatarInfo avatarInfo = AvatarInfoUtil.build(avatar, config.getMedia().getDirectServe());
+            AvatarInfo avatarInfo = AvatarInfoUtil.build(avatar, directServeOperations);
 
             requestContext.send(new AvatarAddedLiberin(avatarInfo));
 
@@ -224,7 +224,7 @@ public class AvatarController {
         log.info("GET /avatars");
 
         return avatarRepository.findAllByNodeId(requestContext.nodeId()).stream()
-            .map(avatar -> AvatarInfoUtil.build(avatar, config.getMedia().getDirectServe()))
+            .map(avatar -> AvatarInfoUtil.build(avatar, directServeOperations))
             .collect(Collectors.toList());
     }
 
@@ -236,7 +236,7 @@ public class AvatarController {
         UUID avatarId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
         Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), avatarId)
             .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
-        return AvatarInfoUtil.build(avatar, config.getMedia().getDirectServe());
+        return AvatarInfoUtil.build(avatar, directServeOperations);
     }
 
     @DeleteMapping("/{id}")

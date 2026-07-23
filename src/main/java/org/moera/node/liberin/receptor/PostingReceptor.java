@@ -158,7 +158,7 @@ public class PostingReceptor extends LiberinReceptorBase {
         );
         if (posting.getCurrentRevision().isUpdateImportant()) {
             AvatarImage ownerAvatar = AvatarImageUtil.build(
-                posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape(), config.getMedia().getDirectServe()
+                posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape(), directServeOperations
             );
             send(
                 Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
@@ -268,7 +268,7 @@ public class PostingReceptor extends LiberinReceptorBase {
                 MediaAttachmentsProvider.NONE,
                 AccessCheckers.ADMIN,
                 universalContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             );
             sheriffUserListOperations.fillSheriffListMarks(postingInfo);
             currentMentions.stream()

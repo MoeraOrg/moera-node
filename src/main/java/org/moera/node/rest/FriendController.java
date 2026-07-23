@@ -19,7 +19,7 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.Friend;
@@ -59,7 +59,7 @@ public class FriendController {
     private static final Logger log = LoggerFactory.getLogger(FriendController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -109,7 +109,7 @@ public class FriendController {
             }
             if (groups == null) {
                 FriendInfo info = FriendInfoUtil.build(
-                    friend, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                    friend, requestContext.getOptions(), requestContext, directServeOperations
                 );
                 if (friendGroupId == null) {
                     groups = new ArrayList<>();
@@ -148,7 +148,7 @@ public class FriendController {
         ContactInfo contact = contactRepository.findByRemoteNode(requestContext.nodeId(), nodeName)
             .map(c ->
                 ContactInfoUtil.build(
-                    c, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                    c, requestContext.getOptions(), requestContext, directServeOperations
                 )
             )
             .orElse(null);
@@ -181,7 +181,7 @@ public class FriendController {
 
             Contact contact = contactOperations.find(friendDescription.getNodeName());
             FriendInfo friendInfo = FriendInfoUtil.build(
-                contact, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                contact, requestContext.getOptions(), requestContext, directServeOperations
             );
             result.add(friendInfo);
 
@@ -241,7 +241,7 @@ public class FriendController {
 
             friendInfo.setContact(
                 ContactInfoUtil.build(
-                    contact, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                    contact, requestContext.getOptions(), requestContext, directServeOperations
                 )
             );
 

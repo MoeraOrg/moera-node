@@ -11,7 +11,7 @@ import org.moera.lib.node.types.BlockedByUserInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.global.ApiController;
@@ -37,7 +37,7 @@ public class BlockedByUserController {
     private static final Logger log = LoggerFactory.getLogger(BlockedByUserController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -67,7 +67,7 @@ public class BlockedByUserController {
         }
 
         return BlockedByUserInfoUtil.build(
-            blockedByUser, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+            blockedByUser, requestContext.getOptions(), requestContext, directServeOperations
         );
     }
 
@@ -88,7 +88,7 @@ public class BlockedByUserController {
         )
             .stream()
             .map(bbu -> BlockedByUserInfoUtil.build(
-                bbu, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                bbu, requestContext.getOptions(), requestContext, directServeOperations
             ))
             .collect(Collectors.toList());
     }

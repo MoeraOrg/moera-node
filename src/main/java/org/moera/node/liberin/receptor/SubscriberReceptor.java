@@ -59,7 +59,7 @@ public class SubscriberReceptor extends LiberinReceptorBase {
                         subscriber,
                         universalContext.getOptions(),
                         AccessCheckers.PUBLIC,
-                        config.getMedia().getDirectServe()
+                        directServeOperations
                     ),
                     visibilityFilter(universalContext.getOptions(), subscriber
                 )
@@ -71,7 +71,7 @@ public class SubscriberReceptor extends LiberinReceptorBase {
                         subscriber,
                         universalContext.getOptions(),
                         AccessCheckers.node(subscriber.getRemoteNodeName()),
-                        config.getMedia().getDirectServe()
+                        directServeOperations
                     ),
                     Principal.ofNode(subscriber.getRemoteNodeName())
                 )
@@ -100,7 +100,7 @@ public class SubscriberReceptor extends LiberinReceptorBase {
                     subscriber,
                     universalContext.getOptions(),
                     AccessCheckers.PUBLIC,
-                    config.getMedia().getDirectServe()
+                    directServeOperations
                 ),
                 addedFilter
             )
@@ -116,7 +116,7 @@ public class SubscriberReceptor extends LiberinReceptorBase {
                     subscriber,
                     universalContext.getOptions(),
                     AccessCheckers.PUBLIC,
-                    config.getMedia().getDirectServe()
+                    directServeOperations
                 ),
                 updatedFilter
             )
@@ -126,7 +126,7 @@ public class SubscriberReceptor extends LiberinReceptorBase {
                 subscriber,
                 universalContext.getOptions(),
                 AccessCheckers.node(subscriber.getRemoteNodeName()),
-                config.getMedia().getDirectServe()
+                directServeOperations
             ),
             Principal.ofNode(subscriber.getRemoteNodeName())
         ));
@@ -141,7 +141,7 @@ public class SubscriberReceptor extends LiberinReceptorBase {
                     subscriber,
                     universalContext.getOptions(),
                     AccessCheckers.PUBLIC,
-                    config.getMedia().getDirectServe()
+                    directServeOperations
                 ),
                 deletedFilter
             )
@@ -158,7 +158,7 @@ public class SubscriberReceptor extends LiberinReceptorBase {
                     subscriber,
                     universalContext.getOptions(),
                     AccessCheckers.PUBLIC,
-                    config.getMedia().getDirectServe()
+                    directServeOperations
                 ),
                 visibilityFilter(universalContext.getOptions(), subscriber)
             ));
@@ -167,7 +167,7 @@ public class SubscriberReceptor extends LiberinReceptorBase {
                     subscriber,
                     universalContext.getOptions(),
                     AccessCheckers.node(subscriber.getRemoteNodeName()),
-                    config.getMedia().getDirectServe()
+                    directServeOperations
                 ),
                 Principal.ofNode(subscriber.getRemoteNodeName())
             ));

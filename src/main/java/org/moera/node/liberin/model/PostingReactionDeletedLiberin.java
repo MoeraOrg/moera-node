@@ -54,12 +54,12 @@ public class PostingReactionDeletedLiberin extends Liberin {
         model.put(
             "posting",
             PostingInfoUtil.build(
-                posting, AccessCheckers.ADMIN, null, getConfig().getMedia().getDirectServe()
+                posting, AccessCheckers.ADMIN, null, getDirectServeOperations()
             )
         );
         model.put(
             "reaction",
-            ReactionInfoUtil.build(reaction, AccessCheckers.ADMIN, getConfig().getMedia().getDirectServe())
+            ReactionInfoUtil.build(reaction, AccessCheckers.ADMIN, getDirectServeOperations())
         );
         model.put("reactionTotals", reactionTotals);
     }

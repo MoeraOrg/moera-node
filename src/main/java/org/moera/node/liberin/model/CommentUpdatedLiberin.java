@@ -76,7 +76,7 @@ public class CommentUpdatedLiberin extends Liberin {
         model.put(
             "comment",
             CommentInfoUtil.build(
-                comment, AccessCheckers.ADMIN, null, getConfig().getMedia().getDirectServe()
+                comment, AccessCheckers.ADMIN, null, getDirectServeOperations()
             )
         );
         model.put(
@@ -84,7 +84,7 @@ public class CommentUpdatedLiberin extends Liberin {
             CommentRevisionInfoUtil.build(
                 comment,
                 latestRevision,
-                MediaAttachmentsProvider.relations(getConfig().getMedia().getDirectServe()),
+                MediaAttachmentsProvider.relations(getDirectServeOperations()),
                 null,
                 AccessCheckers.ADMIN
             )

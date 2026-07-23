@@ -5,7 +5,7 @@ import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.CommentCreated;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.principal.AccessChecker;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Comment;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.option.Options;
@@ -19,13 +19,13 @@ public class CommentCreatedUtil {
         AccessChecker accessChecker,
         List<BlockedOperation> blockedOperations,
         Options options,
-        DirectServeConfig config
+        DirectServeOperations directServe
     ) {
         CommentCreated commentCreated = new CommentCreated();
         
         if (comment != null) {
             CommentInfo commentInfo = CommentInfoUtil.build(
-                comment, mediaAttachmentsProvider, accessChecker, options, config
+                comment, mediaAttachmentsProvider, accessChecker, options, directServe
             );
             CommentInfoUtil.putBlockedOperations(commentInfo, blockedOperations);
             commentCreated.setComment(commentInfo);

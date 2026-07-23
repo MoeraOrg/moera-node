@@ -20,7 +20,7 @@ import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.UserBlockedException;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -66,7 +66,7 @@ public class MediaController {
     private static final Logger log = LoggerFactory.getLogger(MediaController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -140,7 +140,7 @@ public class MediaController {
             );
             mediaFile = mediaFileRepository.save(mediaFile);
 
-            return PublicMediaFileInfoUtil.build(mediaFile, config.getMedia().getDirectServe());
+            return PublicMediaFileInfoUtil.build(mediaFile, directServeOperations);
         } catch (InvalidImageException e) {
             throw new ValidationFailure("media.image-invalid");
         } catch (ThresholdReachedException e) {
@@ -186,7 +186,7 @@ public class MediaController {
                 mediaManager.ownMedia(
                     mediaType, contentLength, contentFileName(contentDisposition), upload, url, downsize, in
                 ),
-                config.getMedia().getDirectServe(),
+                directServeOperations,
                 new MediaGrantGenerator(requestContext.getOptions())
             );
         } catch (InvalidImageException e) {
@@ -229,7 +229,7 @@ public class MediaController {
     public PublicMediaFileInfo getInfoPublic(@PathVariable String id) {
         log.info("GET /media/public/{id}/info (id = {})", LogUtil.format(id));
 
-        return PublicMediaFileInfoUtil.build(getMediaFile(id), config.getMedia().getDirectServe());
+        return PublicMediaFileInfoUtil.build(getMediaFile(id), directServeOperations);
     }
 
     @GetMapping("/private/{id}/info")
@@ -273,7 +273,7 @@ public class MediaController {
         }
 
         return PrivateMediaFileInfoUtil.build(
-            getMediaFileOwner(mediaId, grant), config.getMedia().getDirectServe(), grantSupplier
+            getMediaFileOwner(mediaId, grant), directServeOperations, grantSupplier
         );
     }
 
@@ -299,7 +299,7 @@ public class MediaController {
         }
 
         return PrivateMediaFileInfoUtil.build(
-            mediaFileOwner, config.getMedia().getDirectServe(), new MediaGrantGenerator(requestContext.getOptions())
+            mediaFileOwner, directServeOperations, new MediaGrantGenerator(requestContext.getOptions())
         );
     }
 

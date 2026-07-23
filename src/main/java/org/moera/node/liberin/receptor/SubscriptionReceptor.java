@@ -47,7 +47,7 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
             );
         }
         send(liberin, new SubscriptionAddedEvent(
-            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), config.getMedia().getDirectServe()),
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), directServeOperations),
             visibilityFilter
         ));
         sendPeopleChangedEvent(liberin);
@@ -71,7 +71,7 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
             );
         }
         send(liberin, new SubscriptionAddedEvent(
-            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), config.getMedia().getDirectServe()),
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), directServeOperations),
             addedFilter
         ));
 
@@ -79,7 +79,7 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
             .and(subscription.getViewE())
             .and(liberin.getLatestViewPrincipal());
         send(liberin, new SubscriptionUpdatedEvent(
-            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), config.getMedia().getDirectServe()),
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), directServeOperations),
             updatedFilter
         ));
 
@@ -97,7 +97,7 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
             );
         }
         send(liberin, new SubscriptionDeletedEvent(
-            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), config.getMedia().getDirectServe()),
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), directServeOperations),
             deletedFilter
         ));
     }
@@ -118,7 +118,7 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
             );
         }
         send(liberin, new SubscriptionDeletedEvent(
-            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), config.getMedia().getDirectServe()),
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions(), directServeOperations),
             visibilityFilter
         ));
         sendPeopleChangedEvent(liberin);

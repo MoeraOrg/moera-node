@@ -27,7 +27,7 @@ public class BlockedByUserReceptor extends LiberinReceptorBase {
             BlockedByUserInfoUtil.build(
                 blockedByUser,
                 universalContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             ),
             BlockedByUser.getViewAllE(universalContext.getOptions())
         ));
@@ -41,7 +41,7 @@ public class BlockedByUserReceptor extends LiberinReceptorBase {
             BlockedByUserInfoUtil.build(
                 blockedByUser,
                 universalContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             ),
             BlockedByUser.getViewAllE(universalContext.getOptions())
         ));

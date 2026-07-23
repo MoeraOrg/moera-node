@@ -16,6 +16,7 @@ import com.rometools.rome.feed.synd.SyndFeedImpl;
 import com.rometools.rome.feed.synd.SyndImage;
 import com.rometools.rome.feed.synd.SyndImageImpl;
 import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
@@ -36,6 +37,9 @@ public class RssController {
 
     @Inject
     private Config config;
+
+    @Inject
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -72,7 +76,7 @@ public class RssController {
             image.setTitle(title);
             image.setUrl(
                 rcp.getSiteUrl() + "/moera/media/"
-                    + AvatarImageUtil.build(rcp.getAvatar(), config.getMedia().getDirectServe()).getPath()
+                    + AvatarImageUtil.build(rcp.getAvatar(), directServeOperations).getPath()
             );
             image.setLink(rcp.getSiteUrl() + "/");
             feed.setImage(image);

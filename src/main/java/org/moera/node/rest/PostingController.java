@@ -28,7 +28,7 @@ import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.UserBlockedException;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -90,7 +90,7 @@ public class PostingController {
     private static final Duration CREATED_AT_MARGIN = Duration.ofMinutes(10);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -206,10 +206,10 @@ public class PostingController {
             .body(withBlockings(PostingInfoUtil.build(
                 posting,
                 stories,
-                MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
+                MediaAttachmentsProvider.relations(directServeOperations),
                 requestContext,
                 requestContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             )));
     }
 
@@ -275,10 +275,10 @@ public class PostingController {
             PostingInfoUtil.build(
                 posting,
                 stories,
-                MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
+                MediaAttachmentsProvider.relations(directServeOperations),
                 requestContext,
                 requestContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             )
         ));
     }
@@ -412,10 +412,10 @@ public class PostingController {
                     PostingInfoUtil.build(
                         posting,
                         stories,
-                        MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
+                        MediaAttachmentsProvider.relations(directServeOperations),
                         requestContext,
                         requestContext.getOptions(),
-                        config.getMedia().getDirectServe()
+                        directServeOperations
                     )
                 )));
             })
@@ -450,7 +450,7 @@ public class PostingController {
                 includeSet.contains("source"),
                 requestContext,
                 requestContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             )
         )));
     }
@@ -505,7 +505,7 @@ public class PostingController {
         return attached.stream()
             .map(p -> withBlockings(withClientReaction(
                 PostingInfoUtil.build(
-                    p, false, requestContext, requestContext.getOptions(), config.getMedia().getDirectServe()
+                    p, false, requestContext, requestContext.getOptions(), directServeOperations
                 )
             )))
             .collect(Collectors.toList());

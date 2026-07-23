@@ -151,7 +151,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 comment.getOwnerFullName(),
                 comment.getOwnerGender(),
                 AvatarImageUtil.build(
-                    comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), config.getMedia().getDirectServe()
+                    comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), directServeOperations
                 )
             )
         );
@@ -196,7 +196,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 comment.getOwnerFullName(),
                 comment.getOwnerGender(),
                 AvatarImageUtil.build(
-                    comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), config.getMedia().getDirectServe()
+                    comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), directServeOperations
                 )
             )
         );
@@ -223,7 +223,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 MediaAttachmentsProvider.NONE,
                 AccessCheckers.ADMIN,
                 universalContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             );
             sheriffUserListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = CommentInfoUtil.build(
@@ -231,7 +231,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 MediaAttachmentsProvider.NONE,
                 AccessCheckers.ADMIN,
                 universalContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             );
             sheriffUserListOperations.fillSheriffListMarks(aposting, commentInfo);
             UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
@@ -283,7 +283,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 MediaAttachmentsProvider.NONE,
                 AccessCheckers.ADMIN,
                 universalContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             );
             sheriffUserListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = CommentInfoUtil.build(
@@ -291,7 +291,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 MediaAttachmentsProvider.NONE,
                 AccessCheckers.ADMIN,
                 universalContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             );
             sheriffUserListOperations.fillSheriffListMarks(aposting, commentInfo);
             send(
@@ -335,7 +335,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 comment.getOwnerFullName(),
                 comment.getOwnerGender(),
                 AvatarImageUtil.build(
-                    comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), config.getMedia().getDirectServe()
+                    comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), directServeOperations
                 )
             )
         );
@@ -354,7 +354,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 MediaAttachmentsProvider.NONE,
                 AccessCheckers.ADMIN,
                 universalContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             );
             sheriffUserListOperations.fillSheriffListMarks(postingInfo);
             send(
@@ -401,7 +401,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 MediaAttachmentsProvider.NONE,
                 AccessCheckers.ADMIN,
                 universalContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             );
             sheriffUserListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = CommentInfoUtil.build(
@@ -409,7 +409,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 MediaAttachmentsProvider.NONE,
                 AccessCheckers.ADMIN,
                 universalContext.getOptions(),
-                config.getMedia().getDirectServe()
+                directServeOperations
             );
             sheriffUserListOperations.fillSheriffListMarks(posting, commentInfo);
             currentMentions.stream()

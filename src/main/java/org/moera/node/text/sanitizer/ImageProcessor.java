@@ -119,7 +119,7 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                     MediaUtil.mediaSources(
                         mediaLocation,
                         localRemoteMedia.mediaFileOwner(),
-                        serveContext.directServeConfig()
+                        serveContext.directServeOperations()
                     )
                 );
                 newAttrs.add("sizes");

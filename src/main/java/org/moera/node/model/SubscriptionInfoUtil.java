@@ -5,16 +5,18 @@ import org.moera.lib.node.types.SubscriptionInfo;
 import org.moera.lib.node.types.SubscriptionOperations;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.UserSubscription;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 public class SubscriptionInfoUtil {
 
-    public static SubscriptionInfo build(UserSubscription subscription, Options options, DirectServeConfig config) {
+    public static SubscriptionInfo build(
+        UserSubscription subscription, Options options, DirectServeOperations directServe
+    ) {
         ContactInfo contactInfo = subscription.getContact() != null
-            ? ContactInfoUtil.build(subscription.getContact(), options, config)
+            ? ContactInfoUtil.build(subscription.getContact(), options, directServe)
             : null;
         return build(subscription, contactInfo, options);
     }
@@ -40,9 +42,9 @@ public class SubscriptionInfoUtil {
     }
 
     public static SubscriptionInfo build(
-        UserSubscription subscription, Options options, AccessChecker accessChecker, DirectServeConfig config
+        UserSubscription subscription, Options options, AccessChecker accessChecker, DirectServeOperations directServe
     ) {
-        SubscriptionInfo subscriptionInfo = build(subscription, options, config);
+        SubscriptionInfo subscriptionInfo = build(subscription, options, directServe);
         protect(subscriptionInfo, accessChecker);
         return subscriptionInfo;
     }

@@ -46,7 +46,7 @@ public class PostingDeletedLiberin extends Liberin {
         model.put(
             "posting",
             PostingInfoUtil.build(
-                posting, AccessCheckers.ADMIN, null, getConfig().getMedia().getDirectServe()
+                posting, AccessCheckers.ADMIN, null, getDirectServeOperations()
             )
         );
         model.put(
@@ -54,7 +54,7 @@ public class PostingDeletedLiberin extends Liberin {
             PostingRevisionInfoUtil.build(
                 posting,
                 latestRevision,
-                MediaAttachmentsProvider.relations(getConfig().getMedia().getDirectServe()),
+                MediaAttachmentsProvider.relations(getDirectServeOperations()),
                 null,
                 AccessCheckers.ADMIN
             )

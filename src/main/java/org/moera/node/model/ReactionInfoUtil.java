@@ -8,7 +8,7 @@ import org.moera.lib.node.types.ReactionOperations;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryType;
@@ -18,7 +18,9 @@ import org.moera.node.util.Util;
 
 public class ReactionInfoUtil {
 
-    public static ReactionInfo build(Reaction reaction, AccessChecker accessChecker, DirectServeConfig config) {
+    public static ReactionInfo build(
+        Reaction reaction, AccessChecker accessChecker, DirectServeOperations directServe
+    ) {
         ReactionInfo reactionInfo = new ReactionInfo();
         
         reactionInfo.setOwnerName(reaction.getOwnerName());
@@ -27,7 +29,7 @@ public class ReactionInfoUtil {
         
         if (reaction.getOwnerAvatarMediaFile() != null) {
             reactionInfo.setOwnerAvatar(
-                AvatarImageUtil.build(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape(), config)
+                AvatarImageUtil.build(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape(), directServe)
             );
         }
 

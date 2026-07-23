@@ -1,13 +1,13 @@
 package org.moera.node.model;
 
 import org.moera.lib.node.types.PostingSourceInfo;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntrySource;
 import org.moera.node.util.Util;
 
 public class PostingSourceInfoUtil {
     
-    public static PostingSourceInfo build(EntrySource entrySource, DirectServeConfig config) {
+    public static PostingSourceInfo build(EntrySource entrySource, DirectServeOperations directServe) {
         PostingSourceInfo postingSourceInfo = new PostingSourceInfo();
         
         postingSourceInfo.setNodeName(entrySource.getRemoteNodeName());
@@ -17,7 +17,7 @@ public class PostingSourceInfoUtil {
             postingSourceInfo.setAvatar(AvatarImageUtil.build(
                 entrySource.getRemoteAvatarMediaFile(), 
                 entrySource.getRemoteAvatarShape(),
-                config
+                directServe
             ));
         }
         

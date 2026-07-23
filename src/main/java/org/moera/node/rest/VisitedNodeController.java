@@ -12,7 +12,7 @@ import org.moera.lib.node.types.VisitedNodeAttributes;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.FavorType;
 import org.moera.node.data.QContact;
 import org.moera.node.global.ApiController;
@@ -40,7 +40,7 @@ public class VisitedNodeController {
     private static final Logger log = LoggerFactory.getLogger(VisitedNodeController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -74,7 +74,7 @@ public class VisitedNodeController {
         return contactSearch
             .search(requestContext.nodeId(), query, limit, QContact.contact.visitCount.gt(0))
             .stream()
-            .map(c -> SearchNodeInfoUtil.build(c, config.getMedia().getDirectServe()))
+            .map(c -> SearchNodeInfoUtil.build(c, directServeOperations))
             .toList();
     }
 

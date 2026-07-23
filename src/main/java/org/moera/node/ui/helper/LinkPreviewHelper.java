@@ -81,7 +81,9 @@ public class LinkPreviewHelper {
                 HelperUtil.appendAttr(
                     buf,
                     "src",
-                    "/moera/media/" + (preview.getDirectPath() != null ? preview.getDirectPath() : preview.getPath())
+                    MediaUtil.mediaUrl(
+                        preview.getDirectPath() != null ? preview.getDirectPath() : preview.getPath()
+                    )
                 );
                 HelperUtil.appendAttr(buf, "width", preview.getWidth());
                 HelperUtil.appendAttr(buf, "height", preview.getHeight());

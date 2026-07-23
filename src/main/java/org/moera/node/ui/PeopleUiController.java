@@ -14,7 +14,7 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SubscriberInfo;
 import org.moera.lib.node.types.SubscriptionInfo;
 import org.moera.lib.node.types.SubscriptionType;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.data.BlockedUserRepository;
 import org.moera.node.data.FriendOfRepository;
@@ -44,7 +44,7 @@ public class PeopleUiController {
     private RequestContext requestContext;
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private TitleBuilder titleBuilder;
@@ -95,7 +95,7 @@ public class PeopleUiController {
                 .sorted(comparator)
                 .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
                 .map(s -> SubscriberInfoUtil.build(
-                    s, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                    s, requestContext.getOptions(), requestContext, directServeOperations
                 ))
                 .collect(Collectors.toList());
         }
@@ -135,7 +135,7 @@ public class PeopleUiController {
                 .sorted(comparator)
                 .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
                 .map(s -> SubscriptionInfoUtil.build(
-                    s, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                    s, requestContext.getOptions(), requestContext, directServeOperations
                 ))
                 .collect(Collectors.toList());
         }

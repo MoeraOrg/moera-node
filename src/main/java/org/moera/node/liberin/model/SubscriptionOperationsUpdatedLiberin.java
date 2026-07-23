@@ -41,7 +41,7 @@ public class SubscriptionOperationsUpdatedLiberin extends Liberin {
             SubscriptionInfoUtil.build(
                 subscription,
                 getPluginContext().getOptions(),
-                getConfig().getMedia().getDirectServe()
+                getDirectServeOperations()
             )
         );
         model.put("latestViewPrincipal", latestViewPrincipal);

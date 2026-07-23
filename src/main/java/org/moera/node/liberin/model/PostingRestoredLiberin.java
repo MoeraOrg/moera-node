@@ -32,7 +32,7 @@ public class PostingRestoredLiberin extends Liberin {
         model.put(
             "posting",
             PostingInfoUtil.build(
-                posting, AccessCheckers.ADMIN, null, getConfig().getMedia().getDirectServe()
+                posting, AccessCheckers.ADMIN, null, getDirectServeOperations()
             )
         );
     }

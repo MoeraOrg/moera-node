@@ -23,9 +23,9 @@ public class MediaUtilTest {
     @Test
     void filesystemDirectPathUsesStoredName() {
         MediaFile mediaFile = mediaFile("media-hash", "text/markdown", "stored-name.legacy");
-        DirectServeConfig config = directServeConfig();
+        DirectServeOperations directServeOperations = directServeOperations();
 
-        var directPath = MediaUtil.directPath(mediaFile, ExtendedDuration.ALWAYS, config);
+        var directPath = directServeOperations.directPath(mediaFile, ExtendedDuration.ALWAYS);
 
         Assertions.assertNotNull(directPath.url());
         Assertions.assertTrue(directPath.url().startsWith("stored-name.legacy?"));
@@ -36,7 +36,7 @@ public class MediaUtilTest {
     void filesystemDirectPathIsAbsentWithoutStoredName() {
         MediaFile mediaFile = mediaFile("media-hash", "text/markdown", null);
 
-        var directPath = MediaUtil.directPath(mediaFile, ExtendedDuration.ALWAYS, directServeConfig());
+        var directPath = directServeOperations().directPath(mediaFile, ExtendedDuration.ALWAYS);
 
         Assertions.assertNull(directPath.url());
         Assertions.assertNull(directPath.expires());
@@ -46,8 +46,8 @@ public class MediaUtilTest {
     void refreshDirectPathRebuildsUrlWithStoredNameAndUserFileName() {
         String directPath = "stored-name.legacy?exp=1&fn=hello%20world.md&sig=old";
 
-        var refreshed = MediaUtil.refreshDirectPath(
-            directPath, "media-hash", ExtendedDuration.ALWAYS, directServeConfig()
+        var refreshed = directServeOperations().refreshDirectPath(
+            directPath, "media-hash", ExtendedDuration.ALWAYS
         );
 
         Assertions.assertTrue(refreshed.url().startsWith("stored-name.legacy?"));
@@ -73,10 +73,39 @@ public class MediaUtilTest {
         owner.setId(UUID.randomUUID());
         owner.setMediaFile(original);
 
-        String sources = MediaUtil.mediaSources("/original", owner, directServeConfig());
+        String sources = MediaUtil.mediaSources("/original", owner, directServeOperations());
 
         Assertions.assertTrue(sources.contains("preview.persisted?"));
         Assertions.assertFalse(sources.contains("original.persisted?"));
+    }
+
+    @Test
+    void filesystemDirectDownloadPathIsBuiltServerSide() {
+        MediaFile mediaFile = mediaFile("media-hash", "text/markdown", "stored-name.legacy");
+
+        var directPath = directServeOperations().directDownloadPath(
+            mediaFile, ExtendedDuration.ALWAYS, "notes.md"
+        );
+
+        Assertions.assertNotNull(directPath.url());
+        Assertions.assertTrue(directPath.url().startsWith("stored-name.legacy?"));
+        Assertions.assertTrue(directPath.url().contains("&fn=notes.md&"));
+        Assertions.assertTrue(directPath.url().endsWith("&download=true"));
+    }
+
+    @Test
+    void mediaUrlPrefixesRelativePath() {
+        Assertions.assertEquals(
+            "/moera/media/private/media.jpg?grant=value",
+            MediaUtil.mediaUrl("private/media.jpg?grant=value")
+        );
+    }
+
+    @Test
+    void mediaUrlPreservesAbsoluteUrl() {
+        String url = "https://media.example/media.jpg?signature=value";
+
+        Assertions.assertEquals(url, MediaUtil.mediaUrl(url));
     }
 
     private static MediaFile mediaFile(String id, String mimeType, String fileName) {
@@ -92,6 +121,10 @@ public class MediaUtilTest {
         config.setSource(DirectServeSource.FILESYSTEM);
         config.setSecret("secret");
         return config;
+    }
+
+    private static DirectServeOperations directServeOperations() {
+        return new DirectServeOperations(directServeConfig());
     }
 
 }

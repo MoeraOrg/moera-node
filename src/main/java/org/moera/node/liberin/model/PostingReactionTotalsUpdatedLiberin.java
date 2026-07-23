@@ -43,7 +43,7 @@ public class PostingReactionTotalsUpdatedLiberin extends Liberin {
         model.put(
             "posting",
             PostingInfoUtil.build(
-                posting, AccessCheckers.ADMIN, null, getConfig().getMedia().getDirectServe()
+                posting, AccessCheckers.ADMIN, null, getDirectServeOperations()
             )
         );
         model.put("totals", totals);

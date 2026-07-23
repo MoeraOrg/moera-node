@@ -12,7 +12,7 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
@@ -50,7 +50,7 @@ public abstract class PostingRevisionControllerBase {
     protected EntryRevisionRepository entryRevisionRepository;
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private PostingOperations postingOperations;
@@ -172,7 +172,7 @@ public abstract class PostingRevisionControllerBase {
         return PostingRevisionInfoUtil.build(
             posting,
             revision,
-            MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
+            MediaAttachmentsProvider.relations(directServeOperations),
             requestContext.getOptions(),
             requestContext
         );

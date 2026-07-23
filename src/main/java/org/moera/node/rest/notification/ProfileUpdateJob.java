@@ -3,7 +3,7 @@ package org.moera.node.rest.notification;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.WhoAmI;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.MediaFile;
 import org.moera.node.liberin.model.RemoteNodeAvatarChangedLiberin;
 import org.moera.node.liberin.model.RemoteNodeFullNameChangedLiberin;
@@ -63,7 +63,7 @@ public class ProfileUpdateJob extends Job<ProfileUpdateJob.Parameters, ProfileUp
     }
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private ContactOperations contactOperations;
@@ -120,7 +120,7 @@ public class ProfileUpdateJob extends Job<ProfileUpdateJob.Parameters, ProfileUp
                 () -> universalContext.send(
                     new RemoteNodeAvatarChangedLiberin(
                         parameters.nodeName,
-                        AvatarImageUtil.build(mediaFile, shape, config.getMedia().getDirectServe())
+                        AvatarImageUtil.build(mediaFile, shape, directServeOperations)
                     )
                 )
             );

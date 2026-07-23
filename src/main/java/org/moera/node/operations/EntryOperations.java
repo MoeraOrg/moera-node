@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.MediaAttachment;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
@@ -39,7 +39,7 @@ public class EntryOperations implements MediaAttachmentsProvider {
     private static final Logger log = LoggerFactory.getLogger(EntryOperations.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestCounter requestCounter;
@@ -134,13 +134,13 @@ public class EntryOperations implements MediaAttachmentsProvider {
         return attachments.stream()
             .filter(MediaAttachmentUtil::isVisible)
             .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-            .map(ea -> MediaAttachmentUtil.build(ea, config.getMedia().getDirectServe(), grantSupplier))
+            .map(ea -> MediaAttachmentUtil.build(ea, directServeOperations, grantSupplier))
             .collect(Collectors.toList());
     }
 
     private void updateCachedPaths(List<MediaAttachment> attachments, MediaGrantSupplier grantSupplier) {
         attachments.forEach(attachment ->
-            MediaAttachmentUtil.fillPaths(attachment, config.getMedia().getDirectServe(), grantSupplier)
+            MediaAttachmentUtil.fillPaths(attachment, directServeOperations, grantSupplier)
         );
     }
 

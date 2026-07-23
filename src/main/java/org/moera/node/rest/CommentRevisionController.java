@@ -10,7 +10,7 @@ import jakarta.transaction.Transactional;
 import org.moera.lib.node.types.CommentRevisionInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.EntryRevision;
@@ -38,7 +38,7 @@ public class CommentRevisionController {
     protected RequestContext requestContext;
 
     @Inject
-    protected Config config;
+    protected DirectServeOperations directServeOperations;
 
     @Inject
     protected CommentRepository commentRepository;
@@ -76,7 +76,7 @@ public class CommentRevisionController {
             .map(r -> CommentRevisionInfoUtil.build(
                 comment,
                 r,
-                MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
+                MediaAttachmentsProvider.relations(directServeOperations),
                 requestContext.getOptions(),
                 requestContext
             ))
@@ -119,7 +119,7 @@ public class CommentRevisionController {
         return CommentRevisionInfoUtil.build(
             comment,
             revision,
-            MediaAttachmentsProvider.relations(config.getMedia().getDirectServe()),
+            MediaAttachmentsProvider.relations(directServeOperations),
             requestContext.getOptions(),
             requestContext
         );

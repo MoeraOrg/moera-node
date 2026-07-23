@@ -28,7 +28,7 @@ public class RemoteFriendGroupDeletedLiberin extends Liberin {
         model.put(
             "friendOf",
             FriendOfInfoUtil.build(
-                friendOf, getPluginContext().getOptions(), getConfig().getMedia().getDirectServe()
+                friendOf, getPluginContext().getOptions(), getDirectServeOperations()
             )
         );
     }

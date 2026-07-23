@@ -32,7 +32,7 @@ public class CommentReactionTotalsUpdatedLiberin extends Liberin {
         model.put(
             "comment",
             CommentInfoUtil.build(
-                comment, AccessCheckers.ADMIN, null, getConfig().getMedia().getDirectServe()
+                comment, AccessCheckers.ADMIN, null, getDirectServeOperations()
             )
         );
     }

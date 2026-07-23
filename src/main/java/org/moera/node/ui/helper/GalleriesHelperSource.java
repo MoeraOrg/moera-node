@@ -126,8 +126,10 @@ public class GalleriesHelperSource {
         if (media != null) {
             return Map.of(
                 "id", media.getId(),
-                "src", "/moera/media/" + media.getPath(),
-                "thumb", "/moera/media/" + media.getPath() + "?width=150",
+                "src", MediaUtil.mediaUrl(
+                    media.getDirectPath() != null ? media.getDirectPath() : media.getPath()
+                ),
+                "thumb", MediaUtil.mediaUrl(media.getPath()) + "?width=150",
                 "subHtmlUrl", captionUrl
             );
         }
@@ -207,7 +209,9 @@ public class GalleriesHelperSource {
             HelperUtil.appendAttr(
                 buf,
                 "src",
-                "/moera/media/" + (preview.getDirectPath() != null ? preview.getDirectPath() : preview.getPath())
+                MediaUtil.mediaUrl(
+                    preview.getDirectPath() != null ? preview.getDirectPath() : preview.getPath()
+                )
             );
             HelperUtil.appendAttr(buf, "width", preview.getWidth());
             HelperUtil.appendAttr(buf, "height", preview.getHeight());

@@ -2,12 +2,12 @@ package org.moera.node.model;
 
 import org.moera.lib.naming.types.OperationStatus;
 import org.moera.lib.node.types.WhoAmI;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.global.RequestContext;
 
 public class WhoAmIiUtil {
 
-    public static WhoAmI build(RequestContext requestContext, DirectServeConfig config) {
+    public static WhoAmI build(RequestContext requestContext, DirectServeOperations directServe) {
         WhoAmI whoAmI = new WhoAmI();
         
         whoAmI.setNodeName(requestContext.nodeName());
@@ -26,7 +26,7 @@ public class WhoAmIiUtil {
         whoAmI.setTitle(requestContext.getOptions().getString("profile.title"));
         
         if (requestContext.getAvatar() != null) {
-            whoAmI.setAvatar(AvatarImageUtil.build(requestContext.getAvatar(), config));
+            whoAmI.setAvatar(AvatarImageUtil.build(requestContext.getAvatar(), directServe));
         }
         
         if (requestContext.getOptions().getBool("frozen")) {

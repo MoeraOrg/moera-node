@@ -6,7 +6,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.RemoteMediaCache;
 import org.moera.node.data.RemoteMediaCacheRepository;
@@ -95,7 +95,7 @@ public class RemoteMediaDownloadJob extends Job<RemoteMediaDownloadJob.Parameter
     private static final Logger log = LoggerFactory.getLogger(RemoteMediaDownloadJob.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private MediaManager mediaManager;
@@ -154,7 +154,7 @@ public class RemoteMediaDownloadJob extends Job<RemoteMediaDownloadJob.Parameter
         }
         state.downloadedMediaInfo = PrivateMediaFileInfoUtil.build(
             mediaFileOwner,
-            config.getMedia().getDirectServe(),
+            directServeOperations,
             new MediaGrantGenerator(universalContext.getOptions())
         );
     }

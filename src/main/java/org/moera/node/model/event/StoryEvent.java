@@ -12,7 +12,7 @@ import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntryType;
 import org.moera.node.data.Story;
 import org.moera.node.model.StoryInfoUtil;
@@ -48,13 +48,13 @@ public class StoryEvent extends Event {
         super(type, Scope.VIEW_FEEDS);
     }
 
-    protected StoryEvent(EventType type, Story story, boolean isAdmin, DirectServeConfig config) {
+    protected StoryEvent(EventType type, Story story, boolean isAdmin, DirectServeOperations directServe) {
         super(
             type,
             Scope.VIEW_FEEDS,
             isAdmin ? Principal.ADMIN : story.getViewPrincipalFilter().a().andNot(Principal.ADMIN)
         );
-        StoryInfo storyInfo = StoryInfoUtil.build(story, isAdmin, st -> null, config);
+        StoryInfo storyInfo = StoryInfoUtil.build(story, isAdmin, st -> null, directServe);
         id = story.getId().toString();
         storyType = story.getStoryType();
         feedName = story.getFeedName();

@@ -25,7 +25,7 @@ import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
@@ -72,7 +72,7 @@ public class Picker extends Task {
     private final PickerPool pool;
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private PostingRepository postingRepository;
@@ -305,7 +305,7 @@ public class Picker extends Task {
 
     private void updateRevision(Posting posting, PostingInfo postingInfo, EntryRevision revision) {
         PostingInfoUtil.toPickedEntryRevision(
-            postingInfo, revision, new ServeContext(config.getMedia().getDirectServe(), getOptions())
+            postingInfo, revision, new ServeContext(directServeOperations, getOptions())
         );
 
         byte[] fingerprint = PostingFingerprintBuilder.build(revision.getSignatureVersion(), posting, revision);

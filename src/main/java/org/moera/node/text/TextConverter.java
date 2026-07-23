@@ -6,7 +6,7 @@ import jakarta.inject.Inject;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.body.Body;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.global.ServeContext;
 import org.moera.node.global.UniversalContext;
@@ -20,7 +20,7 @@ import org.springframework.util.ObjectUtils;
 public class TextConverter {
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private UniversalContext universalContext;
@@ -55,7 +55,7 @@ public class TextConverter {
         boolean noFollowOnLinks,
         EntryRevision revision
     ) {
-        ServeContext serveContext = new ServeContext(config.getMedia().getDirectServe(), universalContext.getOptions());
+        ServeContext serveContext = new ServeContext(directServeOperations, universalContext.getOptions());
         Body body = new Body();
         if (!isSigned && sourceBody == null) {
             if (bodySrc != null) {

@@ -22,7 +22,7 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.config.Config;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Contact;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
@@ -68,7 +68,7 @@ public class SubscriberController {
     private static final Logger log = LoggerFactory.getLogger(SubscriberController.class);
 
     @Inject
-    private Config config;
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private RequestContext requestContext;
@@ -130,7 +130,7 @@ public class SubscriberController {
             .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
             .map(s ->
                 SubscriberInfoUtil.build(
-                    s, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+                    s, requestContext.getOptions(), requestContext, directServeOperations
                 )
             )
             .collect(Collectors.toList());
@@ -159,7 +159,7 @@ public class SubscriberController {
         }
 
         return SubscriberInfoUtil.build(
-            subscriber, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+            subscriber, requestContext.getOptions(), requestContext, directServeOperations
         );
     }
 
@@ -222,7 +222,7 @@ public class SubscriberController {
         }
 
         return SubscriberInfoUtil.build(
-            subscriber, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+            subscriber, requestContext.getOptions(), requestContext, directServeOperations
         );
     }
 
@@ -332,7 +332,7 @@ public class SubscriberController {
         requestContext.send(new SubscriberOperationsUpdatedLiberin(subscriber, latestView));
 
         return SubscriberInfoUtil.build(
-            subscriber, requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+            subscriber, requestContext.getOptions(), requestContext, directServeOperations
         );
     }
 
@@ -357,7 +357,7 @@ public class SubscriberController {
         requestContext.send(new SubscriberDeletedLiberin(subscriber));
 
         return ContactInfoUtil.build(
-            subscriber.getContact(), requestContext.getOptions(), requestContext, config.getMedia().getDirectServe()
+            subscriber.getContact(), requestContext.getOptions(), requestContext, directServeOperations
         );
     }
 
