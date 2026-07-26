@@ -2,6 +2,9 @@
 
 1. Setters and getters should not contain any logic besides copying values.
 2. If a lambda can be replaced with a method reference, replace it.
+3. Do not use `@Inject` on constructors; use field injection with `@Inject`.
+4. Name an injected field after its class, with the first letter lowercased.
+5. As an exception to the previous rule, always name an injected `Transaction` field `tx`.
 
 # Database layer
  

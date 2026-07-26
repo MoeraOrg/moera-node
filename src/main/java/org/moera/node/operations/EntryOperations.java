@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -20,7 +21,7 @@ import org.moera.node.data.MediaFileOwner;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.media.MediaGrantSupplier;
+import org.moera.node.media.grant.MediaGrantSupplier;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.MediaAttachmentUtil;
 import org.moera.node.task.Jobs;
@@ -115,7 +116,7 @@ public class EntryOperations implements MediaAttachmentsProvider {
             if (revision.getAttachmentsCache() != null) {
                 var data = objectMapper.readValue(revision.getAttachmentsCache(), MediaAttachmentsCache.class);
                 var cache = data.getAttachments();
-                if (cache != null) {
+                if (cache != null && Objects.equals(data.getDirectServeSource(), directServeOperations.source())) {
                     // Media paths expire, so assuming that they always need to be updated
                     updateCachedPaths(cache, grantSupplier);
                     return cache;

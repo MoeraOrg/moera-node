@@ -3,8 +3,9 @@
 ## Goal
 
 Add `DirectServeSource.AWSS3`. When this source is selected, a scheduled worker copies eligible local media files to a
-configured Amazon S3 bucket in bounded batches. `MediaFile.fileName` continues to identify the local copy, while
-`MediaFile.cloudFileName` identifies the S3 object.
+configured Amazon S3 bucket in bounded batches. After publishing the S3 object, the worker deletes a non-exposed local
+copy, sets its `MediaFile.fileName` to null, and stores the object key in `MediaFile.cloudFileName`. Exposed media retain
+their local copy and `fileName`.
 
 For private media, expose separate direct URLs for inline viewing and downloading. S3 signs response-header overrides
 as part of the URL, so the same presigned URL cannot safely be changed from inline display to attachment download by
@@ -16,10 +17,11 @@ An S3 copy is eligible only when all of the following are true:
 - `fileName` is not null;
 - `usageCount > 0`;
 - `createdAt <= now - 30 minutes`;
-- `recognizeAt` is null or `recognizedAt` is not null.
+- the digest upgrade is complete.
 
-The local copy is retained after upload. This change does not introduce cloud-only media reads for OCR, preview
-generation, application serving, or node-to-node transfers.
+Code that needs media bytes after migration downloads the S3 object to a bounded-lifetime temporary file. This covers
+preview generation, application serving, avatar cropping, and node-to-node transfers. OCR.Space receives a signed
+direct URL when one is available and falls back to a local multipart upload otherwise.
 
 ## Object Naming And Invariants
 
@@ -278,7 +280,7 @@ Add explicit repository queries, as required by the project conventions:
 2. Otherwise select an unclaimed eligible row (`cloud_upload_deadline IS NULL`) with `FOR UPDATE SKIP LOCKED`, ordered
    by `created_at` and `id`, and set its lease deadline.
 3. Return an immutable claim snapshot containing the media ID, exact stored deadline, persisted filesystem name, MIME
-   type, size, creation time, and calculated S3 object key, then commit immediately.
+   type, size, creation time, exposed flag, and calculated S3 object key, then commit immediately.
 
 The claim transaction may briefly take a row lock to serialize the state transition, but no transaction, row lock, or
 database connection remains open during S3 network I/O. `SKIP LOCKED` lets multiple application instances claim
@@ -300,7 +302,6 @@ cloud_file_name IS NULL
 AND cloud_upload_deadline IS NULL
 AND file_name IS NOT NULL
 AND usage_count > 0
-AND (recognize_at IS NULL OR recognized_at IS NOT NULL)
 ```
 
 - adds a partial index on `cloud_upload_deadline` where
@@ -308,9 +309,12 @@ AND (recognize_at IS NULL OR recognized_at IS NOT NULL)
 
 Do not edit generated `doc/create_tables.sql`.
 
+Because the original candidate index was already deployed with the OCR condition, add a follow-up migration that
+recreates `media_files_cloud_upload_candidate_idx` without that condition.
+
 ## Scheduled Upload Worker
 
-Add a scheduled method, either in a focused `AwsS3MediaOperations` component or in `MediaOperations`, with:
+Add a scheduled method, either in a focused `AwsS3MediaUploader` component or in `MediaOperations`, with:
 
 - a fixed delay of five minutes;
 - a batch size of 100;
@@ -398,7 +402,7 @@ the final tombstone delete must also tolerate another worker completing it first
 Update `doc/media-files.md` with:
 
 - the `aws-s3` source and all three new properties;
-- the eligibility delay and OCR condition;
+- the eligibility delay;
 - deterministic object naming;
 - finite absolute display URLs and private-media download presigned URLs;
 - download URLs signed with attachment content disposition and their fallback behavior;
@@ -428,8 +432,8 @@ Add focused tests for:
 - Spring binds `source: aws-s3`, bucket, region, and an optional profile correctly;
 - an explicit profile selects `ProfileCredentialsProvider`, while an absent profile uses the default credentials
   provider chain;
-- candidate selection includes only used, locally available, at-least-30-minute-old media with no pending OCR;
-- both `recognizeAt == null` and `recognizedAt != null` are accepted, while scheduled/uncompleted OCR is excluded;
+- candidate selection includes only used, locally available, at-least-30-minute-old media whose digest upgrade is
+  complete, regardless of OCR scheduling or completion;
 - claiming and completion use short transactions, and no database transaction or row lock is retained while the
   upload future is running;
 - concurrent workers claim different rows with `FOR UPDATE SKIP LOCKED`;
@@ -446,8 +450,10 @@ Add focused tests for:
   the lease deadline forward for retry;
 - a crash after S3 completion but before publication recalculates and retries the same key without leaking a differently
   named object;
-- a successful upload conditionally publishes `cloudFileName`, clears `cloudUploadDeadline`, and invalidates affected
-  attachment caches without rebuilding them;
+- a successful upload conditionally publishes `cloudFileName`, clears `cloudUploadDeadline`, deletes a non-exposed
+  local copy and clears its `fileName`, retains both for exposed media, and invalidates affected attachment caches
+  without rebuilding them;
+- operations that need cloud-only media download it to a temporary file and remove that file after use;
 - the first subsequent request recreates an invalidated attachment cache with the S3 direct path;
 - if usage drops to zero during upload, successful publication preserves the exact key for the subsequent removal
   tombstone;

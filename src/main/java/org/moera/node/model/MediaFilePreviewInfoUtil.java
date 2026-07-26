@@ -8,7 +8,7 @@ import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
-import org.moera.node.media.MediaGrantSupplier;
+import org.moera.node.media.grant.MediaGrantSupplier;
 import org.moera.node.media.MimeUtil;
 import org.moera.node.media.MediaUtil;
 

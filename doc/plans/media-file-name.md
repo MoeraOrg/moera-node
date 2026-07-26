@@ -125,7 +125,7 @@ Update at least these local-file consumers:
 - digest calculation;
 - image reading, cropping, and preview generation;
 - public-media upload to another node in `MediaManager`;
-- OCR multipart upload;
+- OCR direct-URL submission and multipart fallback;
 - cleanup and upgrade jobs.
 
 Operations that require a local copy must handle a null local name as unavailable instead of constructing a guessed
@@ -138,9 +138,8 @@ Low-level local-path resolution throws `MediaFileNotAvailableException`, an `IOE
 HTTP serving translates it to `ObjectNotFoundFailure`, node-to-node operations translate it to
 `MoeraNodeLocalStorageException`, and background jobs log and skip media without a local copy.
 
-`MediaFileRenamePaddedIdsJob` must rename a local file whose name starts with the padded ID and update `file_name`
-accordingly. It must preserve the existing extension instead of deriving old and new paths from MIME types. Its
-duplicate-row branch must explicitly preserve one usable copy and clean up or report the other copy.
+Newer versions assume the padded-ID migration has already completed. If `Updater` finds a remaining padded media ID,
+startup must fail with a fatal error instructing the administrator to run version 0.18.0 first.
 
 ## Direct Paths
 

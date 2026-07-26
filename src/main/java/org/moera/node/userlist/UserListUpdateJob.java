@@ -116,7 +116,6 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
     @Inject
     private MalwareListOperations malwareListOperations;
 
-    @Inject
     public UserListUpdateJob() {
         state = new State();
     }

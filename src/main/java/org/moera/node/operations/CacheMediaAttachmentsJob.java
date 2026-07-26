@@ -101,6 +101,7 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
                 .map(ea -> MediaAttachmentUtil.build(ea, directServeOperations, null))
                 .collect(Collectors.toList());
             cache.setAttachments(mediaAttachments);
+            cache.setDirectServeSource(directServeOperations.source());
 
             try {
                 revision.setAttachmentsCache(objectMapper.writeValueAsString(cache));

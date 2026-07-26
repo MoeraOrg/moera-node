@@ -36,7 +36,6 @@ import org.moera.node.rest.task.upgrade.AllRemoteAvatarsDownloadTask;
 import org.moera.node.rest.task.upgrade.AllContactDetailsDownloadTask;
 import org.moera.node.rest.task.upgrade.ContactsUpgradeTask;
 import org.moera.node.rest.task.upgrade.EncryptAllOptionsJob;
-import org.moera.node.rest.task.upgrade.MediaFileRenamePaddedIdsJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.task.JobsManagerInitializedEvent;
 import org.moera.node.task.TaskAutowire;
@@ -220,9 +219,9 @@ public class Updater {
     }
 
     private void executeMediaUpgrades() {
+        renamePaddedIds();
         updateMediaFileNames();
         updateMediaFileDigests();
-        renamePaddedIds();
     }
 
     private void updateMediaFileNames() {
@@ -306,8 +305,11 @@ public class Updater {
     }
 
     private void renamePaddedIds() {
-        if (mediaFileRepository.countIdWithPadding() > 0 && !jobs.isRunning(MediaFileRenamePaddedIdsJob.class)) {
-            jobs.run(MediaFileRenamePaddedIdsJob.class, new MediaFileRenamePaddedIdsJob.Parameters());
+        if (mediaFileRepository.countIdWithPadding() > 0) {
+            throw new IllegalStateException(
+                "Media files with padded IDs were found. Run Moera Node 0.18.0 first to finish the media file"
+                + " ID migration."
+            );
         }
     }
 

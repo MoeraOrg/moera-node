@@ -24,8 +24,10 @@ import org.languagetool.rules.Rule;
 import org.languagetool.rules.RuleMatch;
 import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.media.MediaFileNotAvailableException;
 import org.moera.node.media.MediaOperations;
+import org.moera.node.media.MimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -54,6 +56,9 @@ public class OcrSpace {
 
     @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private ObjectMapper objectMapper;
@@ -85,15 +90,40 @@ public class OcrSpace {
             return null;
         }
 
-        Path filePath = mediaOperations.getPath(mediaFile);
-        RequestBody fileBody = RequestBody.create(filePath.toFile(), MediaType.parse(mediaFile.getMimeType()));
-        MultipartBody multipartBody = new MultipartBody.Builder()
+        String directUrl = directServeOperations.directUrl(mediaFile);
+        if (!ObjectUtils.isEmpty(directUrl)) {
+            return recognize(requestBody(directUrl));
+        }
+
+        try (var content = mediaOperations.openContent(mediaFile)) {
+            return recognize(requestBody(mediaFile, content.path()));
+        } catch (IOException e) {
+            throw new MediaFileNotAvailableException(mediaFile.getId(), e);
+        }
+    }
+
+    private MultipartBody.Builder requestBody() {
+        return new MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart("apikey", config.getMedia().getOcrServiceKey())
-            .addFormDataPart("file", mediaFile.getFileName(), fileBody)
             .addFormDataPart("language", "auto")
-            .addFormDataPart("OCREngine", "2")
+            .addFormDataPart("OCREngine", "2");
+    }
+
+    private MultipartBody requestBody(String directUrl) {
+        return requestBody()
+            .addFormDataPart("url", directUrl)
             .build();
+    }
+
+    private MultipartBody requestBody(MediaFile mediaFile, Path filePath) {
+        RequestBody fileBody = RequestBody.create(filePath.toFile(), MediaType.parse(mediaFile.getMimeType()));
+        return requestBody()
+            .addFormDataPart("file", MimeUtil.fileName(mediaFile.getId(), mediaFile.getMimeType()), fileBody)
+            .build();
+    }
+
+    private String recognize(MultipartBody multipartBody) {
         Request request = new Request.Builder()
             .post(multipartBody)
             .addHeader(HttpHeaders.ACCEPT, "application/json")
@@ -133,7 +163,7 @@ public class OcrSpace {
         }
     }
 
-    private String filterGibberish(String text) throws IOException{
+    private String filterGibberish(String text) throws IOException {
         text = text.trim().replaceAll("\\s+", " ");
         log.debug("Recognized text: {}", text);
 

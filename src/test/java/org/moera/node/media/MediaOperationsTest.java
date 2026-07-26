@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -14,11 +15,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.moera.node.config.Config;
+import org.moera.node.config.DirectServeSource;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRemoval;
 import org.moera.node.data.MediaFileRemovalRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.RequestCounter;
+import org.moera.node.media.awss3.AwsS3MediaStorage;
 import org.moera.node.util.CallableNoExceptions;
 import org.moera.node.util.CallableVoid;
 import org.moera.node.util.Transaction;
@@ -72,6 +75,81 @@ public class MediaOperationsTest {
     }
 
     @Test
+    void existingCloudOnlyMediaFileDoesNotRecreateLocalCopy() throws Exception {
+        MediaFile existing = new MediaFile();
+        existing.setId("media-hash");
+        existing.setMimeType("text/markdown");
+        existing.setCloudFileName("media-hash_1784883600.md");
+        AtomicBoolean saved = new AtomicBoolean();
+        AtomicBoolean locked = new AtomicBoolean();
+        MediaFileRepository repository = mediaFileRepository(existing, saved, locked);
+        MediaOperations operations = mediaOperations(repository);
+        Path temporaryFile = mediaPath.resolve("temporary");
+        Files.writeString(temporaryFile, "content");
+
+        MediaFile mediaFile = operations.putInPlace(
+            "media-hash", "text/markdown", temporaryFile, new byte[] {1}, false
+        );
+
+        Assertions.assertSame(existing, mediaFile);
+        Assertions.assertNull(mediaFile.getFileName());
+        Assertions.assertTrue(locked.get());
+        Assertions.assertTrue(Files.exists(temporaryFile));
+        Assertions.assertFalse(Files.exists(mediaPath.resolve("media-hash.md")));
+        Assertions.assertFalse(saved.get());
+    }
+
+    @Test
+    void cloudOnlyContentIsDownloadedToTemporaryFile() throws Exception {
+        Files.createDirectory(mediaPath.resolve(MediaOperations.TMP_DIR));
+        MediaOperations operations = new MediaOperations() {
+            @Override
+            public TemporaryFile tmpFile() {
+                try {
+                    Path path = mediaPath.resolve(MediaOperations.TMP_DIR).resolve("cloud-download");
+                    return new TemporaryFile(path, Files.newOutputStream(path));
+                } catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+        };
+        Config config = new Config();
+        config.getMedia().setPath(mediaPath.toString());
+        ReflectionTestUtils.setField(operations, "config", config);
+        var storage = new AwsS3MediaStorage() {
+            @Override
+            public boolean isConfigured() {
+                return true;
+            }
+
+            @Override
+            public CompletableFuture<Void> download(String key, Path path) {
+                Assertions.assertEquals("media-hash_1784883600.md", key);
+                try {
+                    Files.writeString(path, "cloud content");
+                    return CompletableFuture.completedFuture(null);
+                } catch (Exception e) {
+                    return CompletableFuture.failedFuture(e);
+                }
+            }
+        };
+        ReflectionTestUtils.setField(operations, "awsS3MediaStorage", storage);
+        MediaFile mediaFile = new MediaFile();
+        mediaFile.setId("media-hash");
+        mediaFile.setMimeType("text/markdown");
+        mediaFile.setCloudFileName("media-hash_1784883600.md");
+
+        Path temporaryPath;
+        try (var content = operations.openContent(mediaFile)) {
+            temporaryPath = content.path();
+            Assertions.assertTrue(content.temporary());
+            Assertions.assertEquals("cloud content", Files.readString(temporaryPath));
+        }
+
+        Assertions.assertFalse(Files.exists(temporaryPath));
+    }
+
+    @Test
     void pathIsUnavailableWithoutStoredFileName() {
         MediaOperations operations = mediaOperations(mediaFileRepository(null, new AtomicBoolean(), new AtomicBoolean()));
         MediaFile mediaFile = new MediaFile();
@@ -86,7 +164,7 @@ public class MediaOperationsTest {
         Files.writeString(file, "content");
         AtomicBoolean locked = new AtomicBoolean();
         AtomicBoolean removalDeleted = new AtomicBoolean();
-        MediaOperations operations = removalOperations(true, locked, removalDeleted);
+        MediaCleanupOperations operations = removalOperations(true, locked, removalDeleted);
 
         ReflectionTestUtils.invokeMethod(operations, "removeMediaFile", 1L);
 
@@ -101,7 +179,7 @@ public class MediaOperationsTest {
         Files.writeString(file, "content");
         AtomicBoolean locked = new AtomicBoolean();
         AtomicBoolean removalDeleted = new AtomicBoolean();
-        MediaOperations operations = removalOperations(false, locked, removalDeleted);
+        MediaCleanupOperations operations = removalOperations(false, locked, removalDeleted);
 
         ReflectionTestUtils.invokeMethod(operations, "removeMediaFile", 1L);
 
@@ -117,12 +195,133 @@ public class MediaOperationsTest {
         Files.writeString(directory.resolve("child"), "content");
         AtomicBoolean locked = new AtomicBoolean();
         AtomicBoolean removalDeleted = new AtomicBoolean();
-        MediaOperations operations = removalOperations(false, locked, removalDeleted);
+        MediaCleanupOperations operations = removalOperations(false, locked, removalDeleted);
 
         ReflectionTestUtils.invokeMethod(operations, "removeMediaFile", 1L);
 
         Assertions.assertTrue(locked.get());
         Assertions.assertTrue(Files.exists(directory));
+        Assertions.assertFalse(removalDeleted.get());
+    }
+
+    @Test
+    void recreatedMediaKeepsLocalFileButDeletesExactCloudObjectOutsideLock() throws Exception {
+        Path file = mediaPath.resolve("stored-name.legacy");
+        Files.writeString(file, "content");
+        AtomicBoolean locked = new AtomicBoolean();
+        AtomicBoolean localTransaction = new AtomicBoolean();
+        AtomicBoolean cloudDeleted = new AtomicBoolean();
+        AtomicBoolean removalDeleted = new AtomicBoolean();
+        MediaCleanupOperations operations = removalOperations(true, locked, removalDeleted);
+        enableAwsS3(operations);
+        ReflectionTestUtils.setField(
+            operations, "mediaFileRemovalRepository",
+            mediaFileRemovalRepository(removalDeleted, "media-hash_1784883600.jpg")
+        );
+        ReflectionTestUtils.setField(operations, "tx", new Transaction() {
+            @Override
+            public void executeWriteWithExceptions(CallableVoid inside) throws Exception {
+                localTransaction.set(true);
+                try {
+                    inside.call();
+                } finally {
+                    localTransaction.set(false);
+                }
+            }
+        });
+        var storage = new AwsS3MediaStorage() {
+            @Override
+            public CompletableFuture<Void> delete(String key) {
+                Assertions.assertFalse(localTransaction.get());
+                Assertions.assertEquals("media-hash_1784883600.jpg", key);
+                cloudDeleted.set(true);
+                return CompletableFuture.completedFuture(null);
+            }
+        };
+        ReflectionTestUtils.setField(operations, "awsS3MediaStorage", storage);
+
+        ReflectionTestUtils.invokeMethod(operations, "removeMediaFile", 1L);
+
+        Assertions.assertTrue(locked.get());
+        Assertions.assertTrue(Files.exists(file));
+        Assertions.assertTrue(cloudDeleted.get());
+        Assertions.assertTrue(removalDeleted.get());
+    }
+
+    @Test
+    void cloudOnlyRemovalDoesNotAcquireMediaIdLock() {
+        AtomicBoolean locked = new AtomicBoolean();
+        AtomicBoolean cloudDeleted = new AtomicBoolean();
+        AtomicBoolean removalDeleted = new AtomicBoolean();
+        MediaCleanupOperations operations = removalOperations(false, locked, removalDeleted);
+        enableAwsS3(operations);
+        ReflectionTestUtils.setField(
+            operations, "mediaFileRemovalRepository",
+            mediaFileRemovalRepository(removalDeleted, null, "media-hash_1784883600.jpg")
+        );
+        var storage = new AwsS3MediaStorage() {
+            @Override
+            public CompletableFuture<Void> delete(String key) {
+                cloudDeleted.set(true);
+                return CompletableFuture.completedFuture(null);
+            }
+        };
+        ReflectionTestUtils.setField(operations, "awsS3MediaStorage", storage);
+
+        ReflectionTestUtils.invokeMethod(operations, "removeMediaFile", 1L);
+
+        Assertions.assertFalse(locked.get());
+        Assertions.assertTrue(cloudDeleted.get());
+        Assertions.assertTrue(removalDeleted.get());
+    }
+
+    @Test
+    void cloudDeletionFailureRetainsTombstone() {
+        AtomicBoolean locked = new AtomicBoolean();
+        AtomicBoolean removalDeleted = new AtomicBoolean();
+        MediaCleanupOperations operations = removalOperations(false, locked, removalDeleted);
+        enableAwsS3(operations);
+        ReflectionTestUtils.setField(
+            operations, "mediaFileRemovalRepository",
+            mediaFileRemovalRepository(removalDeleted, null, "media-hash_1784883600.jpg")
+        );
+        var storage = new AwsS3MediaStorage() {
+            @Override
+            public CompletableFuture<Void> delete(String key) {
+                return CompletableFuture.failedFuture(new IllegalStateException("S3 unavailable"));
+            }
+        };
+        ReflectionTestUtils.setField(operations, "awsS3MediaStorage", storage);
+
+        ReflectionTestUtils.invokeMethod(operations, "removeMediaFile", 1L);
+
+        Assertions.assertFalse(locked.get());
+        Assertions.assertFalse(removalDeleted.get());
+    }
+
+    @Test
+    void cloudRemovalIsRetainedWhenAwsS3IsDisabled() {
+        AtomicBoolean locked = new AtomicBoolean();
+        AtomicBoolean cloudDeleted = new AtomicBoolean();
+        AtomicBoolean removalDeleted = new AtomicBoolean();
+        MediaCleanupOperations operations = removalOperations(false, locked, removalDeleted);
+        ReflectionTestUtils.setField(
+            operations, "mediaFileRemovalRepository",
+            mediaFileRemovalRepository(removalDeleted, null, "media-hash_1784883600.jpg")
+        );
+        var storage = new AwsS3MediaStorage() {
+            @Override
+            public CompletableFuture<Void> delete(String key) {
+                cloudDeleted.set(true);
+                return CompletableFuture.completedFuture(null);
+            }
+        };
+        ReflectionTestUtils.setField(operations, "awsS3MediaStorage", storage);
+
+        ReflectionTestUtils.invokeMethod(operations, "removeMediaFile", 1L);
+
+        Assertions.assertFalse(locked.get());
+        Assertions.assertFalse(cloudDeleted.get());
         Assertions.assertFalse(removalDeleted.get());
     }
 
@@ -145,7 +344,9 @@ public class MediaOperationsTest {
                 return inside.call();
             }
         };
-        MediaOperations operations = mediaOperations(removalMediaFileRepository(false, new AtomicBoolean()));
+        MediaCleanupOperations operations = mediaCleanupOperations(
+            removalMediaFileRepository(false, new AtomicBoolean())
+        );
         ReflectionTestUtils.setField(
             operations, "mediaFileRemovalRepository", mediaFileRemovalRepository(new AtomicBoolean())
         );
@@ -176,16 +377,30 @@ public class MediaOperationsTest {
         return operations;
     }
 
-    private MediaOperations removalOperations(
+    private MediaCleanupOperations mediaCleanupOperations(MediaFileRepository repository) {
+        Config config = new Config();
+        config.getMedia().setPath(mediaPath.toString());
+        MediaCleanupOperations operations = new MediaCleanupOperations();
+        ReflectionTestUtils.setField(operations, "config", config);
+        ReflectionTestUtils.setField(operations, "mediaFileRepository", repository);
+        return operations;
+    }
+
+    private MediaCleanupOperations removalOperations(
         boolean mediaExists, AtomicBoolean locked, AtomicBoolean removalDeleted
     ) {
         MediaFileRepository mediaFileRepository = removalMediaFileRepository(mediaExists, locked);
-        MediaOperations operations = mediaOperations(mediaFileRepository);
+        MediaCleanupOperations operations = mediaCleanupOperations(mediaFileRepository);
         ReflectionTestUtils.setField(
             operations, "mediaFileRemovalRepository", mediaFileRemovalRepository(removalDeleted)
         );
         ReflectionTestUtils.setField(operations, "tx", directTransaction());
         return operations;
+    }
+
+    private static void enableAwsS3(MediaCleanupOperations operations) {
+        Config config = (Config) ReflectionTestUtils.getField(operations, "config");
+        config.getMedia().getDirectServe().setSource(DirectServeSource.AWSS3);
     }
 
     private static MediaFileRepository mediaFileRepository(
@@ -227,10 +442,23 @@ public class MediaOperationsTest {
     }
 
     private static MediaFileRemovalRepository mediaFileRemovalRepository(AtomicBoolean removalDeleted) {
+        return mediaFileRemovalRepository(removalDeleted, "stored-name.legacy", null);
+    }
+
+    private static MediaFileRemovalRepository mediaFileRemovalRepository(
+        AtomicBoolean removalDeleted, String cloudFileName
+    ) {
+        return mediaFileRemovalRepository(removalDeleted, "stored-name.legacy", cloudFileName);
+    }
+
+    private static MediaFileRemovalRepository mediaFileRemovalRepository(
+        AtomicBoolean removalDeleted, String fileName, String cloudFileName
+    ) {
         MediaFileRemoval removal = new MediaFileRemoval();
         removal.setId(1L);
         removal.setMediaFileId("media-hash");
-        removal.setFileName("stored-name.legacy");
+        removal.setFileName(fileName);
+        removal.setCloudFileName(cloudFileName);
         return (MediaFileRemovalRepository) Proxy.newProxyInstance(
             MediaFileRemovalRepository.class.getClassLoader(),
             new Class<?>[] {MediaFileRemovalRepository.class},

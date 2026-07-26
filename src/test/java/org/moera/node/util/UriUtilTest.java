@@ -102,6 +102,25 @@ public class UriUtilTest {
     }
 
     @Test
+    void stripSchemeAndHostReturnsPathQueryAndFragment() {
+        Assertions.assertEquals(
+            "/media/file%20name.txt?download=true#details",
+            UriUtil.stripSchemeAndHost(
+                "https://user@example.org:8443/media/file%20name.txt?download=true#details"
+            )
+        );
+    }
+
+    @Test
+    void stripSchemeAndHostAcceptsRelativeUriAndNull() {
+        Assertions.assertEquals(
+            "/media/file.txt?download=true#details",
+            UriUtil.stripSchemeAndHost("/media/file.txt?download=true#details")
+        );
+        Assertions.assertNull(UriUtil.stripSchemeAndHost(null));
+    }
+
+    @Test
     void queryParameterReturnsDecodedValue() {
         Assertions.assertEquals("hello world.md", UriUtil.queryParameter("exp=1&fn=hello%20world.md", "fn"));
         Assertions.assertNull(UriUtil.queryParameter("exp=1", "fn"));

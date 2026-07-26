@@ -261,11 +261,11 @@ public class MediaManager {
         if (info != null) {
             return;
         }
-        try {
+        try (var content = mediaOperations.openContent(mediaFile)) {
             nodeApi.at(nodeName, carte).uploadPublicMedia(
-                mediaOperations.getPath(mediaFile), mediaFile.getMimeType()
+                content.path(), mediaFile.getMimeType()
             );
-        } catch (MediaFileNotAvailableException e) {
+        } catch (IOException e) {
             throw new MoeraNodeLocalStorageException(e);
         }
     }

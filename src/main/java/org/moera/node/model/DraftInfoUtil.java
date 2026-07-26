@@ -11,7 +11,7 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Draft;
 import org.moera.node.data.EntryAttachment;
-import org.moera.node.media.MediaGrantGenerator;
+import org.moera.node.media.grant.MediaGrantGenerator;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;

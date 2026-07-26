@@ -8,6 +8,7 @@ import org.moera.lib.node.types.MediaFilePreviewInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.RemoteMediaInfo;
 import org.moera.node.api.naming.NamingCache;
+import org.moera.node.media.grant.MediaGrantGenerator;
 import org.moera.node.option.Options;
 
 public record LocalRemoteMediaInfo(PrivateMediaFileInfo local, RemoteMediaInfo remote) {

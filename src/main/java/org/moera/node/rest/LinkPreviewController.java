@@ -27,7 +27,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.linkpreviewnet.LinkPreviewNet;
 import org.moera.node.linkpreviewnet.LinkPreviewNetException;
 import org.moera.node.linkpreviewnet.LinkPreviewNetInfo;
-import org.moera.node.media.MediaGrantGenerator;
+import org.moera.node.media.grant.MediaGrantGenerator;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;

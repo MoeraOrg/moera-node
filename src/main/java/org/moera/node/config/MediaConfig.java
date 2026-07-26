@@ -3,8 +3,9 @@ package org.moera.node.config;
 public class MediaConfig {
 
     private String path;
-    private String serve = "stream"; // stream, sendfile, accel
+    private MediaServe serve = MediaServe.STREAM;
     private String accelPrefix = "/";
+    private String cloudAccelPrefix = "/";
     private DirectServeConfig directServe = new DirectServeConfig();
     private String ocrService;
     private String ocrServiceKey;
@@ -17,11 +18,11 @@ public class MediaConfig {
         this.path = path;
     }
 
-    public String getServe() {
+    public MediaServe getServe() {
         return serve;
     }
 
-    public void setServe(String serve) {
+    public void setServe(MediaServe serve) {
         this.serve = serve;
     }
 
@@ -31,6 +32,14 @@ public class MediaConfig {
 
     public void setAccelPrefix(String accelPrefix) {
         this.accelPrefix = accelPrefix;
+    }
+
+    public String getCloudAccelPrefix() {
+        return cloudAccelPrefix;
+    }
+
+    public void setCloudAccelPrefix(String cloudAccelPrefix) {
+        this.cloudAccelPrefix = cloudAccelPrefix;
     }
 
     public DirectServeConfig getDirectServe() {

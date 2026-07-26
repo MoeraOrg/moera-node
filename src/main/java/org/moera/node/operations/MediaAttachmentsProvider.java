@@ -9,7 +9,7 @@ import org.moera.lib.node.types.MediaAttachment;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
-import org.moera.node.media.MediaGrantSupplier;
+import org.moera.node.media.grant.MediaGrantSupplier;
 import org.moera.node.model.MediaAttachmentUtil;
 
 public interface MediaAttachmentsProvider {

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 1QDmSkyKc1hzJ57BGRS1vCJrnIAbAUnKq18RyEqpGd49k0PtIV1hDhrcZ8PUGxt
+\restrict evFnIXAh5NV52SOL5f0m222W1TTwTHzjweKOslpa7hIB8nmpN7Sb1CYtRIrldUD
 
 -- Dumped from database version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
@@ -1509,7 +1509,8 @@ CREATE TABLE public.media_files (
     recognized_text text,
     recognized_at timestamp without time zone,
     file_name character varying(50),
-    cloud_file_name character varying(65)
+    cloud_file_name character varying(65),
+    cloud_upload_deadline timestamp without time zone
 );
 
 
@@ -3402,6 +3403,20 @@ CREATE INDEX media_file_upgrades_upgrade_type_idx ON public.media_file_upgrades 
 
 
 --
+-- Name: media_files_cloud_upload_candidate_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_files_cloud_upload_candidate_idx ON public.media_files USING btree (created_at, id) WHERE ((cloud_file_name IS NULL) AND (cloud_upload_deadline IS NULL) AND (file_name IS NOT NULL) AND (usage_count > 0));
+
+
+--
+-- Name: media_files_cloud_upload_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_files_cloud_upload_deadline_idx ON public.media_files USING btree (cloud_upload_deadline) WHERE ((cloud_file_name IS NULL) AND (cloud_upload_deadline IS NOT NULL));
+
+
+--
 -- Name: media_files_created_at_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -4819,5 +4834,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 1QDmSkyKc1hzJ57BGRS1vCJrnIAbAUnKq18RyEqpGd49k0PtIV1hDhrcZ8PUGxt
+\unrestrict evFnIXAh5NV52SOL5f0m222W1TTwTHzjweKOslpa7hIB8nmpN7Sb1CYtRIrldUD
 

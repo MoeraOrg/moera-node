@@ -24,7 +24,7 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.data.RemoteMediaFileRepository;
 import org.moera.node.liberin.model.EntryMediaDownloadedLiberin;
-import org.moera.node.media.MediaGrantGenerator;
+import org.moera.node.media.grant.MediaGrantGenerator;
 import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaUtil;
 import org.moera.node.media.RemoteMediaOperations;

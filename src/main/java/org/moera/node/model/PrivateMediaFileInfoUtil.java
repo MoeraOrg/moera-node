@@ -7,7 +7,7 @@ import org.moera.lib.node.types.PrivateMediaFileOperations;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.MediaFileOwner;
-import org.moera.node.media.MediaGrantSupplier;
+import org.moera.node.media.grant.MediaGrantSupplier;
 import org.moera.node.media.MimeUtil;
 import org.moera.node.media.MediaUtil;
 import org.moera.node.util.Util;
@@ -91,7 +91,12 @@ public class PrivateMediaFileInfoUtil {
 
     public static void refreshDirectPaths(PrivateMediaFileInfo info, DirectServeOperations directServe) {
         String sourcePath = info.getDirectPath();
-        var displayPath = directServe.refreshDirectPath(sourcePath, info.getHash(), MediaUtil.MEDIA_GRANT_TTL);
+        String displayFileName = !ObjectUtils.isEmpty(info.getTitle())
+            ? MimeUtil.fileName(info.getTitle(), info.getMimeType())
+            : null;
+        var displayPath = directServe.refreshDirectPath(
+            sourcePath, info.getHash(), MediaUtil.MEDIA_GRANT_TTL, displayFileName
+        );
         info.setDirectPath(displayPath.url());
         info.setDirectPathExpiresAt(displayPath.expires());
 

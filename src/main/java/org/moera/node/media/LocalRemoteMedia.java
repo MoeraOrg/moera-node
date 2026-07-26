@@ -6,6 +6,7 @@ import org.moera.node.data.MediaLease;
 import org.moera.node.data.Posting;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.global.ServeContext;
+import org.moera.node.media.grant.MediaGrantGenerator;
 
 public record LocalRemoteMedia(
     MediaFileOwner mediaFileOwner,

@@ -29,6 +29,7 @@
         <maven-resources-plugin.version>3.4.0</maven-resources-plugin.version>
         <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
 
+        <aws-sdk.version>2.47.3</aws-sdk.version>
         <bootstrap.version>5.3.8</bootstrap.version>
         <bouncycastle.bcprov-lts8on.version>2.73.11</bouncycastle.bcprov-lts8on.version>
         <bucket4j.version>8.17.0</bucket4j.version>
@@ -66,6 +67,18 @@
         <twelvemonkeys.version>3.13.1</twelvemonkeys.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws-sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -95,6 +108,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
         </dependency>
 
         <dependency>

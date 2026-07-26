@@ -4,12 +4,15 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.moera.node.config.DirectServeConfig;
+import org.moera.node.config.Config;
 import org.moera.node.config.DirectServeSource;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFilePreview;
+import org.moera.node.domain.Domains;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.util.ExtendedDuration;
+import org.springframework.test.util.ReflectionTestUtils;
 
 public class MediaUtilTest {
 
@@ -40,6 +43,30 @@ public class MediaUtilTest {
 
         Assertions.assertNull(directPath.url());
         Assertions.assertNull(directPath.expires());
+    }
+
+    @Test
+    void filesystemDirectUrlIsAbsolute() {
+        MediaFile mediaFile = mediaFile("media-hash", "text/markdown", "stored-name.legacy");
+
+        String directUrl = directServeOperations().directUrl(mediaFile);
+
+        Assertions.assertTrue(directUrl.startsWith(
+            "https://node.example/moera/media/stored-name.legacy?"
+        ));
+    }
+
+    @Test
+    void absoluteDirectUrlIsPreserved() {
+        String url = "https://media.example/media.jpg?signature=value";
+        DirectServeOperations directServeOperations = new DirectServeOperations() {
+            @Override
+            public DirectServePath directPath(MediaFile mediaFile, ExtendedDuration valid) {
+                return new DirectServePath(url, 1L);
+            }
+        };
+
+        Assertions.assertEquals(url, directServeOperations.directUrl(new MediaFile()));
     }
 
     @Test
@@ -116,15 +143,25 @@ public class MediaUtilTest {
         return mediaFile;
     }
 
-    private static DirectServeConfig directServeConfig() {
-        DirectServeConfig config = new DirectServeConfig();
-        config.setSource(DirectServeSource.FILESYSTEM);
-        config.setSecret("secret");
-        return config;
-    }
-
     private static DirectServeOperations directServeOperations() {
-        return new DirectServeOperations(directServeConfig());
+        Config config = new Config();
+        config.getMedia().getDirectServe().setSource(DirectServeSource.FILESYSTEM);
+        config.getMedia().getDirectServe().setSecret("secret");
+        DirectServeOperations directServeOperations = new DirectServeOperations();
+        ReflectionTestUtils.setField(directServeOperations, "config", config);
+        ReflectionTestUtils.setField(directServeOperations, "domains", new Domains() {
+            @Override
+            public String getDomainDnsName(UUID nodeId) {
+                return "node.example";
+            }
+        });
+        ReflectionTestUtils.setField(directServeOperations, "universalContext", new UniversalContext() {
+            @Override
+            public UUID nodeId() {
+                return UUID.fromString("12345678-1234-1234-1234-123456789abc");
+            }
+        });
+        return directServeOperations;
     }
 
 }

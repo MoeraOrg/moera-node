@@ -3,7 +3,7 @@ package org.moera.node.model;
 import org.moera.lib.node.types.MediaLeaseInfo;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.MediaLease;
-import org.moera.node.media.MediaGrantSupplier;
+import org.moera.node.media.grant.MediaGrantSupplier;
 
 public class MediaLeaseInfoUtil {
 

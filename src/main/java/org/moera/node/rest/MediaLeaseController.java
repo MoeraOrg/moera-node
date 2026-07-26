@@ -26,8 +26,8 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
-import org.moera.node.media.MediaGrantGenerator;
-import org.moera.node.media.MediaOperations;
+import org.moera.node.media.MediaCleanupOperations;
+import org.moera.node.media.grant.MediaGrantGenerator;
 import org.moera.node.model.MediaLeaseInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.util.Util;
@@ -139,7 +139,9 @@ public class MediaLeaseController {
         mediaLease.setEntry(entry);
         if (admin) {
             mediaLease.setDraftOnly(true);
-            mediaLease.setDeadline(Timestamp.from(Instant.now().plus(MediaOperations.DRAFT_ONLY_LEASE_TTL)));
+            mediaLease.setDeadline(
+                Timestamp.from(Instant.now().plus(MediaCleanupOperations.DRAFT_ONLY_LEASE_TTL))
+            );
         }
         mediaLease = mediaLeaseRepository.save(mediaLease);
 

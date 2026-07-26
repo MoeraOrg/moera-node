@@ -19,7 +19,7 @@ import org.moera.lib.node.types.StoryInfo;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.LocalRemoteMediaInfo;
-import org.moera.node.media.MediaGrantGenerator;
+import org.moera.node.media.grant.MediaGrantGenerator;
 import org.moera.node.media.MediaUtil;
 import org.moera.node.media.MimeUtil;
 import org.moera.node.model.MediaFilePreviewInfoUtil;

@@ -1,4 +1,4 @@
-package org.moera.node.media;
+package org.moera.node.media.grant;
 
 import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;

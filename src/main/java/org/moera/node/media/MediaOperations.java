@@ -15,8 +15,6 @@ import java.io.OutputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Timestamp;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,7 +27,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
@@ -70,8 +67,6 @@ import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFilePreview;
 import org.moera.node.data.MediaFilePreviewRepository;
-import org.moera.node.data.MediaFileRemoval;
-import org.moera.node.data.MediaFileRemovalRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.MediaLease;
 import org.moera.node.data.MediaLeaseRepository;
@@ -82,6 +77,7 @@ import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.CommentMediaTextUpdatedLiberin;
 import org.moera.node.liberin.model.DraftUpdatedLiberin;
 import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
+import org.moera.node.media.awss3.AwsS3MediaStorage;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -115,18 +111,12 @@ public class MediaOperations {
 
     public static final String TMP_DIR = "tmp";
 
-    public static final Duration DRAFT_ONLY_LEASE_TTL = Duration.ofDays(1);
-
     private static final Logger log = LoggerFactory.getLogger(MediaOperations.class);
 
     private static final int[] PREVIEW_SIZES = {1400, 900, 150};
 
     private static final int PERMISSIONS_REFRESH_BATCH_SIZE = 100;
     private static final int PERMISSIONS_REFRESH_BATCHES_PER_CALL = 5;
-    private static final int MEDIA_FILE_PURGE_BATCH_SIZE = 1024;
-    private static final int MEDIA_FILE_REMOVAL_BATCH_SIZE = 100;
-
-    private final AtomicBoolean removingMediaFiles = new AtomicBoolean();
 
     private class PreviewSource {
 
@@ -154,10 +144,12 @@ public class MediaOperations {
         }
 
         private BufferedImage readImage(MediaFile mediaFile) throws IOException {
-            return ThumbnailUtil.thumbnailOf(getPath(mediaFile).toFile(), mediaFile.getMimeType())
-                .scale(1)
-                .useExifOrientation(true)
-                .asBufferedImage();
+            try (var content = openContent(mediaFile)) {
+                return ThumbnailUtil.thumbnailOf(content.path().toFile(), mediaFile.getMimeType())
+                    .scale(1)
+                    .useExifOrientation(true)
+                    .asBufferedImage();
+            }
         }
 
         public PreviewSource from(MediaFile mediaFile) {
@@ -189,7 +181,7 @@ public class MediaOperations {
     private MediaFileRepository mediaFileRepository;
 
     @Inject
-    private MediaFileRemovalRepository mediaFileRemovalRepository;
+    private AwsS3MediaStorage awsS3MediaStorage;
 
     @Inject
     private MediaFileOwnerRepository mediaFileOwnerRepository;
@@ -208,6 +200,9 @@ public class MediaOperations {
 
     @Inject
     private DraftRepository draftRepository;
+
+    @Inject
+    private DirectServeOperations directServeOperations;
 
     @Inject
     private MalwareListOperations malwareListOperations;
@@ -239,10 +234,44 @@ public class MediaOperations {
     }
 
     public Path getPath(MediaFile mediaFile) throws MediaFileNotAvailableException {
-        if (ObjectUtils.isEmpty(mediaFile.getFileName())) {
+        return getPath(mediaFile.getId(), mediaFile.getFileName());
+    }
+
+    public Path getPath(String id, String fileName) throws MediaFileNotAvailableException {
+        if (ObjectUtils.isEmpty(fileName)) {
+            throw new MediaFileNotAvailableException(id);
+        }
+        return FileSystems.getDefault().getPath(config.getMedia().getPath(), fileName);
+    }
+
+    public MediaFileContent openContent(MediaFile mediaFile) throws MediaFileNotAvailableException {
+        if (!ObjectUtils.isEmpty(mediaFile.getFileName())) {
+            return new MediaFileContent(getPath(mediaFile), false);
+        }
+        if (ObjectUtils.isEmpty(mediaFile.getCloudFileName()) || !awsS3MediaStorage.isConfigured()) {
             throw new MediaFileNotAvailableException(mediaFile.getId());
         }
-        return FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
+
+        TemporaryFile tmp = tmpFile();
+        try {
+            tmp.outputStream().close();
+            var download = awsS3MediaStorage.download(mediaFile.getCloudFileName(), tmp.path());
+            try {
+                download.get();
+            } catch (InterruptedException e) {
+                download.cancel(true);
+                Thread.currentThread().interrupt();
+                throw e;
+            }
+            return new MediaFileContent(tmp.path(), true);
+        } catch (Exception e) {
+            try {
+                Files.deleteIfExists(tmp.path());
+            } catch (IOException ex) {
+                e.addSuppressed(ex);
+            }
+            throw new MediaFileNotAvailableException(mediaFile.getId(), e);
+        }
     }
 
     public static DigestingOutputStream transfer(
@@ -400,7 +429,9 @@ public class MediaOperations {
     }
 
     public byte[] digest(MediaFile mediaFile) throws IOException {
-        return digest(getPath(mediaFile));
+        try (var content = openContent(mediaFile)) {
+            return digest(content.path());
+        }
     }
 
     private static byte[] digest(Path mediaPath) throws IOException {
@@ -444,10 +475,12 @@ public class MediaOperations {
         try {
             DigestingOutputStream out = new DigestingOutputStream(tmp.outputStream());
 
-            ThumbnailUtil.thumbnailOf(getPath(original).toFile(), original.getMimeType())
-                .sourceRegion(region)
-                .size(region.width, region.height)
-                .toOutputStream(out);
+            try (var content = openContent(original)) {
+                ThumbnailUtil.thumbnailOf(content.path().toFile(), original.getMimeType())
+                    .sourceRegion(region)
+                    .size(region.width, region.height)
+                    .toOutputStream(out);
+            }
 
             MediaFile cropped = putInPlace(
                 out.getHash(), previewFormat.mimeType(), tmp.path(), out.getDigest(), false
@@ -752,13 +785,6 @@ public class MediaOperations {
     private ResponseEntity<Resource> serve(
         MediaFile mediaFile, String fileName, boolean download, ExtendedDuration cacheDuration
     ) {
-        Path mediaPath;
-        try {
-            mediaPath = getPath(mediaFile);
-        } catch (MediaFileNotAvailableException e) {
-            throw new ObjectNotFoundFailure("media.not-found");
-        }
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(mediaFile.getMimeType()));
         setCacheControl(headers, cacheDuration);
@@ -771,22 +797,45 @@ public class MediaOperations {
         }
         headers.setAccessControlAllowOrigin("*");
 
-        switch (config.getMedia().getServe().toLowerCase()) {
-            default:
-            case "stream": {
-                headers.setContentLength(mediaFile.getFileSize());
-                return new ResponseEntity<>(new FileSystemResource(mediaPath), headers, HttpStatus.OK);
+        try {
+            if (!ObjectUtils.isEmpty(mediaFile.getFileName())) {
+                Path mediaPath = getPath(mediaFile);
+                return switch (config.getMedia().getServe()) {
+                    case STREAM -> {
+                        headers.setContentLength(mediaFile.getFileSize());
+                        yield new ResponseEntity<>(new FileSystemResource(mediaPath), headers, HttpStatus.OK);
+                    }
+                    case ACCEL -> {
+                        headers.add("X-Accel-Redirect", config.getMedia().getAccelPrefix() + mediaFile.getFileName());
+                        yield new ResponseEntity<>(headers, HttpStatus.OK);
+                    }
+                    case SENDFILE -> {
+                        headers.add("X-SendFile", mediaPath.toAbsolutePath().toString());
+                        yield new ResponseEntity<>(headers, HttpStatus.OK);
+                    }
+                };
             }
-
-            case "accel":
-                headers.add("X-Accel-Redirect", config.getMedia().getAccelPrefix() + mediaFile.getFileName());
-                return new ResponseEntity<>(headers, HttpStatus.OK);
-
-            case "sendfile": {
-                headers.add("X-SendFile", mediaPath.toAbsolutePath().toString());
-                return new ResponseEntity<>(headers, HttpStatus.OK);
-            }
+        } catch (MediaFileNotAvailableException e) {
+            // ignore
         }
+
+        if (!ObjectUtils.isEmpty(mediaFile.getCloudFileName())) {
+            return switch (config.getMedia().getServe()) {
+                case STREAM, SENDFILE -> {
+                    headers.set(HttpHeaders.LOCATION, directServeOperations.directUrl(mediaFile));
+                    yield new ResponseEntity<>(headers, HttpStatus.FOUND);
+                }
+                case ACCEL -> {
+                    headers.add(
+                        "X-Accel-Redirect",
+                        config.getMedia().getCloudAccelPrefix() + directServeOperations.directLocation(mediaFile)
+                    );
+                    yield new ResponseEntity<>(headers, HttpStatus.OK);
+                }
+            };
+        }
+
+        throw new ObjectNotFoundFailure("media.not-found");
     }
 
     public ResponseEntity<Resource> serve(
@@ -898,71 +947,6 @@ public class MediaOperations {
         tx.executeWrite(() -> mediaLeaseRepository.clearDraftOnly(universalContext.nodeId(), leaseIds));
     }
 
-    @Scheduled(fixedDelayString = "PT6H")
-    public void purgeUnused() {
-        try (var ignored = requestCounter.allot()) {
-            log.info("Purging unused media files");
-
-            Timestamp now = Util.now();
-            tx.executeWrite(() -> mediaFileOwnerRepository.deleteUnused(now));
-            int moved;
-            do {
-                moved = tx.executeWrite(() ->
-                    mediaFileRepository.moveUnusedToRemovals(now, MEDIA_FILE_PURGE_BATCH_SIZE)
-                );
-            } while (moved == MEDIA_FILE_PURGE_BATCH_SIZE);
-        }
-    }
-
-    @Scheduled(fixedDelayString = "PT30M")
-    public void removeMediaFiles() {
-        if (!removingMediaFiles.compareAndSet(false, true)) {
-            return;
-        }
-
-        try {
-            try (var ignored = requestCounter.allot()) {
-                log.info("Removing purged media files");
-
-                List<Long> removalIds = tx.executeRead(() ->
-                    mediaFileRemovalRepository.findPendingIds(Pageable.ofSize(MEDIA_FILE_REMOVAL_BATCH_SIZE))
-                );
-                removalIds.forEach(this::removeMediaFile);
-            }
-        } finally {
-            removingMediaFiles.set(false);
-        }
-    }
-
-    private void removeMediaFile(long removalId) {
-        try {
-            tx.executeWriteWithExceptions(() -> {
-                MediaFileRemoval removal = mediaFileRemovalRepository.findById(removalId).orElse(null);
-                if (removal == null) {
-                    return;
-                }
-
-                mediaFileRepository.lockMediaFileId(removal.getMediaFileId());
-                if (mediaFileRepository.countById(removal.getMediaFileId()) > 0) {
-                    mediaFileRemovalRepository.deleteById(removal.getId());
-                    return;
-                }
-
-                if (removal.getFileName() != null) {
-                    Path path = FileSystems.getDefault().getPath(config.getMedia().getPath(), removal.getFileName());
-                    Files.deleteIfExists(path);
-                }
-                if (removal.getCloudFileName() != null) { // TODO
-                    log.warn("Cloud media file removal is not supported yet: {}", removal.getCloudFileName());
-                    return;
-                }
-                mediaFileRemovalRepository.deleteById(removal.getId());
-            });
-        } catch (Exception e) {
-            log.warn("Error removing media file {}: {}", removalId, e.getMessage());
-        }
-    }
-
     @Scheduled(fixedDelayString = "PT15M")
     public void refreshPermissions() {
         try (var ignored = requestCounter.allot()) {
@@ -983,22 +967,6 @@ public class MediaOperations {
                     break;
                 }
             }
-        }
-    }
-
-    @Scheduled(fixedDelayString = "PT12H")
-    public void purgeExpiredDraftOnlyLeases() {
-        try (var ignored = requestCounter.allot()) {
-            log.info("Purging expired draft-only media leases");
-
-            Timestamp now = Util.now();
-            tx.executeWrite(() -> {
-                mediaLeaseRepository.deleteExpiredDraftOnlyUnused(now);
-                mediaLeaseRepository.findExpiredDraftOnlyUsed(now)
-                    .forEach(ml -> ml.setDeadline(
-                        Timestamp.from(ml.getDeadline().toInstant().plus(DRAFT_ONLY_LEASE_TTL))
-                    ));
-            });
         }
     }
 

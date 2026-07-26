@@ -4,7 +4,7 @@ import org.moera.lib.node.types.MediaAttachment;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.Posting;
-import org.moera.node.media.MediaGrantSupplier;
+import org.moera.node.media.grant.MediaGrantSupplier;
 
 public class MediaAttachmentUtil {
 

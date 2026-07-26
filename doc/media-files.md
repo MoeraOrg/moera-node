@@ -33,10 +33,9 @@ The record contains:
 - the name of its cloud copy;
 - usage information used by automatic cleanup.
 
-The local and cloud names are nullable. If the local name is null, the media has no usable local copy. Code that needs a
-local file receives `MediaFileNotAvailableException` in that case.
-
-Cloud storage is represented in the data model but is not supported by a storage backend yet.
+The local and cloud names are nullable. If the local name is null and an S3 object is available, code that needs the
+bytes downloads it to a temporary file and removes the temporary file after use. If neither copy is available,
+`MediaFileNotAvailableException` is raised.
 
 ### `MediaFileOwner`
 
@@ -188,7 +187,7 @@ node:
       secret: <shared-secret>
 ```
 
-The available sources are `none` and `filesystem`.
+The available sources are `none`, `filesystem`, and `aws-s3`.
 
 With filesystem direct serving enabled, API responses may contain a path like:
 
@@ -208,6 +207,55 @@ When direct serving is disabled, or when there is no local copy, the API returns
 Some entry data is cached in the database. When a cached direct path is read, moera-node refreshes its expiration and
 signature before returning it.
 
+### AWS S3 direct serving
+
+AWS S3 direct serving uploads eligible local files to a private bucket provisioned outside the application:
+
+```yaml
+node:
+  media:
+    direct-serve:
+      source: aws-s3
+      bucket: example-moera-media
+      region: eu-central-1
+      profile: moera-production
+```
+
+`profile` is optional. When it is present, the named profile from the standard shared AWS configuration and credentials
+files is selected explicitly. Otherwise, the AWS SDK default credentials provider chain is used. Role or web-identity
+credentials are recommended for deployed nodes. The filesystem `secret` setting is ignored by the `aws-s3` source.
+
+Every five minutes, a worker uploads at most 100 files. A file becomes eligible when it is used, has a local copy, is
+at least 30 minutes old, and has completed the legacy digest upgrade. OCR scheduling and completion do not affect
+eligibility. After successful publication, the worker deletes a non-exposed local copy and clears its
+`MediaFile.fileName`. Exposed media retain their local copy and `fileName`. Object keys have the stable form:
+
+```text
+<media-hash>_<creation-time-as-Unix-seconds>.<MIME-extension>
+```
+
+The worker uses durable, renewable database leases, so no database transaction or row lock is held while an upload is
+in progress. Large files are uploaded by the AWS SDK's asynchronous multipart-capable S3 client.
+
+S3 direct paths are absolute HTTPS presigned URLs. They are valid for the requested direct-path lifetime, capped at
+seven days by S3. Private media also receive a separate presigned download URL whose signed response headers request
+attachment content disposition. Clients fall back to the ordinary media controller download path when this URL is
+absent. A presigned URL may expire earlier when the temporary credentials used to sign it expire.
+
+When OCR.Space recognition runs, the node sends an absolute signed direct URL if the selected backend can provide one
+for the media file. Otherwise, it uploads the local file as multipart content. This lets an S3 upload complete before
+pending OCR; recognition then uses the S3 URL.
+
+The bucket should remain private. The node identity needs these object permissions for the configured bucket:
+
+- `s3:PutObject`
+- `s3:GetObject`
+- `s3:DeleteObject`
+- `s3:AbortMultipartUpload`
+
+A bucket lifecycle rule that aborts incomplete multipart uploads after a bounded period, such as seven days, is
+strongly recommended. It cleans up parts left behind when a process or host dies during an upload.
+
 ## Removing Unused Media
 
 Database triggers track how many records refer to each `MediaFile`. When the last reference disappears, the file gets a
@@ -218,7 +266,7 @@ Cleanup happens in two stages.
 
 ### Move the record to the removal queue
 
-Every six hours, `MediaOperations.purgeUnused()` moves expired, unused media records from `media_files` to
+Every six hours, `MediaCleanupOperations.purgeUnused()` moves expired, unused media records from `media_files` to
 `media_file_removals` in small batches. The removal record keeps the media ID and the names of its stored copies.
 
 This database step does not touch the filesystem. It first makes the media unavailable to new database references while
@@ -235,13 +283,12 @@ For each item, it:
 2. checks whether the same content was added again after being queued for removal;
 3. keeps the file if a new `MediaFile` with that ID exists;
 4. otherwise deletes the recorded local file;
-5. removes the queue record after cleanup succeeds.
+5. releases the database transaction and media-ID lock;
+6. deletes the exact recorded S3 object key, even if the media hash was recreated;
+7. removes the queue record after every recorded copy has been cleaned up.
 
 Deleting a file that is already absent counts as success. If deletion fails, the queue record remains and a later run
 tries again. This also makes cleanup safe when the application stops halfway through the operation.
-
-Cloud deletion is not implemented yet. A queue record with a cloud filename is kept so it can be handled when a cloud
-backend is added.
 
 ## Configuration Summary
 
@@ -250,15 +297,18 @@ backend is added.
 | `node.media.path` | Root directory for local media, temporary files, and staged uploads. |
 | `node.media.serve` | Application delivery mode: `stream`, `sendfile`, or `accel`. |
 | `node.media.accel-prefix` | Prefix used for `X-Accel-Redirect`. |
-| `node.media.direct-serve.source` | Direct serving source: `none` or `filesystem`. |
+| `node.media.direct-serve.source` | Direct serving source: `none`, `filesystem`, or `aws-s3`. |
 | `node.media.direct-serve.secret` | Secret shared with the direct-serving reverse proxy. |
+| `node.media.direct-serve.bucket` | S3 bucket used by the `aws-s3` source. |
+| `node.media.direct-serve.region` | AWS region containing the S3 bucket. |
+| `node.media.direct-serve.profile` | Optional named AWS shared-configuration profile. |
 
 ## Where to Look in the Code
 
-- `MediaOperations` — local files, metadata, previews, serving modes, and cleanup.
+- `MediaOperations` — local/cloud content access, metadata, previews, and serving modes.
+- `MediaCleanupOperations` — unused-media purging and local/S3 deletion.
 - `MediaManager` — upload and download workflows, private owners, remote media, and leases.
 - `MediaUtil` — public/private paths, direct paths, signatures, and responsive-image sources.
 - `MediaController` and `MediaUiController` — API and browser-facing media endpoints.
 - `MediaGrantGenerator` and `MediaGrantValidator` — private-media grants.
 - `MediaFile`, `MediaFileOwner`, `MediaFilePreview`, and `MediaFileRemoval` — the main database entities.
-

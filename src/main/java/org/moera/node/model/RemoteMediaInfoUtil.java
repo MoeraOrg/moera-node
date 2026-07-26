@@ -2,7 +2,7 @@ package org.moera.node.model;
 
 import org.moera.lib.node.types.RemoteMediaInfo;
 import org.moera.node.data.RemoteMediaFile;
-import org.moera.node.media.MediaGrantSupplier;
+import org.moera.node.media.grant.MediaGrantSupplier;
 import org.moera.node.media.MediaUtil;
 import org.moera.node.util.Util;
 

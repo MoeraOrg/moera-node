@@ -112,15 +112,17 @@ public class AvatarController {
         try {
             DigestingOutputStream out = new DigestingOutputStream(tmp.outputStream());
 
-            ThumbnailUtil.thumbnailOf(mediaOperations.getPath(mediaFile).toFile(), mediaFile.getMimeType())
-                .rotate(avatarAttributes.getRotate())
-                .sourceRegion(
-                    avatarAttributes.getClipX(), avatarAttributes.getClipY(),
-                    avatarAttributes.getClipSize(), avatarAttributes.getClipSize()
-                )
-                .size(avatarAttributes.getAvatarSize(), avatarAttributes.getAvatarSize())
-                .outputFormat(thumbnailFormat.format())
-                .toOutputStream(out);
+            try (var content = mediaOperations.openContent(mediaFile)) {
+                ThumbnailUtil.thumbnailOf(content.path().toFile(), mediaFile.getMimeType())
+                    .rotate(avatarAttributes.getRotate())
+                    .sourceRegion(
+                        avatarAttributes.getClipX(), avatarAttributes.getClipY(),
+                        avatarAttributes.getClipSize(), avatarAttributes.getClipSize()
+                    )
+                    .size(avatarAttributes.getAvatarSize(), avatarAttributes.getAvatarSize())
+                    .outputFormat(thumbnailFormat.format())
+                    .toOutputStream(out);
+            }
 
             MediaFile avatarFile = mediaOperations.putInPlace(
                 out.getHash(), thumbnailFormat.mimeType(), tmp.path(), out.getDigest(), true

@@ -13,7 +13,7 @@ import org.moera.node.data.RemoteMediaCacheRepository;
 import org.moera.node.data.RemoteMediaError;
 import org.moera.node.liberin.model.RemoteMediaDownloadFailedLiberin;
 import org.moera.node.liberin.model.RemoteMediaDownloadedLiberin;
-import org.moera.node.media.MediaGrantGenerator;
+import org.moera.node.media.grant.MediaGrantGenerator;
 import org.moera.node.media.MediaManager;
 import org.moera.node.media.RemoteMediaCacheOperations;
 import org.moera.node.model.PrivateMediaFileInfoUtil;

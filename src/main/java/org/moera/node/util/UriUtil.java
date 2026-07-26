@@ -74,6 +74,24 @@ public class UriUtil {
         return pos >= 0 ? path.substring(pos + 1, end + 1) : path.substring(0, end + 1);
     }
 
+    public static String stripSchemeAndHost(String uri) {
+        if (uri == null) {
+            return null;
+        }
+        URI parsed = URI.create(uri);
+        StringBuilder result = new StringBuilder();
+        if (parsed.getRawPath() != null) {
+            result.append(parsed.getRawPath());
+        }
+        if (parsed.getRawQuery() != null) {
+            result.append('?').append(parsed.getRawQuery());
+        }
+        if (parsed.getRawFragment() != null) {
+            result.append('#').append(parsed.getRawFragment());
+        }
+        return result.toString();
+    }
+
     public static String stripQueryAndFragment(String uri) {
         if (uri == null) {
             return null;

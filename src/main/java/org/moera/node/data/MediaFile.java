@@ -34,6 +34,8 @@ public class MediaFile {
     @Size(max = 65)
     private String cloudFileName;
 
+    private Timestamp cloudUploadDeadline;
+
     @Column(name="size_x")
     private Integer sizeX;
 
@@ -110,6 +112,14 @@ public class MediaFile {
 
     public void setCloudFileName(String cloudFileName) {
         this.cloudFileName = cloudFileName;
+    }
+
+    public Timestamp getCloudUploadDeadline() {
+        return cloudUploadDeadline;
+    }
+
+    public void setCloudUploadDeadline(Timestamp cloudUploadDeadline) {
+        this.cloudUploadDeadline = cloudUploadDeadline;
     }
 
     public Integer getSizeX() {

@@ -1,8 +1,9 @@
-package org.moera.node.media;
+package org.moera.node.media.grant;
 
 import java.security.PrivateKey;
 import java.sql.Timestamp;
 
+import org.moera.node.media.MediaUtil;
 import org.moera.node.option.Options;
 import org.moera.node.util.ExtendedDuration;
 

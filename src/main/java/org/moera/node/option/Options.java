@@ -20,7 +20,7 @@ import org.moera.lib.node.types.SettingDescriptor;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Option;
 import org.moera.node.data.OptionRepository;
-import org.moera.node.media.MediaGrantSalt;
+import org.moera.node.media.grant.MediaGrantSalt;
 import org.moera.node.option.exception.DeserializeOptionValueException;
 import org.moera.node.option.exception.TransactionAbsentException;
 import org.moera.node.option.type.OptionTypeBase;
