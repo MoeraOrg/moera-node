@@ -32,6 +32,7 @@ import org.moera.node.global.UniversalContext;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PingEvent;
 import org.moera.node.operations.GrantCache;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -152,9 +153,7 @@ public class EventManager {
             if (ip != null) {
                 address = ip.toString();
             }
-            if (address.startsWith("/")) { // Don't understand why '/' is here
-                address = address.substring(1);
-            }
+            address = Util.startWithNoSlash(address); // Don't understand why '/' is here
         }
         return InetAddress.getByName(address);
     }

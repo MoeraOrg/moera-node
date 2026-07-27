@@ -40,13 +40,6 @@ public class UriUtil {
         return builder;
     }
 
-    public static String normalize(String uri) {
-        if (uri == null) {
-            return null;
-        }
-        return uri.endsWith("/") ? uri.substring(0, uri.length() - 1) : uri;
-    }
-
     public static String resolve(String uri, String baseUri) {
         if (uri == null) {
             return null;

@@ -32,7 +32,7 @@ public class AwsS3MediaUploader {
     static final Duration MINIMUM_AGE = Duration.ofMinutes(30);
     static final Duration LEASE_DURATION = Duration.ofMinutes(15);
     static final Duration HEARTBEAT_INTERVAL = Duration.ofMinutes(5);
-    static final int UPLOAD_BATCH_SIZE = 100;
+    static final int UPLOAD_BATCH_SIZE = 250;
 
     private static final Logger log = LoggerFactory.getLogger(AwsS3MediaUploader.class);
 

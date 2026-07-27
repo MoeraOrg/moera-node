@@ -236,4 +236,32 @@ public class Util {
 
     }
 
+    public static String startWithSlash(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.startsWith("/") ? value : '/' + value;
+    }
+
+    public static String startWithNoSlash(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.startsWith("/") ? value.substring(1) : value;
+    }
+
+    public static String endWithSlash(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.endsWith("/") ? value : value + '/';
+    }
+
+    public static String endWithNoSlash(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
+    }
+
 }

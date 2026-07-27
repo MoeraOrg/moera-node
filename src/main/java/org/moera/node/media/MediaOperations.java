@@ -806,7 +806,10 @@ public class MediaOperations {
                         yield new ResponseEntity<>(new FileSystemResource(mediaPath), headers, HttpStatus.OK);
                     }
                     case ACCEL -> {
-                        headers.add("X-Accel-Redirect", config.getMedia().getAccelPrefix() + mediaFile.getFileName());
+                        headers.add(
+                            "X-Accel-Redirect",
+                            Util.endWithSlash(config.getMedia().getAccelPrefix()) + mediaFile.getFileName()
+                        );
                         yield new ResponseEntity<>(headers, HttpStatus.OK);
                     }
                     case SENDFILE -> {
@@ -828,7 +831,8 @@ public class MediaOperations {
                 case ACCEL -> {
                     headers.add(
                         "X-Accel-Redirect",
-                        config.getMedia().getCloudAccelPrefix() + directServeOperations.directLocation(mediaFile)
+                        Util.endWithNoSlash(config.getMedia().getCloudAccelPrefix())
+                            + directServeOperations.directLocation(mediaFile)
                     );
                     yield new ResponseEntity<>(headers, HttpStatus.OK);
                 }

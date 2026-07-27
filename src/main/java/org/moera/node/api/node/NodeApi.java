@@ -7,7 +7,7 @@ import org.moera.lib.node.MoeraNode;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.api.naming.RegisteredNameDetails;
 import org.moera.node.config.Config;
-import org.moera.node.util.UriUtil;
+import org.moera.node.util.Util;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,7 +21,7 @@ public class NodeApi {
 
     private String fetchNodeUri(String remoteNodeName) {
         RegisteredNameDetails details = namingCache.get(remoteNodeName);
-        return details != null ? UriUtil.normalize(details.getNodeUri()) : null;
+        return details != null ? Util.endWithNoSlash(details.getNodeUri()) : null;
     }
 
     public MoeraNode at(String remoteNodeName) throws MoeraNodeUnknownNameException {

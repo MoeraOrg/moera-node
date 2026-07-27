@@ -112,11 +112,7 @@ public class MimeUtil {
         if (fileSize == null) {
             return true;
         }
-        if (MimeUtil.isJpeg(mimeType)) {
-            return fileSize <= 20_971_520L;
-        } else {
-            return fileSize <= 5_242_880L;
-        }
+        return fileSize <= 20_971_520L;
     }
 
 }

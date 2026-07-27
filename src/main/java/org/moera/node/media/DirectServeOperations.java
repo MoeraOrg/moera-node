@@ -26,6 +26,8 @@ import org.springframework.util.ObjectUtils;
 @Component
 public class DirectServeOperations {
 
+    private static final Duration AWS_URL_MAX_TTL = Duration.ofDays(7);
+
     @Inject
     private Config config;
 
@@ -85,10 +87,10 @@ public class DirectServeOperations {
         }
 
         Duration duration = switch (valid.getZone()) {
-            case FIXED -> valid.getDuration().compareTo(Duration.ofDays(7)) < 0
+            case FIXED -> valid.getDuration().compareTo(AWS_URL_MAX_TTL) < 0
                 ? valid.getDuration()
-                : Duration.ofDays(7);
-            case ALWAYS -> Duration.ofDays(7);
+                : AWS_URL_MAX_TTL;
+            case ALWAYS -> AWS_URL_MAX_TTL;
             case NEVER -> Duration.ofSeconds(1);
         };
         String disposition = null;
