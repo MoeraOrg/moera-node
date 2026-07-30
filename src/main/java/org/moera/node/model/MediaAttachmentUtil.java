@@ -57,7 +57,14 @@ public class MediaAttachmentUtil {
                     MediaFilePreviewInfoUtil.refreshDirectPath(preview, directServe);
                 }
             }
-        } else if (mediaAttachment.getRemoteMedia() != null) {
+        }
+    }
+
+    public static void fillRemoteGrants(
+        MediaAttachment mediaAttachment,
+        MediaGrantSupplier grantSupplier
+    ) {
+        if (mediaAttachment.getMedia() == null && mediaAttachment.getRemoteMedia() != null) {
             RemoteMediaInfoUtil.fillGrant(mediaAttachment.getRemoteMedia(), grantSupplier);
         }
     }

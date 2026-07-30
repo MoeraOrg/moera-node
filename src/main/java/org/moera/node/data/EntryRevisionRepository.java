@@ -92,6 +92,10 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
     Collection<EntryRevision> findByMedia(UUID mediaFileOwnerId);
 
     @Modifying
+    @Query("update EntryRevision r set r.attachmentsCache = ?2 where r.id = ?1")
+    void updateAttachmentsCacheById(UUID id, String attachmentsCache);
+
+    @Modifying
     @Query(
         "update EntryRevision r set r.attachmentsCache = null"
         + " where exists("

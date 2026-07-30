@@ -162,7 +162,10 @@ public class AwsS3MediaStorage {
         String key, Duration signatureDuration, String responseContentDisposition
     ) {
         initialize();
-        var requestBuilder = GetObjectRequest.builder().bucket(serveConfig().getBucket()).key(key);
+        var requestBuilder = GetObjectRequest.builder()
+            .bucket(serveConfig().getBucket())
+            .key(key)
+            .responseCacheControl("private, max-age=" + signatureDuration.toSeconds());
         if (!ObjectUtils.isEmpty(responseContentDisposition)) {
             requestBuilder.responseContentDisposition(responseContentDisposition);
         }

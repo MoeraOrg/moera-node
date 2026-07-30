@@ -2,6 +2,7 @@ package org.moera.node.operations;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -114,12 +115,14 @@ public class EntryOperations implements MediaAttachmentsProvider {
     public List<MediaAttachment> getMediaAttachments(EntryRevision revision, MediaGrantSupplier grantSupplier) {
         try {
             if (revision.getAttachmentsCache() != null) {
-                var data = objectMapper.readValue(revision.getAttachmentsCache(), MediaAttachmentsCache.class);
-                var cache = data.getAttachments();
-                if (cache != null && Objects.equals(data.getDirectServeSource(), directServeOperations.source())) {
+                var cache = objectMapper.readValue(revision.getAttachmentsCache(), MediaAttachmentsCache.class);
+                if (
+                    cache.getAttachments() != null
+                    && Objects.equals(cache.getDirectServeSource(), directServeOperations.source())
+                ) {
                     // Media paths expire, so assuming that they always need to be updated
-                    updateCachedPaths(cache, grantSupplier);
-                    return cache;
+                    updateCachedPaths(revision.getId(), cache, grantSupplier);
+                    return cache.getAttachments();
                 }
             }
         } catch (JacksonException e) {
@@ -139,10 +142,40 @@ public class EntryOperations implements MediaAttachmentsProvider {
             .collect(Collectors.toList());
     }
 
-    private void updateCachedPaths(List<MediaAttachment> attachments, MediaGrantSupplier grantSupplier) {
-        attachments.forEach(attachment ->
-            MediaAttachmentUtil.fillPaths(attachment, directServeOperations, grantSupplier)
-        );
+    private void updateCachedPaths(UUID revisionId, MediaAttachmentsCache cache, MediaGrantSupplier grantSupplier) {
+        if (isPathsExpireSoon(cache.getAttachments())) {
+            cache.getAttachments().forEach(attachment ->
+                MediaAttachmentUtil.fillPaths(attachment, directServeOperations, grantSupplier)
+            );
+            entryRevisionRepository.updateAttachmentsCacheById(revisionId, objectMapper.writeValueAsString(cache));
+        }
+        cache.getAttachments().forEach(attachment -> MediaAttachmentUtil.fillRemoteGrants(attachment, grantSupplier));
+    }
+
+    private boolean isPathsExpireSoon(List<MediaAttachment> attachments) {
+        long deadline = Instant.now().plus(24, ChronoUnit.HOURS).getEpochSecond();
+        for (MediaAttachment attachment : attachments) {
+            var media = attachment.getMedia();
+            if (media == null) {
+                continue;
+            }
+            if (
+                media.getGrantExpiresAt() != null && media.getGrantExpiresAt() <= deadline
+                || media.getDirectPathExpiresAt() != null && media.getDirectPathExpiresAt() <= deadline
+                || media.getDirectDownloadPathExpiresAt() != null
+                    && media.getDirectDownloadPathExpiresAt() <= deadline
+            ) {
+                return true;
+            }
+            if (media.getPreviews() != null) {
+                for (var preview : media.getPreviews()) {
+                    if (preview.getDirectPathExpiresAt() != null && preview.getDirectPathExpiresAt() <= deadline) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
 }
