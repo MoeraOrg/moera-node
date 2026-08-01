@@ -28,7 +28,8 @@ import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.MediaTitleUpdatedLiberin;
-import org.moera.node.media.InvalidImageException;
+import org.moera.node.media.image.InvalidImageException;
+import org.moera.node.media.video.InvalidVideoException;
 import org.moera.node.media.grant.MediaGrantGenerator;
 import org.moera.node.media.grant.MediaGrantProperties;
 import org.moera.node.media.grant.MediaGrantSupplier;
@@ -108,7 +109,7 @@ public class MediaController {
         if (maxSize == null) {
             maxSize = requestContext.getOptions().getInt("media.max-size");
         }
-        return MediaOperations.transfer(in, out, contentLength, maxSize);
+        return mediaOperations.transfer(in, out, contentLength, maxSize);
     }
 
     @PostMapping("/public")
@@ -191,6 +192,8 @@ public class MediaController {
             );
         } catch (InvalidImageException e) {
             throw new ValidationFailure("media.image-invalid");
+        } catch (InvalidVideoException e) {
+            throw new ValidationFailure("media.video-invalid");
         } catch (ThresholdReachedException e) {
             throw new ValidationFailure("media.wrong-size");
         } catch (IOException e) {

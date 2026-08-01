@@ -249,8 +249,6 @@ public class NotificationSenderPool {
             try {
                 storePending(sender, notification);
                 sender.put(notification);
-            } catch (InterruptedException e) {
-                continue;
             } catch (JacksonException e) {
                 log.error("Error serializing notification", e);
             }

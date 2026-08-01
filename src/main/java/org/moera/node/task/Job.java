@@ -152,6 +152,7 @@ public abstract class Job<P, S> extends Task {
                 case RETRY -> recover(null);
             }
         } else if (e instanceof InterruptedException) {
+            Thread.currentThread().interrupt();
             recover(e);
         } else if (e instanceof MoeraNodeException ex && isRecoverableError(ex)) {
             recover(e);

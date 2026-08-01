@@ -127,7 +127,8 @@ public class NamingCache {
                 try {
                     queryDone.wait();
                 } catch (InterruptedException e) {
-                    // ignore
+                    Thread.currentThread().interrupt();
+                    throw new NamingNotAvailableException(e);
                 }
             }
         }

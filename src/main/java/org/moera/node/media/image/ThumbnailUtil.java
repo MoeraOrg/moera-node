@@ -1,4 +1,4 @@
-package org.moera.node.media;
+package org.moera.node.media.image;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import javax.imageio.ImageIO;
 
 import net.coobird.thumbnailator.Thumbnails;
+import org.moera.node.media.MimeUtil;
 
 public class ThumbnailUtil {
 

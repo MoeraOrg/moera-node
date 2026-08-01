@@ -94,7 +94,8 @@ public class SseTask extends Task {
                     try {
                         packet = queue.poll(1, TimeUnit.MINUTES);
                     } catch (InterruptedException e) {
-                        continue;
+                        Thread.currentThread().interrupt();
+                        break;
                     }
                 }
 

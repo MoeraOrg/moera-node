@@ -223,7 +223,8 @@ public class EventManager {
                         deliverySignal.wait();
                     }
                 } catch (InterruptedException e) {
-                    // ignore
+                    Thread.currentThread().interrupt();
+                    return;
                 }
                 deliver();
             }

@@ -30,7 +30,7 @@ import org.moera.node.liberin.model.AvatarDeletedLiberin;
 import org.moera.node.liberin.model.AvatarOrderedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MimeUtil;
-import org.moera.node.media.ThumbnailUtil;
+import org.moera.node.media.image.ThumbnailUtil;
 import org.moera.node.model.AvatarInfoUtil;
 import org.moera.node.model.AvatarOrdinalUtil;
 import org.moera.node.model.ObjectNotFoundFailure;

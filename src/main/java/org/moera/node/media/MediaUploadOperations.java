@@ -115,7 +115,7 @@ public class MediaUploadOperations {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            MediaOperations.transfer(in, tmp.outputStream(), contentLength, expectedSize);
+            mediaOperations.transfer(in, tmp.outputStream(), contentLength, expectedSize);
             if (Files.size(tmp.path()) != expectedSize) {
                 throw new ValidationFailure("media-upload.chunk.wrong-size");
             }

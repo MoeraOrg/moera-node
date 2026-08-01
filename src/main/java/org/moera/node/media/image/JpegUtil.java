@@ -1,4 +1,4 @@
-package org.moera.node.media;
+package org.moera.node.media.image;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;

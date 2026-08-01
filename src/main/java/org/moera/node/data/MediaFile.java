@@ -47,6 +47,8 @@ public class MediaFile {
 
     private long fileSize;
 
+    private Float duration;
+
     @NotNull
     private boolean exposed;
 
@@ -96,6 +98,10 @@ public class MediaFile {
 
     public boolean isReasonableImage() {
         return MimeUtil.isReasonableImage(mimeType, sizeX, sizeY, fileSize);
+    }
+
+    public boolean isVideo() {
+        return MimeUtil.isSupportedVideo(mimeType);
     }
 
     public String getFileName() {
@@ -166,6 +172,14 @@ public class MediaFile {
 
     public void setFileSize(long fileSize) {
         this.fileSize = fileSize;
+    }
+
+    public Float getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Float duration) {
+        this.duration = duration;
     }
 
     public boolean isExposed() {
@@ -261,16 +275,16 @@ public class MediaFile {
     }
 
     public MediaFilePreview findLargerPreview(int width) {
-        MediaFilePreview larger = null;
+        MediaFilePreview smallest = null;
         for (MediaFilePreview preview : getPreviews()) {
             if (preview.getMediaFile() == null) {
                 continue;
             }
-            if (preview.getWidth() >= width && (larger == null || larger.getWidth() > preview.getWidth())) {
-                larger = preview;
+            if (preview.getWidth() >= width && (smallest == null || smallest.getWidth() > preview.getWidth())) {
+                smallest = preview;
             }
         }
-        return larger;
+        return smallest;
     }
 
 }

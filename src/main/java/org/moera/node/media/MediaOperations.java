@@ -8,7 +8,6 @@ import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,30 +28,21 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.FileImageInputStream;
-import javax.imageio.stream.ImageInputStream;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import com.drew.imaging.FileType;
 import com.drew.imaging.FileTypeDetector;
-import com.drew.imaging.ImageMetadataReader;
-import com.drew.imaging.ImageProcessingException;
-import com.drew.metadata.Directory;
-import com.drew.metadata.Metadata;
-import com.drew.metadata.MetadataException;
-import com.drew.metadata.exif.ExifIFD0Directory;
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.tika.Tika;
+import org.apache.tika.metadata.Metadata;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.MediaToAttach;
 import org.moera.lib.node.types.RemoteMedia;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.config.Config;
 import org.moera.node.data.ChildOperationsUtil;
@@ -78,6 +67,11 @@ import org.moera.node.liberin.model.CommentMediaTextUpdatedLiberin;
 import org.moera.node.liberin.model.DraftUpdatedLiberin;
 import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
 import org.moera.node.media.awss3.AwsS3MediaStorage;
+import org.moera.node.media.image.ImageScaler;
+import org.moera.node.media.image.ImageUtil;
+import org.moera.node.media.image.InvalidImageException;
+import org.moera.node.media.image.ThumbnailUtil;
+import org.moera.node.media.video.VideoUtil;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -105,6 +99,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 @Component
 public class MediaOperations {
@@ -274,9 +269,13 @@ public class MediaOperations {
         }
     }
 
-    public static DigestingOutputStream transfer(
-        InputStream in, OutputStream out, Long contentLength, int maxSize
+    public DigestingOutputStream transfer(
+        InputStream in, OutputStream out, Long contentLength, Integer maxSize
     ) throws IOException {
+        if (maxSize == null) {
+            maxSize = universalContext.getOptions().getInt("media.max-size");
+        }
+
         DigestingOutputStream digestingStream = new DigestingOutputStream(out);
 
         out = digestingStream;
@@ -300,28 +299,6 @@ public class MediaOperations {
         return digestingStream;
     }
 
-    private static Dimension getImageDimension(String contentType, Path path) throws InvalidImageException {
-        Iterator<ImageReader> it = ImageIO.getImageReadersByMIMEType(contentType);
-        while (it.hasNext()) {
-            ImageReader reader = it.next();
-            try (ImageInputStream stream = new FileImageInputStream(path.toFile())) {
-                reader.setInput(stream);
-                int width = reader.getWidth(reader.getMinIndex());
-                int height = reader.getHeight(reader.getMinIndex());
-                return new Dimension(width, height);
-            } catch (IOException e) {
-                log.warn(
-                    "Error reading image file {} (Content-Type: {}): {}",
-                    LogUtil.format(path.toString()), LogUtil.format(contentType), e.getMessage()
-                );
-            } finally {
-                reader.dispose();
-            }
-        }
-
-        throw new InvalidImageException();
-    }
-
     public String downsizeImage(Path path, String contentType) throws IOException {
         return downsizeImage(path, contentType, universalContext.getOptions().getInt("media.image.recommended-size"));
     }
@@ -337,7 +314,7 @@ public class MediaOperations {
             return contentType;
         }
 
-        Dimension dimension = getImageDimension(contentType, path);
+        Dimension dimension = ImageUtil.getImageDimension(contentType, path);
         if (!MimeUtil.isReasonableImageForDownsize(contentType, dimension.width, dimension.height, fileSize)) {
             return contentType;
         }
@@ -383,8 +360,12 @@ public class MediaOperations {
             mediaFile.setMimeType(contentType);
             mediaFile.setFileName(fileName);
             if (MimeUtil.isSupportedImage(contentType)) {
-                mediaFile.setDimension(getImageDimension(contentType, mediaPath));
-                mediaFile.setOrientation(getImageOrientation(mediaPath));
+                mediaFile.setDimension(ImageUtil.getImageDimension(contentType, mediaPath));
+                mediaFile.setOrientation(ImageUtil.getImageOrientation(mediaPath));
+            } else if (MimeUtil.isSupportedVideo(contentType)) {
+                var videoInfo = VideoUtil.getVideoInfo(mediaPath);
+                mediaFile.setDimension(videoInfo.dimension());
+                mediaFile.setDuration(videoInfo.duration());
             }
             mediaFile.setFileSize(Files.size(mediaPath));
             mediaFile.setDigest(digest);
@@ -396,36 +377,30 @@ public class MediaOperations {
         return mediaFile;
     }
 
-    private short getImageOrientation(Path imagePath) {
-        short orientation = 1;
-        try {
-            Metadata metadata = ImageMetadataReader.readMetadata(imagePath.toFile());
-            if (metadata != null) {
-                Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
-                if (directory != null) {
-                    orientation = (short) directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
-                }
+    private String detectContentType(Path path, String contentType) throws IOException {
+        try (var in = new BufferedInputStream(Files.newInputStream(path))) {
+            FileType fileType = FileTypeDetector.detectFileType(in);
+            String candidateType = fileType != FileType.Unknown ? fileType.getMimeType() : null;
+            if (candidateType != null && candidateType.startsWith("image/")) {
+                return candidateType;
             }
-        } catch (MetadataException | IOException | ImageProcessingException e) {
-            // Could not get orientation, use default
+
+            var metadata = new Metadata();
+            if (!isEmptyContentType(contentType)) {
+                metadata.set(Metadata.CONTENT_TYPE, contentType);
+            }
+            candidateType = new Tika().detect(in, metadata);
+            if (!isEmptyContentType(candidateType)) {
+                return candidateType;
+            }
+
+            return Objects.requireNonNullElse(contentType, MediaType.APPLICATION_OCTET_STREAM_VALUE);
         }
-        return orientation;
     }
 
-    private String detectContentType(Path path, String contentType) throws IOException {
-        if (contentType == null || contentType.startsWith("image/")) {
-            FileType fileType = FileTypeDetector.detectFileType(
-                new BufferedInputStream(new FileInputStream(path.toFile()))
-            );
-            contentType = fileType != null ? fileType.getMimeType() : contentType;
-        }
-        if (contentType == null) {
-            contentType = new Tika().detect(path);
-        }
-        if (contentType == null) {
-            contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
-        }
-        return contentType;
+    private boolean isEmptyContentType(String contentType) {
+        return !StringUtils.hasText(contentType)
+            || MediaType.APPLICATION_OCTET_STREAM_VALUE.equalsIgnoreCase(contentType);
     }
 
     public byte[] digest(MediaFile mediaFile) throws IOException {
@@ -436,7 +411,7 @@ public class MediaOperations {
 
     private static byte[] digest(Path mediaPath) throws IOException {
         DigestingOutputStream out = new DigestingOutputStream(OutputStream.nullOutputStream());
-        try (InputStream in = new FileInputStream(mediaPath.toFile())) {
+        try (InputStream in = Files.newInputStream(mediaPath)) {
             in.transferTo(out);
         }
         return out.getDigest();
@@ -496,7 +471,7 @@ public class MediaOperations {
     private PreviewSource createPreview(
         MediaFile original, MediaFile cropped, PreviewSource previewSource, int width
     ) throws IOException {
-        var previewFormat = MimeUtil.thumbnail(original.getMimeType());
+        var previewFormat = original.isImage() ? MimeUtil.thumbnail(original.getMimeType()) : MimeUtil.JPEG;
         if (previewFormat == null) {
             return previewSource;
         }
@@ -509,30 +484,25 @@ public class MediaOperations {
 
         source = source.or(largerPreview);
         MediaFile previewFile = source.getMediaFile();
-        if (source.getMediaFile().getSizeX() > width) {
+        if (!source.getMediaFile().isImage() || source.getMediaFile().getSizeX() > width) {
             var tmp = tmpFile();
             try {
-                DigestingOutputStream out = new DigestingOutputStream(tmp.outputStream());
-
-                BufferedImage previewImage = Thumbnails.of(source.loadImage())
-                    .width(width)
-                    .asBufferedImage();
-                ThumbnailUtil.toOutputStream(Thumbnails.of(previewImage).scale(1), out, previewFormat);
-
-                long fileSize = Files.size(tmp.path());
-                long prevFileSize = source.getMediaFile().getFileSize();
-                long gain = (prevFileSize - fileSize) * 100 / prevFileSize; // negative, if fileSize > prevFileSize
-                if (gain < universalContext.getOptions().getInt("media.preview-gain")) {
-                    if (largerPreview != null) {
-                        return source;
+                PreviewResult result = source.getMediaFile().isImage()
+                    ? createImagePreview(source, previewFormat, width, tmp)
+                    : createVideoPreview(source, width, tmp);
+                try (var digests = result.digests()) {
+                    if (result.previewImage() == null) {
+                        if (largerPreview != null) {
+                            return source;
+                        }
+                        // otherwise original will be used in preview
+                    } else {
+                        previewFile = putInPlace(
+                            digests.getHash(), previewFormat.mimeType(), tmp.path(), digests.getDigest(), false
+                        );
+                        previewFile = mediaFileRepository.save(previewFile);
+                        source = new PreviewSource(previewFile, result.previewImage());
                     }
-                    // otherwise original will be used in preview
-                } else {
-                    previewFile = putInPlace(
-                        out.getHash(), previewFormat.mimeType(), tmp.path(), out.getDigest(), false
-                    );
-                    previewFile = mediaFileRepository.save(previewFile);
-                    source = new PreviewSource(previewFile, previewImage);
                 }
             } finally {
                 Files.deleteIfExists(tmp.path());
@@ -550,9 +520,52 @@ public class MediaOperations {
         return source.from(previewFile);
     }
 
+    private record PreviewResult(DigestingOutputStream digests, BufferedImage previewImage) {
+    }
+
+    private PreviewResult createImagePreview(
+        PreviewSource source,
+        MimeUtil.ThumbnailFormat previewFormat,
+        int width,
+        TemporaryFile destination
+    ) throws IOException {
+        DigestingOutputStream out = new DigestingOutputStream(destination.outputStream());
+
+        BufferedImage previewImage = Thumbnails.of(source.loadImage())
+            .width(width)
+            .asBufferedImage();
+        ThumbnailUtil.toOutputStream(Thumbnails.of(previewImage).scale(1), out, previewFormat);
+
+        long fileSize = Files.size(destination.path());
+        long prevFileSize = source.getMediaFile().getFileSize();
+        long gain = (prevFileSize - fileSize) * 100 / prevFileSize; // negative, if fileSize > prevFileSize
+        boolean worthIt = gain >= universalContext.getOptions().getInt("media.preview-gain");
+
+        return new PreviewResult(out, worthIt ? previewImage : null);
+    }
+
+    private PreviewResult createVideoPreview(
+        PreviewSource source,
+        int width,
+        TemporaryFile destination
+    ) throws IOException {
+        destination.outputStream().close();
+
+        try (var content = openContent(source.getMediaFile())) {
+            VideoUtil.thumbnailVideo(content.path(), width, destination.path());
+        }
+
+        DigestingOutputStream out;
+        try (InputStream tmpIn = Files.newInputStream(destination.path())) {
+            out = transfer(tmpIn, null, null, null);
+        }
+
+        return new PreviewResult(out, ImageIO.read(destination.path().toFile()));
+    }
+
     public MediaFileOwner own(MediaFile mediaFile, String title) throws IOException {
-        if (mediaFile.isReasonableImage()) {
-            MediaFile croppedFile = cropOriginal(mediaFile);
+        if (mediaFile.isReasonableImage() || mediaFile.isVideo()) {
+            MediaFile croppedFile = mediaFile.isImage() ? cropOriginal(mediaFile) : mediaFile;
             PreviewSource previewSource = null;
             for (int size : PREVIEW_SIZES) {
                 previewSource = createPreview(mediaFile, croppedFile, previewSource, size);

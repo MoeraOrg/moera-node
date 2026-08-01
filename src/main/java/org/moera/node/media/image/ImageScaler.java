@@ -1,4 +1,4 @@
-package org.moera.node.media;
+package org.moera.node.media.image;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
@@ -11,6 +11,7 @@ import net.coobird.thumbnailator.Thumbnails;
 import net.coobird.thumbnailator.resizers.configurations.Antialiasing;
 import net.coobird.thumbnailator.resizers.configurations.Rendering;
 import net.coobird.thumbnailator.resizers.configurations.ScalingMode;
+import org.moera.node.media.MimeUtil;
 
 public class ImageScaler {
 

@@ -127,6 +127,7 @@ public class ParametrizedLock<K> {
                 }
             }
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -144,6 +145,7 @@ public class ParametrizedLock<K> {
                 Thread.sleep((long) (Math.random() * 1000));
             }
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 

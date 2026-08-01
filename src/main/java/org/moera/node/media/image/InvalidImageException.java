@@ -1,4 +1,4 @@
-package org.moera.node.media;
+package org.moera.node.media.image;
 
 import java.io.IOException;
 

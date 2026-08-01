@@ -1,6 +1,7 @@
 package org.moera.node.media;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.tika.mime.MimeTypeException;
@@ -17,6 +18,8 @@ public class MimeUtil {
 
     }
 
+    public static final ThumbnailFormat JPEG = new ThumbnailFormat("image/jpeg", "JPEG");
+
     private static final MimeTypes MIME_TYPES = MimeTypes.getDefaultMimeTypes();
     private static final Map<String, String> ADDITIONAL_MIME_TYPES = Map.of(
         "text/markdown", "md"
@@ -24,6 +27,28 @@ public class MimeUtil {
     private static final ThumbnailFormat LOSSY = new ThumbnailFormat("image/jpeg", "JPEG");
     private static final ThumbnailFormat LOSSLESS = new ThumbnailFormat("image/png", "PNG");
     private static final Map<String, ThumbnailFormat> THUMBNAIL_FORMATS = new HashMap<>();
+
+    private static final List<String> VIDEO_FORMATS = List.of(
+        "video/mp4",
+        "video/quicktime",
+        "video/webm",
+        "video/ogg",
+        "video/x-msvideo",
+        "video/x-matroska",
+        "video/mpeg",
+        "video/mp2t",
+        "video/3gpp",
+        "video/3gpp2",
+        "video/x-flv",
+        "video/x-ms-wmv",
+        "video/x-ms-asf",
+        "video/x-m4v",
+        "application/mp4",
+        "application/ogg",
+        "application/x-matroska",
+        "application/vnd.rn-realmedia",
+        "application/vnd.ms-asf"
+    );
 
     static {
         THUMBNAIL_FORMATS.put("image/avif", LOSSY);
@@ -72,6 +97,10 @@ public class MimeUtil {
         return THUMBNAIL_FORMATS.containsKey(mimeType);
     }
 
+    public static boolean isSupportedVideo(String mimeType) {
+        return VIDEO_FORMATS.contains(mimeType);
+    }
+
     public static boolean isLossyImage(String mimeType) {
         var format = thumbnail(mimeType);
         return format != null && format.isJpeg();
@@ -113,6 +142,10 @@ public class MimeUtil {
             return true;
         }
         return fileSize <= 20_971_520L;
+    }
+
+    public static List<String> videoFormats() {
+        return VIDEO_FORMATS;
     }
 
 }

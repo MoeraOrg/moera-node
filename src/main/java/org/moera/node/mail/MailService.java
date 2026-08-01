@@ -141,7 +141,8 @@ public class MailService {
                 message.addInline("logo.png", applicationContext.getResource("classpath:templates/mail/part/logo.png"));
             });
         } catch (InterruptedException e) {
-            throw new SendMailInterruptedException();
+            Thread.currentThread().interrupt();
+            throw new SendMailInterruptedException(e);
         }
     }
 

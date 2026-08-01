@@ -89,13 +89,9 @@ public class LiberinManager implements Runnable {
     }
 
     public void send(Liberin... liberins) {
-        try {
-            for (Liberin liberin : liberins) {
-                liberin.setDirectServeOperations(directServeOperations);
-                queue.put(liberin);
-            }
-        } catch (InterruptedException e) {
-            // ignore
+        for (Liberin liberin : liberins) {
+            liberin.setDirectServeOperations(directServeOperations);
+            queue.add(liberin);
         }
     }
 
@@ -106,12 +102,14 @@ public class LiberinManager implements Runnable {
     @Override
     public void run() {
         boolean stopped = false;
+        boolean interrupted = false;
         while (!stopped || queue.peek() != null) {
             Liberin liberin = null;
             try {
                 liberin = queue.take();
             } catch (InterruptedException e) {
                 stopped = true;
+                interrupted = true;
             }
             if (liberin == null) {
                 continue;
@@ -141,6 +139,9 @@ public class LiberinManager implements Runnable {
                 },
                 e -> log.error("Error handling liberin %s:".formatted(lb.getClass().getSimpleName()), e)
             );
+        }
+        if (interrupted) {
+            Thread.currentThread().interrupt();
         }
     }
 

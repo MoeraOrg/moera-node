@@ -30,7 +30,7 @@ public class AllContactDetailsDownloadTask extends Task {
     }
 
     @Override
-    protected void execute() {
+    protected void execute() throws InterruptedException {
         Set<String> targetNodeNames = getTargetNodeNames();
         for (String targetNodeName : targetNodeNames) {
             Duration delay = Duration.ofSeconds(30);
@@ -42,11 +42,7 @@ public class AllContactDetailsDownloadTask extends Task {
                 } catch (Throwable e) {
                     error(targetNodeName, e);
                 }
-                try {
-                    Thread.sleep(delay.toMillis());
-                } catch (InterruptedException e) {
-                    // ignore
-                }
+                Thread.sleep(delay.toMillis());
                 delay = delay.multipliedBy(2);
             }
         }

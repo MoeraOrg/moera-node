@@ -116,8 +116,8 @@ public class Picker extends Task {
         return stopped;
     }
 
-    public void put(@NotNull Pick pick) throws InterruptedException {
-        queue.put(pick);
+    public void put(@NotNull Pick pick) {
+        queue.add(pick);
     }
 
     @Override
@@ -129,7 +129,8 @@ public class Picker extends Task {
                 try {
                     pick = queue.poll(10, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
-                    continue;
+                    Thread.currentThread().interrupt();
+                    return;
                 }
                 if (pick == null) {
                     stopped = true;

@@ -85,11 +85,7 @@ public class PickerPool {
                         d -> createPicker(d.getNodeName(), nodeId)
                     );
                 } while (picker.isStopped());
-                try {
-                    picker.put(pick);
-                } catch (InterruptedException e) {
-                    continue;
-                }
+                picker.put(pick);
                 break;
             }
         } catch (RejectedExecutionException e) {

@@ -30,9 +30,12 @@ public class PrivateMediaFileInfoUtil {
         info.setHeight(mediaFileOwner.getMediaFile().getSizeY());
         info.setOrientation(mediaFileOwner.getMediaFile().getOrientation());
         info.setSize(mediaFileOwner.getMediaFile().getFileSize());
+        info.setDuration(mediaFileOwner.getMediaFile().getDuration());
         info.setTitle(mediaFileOwner.getTitle());
         info.setTextContent(mediaFileOwner.getMediaFile().getRecognizedText());
-        info.setAttachment(!mediaFileOwner.getMediaFile().isReasonableImage());
+        info.setAttachment(
+            !mediaFileOwner.getMediaFile().isReasonableImage() && !mediaFileOwner.getMediaFile().isVideo()
+        );
         if (mediaFileOwner.getMalwareMarks().isEmpty()) {
             fillPath(info, grantSupplier);
             fillDirectPaths(info, mediaFileOwner, directServe);

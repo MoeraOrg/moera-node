@@ -8,6 +8,7 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.node.media.MimeUtil;
 import org.moera.node.option.Options;
 
 public class PostingFeaturesUtil {
@@ -21,6 +22,7 @@ public class PostingFeaturesUtil {
         postingFeatures.setSubjectPresent(options.getBool("posting.subject.present"));
         postingFeatures.setSourceFormats(Arrays.asList(SourceFormat.values()));
         postingFeatures.setImageFormats(Arrays.asList(ImageIO.getReaderMIMETypes()));
+        postingFeatures.setVideoFormats(MimeUtil.videoFormats());
         return postingFeatures;
     }
 

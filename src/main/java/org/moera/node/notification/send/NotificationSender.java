@@ -11,7 +11,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import jakarta.inject.Inject;
 
-import org.jetbrains.annotations.NotNull;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.exception.MoeraNodeApiAuthenticationException;
 import org.moera.lib.node.exception.MoeraNodeApiNotFoundException;
@@ -24,10 +23,10 @@ import org.moera.lib.node.types.notifications.Notification;
 import org.moera.lib.node.types.notifications.SubscriberNotification;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.node.MoeraNodeUnknownNameException;
-import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.fingerprint.NotificationPacketFingerprintBuilder;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.operations.RemoteConnectivityOperations;
 import org.moera.node.task.Task;
@@ -106,8 +105,8 @@ public class NotificationSender extends Task {
         return pausedTill != null;
     }
 
-    public void put(@NotNull Notification notification) throws InterruptedException {
-        queue.put(notification);
+    public void put(Notification notification) {
+        queue.add(notification);
     }
 
     @Override
@@ -124,7 +123,9 @@ public class NotificationSender extends Task {
                         notification = queue.poll(10, TimeUnit.SECONDS);
                         delay = getConnectivityStatus() == ConnectivityStatus.FAILING ? FAILING_MIN_DELAY : null;
                     } catch (InterruptedException e) {
-                        continue;
+                        Thread.currentThread().interrupt();
+                        stopped = true;
+                        break;
                     }
                 }
                 if (notification == null) {
@@ -143,6 +144,9 @@ public class NotificationSender extends Task {
                     }
                 }
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            stopped = true;
         } catch (Throwable e) {
             stopped = true; // if stopped abnormally by exception
         } finally {
@@ -153,16 +157,12 @@ public class NotificationSender extends Task {
         }
     }
 
-    private void deliver(Notification notification) {
+    private void deliver(Notification notification) throws InterruptedException {
         do {
             if (delay != null && pausedTill == null) {
                 if (delay.compareTo(Duration.ofSeconds(30)) <= 0) {
                     log.debug("Notification sender paused for {} seconds", delay.toSeconds());
-                    try {
-                        Thread.sleep(delay.toMillis());
-                    } catch (InterruptedException e) {
-                        // ignore
-                    }
+                    Thread.sleep(delay.toMillis());
                 } else {
                     log.debug("Notification sender paused for {} minutes", delay.toMinutes());
                     pausedTill = Instant.now().plus(delay);

@@ -148,6 +148,9 @@ public abstract class Task implements Runnable {
     protected abstract void execute() throws Exception;
 
     protected void handleException(Throwable e) {
+        if (e instanceof InterruptedException) {
+            Thread.currentThread().interrupt();
+        }
         unhandledException(e);
     }
 

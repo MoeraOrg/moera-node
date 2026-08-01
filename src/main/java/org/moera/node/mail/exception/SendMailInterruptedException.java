@@ -6,4 +6,8 @@ public class SendMailInterruptedException extends MailServiceException {
         super("Send mail was interrupted");
     }
 
+    public SendMailInterruptedException(InterruptedException cause) {
+        super("Send mail was interrupted", cause);
+    }
+
 }

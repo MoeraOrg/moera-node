@@ -108,7 +108,7 @@ public class FcmRelay {
                 } while (retry > 0);
             }
         } catch (InterruptedException e) {
-            // just exit
+            Thread.currentThread().interrupt();
         }
     }
 

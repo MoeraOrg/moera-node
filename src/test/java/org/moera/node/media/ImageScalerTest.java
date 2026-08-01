@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.moera.node.media.image.ImageScaler;
+import org.moera.node.media.image.JpegUtil;
 
 public class ImageScalerTest {
 

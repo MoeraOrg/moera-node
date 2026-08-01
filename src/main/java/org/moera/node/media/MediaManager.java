@@ -1,9 +1,7 @@
 package org.moera.node.media;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -147,7 +145,7 @@ public class MediaManager {
         }
         Long contentLength = responseBody.contentLength() >= 0 ? responseBody.contentLength() : null;
         try {
-            DigestingOutputStream out = MediaOperations.transfer(
+            DigestingOutputStream out = mediaOperations.transfer(
                 responseBody.bodyStream(), tmpFile.outputStream(), contentLength, maxSize
             );
             return new TemporaryMediaFile(out.getHash(), responseBody.contentType(), out.getDigest());
@@ -689,12 +687,12 @@ public class MediaManager {
     ) throws IOException {
         var tmp = mediaOperations.tmpFile();
         try {
-            DigestingOutputStream out = transfer(in, tmp.outputStream(), contentLength, null);
+            DigestingOutputStream out = mediaOperations.transfer(in, tmp.outputStream(), contentLength, null);
             String contentType = toContentType(mediaType);
             if (downsize) {
                 contentType = mediaOperations.downsizeImage(tmp.path(), contentType);
-                try (InputStream tmpIn = new FileInputStream(tmp.path().toFile())) {
-                    out = transfer(tmpIn, null, null, null);
+                try (InputStream tmpIn = Files.newInputStream(tmp.path())) {
+                    out = mediaOperations.transfer(tmpIn, null, null, null);
                 }
             }
 
@@ -724,8 +722,8 @@ public class MediaManager {
                 contentType = mediaOperations.downsizeImage(path, contentType);
             }
             DigestingOutputStream out;
-            try (InputStream tmpIn = new FileInputStream(path.toFile())) {
-                out = transfer(tmpIn, null, null, null);
+            try (InputStream tmpIn = Files.newInputStream(path)) {
+                out = mediaOperations.transfer(tmpIn, null, null, null);
             }
 
             MediaFile mediaFile = mediaOperations.putInPlace(
@@ -748,14 +746,14 @@ public class MediaManager {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            DigestingOutputStream out = transfer(
+            DigestingOutputStream out = mediaOperations.transfer(
                 mediaStream.stream(), tmp.outputStream(), mediaStream.contentLength(), null
             );
             String contentType = toContentType(mediaStream.contentType());
             if (downsize) {
                 contentType = mediaOperations.downsizeImage(tmp.path(), contentType);
-                try (InputStream tmpIn = new FileInputStream(tmp.path().toFile())) {
-                    out = transfer(tmpIn, null, null, null);
+                try (InputStream tmpIn = Files.newInputStream(tmp.path())) {
+                    out = mediaOperations.transfer(tmpIn, null, null, null);
                 }
             }
 
@@ -769,15 +767,6 @@ public class MediaManager {
         } finally {
             Files.deleteIfExists(tmp.path());
         }
-    }
-
-    private DigestingOutputStream transfer(
-        InputStream in, OutputStream out, Long contentLength, Integer maxSize
-    ) throws IOException {
-        if (maxSize == null) {
-            maxSize = universalContext.getOptions().getInt("media.max-size");
-        }
-        return MediaOperations.transfer(in, out, contentLength, maxSize);
     }
 
     private String toContentType(MediaType mediaType) {

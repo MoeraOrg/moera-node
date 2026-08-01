@@ -48,6 +48,7 @@ public class NetworkLatencyInterceptor implements HandlerInterceptor {
         try {
             Thread.sleep(period);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
 
         return true;
