@@ -375,7 +375,7 @@ public class Picker extends Task {
                     .getPrivateMediaInfo(mediaId, attach.getRemoteMedia().getGrant());
             }
 
-            String leaseId = leaseMedia(mediaNodeName, mediaId, attach.getMedia().getSize(), remotePostingId);
+            String leaseId = leaseMedia(mediaNodeName, mediaId, mediaInfo.getSize(), remotePostingId);
             if (leaseId == null) {
                 media = mediaManager.downloadPrivateMedia(
                     mediaNodeName,

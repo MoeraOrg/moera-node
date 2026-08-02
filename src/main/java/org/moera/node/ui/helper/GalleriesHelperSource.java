@@ -71,13 +71,13 @@ public class GalleriesHelperSource {
         String galleryCommentId,
         String galleryMediaId
     ) {
-        Map<String, Map<String, String>[]> entryMap = new HashMap<>();
+        Map<String, List<Map<String, Object>>> entryMap = new HashMap<>();
         for (MediaInfo entry : entries) {
             var props = entry.getMedia()
                 .stream()
                 .map(this::galleryItemProps)
                 .filter(Objects::nonNull)
-                .toArray(Map[]::new);
+                .toList();
             entryMap.put(entry.getId(), props);
         }
 
@@ -117,20 +117,20 @@ public class GalleriesHelperSource {
         return new SafeString(buf);
     }
 
-    private Map<String, String> galleryItemProps(MediaAttachment attachment) {
+    private Map<String, Object> galleryItemProps(MediaAttachment attachment) {
         String captionUrl = !ObjectUtils.isEmpty(attachment.getPostingId())
             ? "/moera/media/private/caption/" + attachment.getPostingId()
             : "";
 
         var media = attachment.getMedia();
         if (media != null) {
-            return Map.of(
-                "id", media.getId(),
-                "src", MediaUtil.mediaUrl(
-                    media.getDirectPath() != null ? media.getDirectPath() : media.getPath()
-                ),
-                "thumb", MediaUtil.mediaUrl(media.getPath()) + "?width=150",
-                "subHtmlUrl", captionUrl
+            return galleryItemProps(
+                media.getId(),
+                MediaUtil.mediaUrl(media.getDirectPath() != null ? media.getDirectPath() : media.getPath()),
+                mediaUrl(media.getPath(), 900),
+                mediaUrl(media.getPath(), 150),
+                media.getMimeType(),
+                captionUrl
             );
         }
 
@@ -146,12 +146,44 @@ public class GalleriesHelperSource {
             : "/moera/remote-media/" + nodeName + "/";
         String grant = new MediaGrantGenerator(requestContext.getOptions())
             .generatePublicRemote(remoteMedia.getMediaId(), false, null);
-        return Map.of(
-            "id", remoteMedia.getMediaId(),
-            "src", prefix + MediaUtil.privatePath(remoteMedia, null, grant),
-            "thumb", prefix + MediaUtil.privatePath(remoteMedia, 150, grant),
-            "subHtmlUrl", captionUrl
+
+        return galleryItemProps(
+            remoteMedia.getMediaId(),
+            prefix + MediaUtil.privatePath(remoteMedia, null, grant),
+            prefix + MediaUtil.privatePath(remoteMedia, 900, grant),
+            prefix + MediaUtil.privatePath(remoteMedia, 150, grant),
+            remoteMedia.getMimeType(),
+            captionUrl
         );
+    }
+
+    private Map<String, Object> galleryItemProps(
+        String id, String src, String poster, String thumb, String mimeType, String captionUrl
+    ) {
+        if (MimeUtil.isSupportedVideo(mimeType)) {
+            return Map.of(
+                "id", id,
+                "video", Map.of(
+                    "source", List.of(Map.of("src", src, "type", mimeType)),
+                    "attributes", Map.of("preload", false, "playsinline", true, "controls", true)
+                ),
+                "poster", poster,
+                "thumb", thumb,
+                "subHtmlUrl", captionUrl
+            );
+        } else {
+            return Map.of(
+                "id", id,
+                "src", src,
+                "thumb", thumb,
+                "subHtmlUrl", captionUrl
+            );
+        }
+    }
+
+    private String mediaUrl(String path, int width) {
+        String url = MediaUtil.mediaUrl(path);
+        return "%s%swidth=%d".formatted(url, url.contains("?") ? "&" : "?", width);
     }
 
     private CharSequence entryImage(String postingId, String commentId, LocalRemoteMediaInfo mediaFile) {

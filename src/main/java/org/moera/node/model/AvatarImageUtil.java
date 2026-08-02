@@ -1,9 +1,12 @@
 package org.moera.node.model;
 
+import java.util.Objects;
+
 import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.AvatarInfo;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.config.DirectServeSource;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.MediaFile;
@@ -47,6 +50,11 @@ public class AvatarImageUtil {
     private static void fillDirectPath(
         AvatarImage info, MediaFile mediaFile, DirectServeOperations directServe
     ) {
+        // Presigned URLs on AWS S3 change on every request, making caching useless
+        if (Objects.equals(directServe.source(), DirectServeSource.AWSS3)) {
+            return;
+        }
+
         var pu = directServe.directPath(mediaFile, ExtendedDuration.ALWAYS);
         info.setDirectPath(pu.url());
         info.setDirectPathExpiresAt(pu.expires());

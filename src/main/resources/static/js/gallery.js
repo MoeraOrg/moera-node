@@ -11,7 +11,7 @@ function galleryInit() {
     window.gallery = lightGallery(document.body, {
         dynamic: true,
         dynamicEl: [],
-        plugins: [lgZoom, lgFullscreen]
+        plugins: [lgZoom, lgFullscreen, lgVideo]
     });
     document.body.addEventListener("lgBeforeSlide", galleryBeforeSlide);
     document.body.addEventListener("lgAfterClose", galleryAfterClose);

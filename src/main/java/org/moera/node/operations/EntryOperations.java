@@ -143,16 +143,19 @@ public class EntryOperations implements MediaAttachmentsProvider {
     }
 
     private void updateCachedPaths(UUID revisionId, MediaAttachmentsCache cache, MediaGrantSupplier grantSupplier) {
-        if (isPathsExpireSoon(cache.getAttachments())) {
+        if (isDirectPathsExpireSoon(cache.getAttachments())) {
             cache.getAttachments().forEach(attachment ->
-                MediaAttachmentUtil.fillPaths(attachment, directServeOperations, grantSupplier)
+                MediaAttachmentUtil.fillDirectPaths(attachment, directServeOperations)
             );
             entryRevisionRepository.updateAttachmentsCacheById(revisionId, objectMapper.writeValueAsString(cache));
         }
-        cache.getAttachments().forEach(attachment -> MediaAttachmentUtil.fillRemoteGrants(attachment, grantSupplier));
+        cache.getAttachments().forEach(attachment -> {
+            MediaAttachmentUtil.fillPaths(attachment, grantSupplier);
+            MediaAttachmentUtil.fillRemoteGrants(attachment, grantSupplier);
+        });
     }
 
-    private boolean isPathsExpireSoon(List<MediaAttachment> attachments) {
+    private boolean isDirectPathsExpireSoon(List<MediaAttachment> attachments) {
         long deadline = Instant.now().plus(24, ChronoUnit.HOURS).getEpochSecond();
         for (MediaAttachment attachment : attachments) {
             var media = attachment.getMedia();
@@ -160,8 +163,7 @@ public class EntryOperations implements MediaAttachmentsProvider {
                 continue;
             }
             if (
-                media.getGrantExpiresAt() != null && media.getGrantExpiresAt() <= deadline
-                || media.getDirectPathExpiresAt() != null && media.getDirectPathExpiresAt() <= deadline
+                media.getDirectPathExpiresAt() != null && media.getDirectPathExpiresAt() <= deadline
                 || media.getDirectDownloadPathExpiresAt() != null
                     && media.getDirectDownloadPathExpiresAt() <= deadline
             ) {

@@ -7,8 +7,8 @@ import jakarta.transaction.Transactional;
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.validate.ValidationFailure;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -19,9 +19,10 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
+import org.moera.node.media.DirectServeOperations;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.media.grant.MediaGrantProperties;
 import org.moera.node.media.grant.MediaGrantValidator;
-import org.moera.node.media.MediaOperations;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
@@ -112,15 +113,7 @@ public class MediaUiController {
         UUID mediaId = Util.uuid(id).orElseThrow(PageNotFoundException::new);
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), mediaId)
             .orElseThrow(PageNotFoundException::new);
-        MediaGrantProperties grant = mediaGrantValidator.validate(grantS, mediaId);
-        if (
-            grant == null
-            && !mediaFileOwner.isUnrestricted()
-            && !requestContext.isAdmin(Scope.VIEW_CONTENT)
-            && !requestContext.isClient(requestContext.nodeName(), Scope.VIEW_CONTENT)
-        ) {
-            throw new PageNotFoundException();
-        }
+        MediaGrantProperties grant = validateGrant(grantS, mediaId, mediaFileOwner.isUnrestricted());
         mediaOperations.blockMalware(mediaFileOwner, ignoreMalware);
 
         String title = mediaFileOwner.getUserFileName();
@@ -140,6 +133,27 @@ public class MediaUiController {
             download,
             MediaGrantProperties.cacheDuration(grant, mediaFileOwner.isUnrestricted())
         );
+    }
+
+    private MediaGrantProperties validateGrant(String grantS, UUID mediaId, boolean unrestricted) {
+        MediaGrantProperties grant;
+
+        try {
+            grant = mediaGrantValidator.validate(grantS, mediaId);
+        } catch (ValidationFailure e) {
+            throw new PageNotFoundException();
+        }
+
+        if (
+            grant == null
+            && !unrestricted
+            && !requestContext.isAdmin(Scope.VIEW_CONTENT)
+            && !requestContext.isClient(requestContext.nodeName(), Scope.VIEW_CONTENT)
+        ) {
+            throw new PageNotFoundException();
+        }
+
+        return grant;
     }
 
     @GetMapping(path = "/private/caption/{postingId}", produces = "text/html")

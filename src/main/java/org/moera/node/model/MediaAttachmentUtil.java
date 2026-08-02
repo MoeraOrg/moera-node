@@ -1,9 +1,9 @@
 package org.moera.node.model;
 
 import org.moera.lib.node.types.MediaAttachment;
-import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.Posting;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.media.grant.MediaGrantSupplier;
 
 public class MediaAttachmentUtil {
@@ -44,16 +44,28 @@ public class MediaAttachmentUtil {
 
     public static void fillPaths(
         MediaAttachment mediaAttachment,
-        DirectServeOperations directServe,
         MediaGrantSupplier grantSupplier
     ) {
         if (mediaAttachment.getMedia() != null) {
             var media = mediaAttachment.getMedia();
             PrivateMediaFileInfoUtil.fillPath(media, grantSupplier);
-            PrivateMediaFileInfoUtil.refreshDirectPaths(media, directServe);
             if (media.getPreviews() != null) {
                 for (var preview : media.getPreviews()) {
                     MediaFilePreviewInfoUtil.fillPath(preview, media, grantSupplier);
+                }
+            }
+        }
+    }
+
+    public static void fillDirectPaths(
+        MediaAttachment mediaAttachment,
+        DirectServeOperations directServe
+    ) {
+        if (mediaAttachment.getMedia() != null) {
+            var media = mediaAttachment.getMedia();
+            PrivateMediaFileInfoUtil.refreshDirectPaths(media, directServe);
+            if (media.getPreviews() != null) {
+                for (var preview : media.getPreviews()) {
                     MediaFilePreviewInfoUtil.refreshDirectPath(preview, directServe);
                 }
             }

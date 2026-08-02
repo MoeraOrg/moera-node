@@ -26,6 +26,7 @@ import org.moera.lib.node.types.MediaToAttach;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.PublicMediaFileInfo;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.api.node.MoeraNodeLocalStorageException;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.config.Config;
@@ -313,8 +314,17 @@ public class MediaManager {
             return mediaFile;
         }
 
-        if (caches.stream().anyMatch(remoteMediaCache -> remoteMediaCache.getError() != null)) {
-            return null;
+        RemoteMediaError error = caches.stream()
+            .map(RemoteMediaCache::getError)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElse(null);
+        if (error != null) {
+            log.warn(
+                "Cached error for media {} at node {}: {}",
+                LogUtil.format(id), LogUtil.format(nodeName), error.getErrorCode()
+            );
+            throw new MoeraNodeException(error.getErrorCode());
         }
 
         var tmp = mediaOperations.tmpFile();
