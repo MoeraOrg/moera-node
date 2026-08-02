@@ -74,7 +74,7 @@ public class RemoteCommentReactionController {
             LogUtil.format(attributes.getEmoji())
         );
 
-        jobs.run(
+        jobs.runAfterCommit(
             RemoteCommentReactionPostJob.class,
             new RemoteCommentReactionPostJob.Parameters(nodeName, postingId, commentId, attributes),
             requestContext.nodeId()

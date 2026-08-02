@@ -69,7 +69,7 @@ public class RemotePostingProcessor {
     @NotificationMapping(NotificationType.POSTING_COMMENT_ADDED)
     public void commentAdded(PostingCommentAddedNotification notification) {
         SubscriptionReason reason = tx.executeRead(() -> getSubscriptionReason(getSubscription(notification)));
-        jobs.run(
+        jobs.runAfterCommit(
             RemotePostingCommentAddedJob.class,
             new RemotePostingCommentAddedJob.Parameters(
                 notification.getSenderNodeName(),
@@ -112,7 +112,7 @@ public class RemotePostingProcessor {
     @NotificationMapping(NotificationType.POSTING_IMPORTANT_UPDATE)
     public void postingUpdated(PostingImportantUpdateNotification notification) {
         tx.executeRead(() -> getSubscription(notification));
-        jobs.run(
+        jobs.runAfterCommit(
             RemotePostingImportantUpdateJob.class,
             new RemotePostingImportantUpdateJob.Parameters(
                 notification.getSenderNodeName(),

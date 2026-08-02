@@ -102,7 +102,7 @@ public class SheriffComplaintController {
         if (groupCreated) {
             requestContext.send(new SheriffComplaintGroupAddedLiberin(group));
 
-            jobs.run(
+            jobs.runAfterCommit(
                 SheriffComplaintGroupPrepareJob.class,
                 new SheriffComplaintGroupPrepareJob.Parameters(
                     group.getId(),

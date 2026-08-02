@@ -83,7 +83,7 @@ public class RemotePostingReactionController {
             LogUtil.format(attributes.getEmoji())
         );
 
-        jobs.run(
+        jobs.runAfterCommit(
             RemotePostingReactionPostJob.class,
             new RemotePostingReactionPostJob.Parameters(nodeName, postingId, attributes),
             requestContext.nodeId()

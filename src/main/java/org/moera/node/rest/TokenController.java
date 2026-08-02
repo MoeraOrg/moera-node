@@ -110,7 +110,7 @@ public class TokenController {
 
         if (requestContext.getOptions().isFrozen()) {
             requestContext.getOptions().set("frozen", false);
-            jobs.run(DefrostNodeJob.class, new DefrostNodeJob.Parameters(), options.nodeId());
+            jobs.runAfterCommit(DefrostNodeJob.class, new DefrostNodeJob.Parameters(), options.nodeId());
             requestContext.send(new DefrostLiberin());
         }
 

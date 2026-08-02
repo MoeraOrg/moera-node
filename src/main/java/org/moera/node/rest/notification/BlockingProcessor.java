@@ -33,7 +33,7 @@ public class BlockingProcessor {
 
     @NotificationMapping(NotificationType.BLOCKING_ADDED)
     public void added(BlockingAddedNotification notification) {
-        jobs.run(
+        jobs.runAfterCommit(
             BlockingAddedJob.class,
             new BlockingAddedJob.Parameters(
                 notification.getSenderNodeName(),

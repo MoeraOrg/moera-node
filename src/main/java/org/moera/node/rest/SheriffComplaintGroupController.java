@@ -239,7 +239,7 @@ public class SheriffComplaintGroupController {
         SheriffComplaintDecisionTextUtil.toSheriffComplaintGroup(sheriffComplaintDecisionText, sheriffComplaintGroup);
 
         if (!noOrder) {
-            jobs.run(
+            jobs.runAfterCommit(
                 SheriffOrderPostJob.class,
                 new SheriffOrderPostJob.Parameters(
                     sheriffComplaintGroup.getRemoteNodeName(),

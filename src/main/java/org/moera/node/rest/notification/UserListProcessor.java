@@ -58,7 +58,7 @@ public class UserListProcessor {
             throw new UnsubscribeFailure();
         }
 
-        jobs.run(
+        jobs.runAfterCommit(
             UserListUpdateJob.class,
             new UserListUpdateJob.Parameters(
                 notification.getSenderNodeName(),

@@ -52,7 +52,7 @@ public abstract class Job<P, S> extends Task {
         this.jobs = jobs;
     }
 
-    UUID getId() {
+    protected UUID getId() {
         return id;
     }
 

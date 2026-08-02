@@ -370,7 +370,7 @@ public class CommentOperations {
             return;
         }
 
-        jobs.run(
+        jobs.runAfterCommit(
             DownloadEntryAttachmentsJob.class,
             new DownloadEntryAttachmentsJob.Parameters(comment.getPosting().getId(), comment.getId()),
             requestContext.nodeId()

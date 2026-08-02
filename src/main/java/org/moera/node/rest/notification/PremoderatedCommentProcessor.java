@@ -20,7 +20,7 @@ public class PremoderatedCommentProcessor {
 
     @NotificationMapping(NotificationType.PREMODERATED_COMMENT_DECIDED)
     public void decided(PremoderatedCommentDecidedNotification notification) {
-        jobs.run(
+        jobs.runAfterCommit(
             PremoderatedCommentDecidedJob.class,
             new PremoderatedCommentDecidedJob.Parameters(notification),
             universalContext.nodeId()

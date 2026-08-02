@@ -69,7 +69,7 @@ public class AskProcessor {
                     throw new AuthenticationException();
                 }
 
-                jobs.run(
+                jobs.runAfterCommit(
                     AskedJob.class,
                     new AskedJob.Parameters(
                         notification.getSubject(),
@@ -101,7 +101,7 @@ public class AskProcessor {
                 ).orElseThrow(() -> new ValidationFailure("friend-group.not-found"));
                 ValidationUtil.assertion(friendGroup.getViewPrincipal().isPublic(), "friend-group.not-found");
 
-                jobs.run(
+                jobs.runAfterCommit(
                     AskedJob.class,
                     new AskedJob.Parameters(
                         notification.getSubject(),

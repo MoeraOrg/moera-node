@@ -29,6 +29,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
@@ -99,14 +101,14 @@ public class Jobs {
 
         T job = createJob(klass);
         if (job == null) {
-            return;
+            throw new IllegalStateException("Cannot create job " + klass.getCanonicalName());
         }
 
         job.setParameters(parameters);
         job.setJobs(this);
 
         if (persistent) {
-            persist(job, nodeId);
+            persistQuietly(job, nodeId);
             if (job.getId() != null) {
                 all.put(job.getId(), job);
             }
@@ -117,6 +119,63 @@ public class Jobs {
         } else {
             taskAutowire.autowireWithoutRequestAndDomain(job);
         }
+        execute(job);
+    }
+
+    public <P, T extends Job<P, ?>> UUID runAfterCommit(Class<T> klass, P parameters) {
+        return runAfterCommit(klass, parameters, null);
+    }
+
+    public <P, T extends Job<P, ?>> UUID runAfterCommit(Class<T> klass, P parameters, UUID nodeId) {
+        if (!initialized) {
+            throw new JobsManagerNotInitializedException();
+        }
+
+        T job = createJob(klass);
+        if (job == null) {
+            throw new IllegalStateException("Cannot create job " + klass.getCanonicalName());
+        }
+
+        job.setParameters(parameters);
+        job.setJobs(this);
+
+        if (nodeId != null) {
+            taskAutowire.autowireWithoutRequest(job, nodeId);
+        } else {
+            taskAutowire.autowireWithoutRequestAndDomain(job);
+        }
+
+        UUID id = persist(job, nodeId);
+        startAfterCommit(job);
+        return id;
+    }
+
+    private void startAfterCommit(Job<?, ?> job) {
+        if (
+            TransactionSynchronizationManager.isActualTransactionActive()
+            && TransactionSynchronizationManager.isSynchronizationActive()
+        ) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+
+                @Override
+                public void afterCommit() {
+                    start(job);
+                }
+
+            });
+        } else {
+            start(job);
+        }
+    }
+
+    private void start(Job<?, ?> job) {
+        if (job.getId() != null) {
+            all.put(job.getId(), job);
+        }
+        execute(job);
+    }
+
+    private void execute(Job<?, ?> job) {
         try {
             taskExecutor.execute(job);
         } catch (RejectedExecutionException e) {
@@ -195,17 +254,22 @@ public class Jobs {
         }
     }
 
-    private void persist(Job<?, ?> job, UUID nodeId) {
+    private UUID persist(Job<?, ?> job, UUID nodeId) {
+        PendingJob pendingJob = new PendingJob();
+        pendingJob.setId(UUID.randomUUID());
+        pendingJob.setNodeId(nodeId);
+        pendingJob.setJobType(job.getClass().getCanonicalName());
+        pendingJob.setParameters(objectMapper.writeValueAsString(job.getParameters()));
+        pendingJob.setState(job.getState() != null ? objectMapper.writeValueAsString(job.getState()) : null);
+        pendingJob = pendingJobRepository.save(pendingJob);
+        job.setId(pendingJob.getId());
+        return job.getId();
+    }
+
+    private void persistQuietly(Job<?, ?> job, UUID nodeId) {
         tx.executeWriteQuietly(
             () -> {
-                PendingJob pendingJob = new PendingJob();
-                pendingJob.setId(UUID.randomUUID());
-                pendingJob.setNodeId(nodeId);
-                pendingJob.setJobType(job.getClass().getCanonicalName());
-                pendingJob.setParameters(objectMapper.writeValueAsString(job.getParameters()));
-                pendingJob.setState(job.getState() != null ? objectMapper.writeValueAsString(job.getState()) : null);
-                pendingJob = pendingJobRepository.save(pendingJob);
-                job.setId(pendingJob.getId());
+                persist(job, nodeId);
             },
             e -> log.error("Error storing job", e)
         );

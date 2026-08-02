@@ -71,7 +71,7 @@ public class RemoteSheriffOrderController {
             sheriffOrderAttributes.setReasonCode(SheriffOrderReason.OTHER);
         }
 
-        jobs.run(
+        jobs.runAfterCommit(
             SheriffOrderPostJob.class,
             new SheriffOrderPostJob.Parameters(nodeName, sheriffOrderAttributes, null),
             requestContext.nodeId()

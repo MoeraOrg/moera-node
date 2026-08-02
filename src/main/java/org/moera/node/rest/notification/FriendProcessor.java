@@ -30,7 +30,7 @@ public class FriendProcessor {
 
     @NotificationMapping(NotificationType.FRIENDSHIP_UPDATED)
     public void friendshipUpdated(FriendshipUpdatedNotification notification) {
-        jobs.run(
+        jobs.runAfterCommit(
             FriendshipUpdatedJob.class,
             new FriendshipUpdatedJob.Parameters(
                 notification.getSenderNodeName(),

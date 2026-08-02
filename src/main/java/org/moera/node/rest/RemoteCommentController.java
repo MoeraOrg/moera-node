@@ -129,7 +129,7 @@ public class RemoteCommentController {
 
     private void update(String nodeName, String postingId, String commentId, CommentSourceText commentText) {
         mediaOperations.validateAvatar(commentText.getOwnerAvatar());
-        jobs.run(
+        jobs.runAfterCommit(
             RemoteCommentPostJob.class,
             new RemoteCommentPostJob.Parameters(nodeName, postingId, commentId, commentText),
             requestContext.nodeId()

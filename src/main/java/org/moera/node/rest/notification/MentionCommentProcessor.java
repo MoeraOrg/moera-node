@@ -22,7 +22,7 @@ public class MentionCommentProcessor {
 
     @NotificationMapping(NotificationType.MENTION_COMMENT_ADDED)
     public void added(MentionCommentAddedNotification notification) {
-        jobs.run(
+        jobs.runAfterCommit(
             MentionCommentAddedJob.class,
             new MentionCommentAddedJob.Parameters(
                 notification.getSenderNodeName(),

@@ -26,7 +26,7 @@ public class PostingReactionProcessor {
 
     @NotificationMapping(NotificationType.POSTING_REACTION_ADDED)
     public void added(PostingReactionAddedNotification notification) {
-        jobs.run(
+        jobs.runAfterCommit(
             PostingReactionAddedJob.class,
             new PostingReactionAddedJob.Parameters(
                 notification.getSenderNodeName(),

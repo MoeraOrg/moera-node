@@ -120,7 +120,7 @@ public class RemotePostingController {
 
     private void update(String nodeName, String postingId, PostingSourceText postingText) {
         mediaOperations.validateAvatar(postingText.getOwnerAvatar());
-        jobs.run(
+        jobs.runAfterCommit(
             RemotePostingPostJob.class,
             new RemotePostingPostJob.Parameters(nodeName, postingId, postingText),
             requestContext.nodeId()

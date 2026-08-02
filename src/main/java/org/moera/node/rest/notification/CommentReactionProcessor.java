@@ -24,7 +24,7 @@ public class CommentReactionProcessor {
 
     @NotificationMapping(NotificationType.COMMENT_REACTION_ADDED)
     public void added(CommentReactionAddedNotification notification) {
-        jobs.run(
+        jobs.runAfterCommit(
             CommentReactionAddedJob.class,
             new CommentReactionAddedJob.Parameters(
                 notification.getSenderNodeName(),

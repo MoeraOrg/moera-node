@@ -41,7 +41,7 @@ public class ProfileProcessor {
     @NotificationMapping(NotificationType.PROFILE_UPDATED)
     public void profileUpdated(ProfileUpdatedNotification notification) {
         tx.executeRead(() -> validateSubscription(notification));
-        jobs.run(
+        jobs.runAfterCommit(
             ProfileUpdateJob.class,
             new ProfileUpdateJob.Parameters(notification.getSenderNodeName()),
             universalContext.nodeId()

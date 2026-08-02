@@ -22,7 +22,7 @@ public class ReplyCommentProcessor {
 
     @NotificationMapping(NotificationType.REPLY_COMMENT_ADDED)
     public void added(ReplyCommentAddedNotification notification) {
-        jobs.run(
+        jobs.runAfterCommit(
             ReplyCommentAddedJob.class,
             new ReplyCommentAddedJob.Parameters(
                 notification.getSenderNodeName(),

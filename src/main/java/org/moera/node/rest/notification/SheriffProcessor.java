@@ -24,7 +24,7 @@ public class SheriffProcessor {
 
     @NotificationMapping(NotificationType.SHERIFF_ORDER_FOR_POSTING_ADDED)
     public void orderForPostingAdded(SheriffOrderForPostingAddedNotification notification) {
-        jobs.run(
+        jobs.runAfterCommit(
             SheriffOrderForPostingReceivedJob.class,
             new SheriffOrderForPostingReceivedJob.Parameters(notification),
             universalContext.nodeId()
@@ -33,7 +33,7 @@ public class SheriffProcessor {
 
     @NotificationMapping(NotificationType.SHERIFF_ORDER_FOR_POSTING_DELETED)
     public void orderForPostingDeleted(SheriffOrderForPostingDeletedNotification notification) {
-        jobs.run(
+        jobs.runAfterCommit(
             SheriffOrderForPostingReceivedJob.class,
             new SheriffOrderForPostingReceivedJob.Parameters(notification),
             universalContext.nodeId()
@@ -42,7 +42,7 @@ public class SheriffProcessor {
 
     @NotificationMapping(NotificationType.SHERIFF_ORDER_FOR_COMMENT_ADDED)
     public void orderForCommentAdded(SheriffOrderForCommentAddedNotification notification) {
-        jobs.run(
+        jobs.runAfterCommit(
             SheriffOrderForCommentReceivedJob.class,
             new SheriffOrderForCommentReceivedJob.Parameters(notification),
             universalContext.nodeId()
@@ -51,7 +51,7 @@ public class SheriffProcessor {
 
     @NotificationMapping(NotificationType.SHERIFF_ORDER_FOR_COMMENT_DELETED)
     public void orderForCommentDeleted(SheriffOrderForCommentDeletedNotification notification) {
-        jobs.run(
+        jobs.runAfterCommit(
             SheriffOrderForCommentReceivedJob.class,
             new SheriffOrderForCommentReceivedJob.Parameters(notification),
             universalContext.nodeId()
@@ -60,7 +60,7 @@ public class SheriffProcessor {
 
     @NotificationMapping(NotificationType.SHERIFF_COMPLAINT_DECIDED)
     public void complaintDecided(SheriffComplaintDecidedNotification notification) {
-        jobs.run(
+        jobs.runAfterCommit(
             SheriffComplaintDecidedJob.class,
             new SheriffComplaintDecidedJob.Parameters(notification),
             universalContext.nodeId()
