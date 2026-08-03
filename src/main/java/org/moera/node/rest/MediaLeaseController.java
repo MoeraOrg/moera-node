@@ -1,7 +1,5 @@
 package org.moera.node.rest;
 
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 import jakarta.inject.Inject;
@@ -13,20 +11,20 @@ import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachmentRepository;
-import org.moera.node.data.MediaLease;
-import org.moera.node.data.MediaLeaseRepository;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
+import org.moera.node.data.MediaLease;
+import org.moera.node.data.MediaLeaseRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
-import org.moera.node.media.MediaCleanupOperations;
+import org.moera.node.media.DirectServeOperations;
+import org.moera.node.media.MediaLeaseOperations;
 import org.moera.node.media.grant.MediaGrantGenerator;
 import org.moera.node.model.MediaLeaseInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -46,10 +44,13 @@ public class MediaLeaseController {
     private static final Logger log = LoggerFactory.getLogger(MediaLeaseController.class);
 
     @Inject
+    private RequestContext requestContext;
+
+    @Inject
     private DirectServeOperations directServeOperations;
 
     @Inject
-    private RequestContext requestContext;
+    private MediaLeaseOperations mediaLeaseOperations;
 
     @Inject
     private MediaFileOwnerRepository mediaFileOwnerRepository;
@@ -131,19 +132,7 @@ public class MediaLeaseController {
             throw new ObjectNotFoundFailure("media.not-found");
         }
 
-        MediaLease mediaLease = new MediaLease();
-        mediaLease.setId(UUID.randomUUID());
-        mediaLease.setNodeId(requestContext.nodeId());
-        mediaLease.setOwnerName(attributes.getNodeName());
-        mediaLease.setMediaFileOwner(mediaFileOwner);
-        mediaLease.setEntry(entry);
-        if (admin) {
-            mediaLease.setDraftOnly(true);
-            mediaLease.setDeadline(
-                Timestamp.from(Instant.now().plus(MediaCleanupOperations.DRAFT_ONLY_LEASE_TTL))
-            );
-        }
-        mediaLease = mediaLeaseRepository.save(mediaLease);
+        MediaLease mediaLease = mediaLeaseOperations.create(attributes.getNodeName(), mediaFileOwner, entry, admin);
 
         var grantSupplier = entry != null ? new MediaGrantGenerator(requestContext.getOptions()) : null;
         return MediaLeaseInfoUtil.build(mediaLease, directServeOperations, grantSupplier);

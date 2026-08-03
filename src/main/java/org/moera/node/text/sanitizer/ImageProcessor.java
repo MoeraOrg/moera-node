@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFilePreview;
 import org.moera.node.global.ServeContext;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaUtil;
@@ -131,8 +132,10 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
             Integer sizeX;
             Integer sizeY;
             if (localRemoteMedia.mediaFileOwner() != null) {
-                MediaFile mediaFile =
-                    localRemoteMedia.mediaFileOwner().getMediaFile().findLargerPreview(900).getMediaFile();
+                MediaFilePreview preview = localRemoteMedia.mediaFileOwner().getMediaFile().findLargerPreview(900);
+                MediaFile mediaFile = preview != null
+                    ? preview.getMediaFile()
+                    : localRemoteMedia.mediaFileOwner().getMediaFile();
                 sizeX = mediaFile.getSizeX();
                 sizeY = mediaFile.getSizeY();
             } else {

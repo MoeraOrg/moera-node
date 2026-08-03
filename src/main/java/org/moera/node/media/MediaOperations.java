@@ -363,9 +363,11 @@ public class MediaOperations {
                 mediaFile.setDimension(ImageUtil.getImageDimension(contentType, mediaPath));
                 mediaFile.setOrientation(ImageUtil.getImageOrientation(mediaPath));
             } else if (MimeUtil.isSupportedVideo(contentType)) {
-                var videoInfo = VideoUtil.getVideoInfo(mediaPath);
+                var videoInfo = VideoUtil.getVideoInfo(mediaPath, contentType);
                 mediaFile.setDimension(videoInfo.dimension());
                 mediaFile.setDuration(videoInfo.duration());
+                mediaFile.setStreamInfo(videoInfo.streamInfo());
+                mediaFile.setUncompressed(videoInfo.uncompressed());
             }
             mediaFile.setFileSize(Files.size(mediaPath));
             mediaFile.setDigest(digest);
@@ -477,6 +479,10 @@ public class MediaOperations {
         }
 
         MediaFilePreview largerPreview = original.findLargerPreview(width);
+        // for video, this method may return a preview that is smaller than the requested width if there is no larger
+        if (largerPreview != null && largerPreview.getWidth() < width) {
+            largerPreview = null;
+        }
         PreviewSource source = previewSource != null ? previewSource : new PreviewSource(cropped);
         if (largerPreview != null && largerPreview.getWidth() == width) {
             return source.from(largerPreview.getMediaFile());
@@ -814,10 +820,7 @@ public class MediaOperations {
             if (!ObjectUtils.isEmpty(mediaFile.getFileName())) {
                 Path mediaPath = getPath(mediaFile);
                 return switch (config.getMedia().getServe()) {
-                    case STREAM -> {
-                        headers.setContentLength(mediaFile.getFileSize());
-                        yield new ResponseEntity<>(new FileSystemResource(mediaPath), headers, HttpStatus.OK);
-                    }
+                    case STREAM -> new ResponseEntity<>(new FileSystemResource(mediaPath), headers, HttpStatus.OK);
                     case ACCEL -> {
                         headers.add(
                             "X-Accel-Redirect",
@@ -888,6 +891,15 @@ public class MediaOperations {
         Collection<EntryAttachment> prevMediaList,
         boolean isAdminViewMedia
     ) {
+        return validateAttachments(mediaList, prevMediaList, isAdminViewMedia, false);
+    }
+
+    public List<LocalRemoteMedia> validateAttachments(
+        Collection<MediaToAttach> mediaList,
+        Collection<EntryAttachment> prevMediaList,
+        boolean isAdminViewMedia,
+        boolean allowUncompressed
+    ) {
         if (ObjectUtils.isEmpty(mediaList)) {
             return Collections.emptyList();
         }
@@ -936,10 +948,19 @@ public class MediaOperations {
             if (!usedIds.contains(localMediaId) && (mediaFileOwner == null || !isAdminViewMedia)) {
                 throw new ObjectNotFoundFailure("media.not-found");
             }
+            if (!allowUncompressed && awaitingVideoCompression(mediaFileOwner)) {
+                throw new OperationFailure("media.video-not-compressed");
+            }
             attached.add(new LocalRemoteMedia(mediaFileOwner, remoteMediaFile, mediaLease));
             usedIds.add(localMediaId);
         }
         return attached;
+    }
+
+    public static boolean awaitingVideoCompression(MediaFileOwner mediaFileOwner) {
+        return mediaFileOwner != null
+            && mediaFileOwner.isDownsize()
+            && mediaFileOwner.getMediaFile().isUncompressed();
     }
 
     public void clearDraftOnlyMediaLeases(Collection<MediaToAttach> attachments) {

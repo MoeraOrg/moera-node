@@ -7,8 +7,11 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+
+import jakarta.persistence.LockModeType;
 
 public interface MediaFileRepository extends JpaRepository<MediaFile, String> {
 
@@ -18,10 +21,15 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, String> {
     @Query("select count(mf) from MediaFile mf where mf.id = ?1")
     long countById(String id);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select mf from MediaFile mf where mf.id = ?1")
+    Optional<MediaFile> findByIdForUpdate(String id);
+
     @Query(
         value = "with candidates as ("
             + " select id from media_files"
             + " where deadline is not null and deadline < ?1 and cloud_upload_deadline is null"
+            + " and compression_job_id is null"
             + " order by id limit ?2 for update skip locked"
             + "),"
             + " removed as ("
@@ -43,7 +51,7 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, String> {
             + " cloud_upload_deadline is null and file_name is not null and usage_count > 0 and created_at <= ?2"
             + " and digest is not null"
             + " )"
-            + ")"
+            + ") and compression_job_id is null"
             + " order by"
             + " case when cloud_upload_deadline is not null then 0 else 1 end,"
             + " case when cloud_upload_deadline is not null then cloud_upload_deadline else created_at end,"
@@ -72,6 +80,7 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, String> {
         "update MediaFile mf set mf.cloudFileName = ?3, mf.cloudUploadDeadline = null,"
         + " mf.fileName = case when ?4 = true then mf.fileName else null end"
         + " where mf.id = ?1 and mf.cloudFileName is null and mf.cloudUploadDeadline = ?2"
+        + " and mf.compressionJob is null"
     )
     @Modifying
     int completeCloudUpload(String id, Timestamp expectedDeadline, String cloudFileName, boolean exposed);

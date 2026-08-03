@@ -8,6 +8,8 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
@@ -48,6 +50,17 @@ public class MediaFile {
     private long fileSize;
 
     private Float duration;
+
+    private String streamInfo;
+
+    @NotNull
+    private boolean uncompressed;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private MediaFile compressedFile;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private PendingJob compressionJob;
 
     @NotNull
     private boolean exposed;
@@ -182,6 +195,38 @@ public class MediaFile {
         this.duration = duration;
     }
 
+    public String getStreamInfo() {
+        return streamInfo;
+    }
+
+    public void setStreamInfo(String streamInfo) {
+        this.streamInfo = streamInfo;
+    }
+
+    public boolean isUncompressed() {
+        return uncompressed;
+    }
+
+    public void setUncompressed(boolean uncompressed) {
+        this.uncompressed = uncompressed;
+    }
+
+    public MediaFile getCompressedFile() {
+        return compressedFile;
+    }
+
+    public void setCompressedFile(MediaFile compressedFile) {
+        this.compressedFile = compressedFile;
+    }
+
+    public PendingJob getCompressionJob() {
+        return compressionJob;
+    }
+
+    public void setCompressionJob(PendingJob compressionJob) {
+        this.compressionJob = compressionJob;
+    }
+
     public boolean isExposed() {
         return exposed;
     }
@@ -276,6 +321,7 @@ public class MediaFile {
 
     public MediaFilePreview findLargerPreview(int width) {
         MediaFilePreview smallest = null;
+        MediaFilePreview largest = null;
         for (MediaFilePreview preview : getPreviews()) {
             if (preview.getMediaFile() == null) {
                 continue;
@@ -283,8 +329,11 @@ public class MediaFile {
             if (preview.getWidth() >= width && (smallest == null || smallest.getWidth() > preview.getWidth())) {
                 smallest = preview;
             }
+            if (largest == null || largest.getWidth() < preview.getWidth()) {
+                largest = preview;
+            }
         }
-        return smallest;
+        return smallest != null ? smallest : (isImage() ? null : largest);
     }
 
 }

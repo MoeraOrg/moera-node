@@ -5,14 +5,14 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import org.moera.node.api.naming.NamingCache;
-import org.springframework.stereotype.Controller;
+import org.moera.node.global.UiController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
-@Controller
+@UiController
 @RequestMapping("/moera/remote-media/{nodeName}")
 public class RemoteMediaUiController {
 

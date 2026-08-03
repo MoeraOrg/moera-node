@@ -270,6 +270,7 @@ public class DownloadEntryAttachmentsJob
             || !Objects.equals(remoteMediaFile.getSizeX(), mediaInfo.getWidth())
             || !Objects.equals(remoteMediaFile.getSizeY(), mediaInfo.getHeight())
             || !Objects.equals(remoteMediaFile.getFileSize(), mediaInfo.getSize())
+            || !Objects.equals(remoteMediaFile.getDuration(), mediaInfo.getDuration())
             || !Objects.equals(remoteMediaFile.getTitle(), mediaInfo.getTitle());
     }
 

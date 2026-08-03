@@ -59,6 +59,7 @@ public class RemoteMediaOperations {
         remoteMediaFile.setSizeX(media.getWidth());
         remoteMediaFile.setSizeY(media.getHeight());
         remoteMediaFile.setFileSize(media.getSize());
+        remoteMediaFile.setDuration(media.getDuration());
         remoteMediaFile.setTitle(media.getTitle());
         remoteMediaFile.setLeaseId(leaseId);
         return remoteMediaFile;
@@ -87,6 +88,7 @@ public class RemoteMediaOperations {
         remoteMediaFile.setSizeX(mediaInfo.getWidth());
         remoteMediaFile.setSizeY(mediaInfo.getHeight());
         remoteMediaFile.setFileSize(mediaInfo.getSize());
+        remoteMediaFile.setDuration(mediaInfo.getDuration());
         remoteMediaFile.setTitle(mediaInfo.getTitle());
 
         entryRevisionRepository.clearAttachmentsCacheByRemoteMedia(

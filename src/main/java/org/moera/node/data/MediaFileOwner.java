@@ -62,6 +62,12 @@ public class MediaFileOwner {
     @NotNull
     private String malwareMarks = "";
 
+    @NotNull
+    private boolean downsize;
+
+    @ManyToOne
+    private MediaFileOwner compressedOwner;
+
     public UUID getId() {
         return id;
     }
@@ -173,6 +179,22 @@ public class MediaFileOwner {
 
     public void setMalwareMarks(String malwareMarks) {
         this.malwareMarks = malwareMarks;
+    }
+
+    public boolean isDownsize() {
+        return downsize;
+    }
+
+    public void setDownsize(boolean downsize) {
+        this.downsize = downsize;
+    }
+
+    public MediaFileOwner getCompressedOwner() {
+        return compressedOwner;
+    }
+
+    public void setCompressedOwner(MediaFileOwner compressedOwner) {
+        this.compressedOwner = compressedOwner;
     }
 
 }

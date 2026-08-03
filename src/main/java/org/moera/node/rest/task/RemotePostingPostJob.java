@@ -1,20 +1,17 @@
 package org.moera.node.rest.task;
 
 import java.security.interfaces.ECPrivateKey;
-import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.exception.MoeraNodeException;
-import org.moera.lib.node.types.MediaAttachment;
-import org.moera.lib.node.types.MediaToAttach;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PostingSourceText;
 import org.moera.lib.node.types.PostingText;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.WhoAmI;
+import org.moera.node.data.FavorType;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnPosting;
@@ -24,24 +21,19 @@ import org.moera.node.liberin.model.RemotePostingAddedLiberin;
 import org.moera.node.liberin.model.RemotePostingAddingFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingUpdateFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
-import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AvatarDescriptionUtil;
-import org.moera.node.model.MediaAttachmentUtil;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.PostingSourceTextUtil;
 import org.moera.node.model.PostingTextUtil;
 import org.moera.node.operations.FavorOperations;
-import org.moera.node.data.FavorType;
-import org.moera.node.task.Job;
 import org.moera.node.text.TextConverter;
-import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.ObjectUtils;
 import tools.jackson.databind.ObjectMapper;
 
-public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, RemotePostingPostJob.State> {
+public class RemotePostingPostJob
+    extends RemoteEntryPostJob<RemotePostingPostJob.Parameters, RemotePostingPostJob.State> {
 
     public static class Parameters {
 
@@ -86,6 +78,9 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
 
     public static class State {
 
+        private PostingSourceText sourceText;
+        private boolean uncompressedMediaChecked;
+        private boolean mediaCompressionWaited;
         private WhoAmI target;
         private String targetAvatarMediaFileId;
         private boolean targetAvatarMediaFileLoaded;
@@ -96,6 +91,30 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
         private PostingInfo postingInfo;
 
         public State() {
+        }
+
+        public PostingSourceText getSourceText() {
+            return sourceText;
+        }
+
+        public void setSourceText(PostingSourceText sourceText) {
+            this.sourceText = sourceText;
+        }
+
+        public boolean isUncompressedMediaChecked() {
+            return uncompressedMediaChecked;
+        }
+
+        public void setUncompressedMediaChecked(boolean uncompressedMediaChecked) {
+            this.uncompressedMediaChecked = uncompressedMediaChecked;
+        }
+
+        public boolean isMediaCompressionWaited() {
+            return mediaCompressionWaited;
+        }
+
+        public void setMediaCompressionWaited(boolean mediaCompressionWaited) {
+            this.mediaCompressionWaited = mediaCompressionWaited;
         }
 
         public WhoAmI getTarget() {
@@ -179,13 +198,14 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
     private FavorOperations favorOperations;
 
     @Inject
-    private MediaManager mediaManager;
+    private MediaOperations mediaOperations;
 
     @Inject
-    private MediaOperations mediaOperations;
+    private ObjectMapper objectMapper;
 
     public RemotePostingPostJob() {
         state = new State();
+        exponentialRetry("PT10S", "PT12H");
     }
 
     @Override
@@ -210,6 +230,17 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
 
     @Override
     protected void execute() throws MoeraNodeException {
+        if (state.sourceText == null) {
+            state.sourceText = objectMapper.convertValue(parameters.sourceText, PostingSourceText.class);
+            checkpoint();
+        }
+
+        if (!state.uncompressedMediaChecked) {
+            awaitMediaCompression();
+            state.uncompressedMediaChecked = true;
+            checkpoint();
+        }
+
         if (state.target == null) {
             state.target = nodeApi.at(parameters.targetNodeName).whoAmI();
             checkpoint();
@@ -229,7 +260,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
             mediaManager.uploadPublicMedia(
                 parameters.targetNodeName,
                 generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
-                AvatarDescriptionUtil.getMediaFile(parameters.sourceText.getOwnerAvatar())
+                AvatarDescriptionUtil.getMediaFile(state.sourceText.getOwnerAvatar())
             );
             state.ownerAvatarUploaded = true;
             checkpoint();
@@ -243,7 +274,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
         }
 
         if (!state.uploadedRemoteMediaCached) {
-            cacheUploadedRemoteMedia();
+            cacheUploadedRemoteMedia(state.sourceText.getMedia());
             state.uploadedRemoteMediaCached = true;
             checkpoint();
         }
@@ -256,8 +287,11 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
         if (state.postingInfo == null) {
             if (parameters.postingId == null) {
                 state.postingInfo = nodeApi.at(parameters.targetNodeName).createPosting(state.postingText);
-                String postingId = state.postingInfo.getId();
-                send(new RemotePostingAddedLiberin(parameters.targetNodeName, postingId));
+                send(new RemotePostingAddedLiberin(
+                    state.target,
+                    state.postingInfo,
+                    state.mediaCompressionWaited
+                ));
             } else {
                 state.postingInfo = nodeApi
                     .at(parameters.targetNodeName)
@@ -269,27 +303,24 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
 
         updateCaptions();
         savePosting();
-        mediaOperations.clearDraftOnlyMediaLeases(parameters.sourceText.getMedia());
+        mediaOperations.clearDraftOnlyMediaLeases(state.sourceText.getMedia());
     }
 
-    private void cacheUploadedRemoteMedia() {
-        var media = parameters.sourceText.getMedia();
-        if (ObjectUtils.isEmpty(media)) {
-            return;
+    private void awaitMediaCompression() throws MoeraNodeException {
+        awaitMediaCompression(parameters.targetNodeName, state.sourceText.getBodySrc(), state.sourceText.getMedia());
+    }
+
+    @Override
+    protected void mediaCompressionWaiting() {
+        if (!state.mediaCompressionWaited) {
+            state.mediaCompressionWaited = true;
+            checkpoint();
         }
-        media.stream()
-            .map(MediaToAttach::getRemoteMedia)
-            .filter(Objects::nonNull)
-            .forEach(rm ->
-                mediaManager.cacheUploadedRemoteMedia(
-                    rm.getNodeName(), rm.getMediaId(), Util.base64decode(rm.getDigest())
-                )
-            );
     }
 
     private PostingText buildPosting() throws MoeraNodeException {
         PostingText postingText = PostingTextUtil.build(
-            nodeName(), fullName(), gender(), parameters.sourceText, textConverter
+            nodeName(), fullName(), gender(), state.sourceText, textConverter
         );
         byte[] parentMediaDigest = state.prevPostingInfo != null
             ? mediaManager.getParentMediaDigest(
@@ -309,29 +340,12 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
     }
 
     private void updateCaptions() {
-        if (ObjectUtils.isEmpty(state.postingInfo.getMedia())) {
-            return;
-        }
-        var mediaPostings = state.postingInfo.getMedia().stream()
-            .filter(ma -> MediaAttachmentUtil.mediaId(ma) != null && ma.getPostingId() != null)
-            .collect(Collectors.toMap(MediaAttachmentUtil::mediaId, MediaAttachment::getPostingId));
-
-        for (var caption : parameters.sourceText.getMediaCaptions()) {
-            var postingId = mediaPostings.get(caption.getMediaId());
-            if (postingId == null) {
-                continue;
-            }
-
-            jobs.run(
-                RemotePostingPostJob.class,
-                new RemotePostingPostJob.Parameters(
-                    parameters.targetNodeName,
-                    postingId,
-                    PostingSourceTextUtil.build(parameters.sourceText, caption)
-                ),
-                universalContext.nodeId()
-            );
-        }
+        updateCaptions(
+            parameters.targetNodeName,
+            state.postingInfo.getMedia(),
+            state.sourceText.getMediaCaptions(),
+            caption -> PostingSourceTextUtil.build(state.sourceText, caption)
+        );
     }
 
     private void savePosting() {

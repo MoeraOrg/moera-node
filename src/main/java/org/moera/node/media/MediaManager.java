@@ -37,6 +37,7 @@ import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.MediaUpload;
 import org.moera.node.data.MediaUploadRepository;
+import org.moera.node.data.PendingJob;
 import org.moera.node.data.RemoteMediaCache;
 import org.moera.node.data.RemoteMediaCacheRepository;
 import org.moera.node.data.RemoteMediaError;
@@ -45,6 +46,8 @@ import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.ocrspace.OcrSpace;
+import org.moera.node.media.video.VideoCompressionJob;
+import org.moera.node.task.Jobs;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.UriUtil;
@@ -93,6 +96,9 @@ public class MediaManager {
 
     @Inject
     private MediaDownloadOperations mediaDownloadOperations;
+
+    @Inject
+    private Jobs jobs;
 
     @Inject
     @PersistenceContext
@@ -685,7 +691,35 @@ public class MediaManager {
             mediaFileOwner.getMediaFile().setRecognizeAt(Util.now());
         }
 
+        prepareDownsize(mediaFileOwner, downsize);
+
         return mediaFileOwner;
+    }
+
+    private void prepareDownsize(MediaFileOwner mediaFileOwner, boolean downsize) {
+        mediaFileOwner.setDownsize(downsize);
+        if (!downsize || !mediaFileOwner.getMediaFile().isVideo()) {
+            return;
+        }
+
+        MediaFile mediaFile = mediaFileRepository.findByIdForUpdate(mediaFileOwner.getMediaFile().getId())
+            .orElseThrow(() -> new IllegalStateException("Uploaded media file disappeared"));
+        if (!mediaFile.isUncompressed()) {
+            return;
+        }
+        if (mediaFile.getCompressedFile() != null) {
+            mediaFileOwner.setMediaFile(mediaFile.getCompressedFile());
+            return;
+        }
+        if (mediaFile.getCompressionJob() != null) {
+            return;
+        }
+
+        UUID jobId = jobs.runAfterCommit(
+            VideoCompressionJob.class, new VideoCompressionJob.Parameters(mediaFile.getId())
+        );
+        mediaFile.setCompressionJob(entityManager.getReference(PendingJob.class, jobId));
+        mediaFile.setCloudUploadDeadline(null);
     }
 
     private MediaFileOwner ownMediaFromStream(

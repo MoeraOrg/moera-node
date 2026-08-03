@@ -31,6 +31,12 @@ public class PrivateMediaFileInfoUtil {
         info.setOrientation(mediaFileOwner.getMediaFile().getOrientation());
         info.setSize(mediaFileOwner.getMediaFile().getFileSize());
         info.setDuration(mediaFileOwner.getMediaFile().getDuration());
+        if (mediaFileOwner.getMediaFile().isUncompressed() && mediaFileOwner.isDownsize()) {
+            info.setUncompressed(true);
+        }
+        if (mediaFileOwner.getCompressedOwner() != null) {
+            info.setCompressedMediaId(mediaFileOwner.getCompressedOwner().getId().toString());
+        }
         info.setTitle(mediaFileOwner.getTitle());
         info.setTextContent(mediaFileOwner.getMediaFile().getRecognizedText());
         info.setAttachment(

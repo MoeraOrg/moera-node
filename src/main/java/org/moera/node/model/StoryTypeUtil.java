@@ -35,7 +35,9 @@ public class StoryTypeUtil {
                    SEARCH_REPORT,
                    REMINDER_AVATAR,
                    PREMODERATED_COMMENT_ACCEPTED,
-                   PREMODERATED_COMMENT_REJECTED -> 0;
+                   PREMODERATED_COMMENT_REJECTED,
+                   VIDEO_COMMENT_PUBLISHED,
+                   VIDEO_POSTING_PUBLISHED -> 0;
 
               case MENTION_POSTING,
                    MENTION_COMMENT,

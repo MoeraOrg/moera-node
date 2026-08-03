@@ -126,7 +126,7 @@ public abstract class Job<P, S> extends Task {
         jobs.done(this);
     }
 
-    private void recover(Throwable e) {
+    protected void recover(Throwable e) {
         if (e != null) {
             log.error("Error executing job {}: {}", this.getClass().getSimpleName(), e.getMessage());
         }

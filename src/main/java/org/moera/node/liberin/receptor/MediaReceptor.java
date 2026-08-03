@@ -12,7 +12,9 @@ import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.EntryMediaDownloadedLiberin;
+import org.moera.node.liberin.model.MediaCompressedLiberin;
 import org.moera.node.liberin.model.MediaTitleUpdatedLiberin;
+import org.moera.node.model.event.MediaCompressedEvent;
 import org.moera.node.model.notification.LeasedMediaTitleUpdatedNotificationUtil;
 import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.notification.send.Directions;
@@ -25,6 +27,13 @@ public class MediaReceptor extends LiberinReceptorBase {
 
     @Inject
     private CommentRepository commentRepository;
+
+    @LiberinMapping
+    public void compressed(MediaCompressedLiberin liberin) {
+        send(liberin, new MediaCompressedEvent(
+            liberin.getOriginalMediaId().toString(), liberin.getOriginalMediaHash(), liberin.getMedia()
+        ));
+    }
 
     @LiberinMapping
     public void titleUpdated(MediaTitleUpdatedLiberin liberin) {

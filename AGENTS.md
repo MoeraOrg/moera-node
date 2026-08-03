@@ -16,6 +16,18 @@
    equivalent.
 4. In JPA repository interfaces, always write the DB queries explicitly.
 
+# Public API
+
+1. The difference between media files and media file owners is an implementation detail that is not exposed in the
+   public API. A media file owner ID in the implementation is called a media file ID in the public API, and a media
+   file ID in the implementation is called a media file hash in the public API.
+
+# Instant stories
+
+1. Creation of stories in `Feed.INSTANT` must be initiated only by liberin receptors.
+2. A liberin receptor must delegate this creation to a dedicated instant creator component that extends
+   `InstantsCreator`; it must not construct or persist the story directly.
+
 # Other
  
 1. In src/main/resources/messages.properties, place codes with the same 1st or 1st and 2nd components together. Place

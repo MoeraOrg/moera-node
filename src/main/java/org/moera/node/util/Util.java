@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
@@ -24,6 +25,13 @@ import com.ibm.icu.util.Calendar;
 import org.springframework.web.util.HtmlUtils;
 
 public class Util {
+
+    /**
+     * Returns monotonic time in milliseconds for measuring elapsed time. The value is unrelated to wall-clock time.
+     */
+    public static long milliTime() {
+        return TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
+    }
 
     public static Timestamp now() {
         return Timestamp.from(Instant.now());

@@ -33,7 +33,9 @@ public class PostingTextUtil {
         PostingText postingText = new PostingText();
         
         postingText.setOwnerName(ownerName);
-        postingText.setOwnerFullName(ownerFullName);
+        postingText.setOwnerFullName(
+            sourceText.getOwnerFullName() != null ? sourceText.getOwnerFullName() : ownerFullName
+        );
         postingText.setOwnerGender(ownerGender);
         postingText.setOwnerAvatar(sourceText.getOwnerAvatar());
         postingText.setBodySrc(sourceText.getBodySrc());
@@ -49,6 +51,9 @@ public class PostingTextUtil {
         postingText.setCreatedAt(Util.toEpochSecond(Util.now()));
         postingText.setRejectedReactions(sourceText.getRejectedReactions());
         postingText.setCommentRejectedReactions(sourceText.getCommentRejectedReactions());
+        if (sourceText.getPublications() != null) {
+            postingText.setPublications(new ArrayList<>(sourceText.getPublications()));
+        }
 
         if (postingText.getBodySrc() != null) {
             if (postingText.getBodySrcFormat() != SourceFormat.APPLICATION) {

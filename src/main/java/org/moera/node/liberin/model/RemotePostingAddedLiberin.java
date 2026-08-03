@@ -2,39 +2,55 @@ package org.moera.node.liberin.model;
 
 import java.util.Map;
 
+import org.moera.lib.node.types.PostingInfo;
+import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.liberin.Liberin;
 
 public class RemotePostingAddedLiberin extends Liberin {
 
-    private String nodeName;
-    private String postingId;
+    private WhoAmI nodeInfo;
+    private PostingInfo postingInfo;
+    private boolean videoCompressionWaited;
 
-    public RemotePostingAddedLiberin(String nodeName, String postingId) {
-        this.nodeName = nodeName;
-        this.postingId = postingId;
+    public RemotePostingAddedLiberin(
+        WhoAmI nodeInfo,
+        PostingInfo postingInfo,
+        boolean videoCompressionWaited
+    ) {
+        this.nodeInfo = nodeInfo;
+        this.postingInfo = postingInfo;
+        this.videoCompressionWaited = videoCompressionWaited;
     }
 
-    public String getNodeName() {
-        return nodeName;
+    public WhoAmI getNodeInfo() {
+        return nodeInfo;
     }
 
-    public void setNodeName(String nodeName) {
-        this.nodeName = nodeName;
+    public void setNodeInfo(WhoAmI nodeInfo) {
+        this.nodeInfo = nodeInfo;
     }
 
-    public String getPostingId() {
-        return postingId;
+    public PostingInfo getPostingInfo() {
+        return postingInfo;
     }
 
-    public void setPostingId(String postingId) {
-        this.postingId = postingId;
+    public void setPostingInfo(PostingInfo postingInfo) {
+        this.postingInfo = postingInfo;
+    }
+
+    public boolean isVideoCompressionWaited() {
+        return videoCompressionWaited;
+    }
+
+    public void setVideoCompressionWaited(boolean videoCompressionWaited) {
+        this.videoCompressionWaited = videoCompressionWaited;
     }
 
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("postingId", postingId);
+        model.put("nodeName", nodeInfo.getNodeName());
+        model.put("postingId", postingInfo.getId());
     }
 
 }

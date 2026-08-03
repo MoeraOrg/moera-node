@@ -32,7 +32,9 @@ public class CommentTextUtil {
         CommentText commentText = new CommentText();
         
         commentText.setOwnerName(ownerName);
-        commentText.setOwnerFullName(ownerFullName);
+        commentText.setOwnerFullName(
+            sourceText.getOwnerFullName() != null ? sourceText.getOwnerFullName() : ownerFullName
+        );
         commentText.setOwnerGender(ownerGender);
         commentText.setOwnerAvatar(sourceText.getOwnerAvatar());
         commentText.setBodySrc(sourceText.getBodySrc());

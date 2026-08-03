@@ -4,6 +4,7 @@ import jakarta.inject.Inject;
 
 import org.moera.node.instant.CommentInstants;
 import org.moera.node.instant.MentionCommentInstants;
+import org.moera.node.instant.VideoInstants;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
@@ -29,28 +30,48 @@ public class RemoteCommentReceptor extends LiberinReceptorBase {
     @Inject
     private MentionCommentInstants mentionCommentInstants;
 
+    @Inject
+    private VideoInstants videoInstants;
+
     @LiberinMapping
     public void added(RemoteCommentAddedLiberin liberin) {
-        send(liberin,
-                new RemoteCommentAddedEvent(liberin.getNodeName(), liberin.getPostingId(), liberin.getCommentId()));
+        send(
+            liberin,
+            new RemoteCommentAddedEvent(
+                liberin.getNodeName(), liberin.getPostingInfo().getId(), liberin.getCommentInfo().getId()
+            )
+        );
+        if (liberin.isVideoCompressionWaited()) {
+            videoInstants.commentPublished(
+                liberin.getNodeName(), liberin.getPostingInfo(), liberin.getCommentInfo()
+            );
+        }
     }
 
     @LiberinMapping
     public void addingFailed(RemoteCommentAddingFailedLiberin liberin) {
-        commentInstants.addingFailed(liberin.getRemoteNodeName(), liberin.getRemotePostingId(),
-                liberin.getPostingInfo());
+        commentInstants.addingFailed(
+            liberin.getRemoteNodeName(), liberin.getRemotePostingId(), liberin.getPostingInfo()
+        );
     }
 
     @LiberinMapping
     public void updated(RemoteCommentUpdatedLiberin liberin) {
-        send(liberin,
-                new RemoteCommentUpdatedEvent(liberin.getNodeName(), liberin.getPostingId(), liberin.getCommentId()));
+        send(
+            liberin,
+            new RemoteCommentUpdatedEvent(liberin.getNodeName(), liberin.getPostingId(), liberin.getCommentId())
+        );
     }
 
     @LiberinMapping
     public void updateFailed(RemoteCommentUpdateFailedLiberin liberin) {
-        commentInstants.updateFailed(liberin.getRemoteNodeName(), liberin.getRemotePostingId(),
-                liberin.getPostingInfo(), liberin.getRemoteCommentId(), liberin.getPrevCommentInfo());
+        commentInstants.updateFailed(
+            liberin.getRemoteNodeName(),
+            liberin.getRemotePostingId(),
+            liberin.getPostingInfo(),
+            liberin.getRemoteCommentId(),
+            liberin.getPrevCommentInfo()
+        );
     }
 
     @LiberinMapping
@@ -65,12 +86,24 @@ public class RemoteCommentReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void mentionAdded(MentionInRemoteCommentAddedLiberin liberin) {
-        mentionCommentInstants.added(liberin.getNodeName(), liberin.getPostingOwnerName(),
-                liberin.getPostingOwnerFullName(), liberin.getPostingOwnerGender(), liberin.getPostingOwnerAvatar(),
-                liberin.getPostingId(), liberin.getPostingHeading(), liberin.getPostingSheriffs(),
-                liberin.getPostingSheriffMarks(), liberin.getCommentOwnerName(), liberin.getCommentOwnerFullName(),
-                liberin.getCommentOwnerGender(), liberin.getCommentOwnerAvatar(), liberin.getCommentId(),
-                liberin.getCommentHeading(), liberin.getCommentSheriffMarks());
+        mentionCommentInstants.added(
+            liberin.getNodeName(),
+            liberin.getPostingOwnerName(),
+            liberin.getPostingOwnerFullName(),
+            liberin.getPostingOwnerGender(),
+            liberin.getPostingOwnerAvatar(),
+            liberin.getPostingId(),
+            liberin.getPostingHeading(),
+            liberin.getPostingSheriffs(),
+            liberin.getPostingSheriffMarks(),
+            liberin.getCommentOwnerName(),
+            liberin.getCommentOwnerFullName(),
+            liberin.getCommentOwnerGender(),
+            liberin.getCommentOwnerAvatar(),
+            liberin.getCommentId(),
+            liberin.getCommentHeading(),
+            liberin.getCommentSheriffMarks()
+        );
     }
 
     @LiberinMapping

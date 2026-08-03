@@ -29,6 +29,9 @@ public interface MediaFileOwnerRepository extends JpaRepository<MediaFileOwner, 
     @Query("select mo from MediaFileOwner mo where mo.mediaFile.id = ?1")
     Collection<MediaFileOwner> findAllByFile(String mediaFileId);
 
+    @Query("select mo from MediaFileOwner mo where mo.mediaFile.id = ?1 and mo.downsize = true")
+    Collection<MediaFileOwner> findAllByFileAndDownsize(String mediaFileId);
+
     @Query("delete from MediaFileOwner mo where mo.deadline is not null and mo.deadline < ?1")
     @Modifying
     void deleteUnused(Timestamp deadline);

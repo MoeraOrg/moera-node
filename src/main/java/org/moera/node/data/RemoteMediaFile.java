@@ -51,6 +51,8 @@ public class RemoteMediaFile {
 
     private Long fileSize;
 
+    private Float duration;
+
     @Size(max = 255)
     private String title;
 
@@ -156,6 +158,14 @@ public class RemoteMediaFile {
 
     public void setFileSize(Long fileSize) {
         this.fileSize = fileSize;
+    }
+
+    public Float getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Float duration) {
+        this.duration = duration;
     }
 
     public String getTitle() {

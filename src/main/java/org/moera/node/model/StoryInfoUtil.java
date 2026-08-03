@@ -81,6 +81,7 @@ public class StoryInfoUtil {
             case POSTING_UPDATE_TASK_FAILED:
             case BLOCKED_USER_IN_POSTING:
             case UNBLOCKED_USER_IN_POSTING:
+            case VIDEO_POSTING_PUBLISHED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
                 info.setSummaryNodeName(story.getRemoteNodeName());
@@ -160,6 +161,7 @@ public class StoryInfoUtil {
             case COMMENT_UPDATE_TASK_FAILED:
             case PREMODERATED_COMMENT_ACCEPTED:
             case PREMODERATED_COMMENT_REJECTED:
+            case VIDEO_COMMENT_PUBLISHED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setSummaryNodeName(story.getRemotePostingNodeName());
                 info.setSummaryFullName(story.getRemotePostingFullName());

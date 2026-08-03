@@ -2,9 +2,7 @@ package org.moera.node.rest.task;
 
 import java.security.interfaces.ECPrivateKey;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
@@ -14,11 +12,10 @@ import org.moera.lib.node.types.CommentCreated;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentSourceText;
 import org.moera.lib.node.types.CommentText;
-import org.moera.lib.node.types.MediaAttachment;
-import org.moera.lib.node.types.MediaToAttach;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.WhoAmI;
+import org.moera.node.data.FavorType;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnComment;
@@ -29,26 +26,20 @@ import org.moera.node.liberin.model.RemoteCommentAddedLiberin;
 import org.moera.node.liberin.model.RemoteCommentAddingFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentUpdateFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentUpdatedLiberin;
-import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.CommentTextUtil;
-import org.moera.node.model.MediaAttachmentUtil;
 import org.moera.node.model.PostingSourceTextUtil;
-import org.moera.node.operations.CommentOperations;
 import org.moera.node.operations.FavorOperations;
-import org.moera.node.data.FavorType;
-import org.moera.node.task.Job;
 import org.moera.node.text.TextConverter;
-import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.ObjectUtils;
 import tools.jackson.databind.ObjectMapper;
 
-public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, RemoteCommentPostJob.State> {
+public class RemoteCommentPostJob
+    extends RemoteEntryPostJob<RemoteCommentPostJob.Parameters, RemoteCommentPostJob.State> {
 
     public static class Parameters {
 
@@ -103,6 +94,9 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
 
     public static class State {
 
+        private CommentSourceText sourceText;
+        private boolean uncompressedMediaChecked;
+        private boolean mediaCompressionWaited;
         private WhoAmI target;
         private String targetAvatarMediaFileId;
         private boolean targetAvatarMediaFileLoaded;
@@ -116,6 +110,30 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         private CommentInfo commentInfo;
 
         public State() {
+        }
+
+        public CommentSourceText getSourceText() {
+            return sourceText;
+        }
+
+        public void setSourceText(CommentSourceText sourceText) {
+            this.sourceText = sourceText;
+        }
+
+        public boolean isUncompressedMediaChecked() {
+            return uncompressedMediaChecked;
+        }
+
+        public void setUncompressedMediaChecked(boolean uncompressedMediaChecked) {
+            this.uncompressedMediaChecked = uncompressedMediaChecked;
+        }
+
+        public boolean isMediaCompressionWaited() {
+            return mediaCompressionWaited;
+        }
+
+        public void setMediaCompressionWaited(boolean mediaCompressionWaited) {
+            this.mediaCompressionWaited = mediaCompressionWaited;
         }
 
         public WhoAmI getTarget() {
@@ -226,14 +244,14 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
     private FavorOperations favorOperations;
 
     @Inject
-    private MediaManager mediaManager;
+    private MediaOperations mediaOperations;
 
     @Inject
-    private MediaOperations mediaOperations;
+    private ObjectMapper objectMapper;
 
     public RemoteCommentPostJob() {
         state = new State();
-        exponentialRetry("PT10S", CommentOperations.UNSIGNED_TTL.toString());
+        exponentialRetry("PT10S", "PT12H");
     }
 
     @Override
@@ -254,6 +272,17 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
 
     @Override
     protected void execute() throws MoeraNodeException {
+        if (state.sourceText == null) {
+            state.sourceText = objectMapper.convertValue(parameters.sourceText, CommentSourceText.class);
+            checkpoint();
+        }
+
+        if (!state.uncompressedMediaChecked) {
+            awaitMediaCompression();
+            state.uncompressedMediaChecked = true;
+            checkpoint();
+        }
+
         if (state.target == null) {
             state.target = nodeApi.at(parameters.targetNodeName).whoAmI();
             checkpoint();
@@ -289,7 +318,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
             mediaManager.uploadPublicMedia(
                 parameters.targetNodeName,
                 generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
-                AvatarDescriptionUtil.getMediaFile(parameters.sourceText.getOwnerAvatar())
+                AvatarDescriptionUtil.getMediaFile(state.sourceText.getOwnerAvatar())
             );
             state.ownerAvatarUploaded = true;
             checkpoint();
@@ -309,10 +338,10 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
             if (state.prevCommentInfo != null) {
                 repliedToId = CommentInfoUtil.getRepliedToId(state.prevCommentInfo);
                 repliedToRevisionId = CommentInfoUtil.getRepliedToRevisionId(state.prevCommentInfo);
-            } else if (parameters.sourceText.getRepliedToId() != null) {
+            } else if (state.sourceText.getRepliedToId() != null) {
                 CommentInfo repliedToCommentInfo = nodeApi
                     .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
-                    .getComment(parameters.postingId, parameters.sourceText.getRepliedToId(), false);
+                    .getComment(parameters.postingId, state.sourceText.getRepliedToId(), false);
                 if (repliedToCommentInfo != null) {
                     repliedToId = repliedToCommentInfo.getId();
                     repliedToRevisionId = repliedToCommentInfo.getRevisionId();
@@ -331,7 +360,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         }
 
         if (!state.uploadedRemoteMediaCached) {
-            cacheUploadedRemoteMedia();
+            cacheUploadedRemoteMedia(state.sourceText.getMedia());
             state.uploadedRemoteMediaCached = true;
             checkpoint();
         }
@@ -347,8 +376,12 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
                     .at(parameters.targetNodeName)
                     .createComment(parameters.postingId, state.commentText);
                 state.commentInfo = created.getComment();
-                String commentId = state.commentInfo.getId();
-                send(new RemoteCommentAddedLiberin(parameters.targetNodeName, parameters.postingId, commentId));
+                send(new RemoteCommentAddedLiberin(
+                    parameters.targetNodeName,
+                    state.postingInfo,
+                    state.commentInfo,
+                    state.mediaCompressionWaited
+                ));
             } else {
                 state.commentInfo = nodeApi
                     .at(parameters.targetNodeName)
@@ -372,27 +405,24 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         }
 
         saveComment(state.commentInfo, repliedToAvatarMediaFile);
-        mediaOperations.clearDraftOnlyMediaLeases(parameters.sourceText.getMedia());
+        mediaOperations.clearDraftOnlyMediaLeases(state.sourceText.getMedia());
     }
 
-    private void cacheUploadedRemoteMedia() {
-        var media = parameters.sourceText.getMedia();
-        if (ObjectUtils.isEmpty(media)) {
-            return;
+    private void awaitMediaCompression() throws MoeraNodeException {
+        awaitMediaCompression(parameters.targetNodeName, state.sourceText.getBodySrc(), state.sourceText.getMedia());
+    }
+
+    @Override
+    protected void mediaCompressionWaiting() {
+        if (!state.mediaCompressionWaited) {
+            state.mediaCompressionWaited = true;
+            checkpoint();
         }
-        media.stream()
-            .map(MediaToAttach::getRemoteMedia)
-            .filter(Objects::nonNull)
-            .forEach(rm ->
-                mediaManager.cacheUploadedRemoteMedia(
-                    rm.getNodeName(), rm.getMediaId(), Util.base64decode(rm.getDigest())
-                )
-            );
     }
 
     private CommentText buildComment() throws MoeraNodeException {
         CommentText commentText = CommentTextUtil.build(
-            nodeName(), fullName(), gender(), parameters.sourceText, textConverter
+            nodeName(), fullName(), gender(), state.sourceText, textConverter
         );
         byte[] fingerprint = CommentFingerprintBuilder.build(
             commentText,
@@ -419,29 +449,17 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
     }
 
     private void updateCaptions() {
-        if (ObjectUtils.isEmpty(state.commentInfo.getMedia())) {
-            return;
-        }
-        var mediaPostings = state.commentInfo.getMedia().stream()
-            .filter(ma -> MediaAttachmentUtil.mediaId(ma) != null && ma.getPostingId() != null)
-            .collect(Collectors.toMap(MediaAttachmentUtil::mediaId, MediaAttachment::getPostingId));
-
-        for (var caption : parameters.sourceText.getMediaCaptions()) {
-            var postingId = mediaPostings.get(caption.getMediaId());
-            if (postingId == null) {
-                continue;
-            }
-
-            jobs.run(
-                RemotePostingPostJob.class,
-                new RemotePostingPostJob.Parameters(
-                    parameters.targetNodeName,
-                    postingId,
-                    PostingSourceTextUtil.build(state.postingInfo, state.commentText.getOwnerAvatar(), caption)
-                ),
-                universalContext.nodeId()
-            );
-        }
+        updateCaptions(
+            parameters.targetNodeName,
+            state.commentInfo.getMedia(),
+            state.sourceText.getMediaCaptions(),
+            caption -> PostingSourceTextUtil.build(
+                state.postingInfo,
+                state.commentText.getOwnerFullName(),
+                state.commentText.getOwnerAvatar(),
+                caption
+            )
+        );
     }
 
     private void saveComment(CommentInfo info, MediaFile repliedToAvatarMediaFile) {

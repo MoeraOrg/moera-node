@@ -189,6 +189,7 @@ public class HeadingExtractor {
 
         StringBuilder heading = new StringBuilder();
         boolean hasGallery = false;
+        boolean hasVideo = false;
         boolean hasAttachedFiles = false;
         Set<String> linkIds = MediaExtractor.extractMediaFileIds(body.getLinkPreviews());
         for (LocalRemoteMedia localRemoteMedia : media) {
@@ -201,10 +202,13 @@ public class HeadingExtractor {
                 continue;
             }
             if (mediaFile.isImage()) {
-                if (mediaFile.getRecognizedText() == null) {
+                if (ObjectUtils.isEmpty(mediaFile.getRecognizedText())) {
                     hasGallery = true;
                     continue;
                 }
+            } else if (mediaFile.isVideo()) {
+                hasVideo = true;
+                continue;
             } else {
                 if (ObjectUtils.isEmpty(mediaFileOwner.getTitle())) {
                     hasAttachedFiles = true;
@@ -228,6 +232,9 @@ public class HeadingExtractor {
         }
         if (heading.length() < len && hasGallery) {
             heading.append(EMOJI_PICTURE);
+        }
+        if (heading.length() < len && hasVideo) {
+            heading.append(EMOJI_MOVIE);
         }
         if (heading.length() < len && hasAttachedFiles) {
             heading.append(EMOJI_FILE);
