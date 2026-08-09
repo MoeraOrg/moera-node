@@ -31,65 +31,13 @@ import tools.jackson.databind.ObjectMapper;
 public class SheriffComplaintGroupPrepareJob
         extends Job<SheriffComplaintGroupPrepareJob.Parameters, SheriffComplaintGroupPrepareJob.State> {
 
-    public static class Parameters {
-
-        private UUID groupId;
-        private String nodeName;
-        private String feedName;
-        private String postingId;
-        private String commentId;
-
-        public Parameters() {
-        }
-
-        public Parameters(UUID groupId, String nodeName, String feedName, String postingId, String commentId) {
-            this.groupId = groupId;
-            this.nodeName = nodeName;
-            this.feedName = feedName;
-            this.postingId = postingId;
-            this.commentId = commentId;
-        }
-
-        public UUID getGroupId() {
-            return groupId;
-        }
-
-        public void setGroupId(UUID groupId) {
-            this.groupId = groupId;
-        }
-
-        public String getNodeName() {
-            return nodeName;
-        }
-
-        public void setNodeName(String nodeName) {
-            this.nodeName = nodeName;
-        }
-
-        public String getFeedName() {
-            return feedName;
-        }
-
-        public void setFeedName(String feedName) {
-            this.feedName = feedName;
-        }
-
-        public String getPostingId() {
-            return postingId;
-        }
-
-        public void setPostingId(String postingId) {
-            this.postingId = postingId;
-        }
-
-        public String getCommentId() {
-            return commentId;
-        }
-
-        public void setCommentId(String commentId) {
-            this.commentId = commentId;
-        }
-
+    public record Parameters(
+        UUID groupId,
+        String nodeName,
+        String feedName,
+        String postingId,
+        String commentId
+    ) {
     }
 
     public static class State {

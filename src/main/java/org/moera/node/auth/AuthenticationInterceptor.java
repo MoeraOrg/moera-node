@@ -151,11 +151,11 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     private void processAuthParameters(HttpServletRequest request) throws InvalidTokenException, UnknownHostException {
         requestContext.setRemoteAddr(UriUtil.remoteAddress(request));
         AuthSecrets secrets = extractSecrets(request);
-        if (Objects.equals(config.getRootSecret(), secrets.rootSecret)) {
+        if (Objects.equals(config.getRootSecret(), secrets.rootSecret())) {
             requestContext.setRootAdmin(true);
             requestContext.setAdminScope(Scope.ALL.getMask());
         } else {
-            Token token = authenticationManager.getToken(secrets.token, requestContext.nodeId());
+            Token token = authenticationManager.getToken(secrets.token(), requestContext.nodeId());
             if (token != null) {
                 requestContext.setAdminScope(token.getAuthScope() != 0 ? token.getAuthScope() : Scope.ALL.getMask());
                 requestContext.setClientName(requestContext.nodeName());
@@ -165,18 +165,18 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             }
         }
         try {
-            CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte, UriUtil.remoteAddress(request));
+            CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte(), UriUtil.remoteAddress(request));
             if (carteAuthInfo != null) {
-                String clientName = carteAuthInfo.getClientName();
+                String clientName = carteAuthInfo.clientName();
                 requestContext.setClientName(clientName);
                 requestContext.setFriendGroups(friendCache.getClientGroupIds(clientName));
                 requestContext.setSubscribedToClient(subscribedCache.isSubscribed(clientName));
-                requestContext.setClientScope(carteAuthInfo.getClientScope());
+                requestContext.setClientScope(carteAuthInfo.clientScope());
                 requestContext.setOwner(Objects.equals(clientName, requestContext.nodeName()));
-                long adminScope = carteAuthInfo.getAdminScope();
+                long adminScope = carteAuthInfo.adminScope();
                 adminScope &= grantCache.get(requestContext.nodeId(), clientName);
                 if (requestContext.isOwner()) {
-                    adminScope |= carteAuthInfo.getClientScope() & Scope.VIEW_ALL.getMask();
+                    adminScope |= carteAuthInfo.clientScope() & Scope.VIEW_ALL.getMask();
                 }
                 requestContext.setAdminScope(adminScope);
             }

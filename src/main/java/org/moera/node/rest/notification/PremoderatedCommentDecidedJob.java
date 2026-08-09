@@ -12,25 +12,9 @@ import tools.jackson.databind.ObjectMapper;
 
 public class PremoderatedCommentDecidedJob extends Job<PremoderatedCommentDecidedJob.Parameters, Object> {
 
-    public static class Parameters {
-
-        private PremoderatedCommentDecidedNotification notification;
-
-        public Parameters() {
-        }
-
-        public Parameters(PremoderatedCommentDecidedNotification notification) {
-            this.notification = notification;
-        }
-
-        public PremoderatedCommentDecidedNotification getNotification() {
-            return notification;
-        }
-
-        public void setNotification(PremoderatedCommentDecidedNotification notification) {
-            this.notification = notification;
-        }
-
+    public record Parameters(
+        PremoderatedCommentDecidedNotification notification
+    ) {
     }
 
     @Inject

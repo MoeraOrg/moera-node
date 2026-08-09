@@ -39,35 +39,10 @@ import tools.jackson.databind.ObjectMapper;
 public class DownloadEntryAttachmentsJob
         extends Job<DownloadEntryAttachmentsJob.Parameters, DownloadEntryAttachmentsJob.State> {
 
-    public static class Parameters {
-
-        private UUID postingId;
-        private UUID commentId;
-
-        public Parameters() {
-        }
-
-        public Parameters(UUID postingId, UUID commentId) {
-            this.postingId = postingId;
-            this.commentId = commentId;
-        }
-
-        public UUID getPostingId() {
-            return postingId;
-        }
-
-        public void setPostingId(UUID postingId) {
-            this.postingId = postingId;
-        }
-
-        public UUID getCommentId() {
-            return commentId;
-        }
-
-        public void setCommentId(UUID commentId) {
-            this.commentId = commentId;
-        }
-
+    public record Parameters(
+        UUID postingId,
+        UUID commentId
+    ) {
     }
 
     public static class State {

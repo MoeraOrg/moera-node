@@ -16,35 +16,10 @@ import tools.jackson.databind.ObjectMapper;
 
 public class FetchRecommendationJob extends Job<FetchRecommendationJob.Parameters, Object> {
 
-    public static class Parameters {
-
-        private String feedName;
-        private int limit;
-
-        public Parameters() {
-        }
-
-        public Parameters(String feedName, int limit) {
-            this.feedName = feedName;
-            this.limit = limit;
-        }
-
-        public String getFeedName() {
-            return feedName;
-        }
-
-        public void setFeedName(String feedName) {
-            this.feedName = feedName;
-        }
-
-        public int getLimit() {
-            return limit;
-        }
-
-        public void setLimit(int limit) {
-            this.limit = limit;
-        }
-
+    public record Parameters(
+        String feedName,
+        int limit
+    ) {
     }
 
     private static final Logger log = LoggerFactory.getLogger(FetchRecommendationJob.class);

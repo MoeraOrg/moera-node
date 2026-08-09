@@ -318,7 +318,7 @@ public class PostingController {
                 );
             }
         } else {
-            byte[] signingKey = namingCache.get(ownerName).getSigningKey();
+            byte[] signingKey = namingCache.get(ownerName).signingKey();
             byte[] fingerprint = PostingFingerprintBuilder.build(
                 postingText.getSignatureVersion(),
                 postingText,

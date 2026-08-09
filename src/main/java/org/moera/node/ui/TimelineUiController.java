@@ -279,7 +279,7 @@ public class TimelineUiController {
     }
 
     private String entryLocation(String nodeName, String nodeUrl, Object postingId, Object commentId) {
-        nodeUrl = nodeUrl != null ? nodeUrl : namingCache.getFast(nodeName).getNodeUri();
+        nodeUrl = nodeUrl != null ? nodeUrl : namingCache.getFast(nodeName).nodeUri();
         String query = commentId != null ? "?comment=" + commentId : null;
         return UniversalLocation.redirectTo(nodeName, nodeUrl, "/post/" + postingId, query, null);
     }

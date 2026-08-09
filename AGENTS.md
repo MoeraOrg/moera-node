@@ -5,6 +5,8 @@
 3. Do not use `@Inject` on constructors; use field injection with `@Inject`.
 4. Name an injected field after its class, with the first letter lowercased.
 5. As an exception to the previous rule, always name an injected `Transaction` field `tx`.
+6. If a record declaration contains no methods, do not put an empty line between the opening and closing braces. Keep
+   the opening and closing braces on separate lines.
 
 # Database layer
  

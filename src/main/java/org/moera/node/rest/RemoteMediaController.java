@@ -103,8 +103,8 @@ public class RemoteMediaController {
             RemoteMediaDownloadJob.class,
             (nodeId, p) ->
                 Objects.equals(nodeId, requestContext.nodeId())
-                && Objects.equals(p.getNodeName(), nodeName)
-                && Objects.equals(p.getId(), id)
+                && Objects.equals(p.nodeName(), nodeName)
+                && Objects.equals(p.id(), id)
         );
         if (!pending) {
             jobs.run(

@@ -25,11 +25,7 @@ import tools.jackson.databind.ObjectMapper;
 
 public class DefrostNodeJob extends Job<DefrostNodeJob.Parameters, Object> {
 
-    public static class Parameters {
-
-        public Parameters() {
-        }
-
+    public record Parameters() {
     }
 
     private static final Logger log = LoggerFactory.getLogger(DefrostNodeJob.class);

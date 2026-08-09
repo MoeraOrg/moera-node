@@ -17,44 +17,13 @@ import org.slf4j.LoggerFactory;
 public abstract class RemoteUserListItemFetchJob
     <P extends RemoteUserListItemFetchJob.Parameters, S extends RemoteUserListItemFetchJob.State> extends Job<P, S> {
 
-    public static class Parameters {
+    public interface Parameters {
 
-        protected String listNodeName;
-        protected String listName;
-        protected String ownerName;
+        String listNodeName();
 
-        protected Parameters() {
-        }
+        String listName();
 
-        public Parameters(String listNodeName, String listName, String ownerName) {
-            this.listNodeName = listNodeName;
-            this.listName = listName;
-            this.ownerName = ownerName;
-        }
-
-        public String getListNodeName() {
-            return listNodeName;
-        }
-
-        public void setListNodeName(String listNodeName) {
-            this.listNodeName = listNodeName;
-        }
-
-        public String getListName() {
-            return listName;
-        }
-
-        public void setListName(String listName) {
-            this.listName = listName;
-        }
-
-        public String getOwnerName() {
-            return ownerName;
-        }
-
-        public void setOwnerName(String ownerName) {
-            this.ownerName = ownerName;
-        }
+        String ownerName();
 
     }
 
@@ -98,7 +67,7 @@ public abstract class RemoteUserListItemFetchJob
         super.started();
         log.info(
             "Fetching user list item {}/{}/{}",
-            parameters.listNodeName, parameters.listName, parameters.ownerName
+            parameters.listNodeName(), parameters.listName(), parameters.ownerName()
         );
     }
 
@@ -107,8 +76,8 @@ public abstract class RemoteUserListItemFetchJob
         if (state.absent == null) {
             try {
                 state.absent = nodeApi
-                    .at(parameters.listNodeName)
-                    .getUserListItem(parameters.listName, parameters.ownerName) == null;
+                    .at(parameters.listNodeName())
+                    .getUserListItem(parameters.listName(), parameters.ownerName()) == null;
             } catch (MoeraNodeApiNotFoundException e) {
                 state.absent = true;
             }
@@ -132,9 +101,9 @@ public abstract class RemoteUserListItemFetchJob
             RemoteUserListItem item = new RemoteUserListItem();
             item.setId(UUID.randomUUID());
             item.setNodeId(getNodeId());
-            item.setListNodeName(parameters.listNodeName);
-            item.setListName(parameters.listName);
-            item.setNodeName(parameters.ownerName);
+            item.setListNodeName(parameters.listNodeName());
+            item.setListName(parameters.listName());
+            item.setNodeName(parameters.ownerName());
             item.setAbsent(state.absent);
             Duration ttl = item.isAbsent() ? UserListOperations.ABSENT_TTL : UserListOperations.PRESENT_TTL;
             item.setDeadline(Timestamp.from(Instant.now().plus(ttl)));
@@ -157,9 +126,9 @@ public abstract class RemoteUserListItemFetchJob
         super.succeeded();
         log.info(
             "Fetched user list item {}/{}/{}: {}",
-            parameters.listNodeName,
-            parameters.listName,
-            parameters.ownerName,
+            parameters.listNodeName(),
+            parameters.listName(),
+            parameters.ownerName(),
             state.absent ? "absent" : "present"
         );
     }

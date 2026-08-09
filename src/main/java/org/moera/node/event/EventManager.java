@@ -110,19 +110,19 @@ public class EventManager {
         String[] friendGroups = null;
         boolean subscribedToClient = false;
         try {
-            Token token = authenticationManager.getToken(secrets.token, nodeId);
+            Token token = authenticationManager.getToken(secrets.token(), nodeId);
             if (token != null) {
                 adminScope = token.getAuthScope() != 0 ? token.getAuthScope() : Scope.ALL.getMask();
                 clientScope = adminScope;
                 clientName = universalContext.nodeName();
-            } else if (secrets.carte != null) {
-                CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte, getRemoteAddress(accessor));
+            } else if (secrets.carte() != null) {
+                CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte(), getRemoteAddress(accessor));
                 if (carteAuthInfo != null) {
-                    clientName = carteAuthInfo.getClientName();
-                    clientScope = carteAuthInfo.getClientScope();
+                    clientName = carteAuthInfo.clientName();
+                    clientScope = carteAuthInfo.clientScope();
                     friendGroups = friendCache.getClientGroupIds(clientName);
                     subscribedToClient = subscribedCache.isSubscribed(clientName);
-                    adminScope = carteAuthInfo.getAdminScope();
+                    adminScope = carteAuthInfo.adminScope();
                     adminScope &= grantCache.get(universalContext.nodeId(), clientName);
                     if (Objects.equals(clientName, universalContext.nodeName())) {
                         adminScope |= clientScope & Scope.VIEW_ALL.getMask();
@@ -170,20 +170,20 @@ public class EventManager {
         log.info(
             "Session subscribed, id = {} seen = {}/{}",
             accessor.getSessionId(),
-            LogUtil.format(seen.queueStartedAt),
-            LogUtil.format(seen.lastEvent)
+            LogUtil.format(seen.queueStartedAt()),
+            LogUtil.format(seen.lastEvent())
         );
 
         EventSubscriber subscriber = subscribers.get(accessor.getSessionId());
         if (subscriber == null) {
             return;
         }
-        if (seen.queueStartedAt == null) {
+        if (seen.queueStartedAt() == null) {
             subscriber.setLastEventSeen(lastOrdinal);
-        } else if (seen.queueStartedAt != startedAt) {
+        } else if (seen.queueStartedAt() != startedAt) {
             subscriber.setLastEventSeen(0);
         } else {
-            subscriber.setLastEventSeen(seen.lastEvent);
+            subscriber.setLastEventSeen(seen.lastEvent());
         }
         subscriber.setSubscribed(true);
     }

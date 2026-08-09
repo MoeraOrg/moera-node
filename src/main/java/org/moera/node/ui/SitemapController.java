@@ -81,7 +81,7 @@ public class SitemapController {
 
         Collection<Sitemap> sitemaps = sitemapRecordRepository.findSitemaps(requestContext.nodeId());
         SitemapIndex sitemapIndex = new SitemapIndex(requestContext.getSiteUrl(), sitemaps, SITEMAPS_UPGRADE_DATE);
-        sitemapIndex.getItems().add(
+        sitemapIndex.items().add(
             new SitemapIndexItem(requestContext.getSiteUrl(), "/sitemaps/static", applicationStartedAt)
         );
         return sitemapIndex;
@@ -94,7 +94,7 @@ public class SitemapController {
 
         return new SitemapUrlSet(
             STATIC_PAGES.stream()
-                .map(p -> new SitemapUrl(requestContext.getSiteUrl(), p.getFirst(), p.getSecond()))
+                .map(p -> SitemapUrl.staticPage(requestContext.getSiteUrl(), p.getFirst(), p.getSecond()))
                 .collect(Collectors.toList())
         );
     }

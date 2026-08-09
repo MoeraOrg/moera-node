@@ -230,13 +230,13 @@ public class SubscriptionManager {
     private void retry() {
         synchronized (lock) {
             List<PendingSubscription> pendings = pending.values().stream()
-                .filter(ps -> ps.getRetryAt().isBefore(Instant.now()))
+                .filter(ps -> ps.retryAt().isBefore(Instant.now()))
                 .toList();
             for (PendingSubscription ps : pendings) {
-                pending.remove(ps.getId());
-                SubscriptionTask task = new SubscriptionTask(ps.getId());
-                running.put(ps.getId(), task);
-                taskAutowire.autowireWithoutRequest(task, ps.getNodeId());
+                pending.remove(ps.id());
+                SubscriptionTask task = new SubscriptionTask(ps.id());
+                running.put(ps.id(), task);
+                taskAutowire.autowireWithoutRequest(task, ps.nodeId());
                 taskExecutor.execute(task);
             }
         }

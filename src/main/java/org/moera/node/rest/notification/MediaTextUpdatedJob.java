@@ -10,55 +10,12 @@ import tools.jackson.databind.ObjectMapper;
 
 public class MediaTextUpdatedJob extends Job<MediaTextUpdatedJob.Parameters, Object> {
 
-    public static class Parameters {
-
-        private String senderNodeName;
-        private String mediaId;
-        private String leaseId;
-        private String textContent;
-
-        public Parameters() {
-        }
-
-        public Parameters(String senderNodeName, String mediaId, String leaseId, String textContent) {
-            this.senderNodeName = senderNodeName;
-            this.mediaId = mediaId;
-            this.leaseId = leaseId;
-            this.textContent = textContent;
-        }
-
-        public String getSenderNodeName() {
-            return senderNodeName;
-        }
-
-        public void setSenderNodeName(String senderNodeName) {
-            this.senderNodeName = senderNodeName;
-        }
-
-        public String getMediaId() {
-            return mediaId;
-        }
-
-        public void setMediaId(String mediaId) {
-            this.mediaId = mediaId;
-        }
-
-        public String getLeaseId() {
-            return leaseId;
-        }
-
-        public void setLeaseId(String leaseId) {
-            this.leaseId = leaseId;
-        }
-
-        public String getTextContent() {
-            return textContent;
-        }
-
-        public void setTextContent(String textContent) {
-            this.textContent = textContent;
-        }
-
+    public record Parameters(
+        String senderNodeName,
+        String mediaId,
+        String leaseId,
+        String textContent
+    ) {
     }
 
     @Inject

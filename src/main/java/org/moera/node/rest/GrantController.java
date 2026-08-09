@@ -77,7 +77,7 @@ public class GrantController {
 
         nodeName = NodeName.expand(nodeName);
 
-        ValidationUtil.notNull(namingCache.get(nodeName).getNodeName(), "grant.name-not-registered");
+        ValidationUtil.notNull(namingCache.get(nodeName).nodeName(), "grant.name-not-registered");
 
         long scope;
         if (!change.isRevoke()) {

@@ -20,25 +20,9 @@ import tools.jackson.databind.ObjectMapper;
 
 public class JobsTest {
 
-    public static class Parameters {
-
-        private String value;
-
-        public Parameters() {
-        }
-
-        public Parameters(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        public void setValue(String value) {
-            this.value = value;
-        }
-
+    public record Parameters(
+        String value
+    ) {
     }
 
     public static class TestJob extends Job<Parameters, Object> {
@@ -105,6 +89,15 @@ public class JobsTest {
         Assertions.assertEquals(1, executed.size());
         Assertions.assertEquals(saved.get().getId(), ((TestJob) executed.getFirst()).jobId());
         completeTransaction(false);
+    }
+
+    @Test
+    void recordParametersAreLoadedFromPersistedJson() {
+        TestJob job = new TestJob();
+
+        job.setParameters("{\"value\":\"value\"}", new ObjectMapper());
+
+        Assertions.assertEquals(new Parameters("value"), job.getParameters());
     }
 
     @Test

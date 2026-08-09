@@ -417,7 +417,7 @@ public class CommentController {
                 );
             }
         } else {
-            byte[] signingKey = namingCache.get(ownerName).getSigningKey();
+            byte[] signingKey = namingCache.get(ownerName).signingKey();
             byte[] fingerprint = CommentFingerprintBuilder.build(
                 commentText.getSignatureVersion(),
                 commentText,

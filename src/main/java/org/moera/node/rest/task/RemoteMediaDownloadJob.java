@@ -25,45 +25,11 @@ import tools.jackson.databind.ObjectMapper;
 
 public class RemoteMediaDownloadJob extends Job<RemoteMediaDownloadJob.Parameters, RemoteMediaDownloadJob.State> {
 
-    public static class Parameters {
-
-        private String nodeName;
-        private String id;
-        private String grant;
-
-        public Parameters() {
-        }
-
-        public Parameters(String nodeName, String id, String grant) {
-            this.nodeName = nodeName;
-            this.id = id;
-            this.grant = grant;
-        }
-
-        public String getNodeName() {
-            return nodeName;
-        }
-
-        public void setNodeName(String nodeName) {
-            this.nodeName = nodeName;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
-
-        public String getGrant() {
-            return grant;
-        }
-
-        public void setGrant(String grant) {
-            this.grant = grant;
-        }
-
+    public record Parameters(
+        String nodeName,
+        String id,
+        String grant
+    ) {
     }
 
     public static class State {

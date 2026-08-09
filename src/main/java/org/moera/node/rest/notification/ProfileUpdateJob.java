@@ -15,25 +15,9 @@ import tools.jackson.databind.ObjectMapper;
 
 public class ProfileUpdateJob extends Job<ProfileUpdateJob.Parameters, ProfileUpdateJob.State> {
 
-    public static class Parameters {
-
-        private String nodeName;
-
-        public Parameters() {
-        }
-
-        public Parameters(String nodeName) {
-            this.nodeName = nodeName;
-        }
-
-        public String getNodeName() {
-            return nodeName;
-        }
-
-        public void setNodeName(String nodeName) {
-            this.nodeName = nodeName;
-        }
-
+    public record Parameters(
+        String nodeName
+    ) {
     }
 
     public static class State {

@@ -24,45 +24,11 @@ import tools.jackson.databind.ObjectMapper;
 
 public class FriendshipUpdatedJob extends Job<FriendshipUpdatedJob.Parameters, Object> {
 
-    public static class Parameters {
-
-        private String senderNodeName;
-        private AvatarImage senderAvatar;
-        private List<FriendGroupDetails> friendGroups;
-
-        public Parameters() {
-        }
-
-        public Parameters(String senderNodeName, AvatarImage senderAvatar, List<FriendGroupDetails> friendGroups) {
-            this.senderNodeName = senderNodeName;
-            this.senderAvatar = senderAvatar;
-            this.friendGroups = friendGroups;
-        }
-
-        public String getSenderNodeName() {
-            return senderNodeName;
-        }
-
-        public void setSenderNodeName(String senderNodeName) {
-            this.senderNodeName = senderNodeName;
-        }
-
-        public AvatarImage getSenderAvatar() {
-            return senderAvatar;
-        }
-
-        public void setSenderAvatar(AvatarImage senderAvatar) {
-            this.senderAvatar = senderAvatar;
-        }
-
-        public List<FriendGroupDetails> getFriendGroups() {
-            return friendGroups;
-        }
-
-        public void setFriendGroups(List<FriendGroupDetails> friendGroups) {
-            this.friendGroups = friendGroups;
-        }
-
+    public record Parameters(
+        String senderNodeName,
+        AvatarImage senderAvatar,
+        List<FriendGroupDetails> friendGroups
+    ) {
     }
 
     @Inject

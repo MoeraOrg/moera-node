@@ -25,25 +25,9 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
 
     private static final Logger log = LoggerFactory.getLogger(CacheMediaAttachmentsJob.class);
 
-    public static class Parameters {
-
-        private UUID entryRevisionId;
-
-        public Parameters() {
-        }
-
-        public Parameters(UUID entryRevisionId) {
-            this.entryRevisionId = entryRevisionId;
-        }
-
-        public UUID getEntryRevisionId() {
-            return entryRevisionId;
-        }
-
-        public void setEntryRevisionId(UUID entryRevisionId) {
-            this.entryRevisionId = entryRevisionId;
-        }
-
+    public record Parameters(
+        UUID entryRevisionId
+    ) {
     }
 
     @Inject

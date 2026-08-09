@@ -23,25 +23,9 @@ import tools.jackson.databind.ObjectMapper;
 
 public class OcrJob extends Job<OcrJob.Parameters, Object> {
 
-    public static class Parameters {
-
-        private String mediaFileId;
-
-        public Parameters() {
-        }
-
-        public Parameters(String mediaFileId) {
-            this.mediaFileId = mediaFileId;
-        }
-
-        public String getMediaFileId() {
-            return mediaFileId;
-        }
-
-        public void setMediaFileId(String mediaFileId) {
-            this.mediaFileId = mediaFileId;
-        }
-
+    public record Parameters(
+        String mediaFileId
+    ) {
     }
 
     private static final Logger log = LoggerFactory.getLogger(OcrJob.class);

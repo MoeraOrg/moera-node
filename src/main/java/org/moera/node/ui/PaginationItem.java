@@ -1,20 +1,14 @@
 package org.moera.node.ui;
 
-public class PaginationItem {
-
-    private String title;
-    private Long moment;
-    private boolean active;
-    private boolean dots;
+public record PaginationItem(
+    String title,
+    Long moment,
+    boolean active,
+    boolean dots
+) {
 
     public PaginationItem() {
-    }
-
-    private PaginationItem(String title, Long moment, boolean active, boolean dots) {
-        this.title = title;
-        this.moment = moment;
-        this.active = active;
-        this.dots = dots;
+        this(null, null, false, false);
     }
 
     public static PaginationItem pageLink(String title, long moment, boolean active) {
@@ -29,40 +23,8 @@ public class PaginationItem {
         return new PaginationItem(null, null, false, true);
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public Long getMoment() {
-        return moment;
-    }
-
-    public void setMoment(Long moment) {
-        this.moment = moment;
-    }
-
     public boolean isFirst() {
         return moment == Long.MAX_VALUE;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
-    public boolean isDots() {
-        return dots;
-    }
-
-    public void setDots(boolean dots) {
-        this.dots = dots;
     }
 
 }

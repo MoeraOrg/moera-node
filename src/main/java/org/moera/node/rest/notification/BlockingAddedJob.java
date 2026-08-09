@@ -21,82 +21,14 @@ import tools.jackson.databind.ObjectMapper;
 
 public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingAddedJob.State> {
 
-    public static class Parameters {
-
-        private String senderNodeName;
-        private BlockedOperation blockedOperation;
-        private String postingId;
-        private String postingHeading;
-        private Long deadline;
-        private String reason;
-
-        public Parameters() {
-        }
-
-        public Parameters(
-            String senderNodeName,
-            BlockedOperation blockedOperation,
-            String postingId,
-            String postingHeading,
-            Long deadline,
-            String reason
-        ) {
-            this.senderNodeName = senderNodeName;
-            this.blockedOperation = blockedOperation;
-            this.postingId = postingId;
-            this.postingHeading = postingHeading;
-            this.deadline = deadline;
-            this.reason = reason;
-        }
-
-        public String getSenderNodeName() {
-            return senderNodeName;
-        }
-
-        public void setSenderNodeName(String senderNodeName) {
-            this.senderNodeName = senderNodeName;
-        }
-
-        public BlockedOperation getBlockedOperation() {
-            return blockedOperation;
-        }
-
-        public void setBlockedOperation(BlockedOperation blockedOperation) {
-            this.blockedOperation = blockedOperation;
-        }
-
-        public String getPostingId() {
-            return postingId;
-        }
-
-        public void setPostingId(String postingId) {
-            this.postingId = postingId;
-        }
-
-        public String getPostingHeading() {
-            return postingHeading;
-        }
-
-        public void setPostingHeading(String postingHeading) {
-            this.postingHeading = postingHeading;
-        }
-
-        public Long getDeadline() {
-            return deadline;
-        }
-
-        public void setDeadline(Long deadline) {
-            this.deadline = deadline;
-        }
-
-        public String getReason() {
-            return reason;
-        }
-
-        public void setReason(String reason) {
-            this.reason = reason;
-        }
-
+    public record Parameters(
+        String senderNodeName,
+        BlockedOperation blockedOperation,
+        String postingId,
+        String postingHeading,
+        Long deadline,
+        String reason
+    ) {
     }
 
     public static class State {

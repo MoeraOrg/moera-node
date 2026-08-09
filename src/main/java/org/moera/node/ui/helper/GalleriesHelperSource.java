@@ -141,8 +141,8 @@ public class GalleriesHelperSource {
 
         String nodeName = remoteMedia.getNodeName();
         var nameDetails = namingCache.getFast(nodeName);
-        String prefix = nameDetails.getNodeUri() != null
-            ? nameDetails.getNodeUri() + "/media/"
+        String prefix = nameDetails.nodeUri() != null
+            ? nameDetails.nodeUri() + "/media/"
             : "/moera/remote-media/" + nodeName + "/";
         String grant = new MediaGrantGenerator(requestContext.getOptions())
             .generatePublicRemote(remoteMedia.getMediaId(), false, null);

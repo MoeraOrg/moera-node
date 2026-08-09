@@ -22,25 +22,9 @@ import tools.jackson.databind.ObjectMapper;
 public class AllRemoteSubscribersUpdateJob
         extends Job<AllRemoteSubscribersUpdateJob.Parameters, AllRemoteSubscribersUpdateJob.State> {
 
-    public static class Parameters {
-
-        private Principal viewPrincipal;
-
-        public Parameters() {
-        }
-
-        public Parameters(Principal viewPrincipal) {
-            this.viewPrincipal = viewPrincipal;
-        }
-
-        public Principal getViewPrincipal() {
-            return viewPrincipal;
-        }
-
-        public void setViewPrincipal(Principal viewPrincipal) {
-            this.viewPrincipal = viewPrincipal;
-        }
-
+    public record Parameters(
+        Principal viewPrincipal
+    ) {
     }
 
     public static class State {

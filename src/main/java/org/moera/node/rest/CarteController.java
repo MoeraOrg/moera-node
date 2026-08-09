@@ -118,13 +118,13 @@ public class CarteController {
 
         try {
             CarteAuthInfo authInfo = authenticationManager.getCarte(clientCarte.getCarte(), null);
-            if (clientCarte.getClientName() != null && !clientCarte.getClientName().equals(authInfo.getClientName())) {
+            if (clientCarte.getClientName() != null && !clientCarte.getClientName().equals(authInfo.clientName())) {
                 throw new InvalidCarteException("carte.wrong-client");
             }
             info.setValid(true);
-            info.setClientName(authInfo.getClientName());
-            info.setClientScope(Scope.toValues(authInfo.getClientScope()));
-            info.setAdminScope(Scope.toValues(authInfo.getAdminScope()));
+            info.setClientName(authInfo.clientName());
+            info.setClientScope(Scope.toValues(authInfo.clientScope()));
+            info.setAdminScope(Scope.toValues(authInfo.adminScope()));
         } catch (InvalidCarteException e) {
             info.setValid(false);
             info.setErrorCode(e.getErrorCode());

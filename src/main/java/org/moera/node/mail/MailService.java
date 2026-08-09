@@ -136,8 +136,8 @@ public class MailService {
 
                 var html = getDocument(mail.getTemplateName(), true, mail.getModel(), mail.getLanguage());
 
-                message.setSubject(SUBJECT_PREFIX + plainText.getSubject().toString());
-                message.setText(plainText.getBody().toString(), html);
+                message.setSubject(SUBJECT_PREFIX + plainText.subject().toString());
+                message.setText(plainText.body().toString(), html);
                 message.addInline("logo.png", applicationContext.getResource("classpath:templates/mail/part/logo.png"));
             });
         } catch (InterruptedException e) {

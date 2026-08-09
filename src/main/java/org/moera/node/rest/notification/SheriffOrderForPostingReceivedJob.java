@@ -12,29 +12,9 @@ import tools.jackson.databind.ObjectMapper;
 
 public class SheriffOrderForPostingReceivedJob extends Job<SheriffOrderForPostingReceivedJob.Parameters, Object> {
 
-    public static class Parameters {
-
-        private Notification notification;
-
-        public Parameters() {
-        }
-
-        public Parameters(SheriffOrderForPostingAddedNotification notification) {
-            this.notification = notification;
-        }
-
-        public Parameters(SheriffOrderForPostingDeletedNotification notification) {
-            this.notification = notification;
-        }
-
-        public Notification getNotification() {
-            return notification;
-        }
-
-        public void setNotification(Notification notification) {
-            this.notification = notification;
-        }
-
+    public record Parameters(
+        Notification notification
+    ) {
     }
 
     @Inject

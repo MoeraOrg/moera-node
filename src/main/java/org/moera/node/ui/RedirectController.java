@@ -29,7 +29,7 @@ public class RedirectController {
                            @RequestParam(required = false) String location) {
         String nodeUrl = null;
         if (!ObjectUtils.isEmpty(name)) {
-            nodeUrl = namingCache.getFast(name).getNodeUri();
+            nodeUrl = namingCache.getFast(name).nodeUri();
         } else {
             name = null;
         }

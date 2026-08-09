@@ -23,7 +23,7 @@ import tools.jackson.databind.ObjectMapper;
 public class FetchInitialRecommendationsJob
         extends Job<FetchInitialRecommendationsJob.Parameters, FetchInitialRecommendationsJob.State> {
 
-    public static class Parameters {
+    public record Parameters() {
     }
 
     public static class State {

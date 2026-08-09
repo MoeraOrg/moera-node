@@ -134,17 +134,17 @@ public abstract class PublicPageOperations {
         long nextMoment = 0;
         boolean afterCurrent = false;
         for (PaginationItem item : items) {
-            if (item.isDots()) {
+            if (item.dots()) {
                 continue;
             }
-            if (item.isActive()) {
+            if (item.active()) {
                 afterCurrent = true;
                 continue;
             }
             if (!afterCurrent) {
-                prevMoment = item.getMoment();
+                prevMoment = item.moment();
             } else {
-                nextMoment = item.getMoment();
+                nextMoment = item.moment();
                 break;
             }
         }

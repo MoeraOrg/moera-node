@@ -11,35 +11,10 @@ import tools.jackson.databind.ObjectMapper;
 
 public class AddFavorJob extends Job<AddFavorJob.Parameters, Object> {
 
-    public static class Parameters {
-
-        private String remoteNodeName;
-        private FavorType favorType;
-
-        public Parameters() {
-        }
-
-        public Parameters(String remoteNodeName, FavorType favorType) {
-            this.remoteNodeName = remoteNodeName;
-            this.favorType = favorType;
-        }
-
-        public String getRemoteNodeName() {
-            return remoteNodeName;
-        }
-
-        public void setRemoteNodeName(String remoteNodeName) {
-            this.remoteNodeName = remoteNodeName;
-        }
-
-        public FavorType getFavorType() {
-            return favorType;
-        }
-
-        public void setFavorType(FavorType favorType) {
-            this.favorType = favorType;
-        }
-
+    public record Parameters(
+        String remoteNodeName,
+        FavorType favorType
+    ) {
     }
 
     private static final Logger log = LoggerFactory.getLogger(AddFavorJob.class);

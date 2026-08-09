@@ -31,45 +31,11 @@ import tools.jackson.databind.ObjectMapper;
 
 public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, SheriffOrderPostJob.State> {
 
-    public static class Parameters {
-
-        private String remoteNodeName;
-        private SheriffOrderAttributes attributes;
-        private UUID complaintGroupId;
-
-        public Parameters() {
-        }
-
-        public Parameters(String remoteNodeName, SheriffOrderAttributes attributes, UUID complaintGroupId) {
-            this.remoteNodeName = remoteNodeName;
-            this.attributes = attributes;
-            this.complaintGroupId = complaintGroupId;
-        }
-
-        public String getRemoteNodeName() {
-            return remoteNodeName;
-        }
-
-        public void setRemoteNodeName(String remoteNodeName) {
-            this.remoteNodeName = remoteNodeName;
-        }
-
-        public SheriffOrderAttributes getAttributes() {
-            return attributes;
-        }
-
-        public void setAttributes(SheriffOrderAttributes attributes) {
-            this.attributes = attributes;
-        }
-
-        public UUID getComplaintGroupId() {
-            return complaintGroupId;
-        }
-
-        public void setComplaintGroupId(UUID complaintGroupId) {
-            this.complaintGroupId = complaintGroupId;
-        }
-
+    public record Parameters(
+        String remoteNodeName,
+        SheriffOrderAttributes attributes,
+        UUID complaintGroupId
+    ) {
     }
 
     public static class State {

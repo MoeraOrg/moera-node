@@ -129,7 +129,7 @@ public class SheriffOrderController {
             }
         }
 
-        byte[] signingKey = namingCache.get(sheriffOrderDetails.getSheriffName()).getSigningKey();
+        byte[] signingKey = namingCache.get(sheriffOrderDetails.getSheriffName()).signingKey();
         byte[] fingerprint = SheriffOrderFingerprintBuilder.build(
             sheriffOrderDetails.getSignatureVersion(), requestContext.nodeName(), sheriffOrderDetails, entryDigest
         );

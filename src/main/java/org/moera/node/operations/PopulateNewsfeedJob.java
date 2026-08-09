@@ -17,7 +17,7 @@ import tools.jackson.databind.ObjectMapper;
 
 public class PopulateNewsfeedJob extends Job<PopulateNewsfeedJob.Parameters, Object> {
 
-    public static class Parameters {
+    public record Parameters() {
     }
 
     private static final Logger log = LoggerFactory.getLogger(PopulateNewsfeedJob.class);

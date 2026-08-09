@@ -138,15 +138,15 @@ public class FriendCache {
     }
 
     public void invalidate(FriendCacheInvalidation invalidation) {
-        switch (invalidation.getPart()) {
+        switch (invalidation.part()) {
             case NODE_GROUPS:
-                invalidateNodeGroups(invalidation.getNodeId());
+                invalidateNodeGroups(invalidation.nodeId());
                 break;
             case CLIENT_GROUPS_ALL:
-                invalidateClientGroups(invalidation.getNodeId());
+                invalidateClientGroups(invalidation.nodeId());
                 break;
             case CLIENT_GROUPS:
-                invalidateClientGroups(invalidation.getNodeId(), invalidation.getClientName());
+                invalidateClientGroups(invalidation.nodeId(), invalidation.clientName());
                 break;
         }
     }

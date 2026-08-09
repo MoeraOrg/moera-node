@@ -45,7 +45,7 @@ public class MoeraHelperSource {
         StringBuilder buf = new StringBuilder();
         NodeName registeredName = NodeName.parse(nodeName);
         if (!ObjectUtils.isEmpty(registeredName.getName())) {
-            String nodeUrl = namingCache.getFast(nodeName).getNodeUri();
+            String nodeUrl = namingCache.getFast(nodeName).nodeUri();
 
             String tag = linked ? "a" : "span";
             buf.append('<');
@@ -81,7 +81,7 @@ public class MoeraHelperSource {
 
         StringBuilder buf = new StringBuilder();
         if (linked) {
-            String nodeUrl = namingCache.getFast(nodeName).getNodeUri();
+            String nodeUrl = namingCache.getFast(nodeName).nodeUri();
 
             buf.append("<a");
             HelperUtil.appendAttr(buf, "href", UniversalLocation.redirectTo(nodeName, nodeUrl));
@@ -130,7 +130,7 @@ public class MoeraHelperSource {
         StringBuilder buf = new StringBuilder();
         NodeName registeredName = NodeName.parse(nodeName);
         if (!ObjectUtils.isEmpty(registeredName.getName())) {
-            String nodeUrl = namingCache.getFast(nodeName).getNodeUri();
+            String nodeUrl = namingCache.getFast(nodeName).nodeUri();
             buf.append("<a");
             HelperUtil.appendAttr(
                 buf, "href", UniversalLocation.redirectTo(nodeName, nodeUrl, "/", null, null)

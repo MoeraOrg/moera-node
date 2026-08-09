@@ -19,104 +19,26 @@ import tools.jackson.databind.ObjectMapper;
 
 public class AskedJob extends Job<AskedJob.Parameters, AskedJob.State> {
 
-    public static class Parameters {
+    public record Parameters(
+        AskSubject askSubject,
+        String senderNodeName,
+        String senderFullName,
+        String senderGender,
+        AvatarImage senderAvatar,
+        UUID friendGroupId,
+        String friendGroupTitle,
+        String message
+    ) {
 
-        private AskSubject askSubject;
-        private String senderNodeName;
-        private String senderFullName;
-        private String senderGender;
-        private AvatarImage senderAvatar;
-        private UUID friendGroupId;
-        private String friendGroupTitle;
-        private String message;
-
-        public Parameters() {
-        }
-
-        public Parameters(AskSubject askSubject, String senderNodeName, String senderFullName, String senderGender,
-                          AvatarImage senderAvatar, String message) {
-            this.askSubject = askSubject;
-            this.senderNodeName = senderNodeName;
-            this.senderFullName = senderFullName;
-            this.senderGender = senderGender;
-            this.senderAvatar = senderAvatar;
-            this.message = message;
-        }
-
-        public Parameters(AskSubject askSubject, String senderNodeName, String senderFullName, String senderGender,
-                          AvatarImage senderAvatar, UUID friendGroupId, String friendGroupTitle, String message) {
-            this.askSubject = askSubject;
-            this.senderNodeName = senderNodeName;
-            this.senderFullName = senderFullName;
-            this.senderGender = senderGender;
-            this.senderAvatar = senderAvatar;
-            this.friendGroupId = friendGroupId;
-            this.friendGroupTitle = friendGroupTitle;
-            this.message = message;
-        }
-
-        public AskSubject getAskSubject() {
-            return askSubject;
-        }
-
-        public void setAskSubject(AskSubject askSubject) {
-            this.askSubject = askSubject;
-        }
-
-        public String getSenderNodeName() {
-            return senderNodeName;
-        }
-
-        public void setSenderNodeName(String senderNodeName) {
-            this.senderNodeName = senderNodeName;
-        }
-
-        public String getSenderFullName() {
-            return senderFullName;
-        }
-
-        public void setSenderFullName(String senderFullName) {
-            this.senderFullName = senderFullName;
-        }
-
-        public String getSenderGender() {
-            return senderGender;
-        }
-
-        public void setSenderGender(String senderGender) {
-            this.senderGender = senderGender;
-        }
-
-        public AvatarImage getSenderAvatar() {
-            return senderAvatar;
-        }
-
-        public void setSenderAvatar(AvatarImage senderAvatar) {
-            this.senderAvatar = senderAvatar;
-        }
-
-        public UUID getFriendGroupId() {
-            return friendGroupId;
-        }
-
-        public void setFriendGroupId(UUID friendGroupId) {
-            this.friendGroupId = friendGroupId;
-        }
-
-        public String getFriendGroupTitle() {
-            return friendGroupTitle;
-        }
-
-        public void setFriendGroupTitle(String friendGroupTitle) {
-            this.friendGroupTitle = friendGroupTitle;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
+        public Parameters(
+            AskSubject askSubject,
+            String senderNodeName,
+            String senderFullName,
+            String senderGender,
+            AvatarImage senderAvatar,
+            String message
+        ) {
+            this(askSubject, senderNodeName, senderFullName, senderGender, senderAvatar, null, null, message);
         }
 
     }

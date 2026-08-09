@@ -10,24 +10,15 @@ import tools.jackson.databind.ObjectMapper;
 public class RemoteSheriffUserListItemFetchJob
     extends RemoteUserListItemFetchJob<RemoteSheriffUserListItemFetchJob.Parameters, RemoteUserListItemFetchJob.State> {
 
-    public static class Parameters extends RemoteUserListItemFetchJob.Parameters {
-
-        private UUID entryId;
-
-        public Parameters() {
-        }
+    public record Parameters(
+        String listNodeName,
+        String listName,
+        String ownerName,
+        UUID entryId
+    ) implements RemoteUserListItemFetchJob.Parameters {
 
         public Parameters(String sheriffName, String ownerName, UUID entryId) {
-            super(sheriffName, UserList.SHERIFF_HIDE, ownerName);
-            this.entryId = entryId;
-        }
-
-        public UUID getEntryId() {
-            return entryId;
-        }
-
-        public void setEntryId(UUID entryId) {
-            this.entryId = entryId;
+            this(sheriffName, UserList.SHERIFF_HIDE, ownerName, entryId);
         }
 
     }
@@ -51,7 +42,7 @@ public class RemoteSheriffUserListItemFetchJob
 
     @Override
     protected boolean updateObjects() {
-        Entry liveEntry = entryRepository.findByNodeIdAndId(universalContext.nodeId(), parameters.entryId)
+        Entry liveEntry = entryRepository.findByNodeIdAndId(universalContext.nodeId(), parameters.entryId())
             .orElse(null);
         if (liveEntry == null) {
             return false;

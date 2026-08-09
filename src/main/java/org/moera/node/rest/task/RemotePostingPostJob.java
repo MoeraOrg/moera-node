@@ -35,45 +35,11 @@ import tools.jackson.databind.ObjectMapper;
 public class RemotePostingPostJob
     extends RemoteEntryPostJob<RemotePostingPostJob.Parameters, RemotePostingPostJob.State> {
 
-    public static class Parameters {
-
-        private String targetNodeName;
-        private String postingId;
-        private PostingSourceText sourceText;
-
-        public Parameters() {
-        }
-
-        public Parameters(String targetNodeName, String postingId, PostingSourceText sourceText) {
-            this.targetNodeName = targetNodeName;
-            this.postingId = postingId;
-            this.sourceText = sourceText;
-        }
-
-        public String getTargetNodeName() {
-            return targetNodeName;
-        }
-
-        public void setTargetNodeName(String targetNodeName) {
-            this.targetNodeName = targetNodeName;
-        }
-
-        public String getPostingId() {
-            return postingId;
-        }
-
-        public void setPostingId(String postingId) {
-            this.postingId = postingId;
-        }
-
-        public PostingSourceText getSourceText() {
-            return sourceText;
-        }
-
-        public void setSourceText(PostingSourceText sourceText) {
-            this.sourceText = sourceText;
-        }
-
+    public record Parameters(
+        String targetNodeName,
+        String postingId,
+        PostingSourceText sourceText
+    ) {
     }
 
     public static class State {

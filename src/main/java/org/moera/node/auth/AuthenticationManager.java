@@ -173,7 +173,7 @@ public class AuthenticationManager {
             log.info("Carte: belongs to a wrong node ({})", LogUtil.format(cp.getNodeName()));
             throw new InvalidCarteException("carte.wrong-node");
         }
-        byte[] signingKey = namingCache.get(cp.getOwnerName()).getSigningKey();
+        byte[] signingKey = namingCache.get(cp.getOwnerName()).signingKey();
         if (signingKey == null) {
             log.info("Carte: signing key for node {} is unknown", LogUtil.format(cp.getOwnerName()));
             throw new InvalidCarteException("carte.unknown-signing-key");

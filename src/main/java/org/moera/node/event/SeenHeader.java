@@ -4,34 +4,38 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 
 public class SeenHeader {
 
-    public static class Details {
-
-        Long queueStartedAt;
-        Integer lastEvent;
-
+    public record Details(
+        Long queueStartedAt,
+        Integer lastEvent
+    ) {
     }
 
     private static final String HEADER_NAME = "seen";
 
     public static Details parse(StompHeaderAccessor accessor) {
         String seen = String.valueOf(accessor.getFirstNativeHeader(HEADER_NAME));
-        Details details = new Details();
-        if (seen != null) {
-            String[] parts = seen.split("\\s*,\\s*");
-            if (parts.length > 0) {
-                try {
-                    details.queueStartedAt = Long.parseLong(parts[0]);
-                } catch (NumberFormatException e) {
-                }
-            }
-            if (parts.length > 1) {
-                try {
-                    details.lastEvent = Integer.parseInt(parts[1]);
-                } catch (NumberFormatException e) {
-                }
+        String[] parts = seen.split("\\s*,\\s*");
+        return new Details(parseLong(parts, 0), parseInteger(parts, 1));
+    }
+
+    private static Long parseLong(String[] parts, int index) {
+        if (parts.length > index) {
+            try {
+                return Long.parseLong(parts[index]);
+            } catch (NumberFormatException e) {
             }
         }
-        return details;
+        return null;
+    }
+
+    private static Integer parseInteger(String[] parts, int index) {
+        if (parts.length > index) {
+            try {
+                return Integer.parseInt(parts[index]);
+            } catch (NumberFormatException e) {
+            }
+        }
+        return null;
     }
 
 }

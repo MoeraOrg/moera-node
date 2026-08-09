@@ -19,45 +19,11 @@ import tools.jackson.databind.ObjectMapper;
 public class RemoteMediaReactionFailedJob
         extends Job<RemoteMediaReactionFailedJob.Parameters, RemoteMediaReactionFailedJob.State> {
 
-    public static class Parameters {
-
-        private String targetNodeName;
-        private ParentMediaInfo parentMedia;
-        private String postingId; // The posting linked to the media
-
-        public Parameters() {
-        }
-
-        public Parameters(String targetNodeName, ParentMediaInfo parentMedia, String postingId) {
-            this.targetNodeName = targetNodeName;
-            this.parentMedia = parentMedia;
-            this.postingId = postingId;
-        }
-
-        public String getTargetNodeName() {
-            return targetNodeName;
-        }
-
-        public void setTargetNodeName(String targetNodeName) {
-            this.targetNodeName = targetNodeName;
-        }
-
-        public ParentMediaInfo getMediaParent() {
-            return parentMedia;
-        }
-
-        public void setMediaParent(ParentMediaInfo mediaParent) {
-            this.parentMedia = mediaParent;
-        }
-
-        public String getPostingId() {
-            return postingId;
-        }
-
-        public void setPostingId(String postingId) {
-            this.postingId = postingId;
-        }
-
+    public record Parameters(
+        String targetNodeName,
+        ParentMediaInfo mediaParent,
+        String postingId
+    ) {
     }
 
     public static class State {
@@ -118,10 +84,10 @@ public class RemoteMediaReactionFailedJob
             checkpoint();
         }
 
-        if (parameters.parentMedia.getCommentId() != null && state.parentComment == null) {
+        if (parameters.mediaParent.getCommentId() != null && state.parentComment == null) {
             state.parentComment = nodeApi
                 .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
-                .getComment(state.parentComment.getPostingId(), parameters.parentMedia.getCommentId(), false);
+                .getComment(state.parentComment.getPostingId(), parameters.mediaParent.getCommentId(), false);
             checkpoint();
         }
 
@@ -144,7 +110,7 @@ public class RemoteMediaReactionFailedJob
                     parameters.targetNodeName,
                     parameters.postingId,
                     state.parentPosting.getId(),
-                    parameters.parentMedia.getMediaId(),
+                    parameters.mediaParent.getMediaId(),
                     state.parentPosting
                 )
             );
@@ -153,7 +119,7 @@ public class RemoteMediaReactionFailedJob
                 new RemoteCommentMediaReactionAddingFailedLiberin(
                     parameters.targetNodeName,
                     parameters.postingId,
-                    parameters.parentMedia.getMediaId(),
+                    parameters.mediaParent.getMediaId(),
                     state.parentPosting,
                     state.parentComment
                 )
@@ -164,16 +130,16 @@ public class RemoteMediaReactionFailedJob
     @Override
     protected void failed() {
         super.failed();
-        if (parameters.parentMedia.getNodeName() == null) {
+        if (parameters.mediaParent.getNodeName() == null) {
             log.error(
                 "Failed to send error message to the owner of the parent posting/comment for media {} at node {}",
-                parameters.parentMedia.getMediaId(), parameters.targetNodeName
+                parameters.mediaParent.getMediaId(), parameters.targetNodeName
             );
         } else {
             log.error(
                 "Failed to send error message to the owner of the parent posting/comment for media {} leased from"
                     + " the node {} at node {}",
-                parameters.parentMedia.getMediaId(), parameters.parentMedia.getNodeName(), parameters.targetNodeName
+                parameters.mediaParent.getMediaId(), parameters.mediaParent.getNodeName(), parameters.targetNodeName
             );
         }
     }

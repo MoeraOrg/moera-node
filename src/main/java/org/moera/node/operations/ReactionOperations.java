@@ -125,7 +125,7 @@ public class ReactionOperations {
                 throw new AuthenticationException();
             }
         } else {
-            byte[] signingKey = namingCache.get(reactionDescription.getOwnerName()).getSigningKey();
+            byte[] signingKey = namingCache.get(reactionDescription.getOwnerName()).signingKey();
             byte[] fingerprint = ReactionFingerprintBuilder.build(
                 reactionDescription.getSignatureVersion(), reactionDescription, entry.getCurrentRevision().getDigest()
             );

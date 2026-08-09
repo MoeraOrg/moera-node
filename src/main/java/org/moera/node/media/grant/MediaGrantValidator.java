@@ -192,7 +192,7 @@ public class MediaGrantValidator {
 
     private boolean verifySignature(byte[] fingerprint, byte[] signature, MediaGrantProperties grant) {
         if (!ObjectUtils.isEmpty(grant.getNodeName())) {
-            byte[] signingKey = namingCache.get(grant.getNodeName()).getSigningKey();
+            byte[] signingKey = namingCache.get(grant.getNodeName()).signingKey();
             if (signingKey == null) {
                 log.info("Media grant: signing key for node {} is unknown", LogUtil.format(grant.getNodeName()));
                 throw new ValidationFailure("media-grant.unknown-signing-key");

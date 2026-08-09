@@ -20,67 +20,13 @@ import tools.jackson.databind.ObjectMapper;
 
 public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserListUpdateJob.State> {
 
-    public static class Parameters {
-
-        private String listNodeName;
-        private String listName;
-        private List<String> sheriffFeedNames;
-        private String nodeName;
-        private boolean delete;
-
-        public Parameters() {
-        }
-
-        public Parameters(
-            String listNodeName, String listName, List<String> sheriffFeedNames, String nodeName, boolean delete
-        ) {
-            this.listNodeName = listNodeName;
-            this.listName = listName;
-            this.sheriffFeedNames = sheriffFeedNames;
-            this.nodeName = nodeName;
-            this.delete = delete;
-        }
-
-        public String getListNodeName() {
-            return listNodeName;
-        }
-
-        public void setListNodeName(String listNodeName) {
-            this.listNodeName = listNodeName;
-        }
-
-        public String getListName() {
-            return listName;
-        }
-
-        public void setListName(String listName) {
-            this.listName = listName;
-        }
-
-        public List<String> getSheriffFeedNames() {
-            return sheriffFeedNames;
-        }
-
-        public void setSheriffFeedNames(List<String> sheriffFeedNames) {
-            this.sheriffFeedNames = sheriffFeedNames;
-        }
-
-        public String getNodeName() {
-            return nodeName;
-        }
-
-        public void setNodeName(String nodeName) {
-            this.nodeName = nodeName;
-        }
-
-        public boolean isDelete() {
-            return delete;
-        }
-
-        public void setDelete(boolean delete) {
-            this.delete = delete;
-        }
-
+    public record Parameters(
+        String listNodeName,
+        String listName,
+        List<String> sheriffFeedNames,
+        String nodeName,
+        boolean delete
+    ) {
     }
 
     public static class State {

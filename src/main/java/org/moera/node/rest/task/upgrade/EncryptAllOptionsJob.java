@@ -29,11 +29,7 @@ public class EncryptAllOptionsJob extends Job<EncryptAllOptionsJob.Parameters, O
     @Inject
     private OptionsMetadata optionsMetadata;
 
-    public static class Parameters {
-
-        public Parameters() {
-        }
-
+    public record Parameters() {
     }
 
     public EncryptAllOptionsJob() {

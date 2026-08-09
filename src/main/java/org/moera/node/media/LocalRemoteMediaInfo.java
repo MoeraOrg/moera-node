@@ -80,8 +80,8 @@ public record LocalRemoteMediaInfo(PrivateMediaFileInfo local, RemoteMediaInfo r
 
         String nodeName = remote.getNodeName();
         var nameDetails = namingCache.getFast(nodeName);
-        String prefix = nameDetails.getNodeUri() != null
-            ? nameDetails.getNodeUri() + "/media/"
+        String prefix = nameDetails.nodeUri() != null
+            ? nameDetails.nodeUri() + "/media/"
             : "/moera/remote-media/" + nodeName + "/";
         String grant = new MediaGrantGenerator(options).generatePublicRemote(remote.getMediaId(), false, null);
         return prefix + MediaUtil.privatePath(remote, null, grant, download);

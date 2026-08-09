@@ -30,7 +30,7 @@ public class RemoteMediaUiController {
         @RequestParam(name = "grant", required = false) String grantS,
         @RequestParam(name = "ignoremalware", required = false) Boolean ignoreMalware
     ) {
-        String nodeUrl = namingCache.get(nodeName).getNodeUri();
+        String nodeUrl = namingCache.get(nodeName).nodeUri();
         var uriBuilder = UriComponentsBuilder.fromUriString(nodeUrl + "/media/private/" + id + "." + ext);
         uriBuilder.queryParamIfPresent("width", Optional.ofNullable(width));
         uriBuilder.queryParamIfPresent("download", Optional.ofNullable(download));

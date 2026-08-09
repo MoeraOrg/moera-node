@@ -13,35 +13,10 @@ import tools.jackson.databind.ObjectMapper;
 
 public class ReleaseRemoteMediaJob extends Job<ReleaseRemoteMediaJob.Parameters, Object> {
 
-    public static class Parameters {
-
-        private String remoteNodeName;
-        private String leaseId;
-
-        public Parameters() {
-        }
-
-        public Parameters(String remoteNodeName, String leaseId) {
-            this.remoteNodeName = remoteNodeName;
-            this.leaseId = leaseId;
-        }
-
-        public String getRemoteNodeName() {
-            return remoteNodeName;
-        }
-
-        public void setRemoteNodeName(String remoteNodeName) {
-            this.remoteNodeName = remoteNodeName;
-        }
-
-        public String getLeaseId() {
-            return leaseId;
-        }
-
-        public void setLeaseId(String leaseId) {
-            this.leaseId = leaseId;
-        }
-
+    public record Parameters(
+        String remoteNodeName,
+        String leaseId
+    ) {
     }
 
     private static final Logger log = LoggerFactory.getLogger(ReleaseRemoteMediaJob.class);

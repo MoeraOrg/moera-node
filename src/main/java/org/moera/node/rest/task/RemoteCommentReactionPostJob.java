@@ -33,55 +33,12 @@ import tools.jackson.databind.ObjectMapper;
 public class RemoteCommentReactionPostJob
         extends Job<RemoteCommentReactionPostJob.Parameters, RemoteCommentReactionPostJob.State> {
 
-    public static class Parameters {
-
-        private String targetNodeName;
-        private String postingId;
-        private String commentId;
-        private ReactionAttributes attributes;
-
-        public Parameters() {
-        }
-
-        public Parameters(String targetNodeName, String postingId, String commentId, ReactionAttributes attributes) {
-            this.targetNodeName = targetNodeName;
-            this.postingId = postingId;
-            this.commentId = commentId;
-            this.attributes = attributes;
-        }
-
-        public String getTargetNodeName() {
-            return targetNodeName;
-        }
-
-        public void setTargetNodeName(String targetNodeName) {
-            this.targetNodeName = targetNodeName;
-        }
-
-        public String getPostingId() {
-            return postingId;
-        }
-
-        public void setPostingId(String postingId) {
-            this.postingId = postingId;
-        }
-
-        public String getCommentId() {
-            return commentId;
-        }
-
-        public void setCommentId(String commentId) {
-            this.commentId = commentId;
-        }
-
-        public ReactionAttributes getAttributes() {
-            return attributes;
-        }
-
-        public void setAttributes(ReactionAttributes attributes) {
-            this.attributes = attributes;
-        }
-
+    public record Parameters(
+        String targetNodeName,
+        String postingId,
+        String commentId,
+        ReactionAttributes attributes
+    ) {
     }
 
     public static class State {

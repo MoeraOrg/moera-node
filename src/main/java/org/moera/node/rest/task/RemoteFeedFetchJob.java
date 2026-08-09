@@ -20,45 +20,11 @@ import tools.jackson.databind.ObjectMapper;
 
 public class RemoteFeedFetchJob extends Job<RemoteFeedFetchJob.Parameters, Object> {
 
-    public static class Parameters {
-
-        private String feedName;
-        private String remoteNodeName;
-        private String remoteFeedName;
-
-        public Parameters() {
-        }
-
-        public Parameters(String feedName, String remoteNodeName, String remoteFeedName) {
-            this.feedName = feedName;
-            this.remoteNodeName = remoteNodeName;
-            this.remoteFeedName = remoteFeedName;
-        }
-
-        public String getFeedName() {
-            return feedName;
-        }
-
-        public void setFeedName(String feedName) {
-            this.feedName = feedName;
-        }
-
-        public String getRemoteNodeName() {
-            return remoteNodeName;
-        }
-
-        public void setRemoteNodeName(String remoteNodeName) {
-            this.remoteNodeName = remoteNodeName;
-        }
-
-        public String getRemoteFeedName() {
-            return remoteFeedName;
-        }
-
-        public void setRemoteFeedName(String remoteFeedName) {
-            this.remoteFeedName = remoteFeedName;
-        }
-
+    public record Parameters(
+        String feedName,
+        String remoteNodeName,
+        String remoteFeedName
+    ) {
     }
 
     public static final int FETCH_LIMIT = 10;

@@ -15,24 +15,10 @@ public class MailXmlToText extends DefaultHandler {
         P
     }
 
-    public static final class Result {
-
-        private final CharSequence subject;
-        private final CharSequence body;
-
-        private Result(CharSequence subject, CharSequence body) {
-            this.subject = subject;
-            this.body = body;
-        }
-
-        public CharSequence getSubject() {
-            return subject;
-        }
-
-        public CharSequence getBody() {
-            return body;
-        }
-
+    public record Result(
+        CharSequence subject,
+        CharSequence body
+    ) {
     }
 
     private final StringBuilder subject = new StringBuilder();

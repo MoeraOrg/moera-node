@@ -6,7 +6,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import jakarta.inject.Inject;
@@ -28,33 +27,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class NamingCache {
 
-    private static class Key {
-
-        public String namingLocation;
-        public String name;
-
-        Key(String namingLocation, String name) {
-            this.namingLocation = namingLocation;
-            this.name = name;
-        }
-
-        @Override
-        public boolean equals(Object peer) {
-            if (this == peer) {
-                return true;
-            }
-            if (peer == null || getClass() != peer.getClass()) {
-                return false;
-            }
-            Key key = (Key) peer;
-            return namingLocation.equals(key.namingLocation) && name.equals(key.name);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(namingLocation, name);
-        }
-
+    private record Key(
+        String namingLocation,
+        String name
+    ) {
     }
 
     private static final class Record {
@@ -173,12 +149,12 @@ public class NamingCache {
     }
 
     private void queryName(Key key) {
-        NodeName registeredName = NodeName.parse(key.name);
+        NodeName registeredName = NodeName.parse(key.name());
         RegisteredNameInfo info = null;
         Throwable error = null;
         try {
             info = namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(),
-                                           key.namingLocation);
+                                           key.namingLocation());
         } catch (Exception e) {
             error = e;
         }
@@ -189,10 +165,10 @@ public class NamingCache {
             try {
                 cache.put(key, record);
                 if (registeredName.getGeneration() == 0) {
-                    if (key.name.equals(registeredName.getName())) {
-                        cache.put(new Key(key.namingLocation, registeredName.toString()), record);
+                    if (key.name().equals(registeredName.getName())) {
+                        cache.put(new Key(key.namingLocation(), registeredName.toString()), record);
                     } else {
-                        cache.put(new Key(key.namingLocation, registeredName.getName()), record);
+                        cache.put(new Key(key.namingLocation(), registeredName.getName()), record);
                     }
                 }
             } finally {

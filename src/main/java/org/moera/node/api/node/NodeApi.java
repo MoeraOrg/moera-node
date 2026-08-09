@@ -21,7 +21,7 @@ public class NodeApi {
 
     private String fetchNodeUri(String remoteNodeName) {
         RegisteredNameDetails details = namingCache.get(remoteNodeName);
-        return details != null ? Util.endWithNoSlash(details.getNodeUri()) : null;
+        return details != null ? Util.endWithNoSlash(details.nodeUri()) : null;
     }
 
     public MoeraNode at(String remoteNodeName) throws MoeraNodeUnknownNameException {
