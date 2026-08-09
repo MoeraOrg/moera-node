@@ -122,6 +122,9 @@ public class DownloadEntryAttachmentsJob
     private RemoteMediaOperations remoteMediaOperations;
 
     @Inject
+    private OcrOperations ocrOperations;
+
+    @Inject
     private MediaManager mediaManager;
 
     public DownloadEntryAttachmentsJob() {
@@ -244,7 +247,14 @@ public class DownloadEntryAttachmentsJob
             }
 
             if (remoteMediaInfoDiffers(remoteMediaFile, mediaInfo)) {
-                tx.executeWrite(() -> remoteMediaOperations.update(remoteMediaFile.getId(), mediaInfo));
+                boolean textChanged = !ObjectUtils.isEmpty(mediaInfo.getTextContent())
+                    && !mediaInfo.getTextContent().equals(remoteMediaFile.getRecognizedText());
+                tx.executeWrite(() -> {
+                    RemoteMediaFile updated = remoteMediaOperations.update(remoteMediaFile.getId(), mediaInfo);
+                    if (updated != null && textChanged) {
+                        ocrOperations.updateRemote(List.of(updated), mediaInfo.getTextContent());
+                    }
+                });
             }
         }
     }
@@ -271,7 +281,9 @@ public class DownloadEntryAttachmentsJob
             || !Objects.equals(remoteMediaFile.getSizeY(), mediaInfo.getHeight())
             || !Objects.equals(remoteMediaFile.getFileSize(), mediaInfo.getSize())
             || !Objects.equals(remoteMediaFile.getDuration(), mediaInfo.getDuration())
-            || !Objects.equals(remoteMediaFile.getTitle(), mediaInfo.getTitle());
+            || !Objects.equals(remoteMediaFile.getTitle(), mediaInfo.getTitle())
+            || !ObjectUtils.isEmpty(mediaInfo.getTextContent())
+                && !mediaInfo.getTextContent().equals(remoteMediaFile.getRecognizedText());
     }
 
     private void invalidateRemoteMedia(RemoteMediaFile remoteMediaFile, boolean notFound) throws Exception {
@@ -351,6 +363,10 @@ public class DownloadEntryAttachmentsJob
             entryRevisionRepository.clearAttachmentsCacheByRemoteMedia(
                 nodeId, attachmentLocation.nodeName, attachmentLocation.mediaId
             );
+            String recognizedText = mediaFileOwner.getMediaFile().getRecognizedText();
+            if (!ObjectUtils.isEmpty(recognizedText)) {
+                ocrOperations.update(mediaFileOwner, recognizedText);
+            }
             return remoteMediaFileRepository.findLeaseIdsByMedia(
                 nodeId, attachmentLocation.nodeName, attachmentLocation.mediaId
             );
@@ -395,9 +411,7 @@ public class DownloadEntryAttachmentsJob
                 );
             }
 
-            tx.executeWrite(() ->
-                remoteMediaFileRepository.clearLeaseId(nodeId, state.remoteNodeName, leaseId)
-            );
+            tx.executeWrite(() -> remoteMediaFileRepository.clearLeaseId(nodeId, state.remoteNodeName, leaseId));
             state.leaseIds.remove(leaseId);
             checkpoint();
         }

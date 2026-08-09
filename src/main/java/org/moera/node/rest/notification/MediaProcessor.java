@@ -3,6 +3,7 @@ package org.moera.node.rest.notification;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.types.notifications.LeasedMediaTextUpdatedNotification;
 import org.moera.lib.node.types.notifications.LeasedMediaTitleUpdatedNotification;
 import org.moera.lib.node.types.notifications.NotificationType;
 import org.moera.node.data.EntryRevisionRepository;
@@ -11,6 +12,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
+import org.moera.node.task.Jobs;
 
 @NotificationProcessor
 public class MediaProcessor {
@@ -23,6 +25,33 @@ public class MediaProcessor {
 
     @Inject
     private EntryRevisionRepository entryRevisionRepository;
+
+    @Inject
+    private Jobs jobs;
+
+    @NotificationMapping(NotificationType.LEASED_MEDIA_TEXT_UPDATED)
+    @Transactional
+    public void leasedMediaTextUpdated(LeasedMediaTextUpdatedNotification notification) {
+        int found = remoteMediaFileRepository.countByMediaAndLease(
+            requestContext.nodeId(),
+            notification.getSenderNodeName(),
+            notification.getMediaId(),
+            notification.getLeaseId()
+        );
+        if (found == 0) {
+            throw new ObjectNotFoundFailure("media-lease.not-found");
+        }
+        jobs.runAfterCommit(
+            MediaTextUpdatedJob.class,
+            new MediaTextUpdatedJob.Parameters(
+                notification.getSenderNodeName(),
+                notification.getMediaId(),
+                notification.getLeaseId(),
+                notification.getTextContent()
+            ),
+            requestContext.nodeId()
+        );
+    }
 
     @NotificationMapping(NotificationType.LEASED_MEDIA_TITLE_UPDATED)
     @Transactional

@@ -348,9 +348,11 @@ public class PostingOperations {
         }
     }
 
-    public void updatePickedMediaText(UUID postingId, String remoteMediaId, String title, String text) {
+    public void updatePickedMediaText(
+        UUID postingId, String mediaNodeName, String mediaId, String title, String text
+    ) {
         MediaFileOwner mediaFileOwner = postingRepository
-            .findAttachedMediaByRemoteId(universalContext.nodeId(), postingId, remoteMediaId)
+            .findAttachedMediaByRemoteId(universalContext.nodeId(), postingId, mediaNodeName, mediaId)
             .orElse(null);
         if (mediaFileOwner == null) {
             return;

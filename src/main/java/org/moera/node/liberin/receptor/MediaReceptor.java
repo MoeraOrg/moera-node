@@ -13,9 +13,11 @@ import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.EntryMediaDownloadedLiberin;
 import org.moera.node.liberin.model.MediaCompressedLiberin;
+import org.moera.node.liberin.model.MediaRecognizedTextUpdatedLiberin;
 import org.moera.node.liberin.model.MediaTitleUpdatedLiberin;
 import org.moera.node.model.event.MediaCompressedEvent;
 import org.moera.node.model.notification.LeasedMediaTitleUpdatedNotificationUtil;
+import org.moera.node.model.notification.LeasedMediaTextUpdatedNotificationUtil;
 import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 
@@ -40,6 +42,14 @@ public class MediaReceptor extends LiberinReceptorBase {
         send(
             Directions.leases(liberin.getNodeId(), liberin.getMediaId()),
             LeasedMediaTitleUpdatedNotificationUtil.build(liberin.getMediaId(), liberin.getTitle())
+        );
+    }
+
+    @LiberinMapping
+    public void recognizedTextUpdated(MediaRecognizedTextUpdatedLiberin liberin) {
+        send(
+            Directions.leases(liberin.getNodeId(), liberin.getMediaId()),
+            LeasedMediaTextUpdatedNotificationUtil.build(liberin.getMediaId(), liberin.getTextContent())
         );
     }
 

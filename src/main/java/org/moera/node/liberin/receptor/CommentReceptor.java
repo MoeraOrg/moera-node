@@ -495,6 +495,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 comment.getPosting().getId(),
                 comment.getId(),
                 liberin.getMediaId(),
+                liberin.getMediaNodeName(),
                 liberin.getTitle(),
                 liberin.getTextContent()
             )

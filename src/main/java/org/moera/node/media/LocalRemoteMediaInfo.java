@@ -48,7 +48,7 @@ public record LocalRemoteMediaInfo(PrivateMediaFileInfo local, RemoteMediaInfo r
     }
 
     public String textContent() {
-        return local != null ? local.getTextContent() : null;
+        return local != null ? local.getTextContent() : remote != null ? remote.getTextContent() : null;
     }
 
     public List<MediaFilePreviewInfo> previews() {

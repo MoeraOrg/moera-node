@@ -45,4 +45,15 @@ public class RemoteMediaUtilTest {
         Assertions.assertEquals(12.345f, RemoteMediaInfoUtil.build(remoteMediaFile, null).getDuration());
     }
 
+    @Test
+    void recognizedTextIsIncludedInRemoteMediaInfo() {
+        RemoteMediaFile remoteMediaFile = new RemoteMediaFile();
+        remoteMediaFile.setId(UUID.randomUUID());
+        remoteMediaFile.setRecognizedText("recognized text");
+
+        Assertions.assertEquals(
+            "recognized text", RemoteMediaInfoUtil.build(remoteMediaFile, null).getTextContent()
+        );
+    }
+
 }

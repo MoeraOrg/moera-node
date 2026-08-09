@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class RemoteMediaOperations {
@@ -61,6 +62,7 @@ public class RemoteMediaOperations {
         remoteMediaFile.setFileSize(media.getSize());
         remoteMediaFile.setDuration(media.getDuration());
         remoteMediaFile.setTitle(media.getTitle());
+        remoteMediaFile.setRecognizedText(media.getTextContent());
         remoteMediaFile.setLeaseId(leaseId);
         return remoteMediaFile;
     }
@@ -74,12 +76,12 @@ public class RemoteMediaOperations {
         return remoteMediaFileRepository.save(remoteMediaFile);
     }
 
-    public void update(UUID remoteMediaFileId, PrivateMediaFileInfo mediaInfo) {
+    public RemoteMediaFile update(UUID remoteMediaFileId, PrivateMediaFileInfo mediaInfo) {
         RemoteMediaFile remoteMediaFile = remoteMediaFileRepository
             .findByNodeIdAndId(universalContext.nodeId(), remoteMediaFileId)
             .orElse(null);
         if (remoteMediaFile == null || remoteMediaFile.isInvalid()) {
-            return;
+            return null;
         }
 
         remoteMediaFile.setHash(mediaInfo.getHash());
@@ -90,10 +92,15 @@ public class RemoteMediaOperations {
         remoteMediaFile.setFileSize(mediaInfo.getSize());
         remoteMediaFile.setDuration(mediaInfo.getDuration());
         remoteMediaFile.setTitle(mediaInfo.getTitle());
+        if (!ObjectUtils.isEmpty(mediaInfo.getTextContent())) {
+            remoteMediaFile.setRecognizedText(mediaInfo.getTextContent());
+        }
 
         entryRevisionRepository.clearAttachmentsCacheByRemoteMedia(
             universalContext.nodeId(), remoteMediaFile.getNodeName(), remoteMediaFile.getMediaId()
         );
+
+        return remoteMediaFile;
     }
 
     public String invalidate(UUID remoteMediaFileId) {

@@ -26,6 +26,7 @@ public class RemoteMediaInfoUtil {
         info.setSize(remoteMediaFile.getFileSize());
         info.setDuration(remoteMediaFile.getDuration());
         info.setTitle(remoteMediaFile.getTitle());
+        info.setTextContent(remoteMediaFile.getRecognizedText());
         info.setAttachment(remoteMediaFile.isAttachment());
         fillGrant(info, grantSupplier);
         return info;

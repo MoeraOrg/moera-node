@@ -13,6 +13,7 @@ import org.jsoup.select.NodeFilter;
 import org.moera.lib.node.types.body.Body;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
+import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MimeUtil;
 import org.moera.node.util.Util;
@@ -194,23 +195,31 @@ public class HeadingExtractor {
         Set<String> linkIds = MediaExtractor.extractMediaFileIds(body.getLinkPreviews());
         for (LocalRemoteMedia localRemoteMedia : media) {
             MediaFileOwner mediaFileOwner = localRemoteMedia.mediaFileOwner();
-            if (mediaFileOwner == null) {
+            MediaFile mediaFile = mediaFileOwner != null ? mediaFileOwner.getMediaFile() : null;
+            RemoteMediaFile remoteMediaFile = mediaFile == null ? localRemoteMedia.remoteMediaFile() : null;
+            if (mediaFile == null && remoteMediaFile == null) {
                 continue;
             }
-            MediaFile mediaFile = mediaFileOwner.getMediaFile();
-            if (mediaFile == null || linkIds.contains(mediaFile.getId())) {
+            String hash = mediaFile != null ? mediaFile.getId() : remoteMediaFile.getHash();
+            if (linkIds.contains(hash)) {
                 continue;
             }
-            if (mediaFile.isImage()) {
-                if (ObjectUtils.isEmpty(mediaFile.getRecognizedText())) {
+            String mimeType = mediaFile != null ? mediaFile.getMimeType() : remoteMediaFile.getMimeType();
+            String recognizedText = mediaFile != null
+                ? mediaFile.getRecognizedText()
+                : remoteMediaFile.getRecognizedText();
+            String title = mediaFile != null ? mediaFileOwner.getTitle() : remoteMediaFile.getTitle();
+            boolean image = MimeUtil.isSupportedImage(mimeType);
+            if (image) {
+                if (ObjectUtils.isEmpty(recognizedText)) {
                     hasGallery = true;
                     continue;
                 }
-            } else if (mediaFile.isVideo()) {
+            } else if (MimeUtil.isSupportedVideo(mimeType)) {
                 hasVideo = true;
                 continue;
             } else {
-                if (ObjectUtils.isEmpty(mediaFileOwner.getTitle())) {
+                if (ObjectUtils.isEmpty(title)) {
                     hasAttachedFiles = true;
                     continue;
                 }
@@ -218,12 +227,12 @@ public class HeadingExtractor {
             if (!heading.isEmpty()) {
                 heading.append(' ');
             }
-            if (mediaFile.isImage()) {
-                heading.append(mediaFile.getRecognizedText());
+            if (image) {
+                heading.append(recognizedText);
             } else {
-                heading.append(mediaFileOwner.getTitle());
+                heading.append(title);
                 heading.append('.');
-                heading.append(MimeUtil.extension(mediaFile.getMimeType()));
+                heading.append(MimeUtil.extension(mimeType));
             }
             if (heading.length() >= len) {
                 Util.ellipsize(heading, len);

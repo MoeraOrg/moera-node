@@ -91,6 +91,18 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
     )
     Collection<EntryRevision> findByMedia(UUID mediaFileOwnerId);
 
+    @Query(
+        "select distinct r from EntryRevision r"
+        + " left join fetch r.entry"
+        + " left join fetch r.attachments ra left join fetch ra.mediaFileOwner mfo"
+        + " left join fetch mfo.mediaFile"
+        + " left join fetch ra.remoteMediaFile"
+        + " where r.entry.nodeId = ?1 and exists("
+        + "select ea from EntryAttachment ea where ea.entryRevision = r and ea.remoteMediaFile.id in (?2)"
+        + ")"
+    )
+    Collection<EntryRevision> findByRemoteMedia(UUID nodeId, Collection<UUID> remoteMediaFileIds);
+
     @Modifying
     @Query("update EntryRevision r set r.attachmentsCache = ?2 where r.id = ?1")
     void updateAttachmentsCacheById(UUID id, String attachmentsCache);
@@ -130,5 +142,15 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
         + ")"
     )
     void clearAttachmentsCacheByRemoteMedia(UUID nodeId, String remoteNodeName, String remoteMediaId);
+
+    @Modifying
+    @Query(
+        "update EntryRevision r set r.attachmentsCache = null"
+        + " where r.entry.nodeId = ?1 and exists("
+        + "select ea from EntryAttachment ea"
+        + " where ea.entryRevision = r and ea.remoteMediaFile.id in (?2)"
+        + ")"
+    )
+    void clearAttachmentsCacheByRemoteMedia(UUID nodeId, Collection<UUID> remoteMediaFileIds);
 
 }

@@ -179,7 +179,13 @@ public class PostingProcessor {
     public void mediaTextUpdated(PostingMediaTextUpdatedNotification notification) {
         withValidPostingSubscription(notification, (subscription, posting) ->
             postingOperations.updatePickedMediaText(
-                posting.getId(), notification.getMediaId(), notification.getTitle(), notification.getTextContent()
+                posting.getId(),
+                notification.getMediaNodeName() != null
+                    ? notification.getMediaNodeName()
+                    : notification.getSenderNodeName(),
+                notification.getMediaId(),
+                notification.getTitle(),
+                notification.getTextContent()
             )
         );
     }

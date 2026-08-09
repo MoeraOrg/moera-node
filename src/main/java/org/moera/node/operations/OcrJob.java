@@ -3,38 +3,22 @@ package org.moera.node.operations;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
 import jakarta.inject.Inject;
 
-import org.moera.lib.node.types.body.Body;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.data.DraftRepository;
-import org.moera.node.data.Entry;
-import org.moera.node.data.EntryAttachment;
-import org.moera.node.data.EntryRevisionRepository;
-import org.moera.node.data.EntryType;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
-import org.moera.node.liberin.model.CommentHeadingUpdatedLiberin;
-import org.moera.node.liberin.model.CommentMediaTextUpdatedLiberin;
-import org.moera.node.liberin.model.DraftUpdatedLiberin;
-import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
-import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
-import org.moera.node.media.LocalRemoteMedia;
+import org.moera.node.liberin.model.MediaRecognizedTextUpdatedLiberin;
 import org.moera.node.media.MediaFileNotAvailableException;
 import org.moera.node.ocrspace.OcrSpace;
 import org.moera.node.ocrspace.OcrSpaceConnectionException;
 import org.moera.node.ocrspace.OcrSpaceInvalidResponseException;
 import org.moera.node.task.Job;
-import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.ObjectUtils;
 import tools.jackson.databind.ObjectMapper;
 
 public class OcrJob extends Job<OcrJob.Parameters, Object> {
@@ -69,10 +53,7 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
     private MediaFileOwnerRepository mediaFileOwnerRepository;
 
     @Inject
-    private EntryRevisionRepository entryRevisionRepository;
-
-    @Inject
-    private DraftRepository draftRepository;
+    private OcrOperations ocrOperations;
 
     @Inject
     private OcrSpace ocrSpace;
@@ -110,7 +91,7 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
         try {
             String text = ocrSpace.recognize(mediaFile);
             tx.executeWrite(() -> mediaFileRepository.recognized(parameters.mediaFileId, text, Util.now()));
-            if (text != null) {
+            if (!ObjectUtils.isEmpty(text)) {
                 tx.executeWrite(() -> updateText(mediaFile, text));
             }
         } catch (MediaFileNotAvailableException e) {
@@ -126,55 +107,8 @@ public class OcrJob extends Job<OcrJob.Parameters, Object> {
         var owners = mediaFileOwnerRepository.findAllByFile(mediaFile.getId());
         for (var owner : owners) {
             universalContext.associate(owner.getNodeId());
-
-            entryRevisionRepository.clearAttachmentsCacheByMedia(owner.getId());
-
-            Set<UUID> updatedEntries = new HashSet<>();
-            var revisions = entryRevisionRepository.findByMedia(owner.getId());
-            for (var revision : revisions) {
-                Entry entry = revision.getEntry();
-                boolean collapseQuotations = entry.getEntryType() == EntryType.COMMENT;
-                List<LocalRemoteMedia> media = revision.getAttachments().stream()
-                    .map(EntryAttachment::getLocalRemoteMedia)
-                    .toList();
-                String oldHeading = revision.getHeading();
-                String oldDescription = revision.getDescription();
-                TextConverter.headingToRevision(new Body(revision.getBody()), media, collapseQuotations, revision);
-
-                if (revision.getDeletedAt() != null || !updatedEntries.add(entry.getId())) {
-                    continue;
-                }
-
-                switch (entry.getEntryType()) {
-                    case POSTING:
-                        send(new PostingMediaTextUpdatedLiberin(entry.getId(), owner.getId(), null, text));
-                        break;
-                    case COMMENT:
-                        send(new CommentMediaTextUpdatedLiberin(entry.getId(), owner.getId(), null, text));
-                        break;
-                }
-                if (
-                    !Objects.equals(oldHeading, revision.getHeading())
-                    || !Objects.equals(oldDescription, revision.getDescription())
-                ) {
-                    switch (entry.getEntryType()) {
-                        case POSTING:
-                            send(
-                                new PostingHeadingUpdatedLiberin(
-                                    entry.getId(), revision.getId(), revision.getHeading(), revision.getDescription()
-                                )
-                            );
-                            break;
-                        case COMMENT:
-                            send(
-                                new CommentHeadingUpdatedLiberin(entry.getId(), revision.getId(), revision.getHeading())
-                            );
-                            break;
-                    }
-                }
-            }
-
-            draftRepository.findByMedia(owner.getId()).forEach(draft -> send(new DraftUpdatedLiberin(draft)));
+            ocrOperations.update(owner, text);
+            send(new MediaRecognizedTextUpdatedLiberin(owner.getId(), text));
         }
     }
 

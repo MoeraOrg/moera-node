@@ -56,6 +56,8 @@ public class RemoteMediaFile {
     @Size(max = 255)
     private String title;
 
+    private String recognizedText;
+
     @Size(max = 40)
     private String leaseId;
 
@@ -174,6 +176,14 @@ public class RemoteMediaFile {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getRecognizedText() {
+        return recognizedText;
+    }
+
+    public void setRecognizedText(String recognizedText) {
+        this.recognizedText = recognizedText;
     }
 
     public String getLeaseId() {

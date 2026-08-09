@@ -37,3 +37,5 @@
    them.
 3. `UniversalContext` automatically puts liberins on hold during a transaction and commits them after committing the
    transaction, so don't add an external mechanism for this.
+4. `UniversalContext.associate()` causes side effects that affect further execution of the whole thread. Avoid calling
+   it in methods that are not semantically bound to a concrete job or background task.

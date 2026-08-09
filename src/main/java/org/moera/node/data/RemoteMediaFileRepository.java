@@ -1,6 +1,7 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -13,6 +14,20 @@ public interface RemoteMediaFileRepository extends JpaRepository<RemoteMediaFile
 
     @Query("select rmf from RemoteMediaFile rmf where rmf.nodeId = ?1 and rmf.id = ?2")
     Optional<RemoteMediaFile> findByNodeIdAndId(UUID nodeId, UUID id);
+
+    @Query(
+        "select rmf from RemoteMediaFile rmf"
+        + " where rmf.nodeId = ?1 and rmf.nodeName = ?2 and rmf.mediaId = ?3 and rmf.leaseId = ?4"
+    )
+    List<RemoteMediaFile> findByMediaAndLease(
+        UUID nodeId, String remoteNodeName, String remoteMediaId, String leaseId
+    );
+
+    @Query(
+        "select count(*) from RemoteMediaFile rmf"
+        + " where rmf.nodeId = ?1 and rmf.nodeName = ?2 and rmf.mediaId = ?3 and rmf.leaseId = ?4"
+    )
+    int countByMediaAndLease(UUID nodeId, String remoteNodeName, String remoteMediaId, String leaseId);
 
     @Query(
         "select distinct"
