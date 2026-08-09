@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict evFnIXAh5NV52SOL5f0m222W1TTwTHzjweKOslpa7hIB8nmpN7Sb1CYtRIrldUD
+\restrict sRj30j6Rd72SjmH9jGolxnnqwjTH0s3Slu7nWCZHyTV2BDMFBnVnTi2c1gsicwy
 
 -- Dumped from database version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
@@ -520,6 +520,31 @@ $$;
 ALTER FUNCTION public.update_friend_remote_node() OWNER TO moera;
 
 --
+-- Name: update_media_file_compressed_file_usage(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_media_file_compressed_file_usage() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_media_file_reference(OLD.compressed_file_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_media_file_reference(OLD.compressed_file_id, NEW.compressed_file_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_media_file_reference(NULL, NEW.compressed_file_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_media_file_compressed_file_usage() OWNER TO moera;
+
+--
 -- Name: update_media_file_deadline(); Type: FUNCTION; Schema: public; Owner: moera
 --
 
@@ -541,6 +566,31 @@ $$;
 
 
 ALTER FUNCTION public.update_media_file_deadline() OWNER TO moera;
+
+--
+-- Name: update_media_file_owner_compressed_owner_usage(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_media_file_owner_compressed_owner_usage() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_media_file_owner_reference(OLD.compressed_owner_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_media_file_owner_reference(OLD.compressed_owner_id, NEW.compressed_owner_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_media_file_owner_reference(NULL, NEW.compressed_owner_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_media_file_owner_compressed_owner_usage() OWNER TO moera;
 
 --
 -- Name: update_media_file_owner_reference(uuid, uuid); Type: FUNCTION; Schema: public; Owner: moera
@@ -1413,7 +1463,9 @@ CREATE TABLE public.media_file_owners (
     permissions_updated_at timestamp without time zone DEFAULT now() NOT NULL,
     title character varying(255),
     malware_marks text DEFAULT ''::text NOT NULL,
-    unrestricted boolean DEFAULT false NOT NULL
+    unrestricted boolean DEFAULT false NOT NULL,
+    downsize boolean DEFAULT false NOT NULL,
+    compressed_owner_id uuid
 );
 
 
@@ -1510,7 +1562,12 @@ CREATE TABLE public.media_files (
     recognized_at timestamp without time zone,
     file_name character varying(50),
     cloud_file_name character varying(65),
-    cloud_upload_deadline timestamp without time zone
+    cloud_upload_deadline timestamp without time zone,
+    duration real,
+    stream_info text,
+    uncompressed boolean DEFAULT false NOT NULL,
+    compressed_file_id character varying(40),
+    compression_job_id uuid
 );
 
 
@@ -1914,7 +1971,9 @@ CREATE TABLE public.remote_media_files (
     usage_count integer DEFAULT 0 NOT NULL,
     deadline timestamp without time zone,
     title character varying(255),
-    invalid boolean DEFAULT false NOT NULL
+    invalid boolean DEFAULT false NOT NULL,
+    duration real,
+    recognized_text text
 );
 
 
@@ -3354,6 +3413,13 @@ CREATE UNIQUE INDEX initial_recommendations_name_posting_idx ON public.initial_r
 
 
 --
+-- Name: media_file_owners_compressed_owner_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_file_owners_compressed_owner_id_idx ON public.media_file_owners USING btree (compressed_owner_id);
+
+
+--
 -- Name: media_file_owners_deadline_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -3406,7 +3472,7 @@ CREATE INDEX media_file_upgrades_upgrade_type_idx ON public.media_file_upgrades 
 -- Name: media_files_cloud_upload_candidate_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX media_files_cloud_upload_candidate_idx ON public.media_files USING btree (created_at, id) WHERE ((cloud_file_name IS NULL) AND (cloud_upload_deadline IS NULL) AND (file_name IS NOT NULL) AND (usage_count > 0));
+CREATE INDEX media_files_cloud_upload_candidate_idx ON public.media_files USING btree (created_at, id) WHERE ((cloud_file_name IS NULL) AND (cloud_upload_deadline IS NULL) AND (compression_job_id IS NULL) AND (file_name IS NOT NULL) AND (usage_count > 0));
 
 
 --
@@ -3414,6 +3480,20 @@ CREATE INDEX media_files_cloud_upload_candidate_idx ON public.media_files USING 
 --
 
 CREATE INDEX media_files_cloud_upload_deadline_idx ON public.media_files USING btree (cloud_upload_deadline) WHERE ((cloud_file_name IS NULL) AND (cloud_upload_deadline IS NOT NULL));
+
+
+--
+-- Name: media_files_compressed_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_files_compressed_file_id_idx ON public.media_files USING btree (compressed_file_id);
+
+
+--
+-- Name: media_files_compression_job_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_files_compression_job_id_idx ON public.media_files USING btree (compression_job_id);
 
 
 --
@@ -4096,6 +4176,20 @@ CREATE INDEX verified_emails_node_id_email_idx ON public.verified_emails USING b
 
 
 --
+-- Name: media_files update_compressed_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_compressed_file_id AFTER INSERT OR DELETE OR UPDATE OF compressed_file_id ON public.media_files FOR EACH ROW EXECUTE FUNCTION public.update_media_file_compressed_file_usage();
+
+
+--
+-- Name: media_file_owners update_compressed_owner_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_compressed_owner_id AFTER INSERT OR DELETE OR UPDATE OF compressed_owner_id ON public.media_file_owners FOR EACH ROW EXECUTE FUNCTION public.update_media_file_owner_compressed_owner_usage();
+
+
+--
 -- Name: media_file_owners update_deadline; Type: TRIGGER; Schema: public; Owner: moera
 --
 
@@ -4575,6 +4669,14 @@ ALTER TABLE ONLY public.friends
 
 
 --
+-- Name: media_file_owners media_file_owners_compressed_owner_fk; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_file_owners
+    ADD CONSTRAINT media_file_owners_compressed_owner_fk FOREIGN KEY (compressed_owner_id) REFERENCES public.media_file_owners(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
 -- Name: media_file_owners media_file_owners_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -4604,6 +4706,22 @@ ALTER TABLE ONLY public.media_file_previews
 
 ALTER TABLE ONLY public.media_file_upgrades
     ADD CONSTRAINT media_file_upgrades_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: media_files media_files_compressed_file_fk; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_files
+    ADD CONSTRAINT media_files_compressed_file_fk FOREIGN KEY (compressed_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: media_files media_files_compression_job_fk; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_files
+    ADD CONSTRAINT media_files_compression_job_fk FOREIGN KEY (compression_job_id) REFERENCES public.pending_jobs(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
@@ -4834,5 +4952,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict evFnIXAh5NV52SOL5f0m222W1TTwTHzjweKOslpa7hIB8nmpN7Sb1CYtRIrldUD
+\unrestrict sRj30j6Rd72SjmH9jGolxnnqwjTH0s3Slu7nWCZHyTV2BDMFBnVnTi2c1gsicwy
 

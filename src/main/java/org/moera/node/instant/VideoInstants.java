@@ -30,12 +30,7 @@ public class VideoInstants extends InstantsCreator {
     public void postingPublished(WhoAmI nodeInfo, PostingInfo postingInfo) {
         String remoteNodeName = nodeInfo.getNodeName();
         String remotePostingId = postingInfo.getId();
-        if (
-            isBlocked(StoryType.VIDEO_POSTING_PUBLISHED, null, remoteNodeName, remotePostingId)
-            || !storyRepository.findByRemotePostingId(
-                nodeId(), Feed.INSTANT, StoryType.VIDEO_POSTING_PUBLISHED, remoteNodeName, remotePostingId
-            ).isEmpty()
-        ) {
+        if (isBlocked(StoryType.VIDEO_POSTING_PUBLISHED, null, remoteNodeName, remotePostingId)) {
             return;
         }
 
@@ -59,13 +54,7 @@ public class VideoInstants extends InstantsCreator {
     public void commentPublished(String remoteNodeName, PostingInfo postingInfo, CommentInfo commentInfo) {
         String remotePostingId = postingInfo.getId();
         String remoteCommentId = commentInfo.getId();
-        if (
-            isBlocked(StoryType.VIDEO_COMMENT_PUBLISHED, null, remoteNodeName, remotePostingId)
-            || !storyRepository.findFullByRemotePostingAndCommentId(
-                nodeId(), Feed.INSTANT, StoryType.VIDEO_COMMENT_PUBLISHED,
-                remoteNodeName, remotePostingId, remoteCommentId
-            ).isEmpty()
-        ) {
+        if (isBlocked(StoryType.VIDEO_COMMENT_PUBLISHED, null, remoteNodeName, remotePostingId)) {
             return;
         }
 

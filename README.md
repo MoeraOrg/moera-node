@@ -11,9 +11,9 @@ http://moera.org/development/development-environment.html
 
 ## Installation instructions
 
-1. As prerequisites, you need to have Java 21+ and PostgreSQL 9.6+
-   installed. In all major Linux distributions, you can install them from
-   the main package repository.
+1. As prerequisites, you need to have Java 21+, PostgreSQL 12+, and
+   ffmpeg 6.1+ installed. In all major Linux distributions, you can install
+   them from the main package repository.
 2. Create a PostgreSQL user `<username>` with password `<password>` and
    an empty database `<dbname>` owned by this user
    (see [detailed instructions][2]).

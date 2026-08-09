@@ -42,8 +42,9 @@ public class Jobs {
     private final Map<UUID, Job<?, ?>> all = new ConcurrentHashMap<>();
     private final BlockingQueue<Job<?, ?>> pending =
             new PriorityBlockingQueue<>(8, Comparator.comparing(Job::getWaitUntil));
+    private final Object initializationMonitor = new Object();
 
-    private boolean initialized = false;
+    private volatile boolean initialized = false;
 
     @Inject
     private ApplicationEventPublisher applicationEventPublisher;
@@ -69,13 +70,27 @@ public class Jobs {
 
     @EventListener(DomainsConfiguredEvent.class)
     public void init() {
-        initialized = true;
-        load();
+        synchronized (initializationMonitor) {
+            initialized = true;
+            try {
+                load();
+            } finally {
+                initializationMonitor.notifyAll();
+            }
+        }
         applicationEventPublisher.publishEvent(new JobsManagerInitializedEvent(this));
     }
 
     public boolean isReady() {
         return initialized;
+    }
+
+    public void waitReady() throws InterruptedException {
+        synchronized (initializationMonitor) {
+            while (!initialized) {
+                initializationMonitor.wait();
+            }
+        }
     }
 
     public <P, T extends Job<P, ?>> void run(Class<T> klass, P parameters) {

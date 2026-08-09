@@ -171,7 +171,7 @@ public class RemotePostingPostJob
 
     public RemotePostingPostJob() {
         state = new State();
-        exponentialRetry("PT10S", "PT12H");
+        fixedThenExponentialRetry(60, "PT10S", "PT12H");
     }
 
     @Override
@@ -262,7 +262,11 @@ public class RemotePostingPostJob
                 state.postingInfo = nodeApi
                     .at(parameters.targetNodeName)
                     .updatePosting(parameters.postingId, state.postingText);
-                send(new RemotePostingUpdatedLiberin(parameters.targetNodeName, parameters.postingId));
+                send(new RemotePostingUpdatedLiberin(
+                    state.target,
+                    state.postingInfo,
+                    state.mediaCompressionWaited
+                ));
             }
             checkpoint();
         }

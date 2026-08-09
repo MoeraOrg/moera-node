@@ -2,18 +2,35 @@ package org.moera.node.liberin.model;
 
 import java.util.Map;
 
+import org.moera.lib.node.types.CommentInfo;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.node.liberin.Liberin;
 
 public class RemoteCommentUpdatedLiberin extends Liberin {
 
     private String nodeName;
-    private String postingId;
-    private String commentId;
+    private PostingInfo postingInfo;
+    private CommentInfo commentInfo;
+    private boolean videoCompressionWaited;
 
     public RemoteCommentUpdatedLiberin(String nodeName, String postingId, String commentId) {
         this.nodeName = nodeName;
-        this.postingId = postingId;
-        this.commentId = commentId;
+        postingInfo = new PostingInfo();
+        postingInfo.setId(postingId);
+        commentInfo = new CommentInfo();
+        commentInfo.setId(commentId);
+    }
+
+    public RemoteCommentUpdatedLiberin(
+        String nodeName,
+        PostingInfo postingInfo,
+        CommentInfo commentInfo,
+        boolean videoCompressionWaited
+    ) {
+        this.nodeName = nodeName;
+        this.postingInfo = postingInfo;
+        this.commentInfo = commentInfo;
+        this.videoCompressionWaited = videoCompressionWaited;
     }
 
     public String getNodeName() {
@@ -24,28 +41,36 @@ public class RemoteCommentUpdatedLiberin extends Liberin {
         this.nodeName = nodeName;
     }
 
-    public String getPostingId() {
-        return postingId;
+    public PostingInfo getPostingInfo() {
+        return postingInfo;
     }
 
-    public void setPostingId(String postingId) {
-        this.postingId = postingId;
+    public void setPostingInfo(PostingInfo postingInfo) {
+        this.postingInfo = postingInfo;
     }
 
-    public String getCommentId() {
-        return commentId;
+    public CommentInfo getCommentInfo() {
+        return commentInfo;
     }
 
-    public void setCommentId(String commentId) {
-        this.commentId = commentId;
+    public void setCommentInfo(CommentInfo commentInfo) {
+        this.commentInfo = commentInfo;
+    }
+
+    public boolean isVideoCompressionWaited() {
+        return videoCompressionWaited;
+    }
+
+    public void setVideoCompressionWaited(boolean videoCompressionWaited) {
+        this.videoCompressionWaited = videoCompressionWaited;
     }
 
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
         model.put("nodeName", nodeName);
-        model.put("postingId", postingId);
-        model.put("commentId", commentId);
+        model.put("postingId", postingInfo.getId());
+        model.put("commentId", commentInfo.getId());
     }
 
 }

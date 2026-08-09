@@ -104,6 +104,14 @@ public abstract class Job<P, S> extends Task {
         setRetryPolicy(new JobExponentialRetryPolicy(this, minPeriod, maxPeriod));
     }
 
+    protected void fixedThenExponentialRetry(int fixedCount, Duration period, Duration maxPeriod) {
+        setRetryPolicy(new JobFixedThenExponentialRetryPolicy(this, fixedCount, period, maxPeriod));
+    }
+
+    protected void fixedThenExponentialRetry(int fixedCount, String period, String maxPeriod) {
+        setRetryPolicy(new JobFixedThenExponentialRetryPolicy(this, fixedCount, period, maxPeriod));
+    }
+
     public final void success() {
         throw new StopJobException(StopJob.SUCCESS);
     }

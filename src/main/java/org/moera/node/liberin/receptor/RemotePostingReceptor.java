@@ -70,7 +70,12 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void updated(RemotePostingUpdatedLiberin liberin) {
-        send(liberin, new RemotePostingUpdatedEvent(liberin.getNodeName(), liberin.getPostingId()));
+        send(liberin, new RemotePostingUpdatedEvent(
+            liberin.getNodeInfo().getNodeName(), liberin.getPostingInfo().getId()
+        ));
+        if (liberin.isVideoCompressionWaited()) {
+            videoInstants.postingPublished(liberin.getNodeInfo(), liberin.getPostingInfo());
+        }
     }
 
     @LiberinMapping

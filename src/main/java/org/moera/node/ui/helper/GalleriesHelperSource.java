@@ -260,7 +260,9 @@ public class GalleriesHelperSource {
         alt = alt != null ? alt : "";
         HelperUtil.appendAttr(buf, "alt", alt);
         buf.append('>');
-
+        if (MimeUtil.isSupportedVideo(mediaFile.mimeType()) && (count == null || count == 0)) {
+            buf.append("<i class=\"fas fa-play\"></i>");
+        }
         buf.append("</a>");
 
         return new SafeString(buf);

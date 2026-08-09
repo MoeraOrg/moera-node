@@ -103,9 +103,10 @@ public abstract class RemoteEntryPostJob<P, S> extends Job<P, S> {
             attach.setLocalMediaId(replacementId);
         }
         if (bodySrc != null && StringUtils.hasText(bodySrc.getText())) {
-            bodySrc.setText(bodySrc.getText().replace("hash:" + originalHash, mediaFileOwner.getMediaFile().getId()));
+            bodySrc.setText(
+                bodySrc.getText().replace("hash:" + originalHash, "hash:" + mediaFileOwner.getMediaFile().getId())
+            );
         }
-        checkpoint();
     }
 
     protected void cacheUploadedRemoteMedia(List<MediaToAttach> media) {
@@ -128,7 +129,7 @@ public abstract class RemoteEntryPostJob<P, S> extends Job<P, S> {
         List<MediaCaptionText> captions,
         Function<MediaCaptionText, PostingSourceText> captionTextBuilder
     ) {
-        if (ObjectUtils.isEmpty(media)) {
+        if (ObjectUtils.isEmpty(media) || ObjectUtils.isEmpty(captions)) {
             return;
         }
         var mediaPostings = media.stream()

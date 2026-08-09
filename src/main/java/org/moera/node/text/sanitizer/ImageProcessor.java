@@ -12,6 +12,7 @@ import org.moera.node.data.MediaFilePreview;
 import org.moera.node.global.ServeContext;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaUtil;
+import org.moera.node.media.MimeUtil;
 import org.owasp.html.HtmlStreamEventReceiver;
 import org.owasp.html.HtmlStreamEventReceiverWrapper;
 
@@ -169,6 +170,11 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
             newAttrs.add("style");
             newAttrs.add("--width: %spx; --height: %spx".formatted(imageWidth, imageHeight));
             super.openTag(elementName, newAttrs);
+
+            if (MimeUtil.isSupportedVideo(localRemoteMedia.mimeType())) {
+                super.openTag("i", new ArrayList<>(List.of("class", "fas fa-play")));
+                super.closeTag("i");
+            }
 
             super.closeTag("a");
 

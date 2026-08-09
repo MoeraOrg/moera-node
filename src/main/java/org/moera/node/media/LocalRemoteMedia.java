@@ -42,6 +42,14 @@ public record LocalRemoteMedia(
               : null;
     }
 
+    public String mimeType() {
+        return mediaFileOwner != null
+            ? mediaFileOwner.getMediaFile().getMimeType()
+            : remoteMediaFile != null
+            ? remoteMediaFile.getMimeType()
+            : null;
+    }
+
     public boolean attachment() {
         return mediaFileOwner != null
             ? !mediaFileOwner.getMediaFile().isImage()

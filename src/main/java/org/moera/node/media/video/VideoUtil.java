@@ -47,7 +47,7 @@ public class VideoUtil {
             "-noautorotate",
             "-i", input.toString(),
             "-map_metadata", "0",
-            "-map_chapters", "0",
+            "-map_chapters", "-1",
             "-map", "0:" + info.videoStreamIndex()
         ));
         if (info.audioStreamIndex() != null) {
@@ -141,7 +141,9 @@ public class VideoUtil {
             "-dn",
             "-frames:v", "1",
             "-vf", "scale=%d:%d:force_original_aspect_ratio=decrease".formatted(width, width),
-            "-f", "singlejpeg",
+            "-f", "image2",
+            "-update", "1",
+            "-c:v", "mjpeg",
             "-q:v", "3",
             "-y",
             thumbnailPath.toString()

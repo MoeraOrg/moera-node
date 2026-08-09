@@ -8,6 +8,8 @@
     }
 
     .entry-image {
+        position: relative;
+
         &:hover IMG {
             filter: brightness(90%);
         }
@@ -36,6 +38,16 @@
             font-size: 200%;
             text-shadow: -2px 2px 4px var(--shadow);
             z-index: var(--zindex-text-overlay);
+        }
+
+        .fa-play {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            font-size: 2rem;
+            color: white;
+            filter: drop-shadow(0 0 2px rgb(0 0 0 / 75%));
         }
     }
 }

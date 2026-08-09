@@ -42,18 +42,19 @@ public class ClassPolicy implements AttributePolicy {
     }
 
     private static final ClassMatcher[] MATCHERS = {
-            allowed("text-start", "text-end", "text-center"),
-            allowed("text-*").notInPreview(),
-            allowed("bg-*").notInPreview(),
-            allowed("border").notInPreview(),
-            allowed("border-*").notInPreview(),
-            allowed("fs-*").notInPreview(),
-            allowed("float-*"),
-            allowed("table").onElements("table"),
-            allowed("table-*").onElements("table", "th", "tr", "td"),
-            allowed("entry-image").onElements("a"),
-            allowed("emoji").onElements("img"),
-            allowed("katex").onElements("div", "span")
+        allowed("text-start", "text-end", "text-center"),
+        allowed("text-*").notInPreview(),
+        allowed("bg-*").notInPreview(),
+        allowed("border").notInPreview(),
+        allowed("border-*").notInPreview(),
+        allowed("fs-*").notInPreview(),
+        allowed("float-*"),
+        allowed("table").onElements("table"),
+        allowed("table-*").onElements("table", "th", "tr", "td"),
+        allowed("entry-image").onElements("a"),
+        allowed("emoji").onElements("img"),
+        allowed("katex").onElements("div", "span"),
+        allowed("fas", "fa-play").onElements("i")
     };
 
     private boolean preview;
@@ -72,8 +73,8 @@ public class ClassPolicy implements AttributePolicy {
     public String apply(String elementName, String attributeName, String value) {
         String[] classes = value.split(" ");
         String klass = Arrays.stream(classes)
-                .filter(k -> isClassAllowed(elementName, k))
-                .collect(Collectors.joining(" "));
+            .filter(k -> isClassAllowed(elementName, k))
+            .collect(Collectors.joining(" "));
         return !ObjectUtils.isEmpty(klass) ? klass : null;
     }
 

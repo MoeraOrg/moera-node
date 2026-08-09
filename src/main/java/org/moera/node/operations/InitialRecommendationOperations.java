@@ -34,6 +34,12 @@ public class InitialRecommendationOperations {
     private Jobs jobs;
 
     public void populateNewsfeed(UUID nodeId) {
+        try {
+            jobs.waitReady();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
         jobs.run(PopulateNewsfeedJob.class, new PopulateNewsfeedJob.Parameters(), nodeId);
     }
 

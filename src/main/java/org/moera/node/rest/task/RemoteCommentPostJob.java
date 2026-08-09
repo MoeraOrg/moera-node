@@ -208,7 +208,7 @@ public class RemoteCommentPostJob
 
     public RemoteCommentPostJob() {
         state = new State();
-        exponentialRetry("PT10S", "PT12H");
+        fixedThenExponentialRetry(60, "PT10S", "PT12H");
     }
 
     @Override
@@ -345,7 +345,10 @@ public class RemoteCommentPostJob
                     .updateComment(parameters.postingId, parameters.commentId, state.commentText);
                 send(
                     new RemoteCommentUpdatedLiberin(
-                        parameters.targetNodeName, parameters.postingId, parameters.commentId
+                        parameters.targetNodeName,
+                        state.postingInfo,
+                        state.commentInfo,
+                        state.mediaCompressionWaited
                     )
                 );
             }

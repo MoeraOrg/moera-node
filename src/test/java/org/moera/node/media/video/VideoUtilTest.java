@@ -162,7 +162,7 @@ public class VideoUtilTest {
         assertOption(command, "-c:s", "mov_text");
         assertOption(command, "-c:v:1", "copy");
         assertOption(command, "-map_metadata", "0");
-        assertOption(command, "-map_chapters", "0");
+        assertOption(command, "-map_chapters", "-1");
         assertOption(command, "-movflags", "+faststart");
         assertOption(command, "-progress", "pipe:1");
         assertOption(command, "-stats_period", "5");

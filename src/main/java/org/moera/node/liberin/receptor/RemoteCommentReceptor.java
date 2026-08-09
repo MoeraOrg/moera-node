@@ -59,8 +59,15 @@ public class RemoteCommentReceptor extends LiberinReceptorBase {
     public void updated(RemoteCommentUpdatedLiberin liberin) {
         send(
             liberin,
-            new RemoteCommentUpdatedEvent(liberin.getNodeName(), liberin.getPostingId(), liberin.getCommentId())
+            new RemoteCommentUpdatedEvent(
+                liberin.getNodeName(), liberin.getPostingInfo().getId(), liberin.getCommentInfo().getId()
+            )
         );
+        if (liberin.isVideoCompressionWaited()) {
+            videoInstants.commentPublished(
+                liberin.getNodeName(), liberin.getPostingInfo(), liberin.getCommentInfo()
+            );
+        }
     }
 
     @LiberinMapping
