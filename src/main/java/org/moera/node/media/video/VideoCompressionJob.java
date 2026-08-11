@@ -90,7 +90,8 @@ public class VideoCompressionJob extends Job<VideoCompressionJob.Parameters, Obj
 
             DigestingOutputStream digests;
             try (InputStream in = Files.newInputStream(output.path())) {
-                digests = mediaOperations.transfer(in, null, null, null);
+                // we don't have an associated context to get max-size option
+                digests = mediaOperations.transfer(in, null, null, Integer.MAX_VALUE);
             }
             MediaFile compressed = mediaOperations.putInPlace(
                 digests.getHash(), "video/mp4", output.path(), digests.getDigest(), false
