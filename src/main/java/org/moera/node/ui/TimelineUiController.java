@@ -13,12 +13,10 @@ import jakarta.transaction.Transactional;
 import org.moera.lib.UniversalLocation;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.CommentInfo;
-import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
-import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
@@ -33,6 +31,10 @@ import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
+import org.moera.node.media.DirectServeOperations;
+import org.moera.node.media.LocalRemoteMediaInfo;
+import org.moera.node.media.MediaUtil;
+import org.moera.node.media.MimeUtil;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.CommentUiInfo;
@@ -246,10 +248,18 @@ public class TimelineUiController {
         Entry entry = comment != null ? comment : posting;
         String heading = entry.getCurrentRevision().getHeading();
         model.addAttribute("ogTitle", !ObjectUtils.isEmpty(heading) ? heading : "(no title)");
-        List<MediaAttachment> attachments = entryOperations.getMediaAttachments(entry.getCurrentRevision(), null);
-        PrivateMediaFileInfo image = !attachments.isEmpty() ? attachments.getFirst().getMedia() : null;
+        PrivateMediaFileInfo image = entryOperations.getMediaAttachments(entry.getCurrentRevision(), null)
+            .stream()
+            .map(LocalRemoteMediaInfo::new)
+            .filter(lr -> MimeUtil.isSupportedImageOrVideo(lr.mimeType()))
+            .map(LocalRemoteMediaInfo::local) // TODO support remote images
+            .findFirst()
+            .orElse(null);
         if (image != null) {
-            model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + image.getPath());
+            model.addAttribute(
+                "ogImage",
+                requestContext.getSiteUrl() + MediaUtil.mediaUrl(MediaUtil.privatePath(image, 900, null))
+            );
             model.addAttribute("ogImageType", image.getMimeType());
             model.addAttribute("ogImageWidth", image.getWidth());
             model.addAttribute("ogImageHeight", image.getHeight());
@@ -257,7 +267,7 @@ public class TimelineUiController {
             AvatarImage avatarImage = AvatarImageUtil.build(
                 entry.getOwnerAvatarMediaFile(), entry.getOwnerAvatarShape(), directServeOperations
             );
-            model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + avatarImage.getPath());
+            model.addAttribute("ogImage", requestContext.getSiteUrl() + MediaUtil.mediaUrl(avatarImage.getPath()));
             model.addAttribute("ogImageType", AvatarImageUtil.getMediaFile(avatarImage).getMimeType());
             model.addAttribute("ogImageWidth", avatarImage.getWidth());
             model.addAttribute("ogImageHeight", avatarImage.getHeight());

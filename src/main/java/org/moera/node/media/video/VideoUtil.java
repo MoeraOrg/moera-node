@@ -167,10 +167,7 @@ public class VideoUtil {
         }
 
         if (result.stopReason() != ToolRunner.StopReason.NONE || result.exitCode() != 0) {
-            log.warn(
-                "Error reading video file {}: {}",
-                LogUtil.format(inputPath.toString()), LogUtil.format(result.stderr())
-            );
+            log.warn("Error reading video file {}", LogUtil.format(inputPath.toString()));
             throw new InvalidVideoException();
         }
 

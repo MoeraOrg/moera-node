@@ -147,6 +147,7 @@ public class MediaController {
         } catch (ThresholdReachedException e) {
             throw new ValidationFailure("media.wrong-size");
         } catch (IOException e) {
+            log.error("Failed to store media file", e);
             throw new OperationFailure("media.storage-error");
         } finally {
             Files.deleteIfExists(tmp.path());
@@ -197,6 +198,7 @@ public class MediaController {
         } catch (ThresholdReachedException e) {
             throw new ValidationFailure("media.wrong-size");
         } catch (IOException e) {
+            log.error("Failed to store media file", e);
             throw new OperationFailure("media.storage-error");
         }
     }

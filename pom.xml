@@ -5,7 +5,7 @@
 
     <groupId>org.moera</groupId>
     <artifactId>moera-node</artifactId>
-    <version>0.18.9.1</version>
+    <version>0.18.10</version>
     <name>moera-node</name>
     <description>Moera node</description>
     <packaging>jar</packaging>

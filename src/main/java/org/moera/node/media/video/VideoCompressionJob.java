@@ -137,15 +137,15 @@ public class VideoCompressionJob extends Job<VideoCompressionJob.Parameters, Obj
         boolean hasAttachedPictures = !info.attachedPictureStreamIndexes().isEmpty();
         ToolResult result = runFfmpeg(input, output, info, hasSubtitles, hasAttachedPictures);
         if (result.exitedWithError() && hasSubtitles && hasAttachedPictures) {
-            log.warn("Could not preserve all ancillary streams, omitting attached pictures: {}", result.stderr());
+            log.warn("Could not preserve all ancillary streams, omitting attached pictures");
             result = runFfmpeg(input, output, info, true, false);
             if (result.exitedWithError()) {
-                log.warn("Could not preserve subtitles, trying attached pictures only: {}", result.stderr());
+                log.warn("Could not preserve subtitles, trying attached pictures only");
                 result = runFfmpeg(input, output, info, false, true);
             }
         }
         if (result.exitedWithError() && (hasSubtitles || hasAttachedPictures)) {
-            log.warn("Could not preserve ancillary streams, omitting them: {}", result.stderr());
+            log.warn("Could not preserve ancillary streams, omitting them");
             result = runFfmpeg(input, output, info, false, false);
         }
         if (result.stopReason() != StopReason.NONE || result.exitCode() != 0) {
@@ -177,9 +177,9 @@ public class VideoCompressionJob extends Job<VideoCompressionJob.Parameters, Obj
 
     private String ffmpegFailure(ToolResult result) {
         return switch (result.stopReason()) {
-            case NO_PROGRESS -> "ffmpeg stopped reporting progress: " + result.stderr();
-            case DEADLINE -> "ffmpeg exceeded its execution deadline: " + result.stderr();
-            case NONE -> "ffmpeg exited with code %d: %s".formatted(result.exitCode(), result.stderr());
+            case NO_PROGRESS -> "ffmpeg stopped reporting progress";
+            case DEADLINE -> "ffmpeg exceeded its execution deadline";
+            case NONE -> "ffmpeg exited with code %d".formatted(result.exitCode());
         };
     }
 

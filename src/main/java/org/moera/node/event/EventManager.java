@@ -2,8 +2,8 @@ package org.moera.node.event;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +59,8 @@ public class EventManager {
     private static final String USER_PREFIX = "/user";
     private static final String EVENT_DESTINATION = "/queue";
     private static final String TOKEN_HEADER = "token";
+
+    private static final Duration EVENT_TTL = Duration.ofMinutes(30);
 
     @Inject
     private RequestCounter requestCounter;
@@ -232,7 +234,7 @@ public class EventManager {
     }
 
     private void purge() {
-        long boundary = Instant.now().minus(10, ChronoUnit.MINUTES).getEpochSecond();
+        long boundary = Instant.now().minus(EVENT_TTL).getEpochSecond();
         queue.removeIf(packet -> packet.getSentAt() < boundary);
     }
 
@@ -295,7 +297,7 @@ public class EventManager {
             if (queue.isEmpty()) {
                 return;
             }
-            int last = queue.get(0).getOrdinal() + queue.size() - 1;
+            int last = queue.getFirst().getOrdinal() + queue.size() - 1;
             subscribers.values().stream()
                 .filter(EventSubscriber::isSubscribed)
                 .filter(sub -> sub.getLastEventSeen() < last)
@@ -313,7 +315,7 @@ public class EventManager {
         headerAccessor.setSessionId(subscriber.getSessionId());
         MessageHeaders headers = headerAccessor.getMessageHeaders();
 
-        int first = queue.get(0).getOrdinal();
+        int first = queue.getFirst().getOrdinal();
         int beginIndex = Math.max(0, subscriber.getLastEventSeen() - first + 1);
         try {
             for (int i = beginIndex; i < queue.size(); i++) {

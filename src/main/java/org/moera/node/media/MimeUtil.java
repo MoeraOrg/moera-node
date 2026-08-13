@@ -101,6 +101,10 @@ public class MimeUtil {
         return VIDEO_FORMATS.contains(mimeType);
     }
 
+    public static boolean isSupportedImageOrVideo(String mimeType) {
+        return isSupportedImage(mimeType) || isSupportedVideo(mimeType);
+    }
+
     public static boolean isLossyImage(String mimeType) {
         var format = thumbnail(mimeType);
         return format != null && format.isJpeg();

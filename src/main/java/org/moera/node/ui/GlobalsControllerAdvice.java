@@ -7,6 +7,7 @@ import org.moera.lib.node.types.AvatarImage;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
+import org.moera.node.media.MediaUtil;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.NodeNameInfoUtil;
 import org.springframework.ui.Model;
@@ -39,7 +40,7 @@ public class GlobalsControllerAdvice {
         if (requestContext.getAvatar() != null) {
             AvatarImage avatarImage =
                 AvatarImageUtil.build(requestContext.getAvatar(), directServeOperations);
-            model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + avatarImage.getPath());
+            model.addAttribute("ogImage", requestContext.getSiteUrl() + MediaUtil.mediaUrl(avatarImage.getPath()));
             model.addAttribute("ogImageType", AvatarImageUtil.getMediaFile(avatarImage).getMimeType());
             model.addAttribute("ogImageWidth", avatarImage.getWidth());
             model.addAttribute("ogImageHeight", avatarImage.getHeight());

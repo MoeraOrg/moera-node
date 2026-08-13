@@ -23,6 +23,7 @@ import org.moera.node.api.naming.NamingCache;
 import org.moera.node.config.Config;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgentOs;
+import org.moera.node.media.MediaUtil;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
@@ -162,7 +163,7 @@ public class MoeraHelperSource {
             };
 
             buf.append("<img");
-            HelperUtil.appendAttr(buf, "src", "/moera/media/" + avatarImage.getPath());
+            HelperUtil.appendAttr(buf, "src", MediaUtil.mediaUrl(avatarImage.getPath()));
             HelperUtil.appendAttr(buf, "alt", "Avatar");
             HelperUtil.appendAttr(buf, "class", "avatar avatar-" + avatarImage.getShape());
             HelperUtil.appendAttr(buf, "width", sz);
