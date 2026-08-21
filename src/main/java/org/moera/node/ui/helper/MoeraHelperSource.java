@@ -235,14 +235,22 @@ public class MoeraHelperSource {
 
     private void appendEmojis(StringBuilder buf, List<ReactionTotalInfo> totals) {
         totals = totals.stream()
-                .filter(rt -> rt.getTotal() != null)
-                .sorted(Comparator.comparingInt(ReactionTotalInfo::getTotal).reversed())
+                .filter(MoeraHelperSource::hasPopularity)
+                .sorted(Comparator.comparingDouble(MoeraHelperSource::popularity).reversed())
                 .collect(Collectors.toList());
         buf.append("<span class=\"emojis\">");
         for (int i = 0; i < 3 && i < totals.size(); i++) {
             appendEmoji(buf, totals.get(i).getEmoji());
         }
         buf.append("</span>");
+    }
+
+    private static boolean hasPopularity(ReactionTotalInfo total) {
+        return total.getTotal() != null || total.getShare() != null;
+    }
+
+    private static double popularity(ReactionTotalInfo total) {
+        return total.getTotal() != null ? total.getTotal() : total.getShare();
     }
 
     private void appendEmoji(StringBuilder buf, int emoji) {

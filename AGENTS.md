@@ -24,6 +24,11 @@
    public API. A media file owner ID in the implementation is called a media file ID in the public API, and a media
    file ID in the implementation is called a media file hash in the public API.
 
+# Web UI
+
+1. Web UI is the built-in web interface of `moera-node`, intended for limited clients, search engines, and AI agents.
+   It does not refer to the `moera-client-react` client application.
+
 # Instant stories
 
 1. Creation of stories in `Feed.INSTANT` must be initiated only by liberin receptors.

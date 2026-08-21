@@ -84,8 +84,9 @@ public class VideoCompressionJob extends Job<VideoCompressionJob.Parameters, Obj
             try (var input = mediaOperations.openContent(source)) {
                 compress(input.path(), output, videoInfo);
             }
-            if (VideoUtil.getVideoInfo(output.path(), "video/mp4").uncompressed()) {
-                throw new InvalidVideoException();
+            VideoInfo compressedVideoInfo = VideoUtil.getVideoInfo(output.path(), "video/mp4");
+            if (compressedVideoInfo.uncompressed()) {
+                throw new InvalidVideoException("the video was not compressed properly: " + compressedVideoInfo);
             }
 
             DigestingOutputStream digests;
@@ -96,9 +97,6 @@ public class VideoCompressionJob extends Job<VideoCompressionJob.Parameters, Obj
             MediaFile compressed = mediaOperations.putInPlace(
                 digests.getHash(), "video/mp4", output.path(), digests.getDigest(), false
             );
-            if (compressed.isUncompressed()) {
-                throw new InvalidVideoException();
-            }
 
             tx.executeWriteWithExceptions(() -> publish(compressed.getId()));
         } finally {

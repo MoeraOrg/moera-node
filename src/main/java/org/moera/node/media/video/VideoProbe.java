@@ -18,7 +18,7 @@ public class VideoProbe {
     private static final Logger log = LoggerFactory.getLogger(VideoProbe.class);
 
     private static final double MAX_FRAME_RATE = 30;
-    private static final long MAX_AUDIO_BIT_RATE = 131_072;
+    private static final long MAX_AUDIO_BIT_RATE = 144_000; // allow 10% discrepancy
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     private record ProbeFormat(@JsonProperty("format_name") String formatName, String duration) {
@@ -99,7 +99,7 @@ public class VideoProbe {
                 || video.height() <= 0
                 || duration == null
             ) {
-                throw new InvalidVideoException();
+                throw new InvalidVideoException("no video stream");
             }
 
             int rotation = rotation(video);
@@ -109,7 +109,7 @@ public class VideoProbe {
                 .toList();
             ProbeStream selectedAudio = preferred(audio);
             if (selectedAudio != null && selectedAudio.index() == null) {
-                throw new InvalidVideoException();
+                throw new InvalidVideoException("the audio stream has no index");
             }
             List<Integer> subtitles = streams.stream()
                 .filter(stream -> "subtitle".equals(stream.codecType()))
@@ -152,7 +152,7 @@ public class VideoProbe {
                 "Error parsing video file information for {}: {}",
                 LogUtil.format(path.toString()), e.getMessage()
             );
-            throw new InvalidVideoException();
+            throw new InvalidVideoException("error parsing video information", e);
         }
     }
 

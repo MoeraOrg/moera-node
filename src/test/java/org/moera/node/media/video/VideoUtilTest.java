@@ -60,13 +60,13 @@ public class VideoUtilTest {
 
     @Test
     void audioBitrateBoundaryAndMissingBitrateAreClassifiedCorrectly() throws Exception {
-        Assertions.assertFalse(infoWithAudio("131071", 2, "aac").uncompressed());
-        Assertions.assertFalse(infoWithAudio("131072", 2, "aac").uncompressed());
+        Assertions.assertFalse(infoWithAudio("143999", 2, "aac").uncompressed());
+        Assertions.assertFalse(infoWithAudio("144000", 2, "aac").uncompressed());
         Assertions.assertFalse(infoWithAudio(null, 2, "aac").uncompressed());
-        Assertions.assertTrue(infoWithAudio("131073", 2, "aac").uncompressed());
+        Assertions.assertTrue(infoWithAudio("144001", 2, "aac").uncompressed());
         Assertions.assertTrue(infoWithAudio("not-a-number", 2, "aac").uncompressed());
-        Assertions.assertTrue(infoWithAudio("131072", 3, "aac").uncompressed());
-        Assertions.assertTrue(infoWithAudio("131072", 2, "mp3").uncompressed());
+        Assertions.assertTrue(infoWithAudio("144000", 3, "aac").uncompressed());
+        Assertions.assertTrue(infoWithAudio("144000", 2, "mp3").uncompressed());
     }
 
     @Test
