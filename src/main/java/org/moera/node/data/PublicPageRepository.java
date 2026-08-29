@@ -9,24 +9,16 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface PublicPageRepository extends JpaRepository<PublicPage, Long> {
 
-    @Query("select p from PublicPage p where p.nodeId = ?1 and p.entry.id is null and p.afterMoment = ?2")
-    PublicPage findByAfterMoment(UUID nodeId, long afterMoment);
-
-    @Query("select p from PublicPage p where p.nodeId = ?1 and p.entry.id = ?2 and p.afterMoment = ?3")
-    PublicPage findByAfterMomentForEntry(UUID nodeId, UUID entryId, long afterMoment);
-
-    @Query("select p from PublicPage p where p.nodeId = ?1 and p.entry.id is null and p.beforeMoment = ?2")
-    PublicPage findByBeforeMoment(UUID nodeId, long beforeMoment);
-
-    @Query("select p from PublicPage p where p.nodeId = ?1 and p.entry.id = ?2 and p.beforeMoment = ?3")
-    PublicPage findByBeforeMomentForEntry(UUID nodeId, UUID entryId, long beforeMoment);
-
-    @Query("select p from PublicPage p where p.nodeId = ?1 and p.entry.id is null"
-            + " and ?2 > p.afterMoment and ?2 <= p.beforeMoment")
+    @Query(
+        "select p from PublicPage p"
+        + " where p.nodeId = ?1 and p.entry.id is null and ?2 > p.afterMoment and ?2 <= p.beforeMoment"
+    )
     PublicPage findContaining(UUID nodeId, long moment);
 
-    @Query("select p from PublicPage p where p.nodeId = ?1 and p.entry.id = ?2"
-            + " and ?3 > p.afterMoment and ?3 <= p.beforeMoment")
+    @Query(
+        "select p from PublicPage p"
+        + " where p.nodeId = ?1 and p.entry.id = ?2 and ?3 > p.afterMoment and ?3 <= p.beforeMoment"
+    )
     PublicPage findContainingForEntry(UUID nodeId, UUID entryId, long moment);
 
     @Query("select p from PublicPage p where p.nodeId = ?1 and p.entry.id is null and p.beforeMoment <= ?2")

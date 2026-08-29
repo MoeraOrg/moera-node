@@ -143,7 +143,7 @@ public class OcrSpace {
                         if (ObjectUtils.isEmpty(result.getParsedResults())) {
                             return null;
                         }
-                        ParsedResult parsedResult = result.getParsedResults().get(0);
+                        ParsedResult parsedResult = result.getParsedResults().getFirst();
                         if (parsedResult.getFileParseExitCode() == 1) {
                             String text = parsedResult.getParsedText();
                             if (ObjectUtils.isEmpty(text)) {

@@ -27,6 +27,7 @@ public abstract class Job<P, S> extends Task {
     private int retries;
     private Instant waitUntil;
     private JobRetryPolicy retryPolicy;
+    private int maxParallel = 0;
 
     public Job() {
         exponentialRetry("PT10S", "PT3H");
@@ -110,6 +111,14 @@ public abstract class Job<P, S> extends Task {
 
     protected void fixedThenExponentialRetry(int fixedCount, String period, String maxPeriod) {
         setRetryPolicy(new JobFixedThenExponentialRetryPolicy(this, fixedCount, period, maxPeriod));
+    }
+
+    public int getMaxParallel() {
+        return maxParallel;
+    }
+
+    public void setMaxParallel(int maxParallel) {
+        this.maxParallel = maxParallel;
     }
 
     public final void success() {

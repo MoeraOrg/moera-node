@@ -22,6 +22,8 @@ import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.util.Util;
@@ -289,8 +291,8 @@ public class Entry {
     private boolean premoderating;
 
     @NotNull
-    @Size(max = 1024)
-    private String externalSourceUri = "";
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private String[] externalSourceUri = new String[0];
 
     @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
@@ -1395,11 +1397,11 @@ public class Entry {
         this.premoderating = premoderating;
     }
 
-    public String getExternalSourceUri() {
+    public String[] getExternalSourceUri() {
         return externalSourceUri;
     }
 
-    public void setExternalSourceUri(String externalSourceUri) {
+    public void setExternalSourceUri(String[] externalSourceUri) {
         this.externalSourceUri = externalSourceUri;
     }
 

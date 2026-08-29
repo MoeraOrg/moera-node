@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -120,7 +121,7 @@ public class PostingTextUtil {
             }
         }
         if (postingText.getExternalSourceUri() != null) {
-            entry.setExternalSourceUri(postingText.getExternalSourceUri());
+            entry.setExternalSourceUri(postingText.getExternalSourceUri().toArray(String[]::new));
         }
 
         if (entry.getParentMediaEntry() == null) {
@@ -238,7 +239,7 @@ public class PostingTextUtil {
             )
             && (
                 postingText.getExternalSourceUri() == null
-                || postingText.getExternalSourceUri().equals(entry.getExternalSourceUri())
+                || Arrays.equals(postingText.getExternalSourceUri().toArray(String[]::new), entry.getExternalSourceUri())
             )
             && (
                 postingText.getOperations() == null

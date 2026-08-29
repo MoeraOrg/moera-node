@@ -20,7 +20,7 @@ public class PendingJob {
     private UUID nodeId;
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 127)
     private String jobType;
 
     @NotNull

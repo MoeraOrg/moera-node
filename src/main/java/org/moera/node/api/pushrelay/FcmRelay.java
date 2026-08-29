@@ -61,6 +61,9 @@ public class FcmRelay {
                 );
                 int retry = 0;
                 do {
+                    if (retry > 0) {
+                        log.info("Retries left: {}", retry);
+                    }
                     long now = Instant.now().getEpochSecond();
                     byte[] signature = getSignature(nodeId, now);
 
@@ -94,6 +97,7 @@ public class FcmRelay {
                         }
                     } catch (Exception e) {
                         log.error("Error sending to the FCM relay: {}", e.getMessage());
+                        log.debug("Error sending to the FCM relay", e);
                         if (retry == 0) {
                             retry = 20;
                         }
@@ -123,6 +127,12 @@ public class FcmRelay {
     }
 
     public void send(UUID nodeId, PushContent pushContent) {
+        log.debug(
+            "Called send(nodeId = {}, pushContent.type = {}, pushContent.feedName = {})",
+            LogUtil.format(nodeId),
+            LogUtil.format(pushContent.getType().getValue()),
+            LogUtil.format(pushContent.getFeedStatus().getFeedName())
+        );
         if (
             pushContent.getType() == PushContentType.FEED_UPDATED
             && !Objects.equals(pushContent.getFeedStatus().getFeedName(), Feed.NEWS)
@@ -133,7 +143,10 @@ public class FcmRelay {
 
         boolean active = domains.getDomainOptions(nodeId).getBool("push-relay.fcm.active");
         if (active) {
-            queue.offer(Pair.of(nodeId, pushContent));
+            boolean success = queue.offer(Pair.of(nodeId, pushContent));
+            if (!success) {
+                log.warn("Failed to send to node {}", LogUtil.format(nodeId));
+            }
         }
     }
 

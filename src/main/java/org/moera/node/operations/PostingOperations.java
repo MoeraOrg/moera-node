@@ -49,6 +49,8 @@ import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.PostingTextUtil;
+import org.moera.node.operations.publicpages.UpdateTimelinePublicPagesJob;
+import org.moera.node.task.Jobs;
 import org.moera.node.text.MediaExtractor;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Transaction;
@@ -95,7 +97,7 @@ public class PostingOperations {
     private StoryOperations storyOperations;
 
     @Inject
-    private TimelinePublicPageOperations timelinePublicPageOperations;
+    private Jobs jobs;
 
     @Inject
     private Transaction tx;
@@ -259,7 +261,11 @@ public class PostingOperations {
         if (posting.getViewCompound().isPublic()) {
             Story timelineStory = posting.getStory(Feed.TIMELINE);
             if (timelineStory != null) {
-                timelinePublicPageOperations.updatePublicPages(timelineStory.getMoment());
+                jobs.runAfterCommit(
+                    UpdateTimelinePublicPagesJob.class,
+                    new UpdateTimelinePublicPagesJob.Parameters(timelineStory.getMoment()),
+                    universalContext.nodeId()
+                );
             }
         }
     }

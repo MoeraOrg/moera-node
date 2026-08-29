@@ -1,4 +1,4 @@
-package org.moera.node.operations;
+package org.moera.node.operations.publicpages;
 
 import java.util.UUID;
 import jakarta.inject.Inject;
@@ -33,44 +33,40 @@ public class CommentPublicPageOperations extends PublicPageOperations {
     @Override
     protected Entry findEntryById(UUID entryId) {
         return postingRepository.findById(entryId)
-                .orElseThrow(() -> new IllegalArgumentException("entryId should exist"));
+            .orElseThrow(() -> new IllegalArgumentException("entryId should exist"));
     }
 
     @Override
-    protected PublicPage findByBeforeMoment(UUID entryId, long before) {
-        return publicPageRepository.findByBeforeMomentForEntry(requestContext.nodeId(), entryId, before);
-    }
-
-    @Override
-    protected PublicPage findByAfterMoment(UUID entryId, long after) {
-        return publicPageRepository.findByAfterMomentForEntry(requestContext.nodeId(), entryId, after);
+    protected PublicPage findContaining(UUID entryId, long moment) {
+        return publicPageRepository.findContainingForEntry(universalContext.nodeId(), entryId, moment);
     }
 
     @Override
     protected int countInRange(UUID entryId, long after, long before) {
-        return commentRepository.countInRange(requestContext.nodeId(), entryId, after, before);
+        return commentRepository.countInRange(universalContext.nodeId(), entryId, after, before);
     }
 
     @Override
     protected Page<Long> findMomentsInRange(UUID entryId, long after, long before, Pageable pageable) {
-        return commentRepository.findMomentsInRange(requestContext.nodeId(), entryId, after, before, pageable);
+        return commentRepository.findMomentsInRange(universalContext.nodeId(), entryId, after, before, pageable);
     }
 
     @Override
     protected int countNumber(UUID entryId, long moment) {
-        return publicPageRepository.countNumberForEntry(requestContext.nodeId(), entryId, moment);
+        return publicPageRepository.countNumberForEntry(universalContext.nodeId(), entryId, moment);
     }
 
     @Override
     protected int countTotal(UUID entryId) {
-        return publicPageRepository.countTotalForEntry(requestContext.nodeId(), entryId);
+        return publicPageRepository.countTotalForEntry(universalContext.nodeId(), entryId);
     }
 
     @Override
     protected Page<PublicPage> findPages(UUID entryId, Long moment, int page, int size) {
         moment = moment != null ? moment : Long.MIN_VALUE;
-        return publicPageRepository.findAllAfterMomentForEntry(requestContext.nodeId(), entryId, moment,
-                PageRequest.of(page, size, Sort.Direction.ASC, "beforeMoment"));
+        return publicPageRepository.findAllAfterMomentForEntry(
+            universalContext.nodeId(), entryId, moment, PageRequest.of(page, size, Sort.Direction.ASC, "beforeMoment")
+        );
     }
 
 }

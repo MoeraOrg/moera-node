@@ -13,6 +13,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
+import org.moera.lib.util.LogUtil;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -56,6 +57,7 @@ public class VideoCompressionJob extends Job<VideoCompressionJob.Parameters, Obj
 
     public VideoCompressionJob() {
         retryCount(6, "PT30M");
+        setMaxParallel(2);
     }
 
     @Override
@@ -86,7 +88,10 @@ public class VideoCompressionJob extends Job<VideoCompressionJob.Parameters, Obj
             }
             VideoInfo compressedVideoInfo = VideoUtil.getVideoInfo(output.path(), "video/mp4");
             if (compressedVideoInfo.uncompressed()) {
-                throw new InvalidVideoException("the video was not compressed properly: " + compressedVideoInfo);
+                log.warn(
+                    "Video file {} was not compressed properly: {}",
+                    LogUtil.format(source.getId()), compressedVideoInfo
+                );
             }
 
             DigestingOutputStream digests;

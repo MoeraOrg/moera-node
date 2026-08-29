@@ -1,7 +1,6 @@
-package org.moera.node.operations;
+package org.moera.node.operations.publicpages;
 
 import java.util.UUID;
-
 import jakarta.inject.Inject;
 
 import org.moera.node.data.Entry;
@@ -34,40 +33,36 @@ public class TimelinePublicPageOperations extends PublicPageOperations {
     }
 
     @Override
-    protected PublicPage findByBeforeMoment(UUID entryId, long before) {
-        return publicPageRepository.findByBeforeMoment(requestContext.nodeId(), before);
-    }
-
-    @Override
-    protected PublicPage findByAfterMoment(UUID entryId, long after) {
-        return publicPageRepository.findByAfterMoment(requestContext.nodeId(), after);
+    protected PublicPage findContaining(UUID entryId, long moment) {
+        return publicPageRepository.findContaining(universalContext.nodeId(), moment);
     }
 
     @Override
     protected int countInRange(UUID entryId, long after, long before) {
-        return storyRepository.countInRange(requestContext.nodeId(), Feed.TIMELINE, after, before);
+        return storyRepository.countInRange(universalContext.nodeId(), Feed.TIMELINE, after, before);
     }
 
     @Override
     protected Page<Long> findMomentsInRange(UUID entryId, long after, long before, Pageable pageable) {
-        return storyRepository.findMomentsInRange(requestContext.nodeId(), Feed.TIMELINE, after, before, pageable);
+        return storyRepository.findMomentsInRange(universalContext.nodeId(), Feed.TIMELINE, after, before, pageable);
     }
 
     @Override
     protected int countNumber(UUID entryId, long moment) {
-        return publicPageRepository.countNumber(requestContext.nodeId(), moment);
+        return publicPageRepository.countNumber(universalContext.nodeId(), moment);
     }
 
     @Override
     protected int countTotal(UUID entryId) {
-        return publicPageRepository.countTotal(requestContext.nodeId());
+        return publicPageRepository.countTotal(universalContext.nodeId());
     }
 
     @Override
     protected Page<PublicPage> findPages(UUID entryId, Long moment, int page, int size) {
         moment = moment != null ? moment : Long.MAX_VALUE;
-        return publicPageRepository.findAllBeforeMoment(requestContext.nodeId(), moment,
-                PageRequest.of(page, size, Sort.Direction.DESC, "beforeMoment"));
+        return publicPageRepository.findAllBeforeMoment(
+            universalContext.nodeId(), moment, PageRequest.of(page, size, Sort.Direction.DESC, "beforeMoment")
+        );
     }
 
 }

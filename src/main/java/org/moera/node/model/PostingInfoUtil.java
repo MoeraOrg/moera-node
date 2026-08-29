@@ -20,6 +20,7 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.node.data.Feed;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
@@ -216,9 +217,19 @@ public class PostingInfoUtil {
         info.setDigest(revision.getDigest());
         info.setSignature(revision.getSignature());
         info.setSignatureVersion(revision.getSignatureVersion());
+
         if (!ObjectUtils.isEmpty(stories)) {
-            info.setFeedReferences(stories.stream().map(FeedReferenceUtil::build).collect(Collectors.toList()));
+            var feedReferences = stories.stream()
+                .filter(s ->
+                    Feed.isReadable(s.getFeedName(), accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_FEEDS))
+                )
+                .map(FeedReferenceUtil::build)
+                .toList();
+            if (!ObjectUtils.isEmpty(feedReferences)) {
+                info.setFeedReferences(feedReferences);
+            }
         }
+
         if (
             accessChecker.isPrincipal(Principal.ADMIN, Scope.OTHER)
             && posting.getBlockedInstants() != null && !posting.getBlockedInstants().isEmpty()
@@ -348,7 +359,7 @@ public class PostingInfoUtil {
             accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_CONTENT)
             && !ObjectUtils.isEmpty(posting.getExternalSourceUri())
         ) {
-            info.setExternalSourceUri(posting.getExternalSourceUri());
+            info.setExternalSourceUri(List.of(posting.getExternalSourceUri()));
         }
     }
 

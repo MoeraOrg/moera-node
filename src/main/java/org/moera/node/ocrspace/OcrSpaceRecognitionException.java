@@ -24,19 +24,21 @@ public class OcrSpaceRecognitionException extends OcrSpaceException {
         this.ocrErrorMessage = result.getErrorMessage();
         this.ocrErrorDetails = result.getErrorDetails();
         if (!ObjectUtils.isEmpty(result.getParsedResults())) {
-            this.fileExitCode = result.getParsedResults().get(0).getFileParseExitCode();
-            this.fileErrorMessage = result.getParsedResults().get(0).getErrorMessage();
-            this.fileErrorDetails = result.getParsedResults().get(0).getErrorDetails();
+            this.fileExitCode = result.getParsedResults().getFirst().getFileParseExitCode();
+            this.fileErrorMessage = result.getParsedResults().getFirst().getErrorMessage();
+            this.fileErrorDetails = result.getParsedResults().getFirst().getErrorDetails();
         }
     }
 
     private static String getMessage(OcrResult result) {
         String message = "Error during OCR.space recognition";
         if (!ObjectUtils.isEmpty(result.getErrorMessage())) {
-            message += ": " + result.getErrorMessage();
+            message += ": (%d) %s".formatted(result.getOcrExitCode(), result.getErrorMessage());
+        } else {
+            message += ": (%d)".formatted(result.getOcrExitCode());
         }
         if (!ObjectUtils.isEmpty(result.getParsedResults())) {
-            String errorMessage = result.getParsedResults().get(0).getErrorMessage();
+            String errorMessage = result.getParsedResults().getFirst().getErrorMessage();
             if (!ObjectUtils.isEmpty(errorMessage)) {
                 message += " - " + errorMessage;
             }

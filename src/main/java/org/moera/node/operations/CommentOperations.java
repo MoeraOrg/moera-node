@@ -48,6 +48,7 @@ import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.CommentTextUtil;
+import org.moera.node.operations.publicpages.UpdateCommentPublicPagesJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.text.MediaExtractor;
 import org.moera.node.userlist.SheriffUserListOperations;
@@ -86,9 +87,6 @@ public class CommentOperations {
 
     @Inject
     private RemoteMediaFileRepository remoteMediaFileRepository;
-
-    @Inject
-    private CommentPublicPageOperations commentPublicPageOperations;
 
     @Inject
     private MediaOperations mediaOperations;
@@ -355,7 +353,11 @@ public class CommentOperations {
             && comment.getPosting().getViewCommentsCompound().isPublic()
             && comment.getViewCompound().isPublic()
         ) {
-            commentPublicPageOperations.updatePublicPages(comment.getPosting().getId(), comment.getMoment());
+            jobs.runAfterCommit(
+                UpdateCommentPublicPagesJob.class,
+                new UpdateCommentPublicPagesJob.Parameters(comment.getPosting().getId(), comment.getMoment()),
+                requestContext.nodeId()
+            );
         }
     }
 

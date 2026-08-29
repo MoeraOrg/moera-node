@@ -1,15 +1,18 @@
-package org.moera.node.operations;
+package org.moera.node.operations.publicpages;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Entry;
 import org.moera.node.data.PublicPage;
 import org.moera.node.data.PublicPageRepository;
-import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.ui.PaginationItem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,8 +20,10 @@ import org.springframework.data.domain.Sort;
 
 public abstract class PublicPageOperations {
 
+    private static final Logger log = LoggerFactory.getLogger(PublicPageOperations.class);
+
     @Inject
-    protected RequestContext requestContext;
+    protected UniversalContext universalContext;
 
     @Inject
     protected PublicPageRepository publicPageRepository;
@@ -32,61 +37,48 @@ public abstract class PublicPageOperations {
     }
 
     protected void updatePublicPages(UUID entryId, long moment) {
-        PublicPage firstPage = findByBeforeMoment(entryId, Long.MAX_VALUE);
-        if (firstPage == null) {
-            firstPage = new PublicPage();
-            firstPage.setNodeId(requestContext.nodeId());
-            firstPage.setEntry(findEntryById(entryId));
-            firstPage.setAfterMoment(Long.MIN_VALUE);
-            firstPage.setBeforeMoment(Long.MAX_VALUE);
-            publicPageRepository.save(firstPage);
+        int totalPages = countTotal(entryId);
+        if (totalPages == 0) {
+            var page = new PublicPage();
+            page.setNodeId(universalContext.nodeId());
+            page.setEntry(findEntryById(entryId));
+            page.setAfterMoment(Long.MIN_VALUE);
+            page.setBeforeMoment(Long.MAX_VALUE);
+            publicPageRepository.save(page);
             return;
         }
 
-        long after = firstPage.getAfterMoment();
-        if (moment > after) {
-            int count = countInRange(entryId, after, Long.MAX_VALUE);
-            if (count >= publicPageMaxSize) {
-                long median = findMomentsInRange(entryId, after, Long.MAX_VALUE,
-                        PageRequest.of(count - publicPageAvgSize, 1,
-                                Sort.by(Sort.Direction.DESC, "moment")))
-                        .getContent().get(0);
-                firstPage.setAfterMoment(median);
-                PublicPage secondPage = new PublicPage();
-                secondPage.setNodeId(requestContext.nodeId());
-                secondPage.setEntry(findEntryById(entryId));
-                secondPage.setAfterMoment(after);
-                secondPage.setBeforeMoment(median);
-                publicPageRepository.save(secondPage);
-            }
+        var containingPage = findContaining(entryId, moment);
+        if (containingPage == null) {
+            log.error("Public page does not exist for entry {} and moment {}", LogUtil.format(entryId), moment);
             return;
         }
 
-        PublicPage lastPage = findByAfterMoment(entryId, Long.MIN_VALUE);
-        long end = lastPage.getBeforeMoment();
-        if (moment <= end) {
-            int count = countInRange(entryId, Long.MIN_VALUE, end);
-            if (count >= publicPageMaxSize) {
-                long median = findMomentsInRange(entryId, Long.MIN_VALUE, end,
-                        PageRequest.of(publicPageAvgSize + 1, 1,
-                                Sort.by(Sort.Direction.DESC, "moment")))
-                        .getContent().get(0);
-                lastPage.setBeforeMoment(median);
-                PublicPage prevPage = new PublicPage();
-                prevPage.setNodeId(requestContext.nodeId());
-                prevPage.setEntry(findEntryById(entryId));
-                prevPage.setAfterMoment(median);
-                prevPage.setBeforeMoment(end);
-                publicPageRepository.save(prevPage);
-            }
+        var after = containingPage.getAfterMoment();
+        var before = containingPage.getBeforeMoment();
+        int count = countInRange(entryId, after, before);
+        if (count >= publicPageMaxSize) {
+            long median = findMomentsInRange(
+                entryId,
+                after,
+                before,
+                PageRequest.of(count - publicPageAvgSize, 1, Sort.by(Sort.Direction.DESC, "moment"))
+            ).getContent().getFirst();
+
+            containingPage.setAfterMoment(median);
+
+            var newPage = new PublicPage();
+            newPage.setNodeId(universalContext.nodeId());
+            newPage.setEntry(findEntryById(entryId));
+            newPage.setAfterMoment(after);
+            newPage.setBeforeMoment(median);
+            publicPageRepository.save(newPage);
         }
     }
 
     protected abstract Entry findEntryById(UUID entryId);
 
-    protected abstract PublicPage findByBeforeMoment(UUID entryId, long before);
-
-    protected abstract PublicPage findByAfterMoment(UUID entryId, long after);
+    protected abstract PublicPage findContaining(UUID entryId, long moment);
 
     protected abstract int countInRange(UUID entryId, long after, long before);
 
@@ -107,15 +99,16 @@ public abstract class PublicPageOperations {
         tillLast = Math.min(tillLast, 2);
         int rangeFirst = current + tillLast - 4;
         rangeFirst = Math.max(rangeFirst, 1);
-        PublicPage firstPage = findPages(entryId, null, rangeFirst - 1, 1).getContent().get(0);
-        PublicPage lastPage = findPages(entryId, null, last - 1, 1).getContent().get(0);
+        PublicPage firstPage = findPages(entryId, null, rangeFirst - 1, 1).getContent().getFirst();
+        PublicPage lastPage = findPages(entryId, null, last - 1, 1).getContent().getFirst();
         List<PublicPage> pages = findPages(entryId, firstPage.getBeforeMoment(), 0, 5).getContent();
         int rangeLast = rangeFirst + pages.size() - 1;
 
         LinkedList<PaginationItem> items = new LinkedList<>();
         for (int i = 0; i < pages.size(); i++) {
-            items.add(PaginationItem.pageLink(rangeFirst + i, pages.get(i).getBeforeMoment(),
-                    rangeFirst + i == current));
+            items.add(PaginationItem.pageLink(
+                rangeFirst + i, pages.get(i).getBeforeMoment(), rangeFirst + i == current
+            ));
         }
         if (rangeFirst > 2) {
             items.addFirst(PaginationItem.pageDots());

@@ -72,13 +72,10 @@ public class Jobs {
     public void init() {
         synchronized (initializationMonitor) {
             initialized = true;
-            try {
-                load();
-            } finally {
-                initializationMonitor.notifyAll();
-            }
+            initializationMonitor.notifyAll();
         }
         applicationEventPublisher.publishEvent(new JobsManagerInitializedEvent(this));
+        load();
     }
 
     public boolean isReady() {
@@ -190,12 +187,23 @@ public class Jobs {
         execute(job);
     }
 
-    private void execute(Job<?, ?> job) {
+    private boolean execute(Job<?, ?> job) {
+        if (job.getMaxParallel() > 0 && countParallel(job.getClass()) > job.getMaxParallel()) {
+            log.info(
+                "Limit of {} parallel jobs is reached, job {} will be postponed",
+                job.getMaxParallel(), job.getId()
+            );
+            rejectedExecution(job);
+            return false;
+        }
+
         try {
             taskExecutor.execute(job);
+            return true;
         } catch (RejectedExecutionException e) {
-            // No space in the executor, wait a bit
+            log.info("No space in the executor for job {}, wait a bit", job.getId());
             rejectedExecution(job);
+            return false;
         }
     }
 
@@ -212,9 +220,16 @@ public class Jobs {
                 .anyMatch(pendingJob -> matchesParameters(klass, pendingJob, filter)));
     }
 
+    public long countParallel(Class<?> klass) {
+        long total = all.values().stream().filter(job -> job.getClass().equals(klass)).count();
+        long waiting = pending.stream().filter(job -> job.getClass().equals(klass)).count();
+        return total - waiting;
+    }
+
     @Scheduled(fixedDelayString = "PT1H")
     public void load() {
         if (!initialized) {
+            log.info("Jobs manager is not initialized yet, skipping loading pending jobs");
             return;
         }
 
@@ -260,12 +275,7 @@ public class Jobs {
         if (job.getWaitUntil() != null && job.getWaitUntil().isAfter(Instant.now())) {
             pending.add(job);
         } else {
-            try {
-                taskExecutor.execute(job);
-            } catch (Exception e) {
-                // No space in the executor, wait a bit
-                rejectedExecution(job);
-            }
+            execute(job);
         }
     }
 
@@ -381,11 +391,7 @@ public class Jobs {
         var job = pending.peek();
         while (job != null && job.getWaitUntil().isBefore(Instant.now())) {
             pending.remove();
-            try {
-                taskExecutor.execute(job);
-            } catch (RejectedExecutionException e) {
-                // No space in the executor, wait a bit
-                rejectedExecution(job);
+            if (!execute(job)) {
                 return;
             }
             job = pending.peek();
