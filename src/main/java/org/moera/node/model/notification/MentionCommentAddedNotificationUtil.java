@@ -11,7 +11,7 @@ public class MentionCommentAddedNotificationUtil {
     
     public static MentionCommentAddedNotification build(
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingOwnerGender,
         AvatarImage postingOwnerAvatar,
         UUID postingId,
@@ -20,7 +20,7 @@ public class MentionCommentAddedNotificationUtil {
         List<String> postingSheriffs,
         List<SheriffMark> postingSheriffMarks,
         String commentOwnerName,
-        String commentOwnerFullName,
+        String commentOwnerFullName, String commentOwnerSourceUri,
         String commentOwnerGender,
         AvatarImage commentOwnerAvatar,
         String commentHeading,
@@ -32,6 +32,7 @@ public class MentionCommentAddedNotificationUtil {
         notification.setCommentId(commentId.toString());
         notification.setPostingOwnerName(postingOwnerName);
         notification.setPostingOwnerFullName(postingOwnerFullName);
+        notification.setPostingOwnerSourceUri(postingOwnerSourceUri);
         notification.setPostingOwnerGender(postingOwnerGender);
         notification.setPostingOwnerAvatar(postingOwnerAvatar);
         notification.setPostingHeading(postingHeading);
@@ -39,6 +40,7 @@ public class MentionCommentAddedNotificationUtil {
         notification.setPostingSheriffMarks(postingSheriffMarks);
         notification.setCommentOwnerName(commentOwnerName);
         notification.setCommentOwnerFullName(commentOwnerFullName);
+        notification.setCommentOwnerSourceUri(commentOwnerSourceUri);
         notification.setCommentOwnerGender(commentOwnerGender);
         notification.setCommentOwnerAvatar(commentOwnerAvatar);
         notification.setCommentHeading(commentHeading);

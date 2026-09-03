@@ -38,6 +38,7 @@ public class VideoInstants extends InstantsCreator {
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
         story.setRemoteFullName(nodeInfo.getFullName());
+        story.setRemoteSourceUri(nodeInfo.getSourceUri());
         AvatarImage avatar = nodeInfo.getAvatar();
         if (avatar != null && avatar.getMediaId() != null) {
             story.setRemoteAvatarMediaFile(mediaFileRepository.findById(avatar.getMediaId()).orElse(null));
@@ -63,6 +64,7 @@ public class VideoInstants extends InstantsCreator {
         story.setRemoteNodeName(remoteNodeName);
         story.setRemotePostingNodeName(postingInfo.getOwnerName());
         story.setRemotePostingFullName(postingInfo.getOwnerFullName());
+        story.setRemotePostingSourceUri(postingInfo.getOwnerSourceUri());
         AvatarImage postingOwnerAvatar = postingInfo.getOwnerAvatar();
         if (postingOwnerAvatar != null) {
             story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(postingOwnerAvatar));
@@ -79,7 +81,8 @@ public class VideoInstants extends InstantsCreator {
 
     private static StorySummaryData buildPostSummary(String postingHeading) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(StorySummaryEntryUtil.build(null, null, null, postingHeading));
+        summaryData.setPosting(StorySummaryEntryUtil.build(null, null,
+            null, null, postingHeading));
         return summaryData;
     }
 
@@ -88,10 +91,12 @@ public class VideoInstants extends InstantsCreator {
         summaryData.setPosting(StorySummaryEntryUtil.build(
             postingInfo.getOwnerName(),
             postingInfo.getOwnerFullName(),
+            postingInfo.getOwnerSourceUri(),
             postingInfo.getOwnerGender(),
             postingInfo.getHeading()
         ));
-        summaryData.setComment(StorySummaryEntryUtil.build(null, null, null, commentInfo.getHeading()));
+        summaryData.setComment(StorySummaryEntryUtil.build(null, null,
+            null, null, commentInfo.getHeading()));
         return summaryData;
     }
 

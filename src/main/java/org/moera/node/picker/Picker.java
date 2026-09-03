@@ -65,6 +65,7 @@ public class Picker extends Task {
 
     private final String remoteNodeName;
     private String remoteFullName;
+    private String remoteSourceUri;
     private MediaFile remoteAvatarMediaFile;
     private String remoteAvatarShape;
     private final BlockingQueue<Pick> queue = new LinkedBlockingQueue<>();
@@ -156,6 +157,7 @@ public class Picker extends Task {
     private void fetchNodeDetails() throws MoeraNodeException {
         WhoAmI remote = nodeApi.at(remoteNodeName).whoAmI();
         remoteFullName = remote.getFullName();
+        remoteSourceUri = remote.getSourceUri();
         remoteAvatarMediaFile = mediaManager.downloadPublicMedia(remoteNodeName, remote.getAvatar());
         remoteAvatarShape = remote.getAvatar() != null ? remote.getAvatar().getShape() : null;
     }
@@ -209,6 +211,7 @@ public class Picker extends Task {
         boolean original = PostingInfoUtil.isOriginal(postingInfo);
         String receiverName = original ? remoteNodeName : postingInfo.getReceiverName();
         String receiverFullName = original ? postingInfo.getOwnerFullName() : postingInfo.getReceiverFullName();
+        String receiverSourceUri = original ? postingInfo.getOwnerSourceUri() : postingInfo.getReceiverSourceUri();
         String receiverGender = original ? postingInfo.getOwnerGender() : postingInfo.getReceiverGender();
         MediaFile receiverAvatar = original
             ? ownerAvatar
@@ -234,6 +237,7 @@ public class Picker extends Task {
             posting.setParentMediaEntry(parentMediaEntry);
             posting.setReceiverName(receiverName);
             posting.setReceiverFullName(receiverFullName);
+            posting.setReceiverSourceUri(receiverSourceUri);
             posting.setReceiverGender(receiverGender);
             posting.setReceiverAvatarMediaFile(receiverAvatar);
             posting.setReceiverAvatarShape(receiverAvatarShape);
@@ -474,6 +478,7 @@ public class Picker extends Task {
         entrySource.setId(UUID.randomUUID());
         entrySource.setEntry(posting);
         entrySource.setRemoteFullName(remoteFullName);
+        entrySource.setRemoteSourceUri(remoteSourceUri);
         entrySource.setRemoteAvatarMediaFile(remoteAvatarMediaFile);
         entrySource.setRemoteAvatarShape(remoteAvatarShape);
         pick.toEntrySource(entrySource);

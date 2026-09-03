@@ -10,6 +10,7 @@ public class PostingSourceTextUtil {
     public static PostingSourceText build(PostingSourceText parentSourceText, MediaCaptionText caption) {
         var sourceText = new PostingSourceText();
         sourceText.setOwnerFullName(parentSourceText.getOwnerFullName());
+        sourceText.setOwnerSourceUri(parentSourceText.getOwnerSourceUri());
         sourceText.setOwnerAvatar(parentSourceText.getOwnerAvatar());
         sourceText.setBodySrc(caption.getCaptionSrc());
         sourceText.setBodySrcFormat(caption.getCaptionSrcFormat());
@@ -23,10 +24,12 @@ public class PostingSourceTextUtil {
     }
 
     public static PostingSourceText build(
-        PostingInfo parentSourceText, String ownerFullName, AvatarDescription avatar, MediaCaptionText caption
+        PostingInfo parentSourceText, String ownerFullName, String ownerSourceUri, AvatarDescription avatar,
+        MediaCaptionText caption
     ) {
         var sourceText = new PostingSourceText();
         sourceText.setOwnerFullName(ownerFullName);
+        sourceText.setOwnerSourceUri(ownerSourceUri);
         sourceText.setOwnerAvatar(avatar);
         sourceText.setBodySrc(caption.getCaptionSrc());
         sourceText.setBodySrcFormat(caption.getCaptionSrcFormat());

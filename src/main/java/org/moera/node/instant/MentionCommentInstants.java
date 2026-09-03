@@ -21,9 +21,11 @@ public class MentionCommentInstants extends InstantsCreator {
     @Inject
     private StoryRepository storyRepository;
 
-    public void added(String nodeName, String postingOwnerName, String postingOwnerFullName, String postingOwnerGender,
+    public void added(String nodeName, String postingOwnerName, String postingOwnerFullName,
+        String postingOwnerSourceUri, String postingOwnerGender,
                       AvatarImage postingAvatar, String postingId, String postingHeading, List<String> postingSheriffs,
                       List<SheriffMark> postingSheriffMarks, String commentOwnerName, String commentOwnerFullName,
+                          String commentOwnerSourceUri,
                       String commentOwnerGender, AvatarImage commentOwnerAvatar, String commentId,
                       String commentHeading, List<SheriffMark> commentSheriffMarks) {
         if (isBlocked(StoryType.MENTION_COMMENT, null, nodeName, postingId, commentOwnerName)) {
@@ -38,6 +40,7 @@ public class MentionCommentInstants extends InstantsCreator {
         story.setRemoteNodeName(nodeName);
         story.setRemotePostingNodeName(postingOwnerName);
         story.setRemotePostingFullName(postingOwnerFullName);
+        story.setRemotePostingSourceUri(postingOwnerSourceUri);
         if (postingAvatar != null) {
             story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(postingAvatar));
             story.setRemotePostingAvatarShape(postingAvatar.getShape());
@@ -45,6 +48,7 @@ public class MentionCommentInstants extends InstantsCreator {
         story.setRemotePostingId(postingId);
         story.setRemoteOwnerName(commentOwnerName);
         story.setRemoteOwnerFullName(commentOwnerFullName);
+        story.setRemoteOwnerSourceUri(commentOwnerSourceUri);
         if (commentOwnerAvatar != null) {
             story.setRemoteOwnerAvatarMediaFile(AvatarImageUtil.getMediaFile(commentOwnerAvatar));
             story.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
@@ -80,6 +84,7 @@ public class MentionCommentInstants extends InstantsCreator {
         summaryData.setPosting(StorySummaryEntryUtil.build(
             story.getRemotePostingNodeName(),
             story.getRemotePostingFullName(),
+            story.getRemotePostingSourceUri(),
             postingOwnerGender,
             postingHeading,
             postingSheriffs,
@@ -88,6 +93,7 @@ public class MentionCommentInstants extends InstantsCreator {
         summaryData.setComment(StorySummaryEntryUtil.build(
             story.getRemoteOwnerName(),
             story.getRemoteOwnerFullName(),
+            story.getRemoteOwnerSourceUri(),
             commentOwnerGender,
             commentHeading,
             null,

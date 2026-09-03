@@ -29,6 +29,7 @@ public class ReplyCommentProcessor {
                 notification.getPostingId(),
                 notification.getPostingOwnerName(),
                 notification.getPostingOwnerFullName(),
+                notification.getPostingOwnerSourceUri(),
                 notification.getPostingOwnerGender(),
                 notification.getPostingOwnerAvatar(),
                 notification.getPostingHeading(),
@@ -39,6 +40,7 @@ public class ReplyCommentProcessor {
                 notification.getRepliedToHeading(),
                 notification.getCommentOwnerName(),
                 notification.getCommentOwnerFullName(),
+                notification.getCommentOwnerSourceUri(),
                 notification.getCommentOwnerGender(),
                 notification.getCommentOwnerAvatar(),
                 notification.getCommentSheriffMarks()

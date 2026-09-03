@@ -8,7 +8,7 @@ public class SheriffOrderForCommentDeletedNotificationUtil {
         String remoteNodeName,
         String remoteFeedName,
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingHeading,
         String postingId,
         String commentHeading,
@@ -21,6 +21,7 @@ public class SheriffOrderForCommentDeletedNotificationUtil {
         notification.setRemoteFeedName(remoteFeedName);
         notification.setPostingOwnerName(postingOwnerName);
         notification.setPostingOwnerFullName(postingOwnerFullName);
+        notification.setPostingOwnerSourceUri(postingOwnerSourceUri);
         notification.setPostingHeading(postingHeading);
         notification.setPostingId(postingId);
         notification.setCommentHeading(commentHeading);

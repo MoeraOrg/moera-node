@@ -22,7 +22,7 @@ public class AskedJob extends Job<AskedJob.Parameters, AskedJob.State> {
     public record Parameters(
         AskSubject askSubject,
         String senderNodeName,
-        String senderFullName,
+        String senderFullName, String senderSourceUri,
         String senderGender,
         AvatarImage senderAvatar,
         UUID friendGroupId,
@@ -33,12 +33,15 @@ public class AskedJob extends Job<AskedJob.Parameters, AskedJob.State> {
         public Parameters(
             AskSubject askSubject,
             String senderNodeName,
-            String senderFullName,
+            String senderFullName, String senderSourceUri,
             String senderGender,
             AvatarImage senderAvatar,
             String message
         ) {
-            this(askSubject, senderNodeName, senderFullName, senderGender, senderAvatar, null, null, message);
+            this(
+                askSubject, senderNodeName, senderFullName, senderSourceUri, senderGender, senderAvatar, null, null,
+                message
+            );
         }
 
     }
@@ -103,6 +106,7 @@ public class AskedJob extends Job<AskedJob.Parameters, AskedJob.State> {
                 tx.executeWriteWithExceptions(() ->
                         mediaManager.downloadAvatar(parameters.senderNodeName, parameters.senderAvatar));
                 universalContext.send(new AskedToSubscribeLiberin(parameters.senderNodeName, parameters.senderFullName,
+                    parameters.senderSourceUri,
                         parameters.senderGender, parameters.senderAvatar, parameters.message));
                 break;
 
@@ -112,6 +116,7 @@ public class AskedJob extends Job<AskedJob.Parameters, AskedJob.State> {
                 tx.executeWriteWithExceptions(() ->
                         mediaManager.downloadAvatar(parameters.senderNodeName, parameters.senderAvatar));
                 universalContext.send(new AskedToFriendLiberin(parameters.senderNodeName, parameters.senderFullName,
+                    parameters.senderSourceUri,
                         parameters.senderGender, parameters.senderAvatar, parameters.friendGroupId,
                         parameters.friendGroupTitle, parameters.message));
                 break;

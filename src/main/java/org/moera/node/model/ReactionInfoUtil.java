@@ -25,6 +25,7 @@ public class ReactionInfoUtil {
         
         reactionInfo.setOwnerName(reaction.getOwnerName());
         reactionInfo.setOwnerFullName(reaction.getOwnerFullName());
+        reactionInfo.setOwnerSourceUri(reaction.getOwnerSourceUri());
         reactionInfo.setOwnerGender(reaction.getOwnerGender());
         
         if (reaction.getOwnerAvatarMediaFile() != null) {

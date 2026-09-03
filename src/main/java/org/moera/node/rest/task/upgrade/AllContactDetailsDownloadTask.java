@@ -61,12 +61,13 @@ public class AllContactDetailsDownloadTask extends Task {
     private void download(String targetNodeName) throws MoeraNodeException {
         WhoAmI target = nodeApi.at(targetNodeName).whoAmI();
         String targetFullName = target.getFullName();
+        String targetSourceUri = target.getSourceUri();
         String targetGender = target.getGender();
         String targetTitle = target.getTitle();
-        if (targetGender != null || targetTitle != null) {
+        if (targetSourceUri != null || targetGender != null || targetTitle != null) {
             tx.executeWrite(() ->
                 contactRepository.updateRemoteDetails(
-                    nodeId, targetNodeName, targetFullName, targetGender, targetTitle
+                    nodeId, targetNodeName, targetFullName, targetSourceUri, targetGender, targetTitle
                 ));
         }
     }

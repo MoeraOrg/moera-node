@@ -20,7 +20,8 @@ public class AskInstants extends InstantsCreator {
     @Inject
     private StoryRepository storyRepository;
 
-    public void askedToSubscribe(String remoteNodeName, String remoteFullName, String remoteGender,
+    public void askedToSubscribe(String remoteNodeName, String remoteFullName, String remoteSourceUri,
+        String remoteGender,
                                  AvatarImage remoteAvatar, String message) {
         if (isBlocked(StoryType.ASKED_TO_SUBSCRIBE, null, null, null, remoteNodeName)) {
             return;
@@ -30,23 +31,26 @@ public class AskInstants extends InstantsCreator {
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
         story.setRemoteFullName(remoteFullName);
+        story.setRemoteSourceUri(remoteSourceUri);
         story.setRemoteAvatarMediaFile(AvatarImageUtil.getMediaFile(remoteAvatar));
         story.setRemoteAvatarShape(remoteAvatar.getShape());
-        story.setSummaryData(buildSubscribeSummary(remoteNodeName, remoteFullName, remoteGender, message));
+        story.setSummaryData(buildSubscribeSummary(remoteNodeName, remoteFullName, remoteSourceUri, remoteGender,
+            message));
         updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         storyAdded(story);
     }
 
     private static StorySummaryData buildSubscribeSummary(String remoteNodeName, String remoteFullName,
+        String remoteSourceUri,
                                                           String remoteGender, String message) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(StorySummaryNodeUtil.build(remoteNodeName, remoteFullName, remoteGender));
+        summaryData.setNode(StorySummaryNodeUtil.build(remoteNodeName, remoteFullName, remoteSourceUri, remoteGender));
         summaryData.setDescription(message);
         return summaryData;
     }
 
-    public void askedToFriend(String remoteNodeName, String remoteFullName, String remoteGender,
+    public void askedToFriend(String remoteNodeName, String remoteFullName, String remoteSourceUri, String remoteGender,
                               AvatarImage remoteAvatar, UUID friendGroupId, String friendGroupTitle, String message) {
         if (isBlocked(StoryType.ASKED_TO_FRIEND, null, null, null, remoteNodeName)) {
             return;
@@ -56,10 +60,12 @@ public class AskInstants extends InstantsCreator {
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
         story.setRemoteFullName(remoteFullName);
+        story.setRemoteSourceUri(remoteSourceUri);
         story.setRemoteAvatarMediaFile(AvatarImageUtil.getMediaFile(remoteAvatar));
         story.setRemoteAvatarShape(remoteAvatar.getShape());
         story.setSummaryData(
-            buildFriendSummary(remoteNodeName, remoteFullName, remoteGender, friendGroupId, friendGroupTitle, message)
+            buildFriendSummary(remoteNodeName, remoteFullName, remoteSourceUri, remoteGender, friendGroupId,
+                friendGroupTitle, message)
         );
         updateMoment(story);
         story = storyRepository.saveAndFlush(story);
@@ -67,10 +73,11 @@ public class AskInstants extends InstantsCreator {
     }
 
     private static StorySummaryData buildFriendSummary(String remoteNodeName, String remoteFullName,
+        String remoteSourceUri,
                                                        String remoteGender, UUID friendGroupId, String friendGroupTitle,
                                                        String message) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(StorySummaryNodeUtil.build(remoteNodeName, remoteFullName, remoteGender));
+        summaryData.setNode(StorySummaryNodeUtil.build(remoteNodeName, remoteFullName, remoteSourceUri, remoteGender));
         summaryData.setFriendGroup(StorySummaryFriendGroupUtil.build(friendGroupId.toString(), friendGroupTitle));
         summaryData.setDescription(message);
         return summaryData;

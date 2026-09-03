@@ -11,7 +11,7 @@ public class ReplyCommentAddedNotificationUtil {
 
     public static ReplyCommentAddedNotification build(
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingOwnerGender,
         AvatarImage postingOwnerAvatar,
         UUID postingId,
@@ -21,7 +21,7 @@ public class ReplyCommentAddedNotificationUtil {
         List<String> postingSheriffs,
         List<SheriffMark> postingSheriffMarks,
         String commentOwnerName,
-        String commentOwnerFullName,
+        String commentOwnerFullName, String commentOwnerSourceUri,
         String commentOwnerGender,
         AvatarImage commentOwnerAvatar,
         String commentHeading,
@@ -35,10 +35,12 @@ public class ReplyCommentAddedNotificationUtil {
         notification.setRepliedToId(repliedToId.toString());
         notification.setCommentOwnerName(commentOwnerName);
         notification.setCommentOwnerFullName(commentOwnerFullName);
+        notification.setCommentOwnerSourceUri(commentOwnerSourceUri);
         notification.setCommentOwnerGender(commentOwnerGender);
         notification.setCommentOwnerAvatar(commentOwnerAvatar);
         notification.setPostingOwnerName(postingOwnerName);
         notification.setPostingOwnerFullName(postingOwnerFullName);
+        notification.setPostingOwnerSourceUri(postingOwnerSourceUri);
         notification.setPostingOwnerGender(postingOwnerGender);
         notification.setPostingOwnerAvatar(postingOwnerAvatar);
         notification.setPostingHeading(postingHeading);

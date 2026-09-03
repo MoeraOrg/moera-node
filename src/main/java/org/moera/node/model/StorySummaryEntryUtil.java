@@ -7,13 +7,16 @@ import org.moera.lib.node.types.StorySummaryEntry;
 
 public class StorySummaryEntryUtil {
 
-    public static StorySummaryEntry build(String ownerName, String ownerFullName, String ownerGender, String heading) {
-        return build(ownerName, ownerFullName, ownerGender, heading, null, null);
+    public static StorySummaryEntry build(
+        String ownerName, String ownerFullName, String ownerSourceUri, String ownerGender, String heading
+    ) {
+        return build(ownerName, ownerFullName, ownerSourceUri, ownerGender, heading, null, null);
     }
 
     public static StorySummaryEntry build(
         String ownerName,
         String ownerFullName,
+        String ownerSourceUri,
         String ownerGender,
         String heading,
         List<String> sheriffs,
@@ -22,6 +25,7 @@ public class StorySummaryEntryUtil {
         StorySummaryEntry entry = new StorySummaryEntry();
         entry.setOwnerName(ownerName);
         entry.setOwnerFullName(ownerFullName);
+        entry.setOwnerSourceUri(ownerSourceUri);
         entry.setOwnerGender(ownerGender);
         entry.setHeading(heading);
         entry.setSheriffs(sheriffs);

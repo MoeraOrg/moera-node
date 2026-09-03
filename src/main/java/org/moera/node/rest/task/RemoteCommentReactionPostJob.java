@@ -191,7 +191,7 @@ public class RemoteCommentReactionPostJob
         byte[] fingerprint = ReactionFingerprintBuilder.build(nodeName(), parameters.attributes, commentFingerprint);
 
         ReactionDescription description = ReactionDescriptionUtil.build(
-            nodeName(), fullName(), gender(), getAvatar(), parameters.attributes
+            nodeName(), fullName(), sourceUri(), gender(), getAvatar(), parameters.attributes
         );
         description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         description.setSignatureVersion(ReactionFingerprintBuilder.LATEST_VERSION);

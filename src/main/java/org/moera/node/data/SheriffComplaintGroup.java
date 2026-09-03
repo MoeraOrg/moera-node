@@ -30,6 +30,9 @@ public class SheriffComplaintGroup {
     @Size(max = 96)
     private String remoteNodeFullName;
 
+    @Size(max = 1024)
+    private String remoteNodeSourceUri;
+
     @NotNull
     @Size(max = 63)
     private String remoteFeedName;
@@ -39,6 +42,9 @@ public class SheriffComplaintGroup {
 
     @Size(max = 96)
     private String remotePostingOwnerFullName;
+
+    @Size(max = 1024)
+    private String remotePostingOwnerSourceUri;
 
     @Size(max = 31)
     private String remotePostingOwnerGender;
@@ -57,6 +63,9 @@ public class SheriffComplaintGroup {
 
     @Size(max = 96)
     private String remoteCommentOwnerFullName;
+
+    @Size(max = 1024)
+    private String remoteCommentOwnerSourceUri;
 
     @Size(max = 31)
     private String remoteCommentOwnerGender;
@@ -122,6 +131,14 @@ public class SheriffComplaintGroup {
         this.remoteNodeFullName = remoteNodeFullName;
     }
 
+    public String getRemoteNodeSourceUri() {
+        return remoteNodeSourceUri;
+    }
+
+    public void setRemoteNodeSourceUri(String remoteNodeSourceUri) {
+        this.remoteNodeSourceUri = remoteNodeSourceUri;
+    }
+
     public String getRemoteFeedName() {
         return remoteFeedName;
     }
@@ -144,6 +161,14 @@ public class SheriffComplaintGroup {
 
     public void setRemotePostingOwnerFullName(String remotePostingOwnerFullName) {
         this.remotePostingOwnerFullName = remotePostingOwnerFullName;
+    }
+
+    public String getRemotePostingOwnerSourceUri() {
+        return remotePostingOwnerSourceUri;
+    }
+
+    public void setRemotePostingOwnerSourceUri(String remotePostingOwnerSourceUri) {
+        this.remotePostingOwnerSourceUri = remotePostingOwnerSourceUri;
     }
 
     public String getRemotePostingOwnerGender() {
@@ -192,6 +217,14 @@ public class SheriffComplaintGroup {
 
     public void setRemoteCommentOwnerFullName(String remoteCommentOwnerFullName) {
         this.remoteCommentOwnerFullName = remoteCommentOwnerFullName;
+    }
+
+    public String getRemoteCommentOwnerSourceUri() {
+        return remoteCommentOwnerSourceUri;
+    }
+
+    public void setRemoteCommentOwnerSourceUri(String remoteCommentOwnerSourceUri) {
+        this.remoteCommentOwnerSourceUri = remoteCommentOwnerSourceUri;
     }
 
     public String getRemoteCommentOwnerGender() {

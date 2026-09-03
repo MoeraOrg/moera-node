@@ -75,6 +75,7 @@ public class AskProcessor {
                         notification.getSubject(),
                         notification.getSenderNodeName(),
                         notification.getSenderFullName(),
+                        notification.getSenderSourceUri(),
                         notification.getSenderGender(),
                         notification.getSenderAvatar(),
                         notification.getMessage()
@@ -107,6 +108,7 @@ public class AskProcessor {
                         notification.getSubject(),
                         notification.getSenderNodeName(),
                         notification.getSenderFullName(),
+                        notification.getSenderSourceUri(),
                         notification.getSenderGender(),
                         notification.getSenderAvatar(),
                         friendGroup.getId(),

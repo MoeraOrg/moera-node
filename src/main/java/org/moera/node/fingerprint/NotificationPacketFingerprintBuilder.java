@@ -7,7 +7,7 @@ import org.moera.node.util.Util;
 
 public class NotificationPacketFingerprintBuilder {
 
-    public static final short LATEST_VERSION = 1;
+    public static final short LATEST_VERSION = 2;
 
     public static byte[] build(NotificationPacket packet) {
         return build(LATEST_VERSION, packet);
@@ -15,6 +15,16 @@ public class NotificationPacketFingerprintBuilder {
 
     public static byte[] build(short version, NotificationPacket packet) {
         return switch (version) {
+            case 2 ->
+                Fingerprints.notificationPacket2(
+                    packet.getId(),
+                    packet.getNodeName(),
+                    packet.getFullName(),
+                    packet.getNodeSourceUri(),
+                    Util.toTimestamp(packet.getCreatedAt()),
+                    packet.getType(),
+                    packet.getNotification()
+                );
             case 1 ->
                 Fingerprints.notificationPacket1(
                     packet.getId(),

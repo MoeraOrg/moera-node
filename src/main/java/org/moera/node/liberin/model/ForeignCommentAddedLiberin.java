@@ -13,6 +13,7 @@ public class ForeignCommentAddedLiberin extends Liberin {
     private String nodeName;
     private String postingOwnerName;
     private String postingOwnerFullName;
+    private String postingOwnerSourceUri;
     private String postingOwnerGender;
     private AvatarImage postingOwnerAvatar;
     private String postingId;
@@ -21,6 +22,7 @@ public class ForeignCommentAddedLiberin extends Liberin {
     private List<SheriffMark> postingSheriffMarks;
     private String commentOwnerName;
     private String commentOwnerFullName;
+    private String commentOwnerSourceUri;
     private String commentOwnerGender;
     private AvatarImage commentOwnerAvatar;
     private String commentId;
@@ -29,15 +31,18 @@ public class ForeignCommentAddedLiberin extends Liberin {
     private SubscriptionReason subscriptionReason;
 
     public ForeignCommentAddedLiberin(String nodeName, String postingOwnerName, String postingOwnerFullName,
+        String postingOwnerSourceUri,
                                       String postingOwnerGender, AvatarImage postingOwnerAvatar, String postingId,
                                       String postingHeading, List<String> postingSheriffs,
                                       List<SheriffMark> postingSheriffMarks, String commentOwnerName,
-                                      String commentOwnerFullName, String commentOwnerGender,
+                                      String commentOwnerFullName, String commentOwnerSourceUri,
+                                          String commentOwnerGender,
                                       AvatarImage commentOwnerAvatar, String commentId, String commentHeading,
                                       List<SheriffMark> commentSheriffMarks, SubscriptionReason subscriptionReason) {
         this.nodeName = nodeName;
         this.postingOwnerName = postingOwnerName;
         this.postingOwnerFullName = postingOwnerFullName;
+        this.postingOwnerSourceUri = postingOwnerSourceUri;
         this.postingOwnerGender = postingOwnerGender;
         this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingId = postingId;
@@ -46,6 +51,7 @@ public class ForeignCommentAddedLiberin extends Liberin {
         this.postingSheriffMarks = postingSheriffMarks;
         this.commentOwnerName = commentOwnerName;
         this.commentOwnerFullName = commentOwnerFullName;
+        this.commentOwnerSourceUri = commentOwnerSourceUri;
         this.commentOwnerGender = commentOwnerGender;
         this.commentOwnerAvatar = commentOwnerAvatar;
         this.commentId = commentId;
@@ -76,6 +82,14 @@ public class ForeignCommentAddedLiberin extends Liberin {
 
     public void setPostingOwnerFullName(String postingOwnerFullName) {
         this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public String getPostingOwnerSourceUri() {
+        return postingOwnerSourceUri;
+    }
+
+    public void setPostingOwnerSourceUri(String postingOwnerSourceUri) {
+        this.postingOwnerSourceUri = postingOwnerSourceUri;
     }
 
     public String getPostingOwnerGender() {
@@ -142,6 +156,14 @@ public class ForeignCommentAddedLiberin extends Liberin {
         this.commentOwnerFullName = commentOwnerFullName;
     }
 
+    public String getCommentOwnerSourceUri() {
+        return commentOwnerSourceUri;
+    }
+
+    public void setCommentOwnerSourceUri(String commentOwnerSourceUri) {
+        this.commentOwnerSourceUri = commentOwnerSourceUri;
+    }
+
     public String getCommentOwnerGender() {
         return commentOwnerGender;
     }
@@ -196,6 +218,7 @@ public class ForeignCommentAddedLiberin extends Liberin {
         model.put("nodeName", nodeName);
         model.put("postingOwnerName", postingOwnerName);
         model.put("postingOwnerFullName", postingOwnerFullName);
+        model.put("postingOwnerSourceUri", postingOwnerSourceUri);
         model.put("postingOwnerGender", postingOwnerGender);
         model.put("postingOwnerAvatar", postingOwnerAvatar);
         model.put("postingId", postingId);
@@ -204,6 +227,7 @@ public class ForeignCommentAddedLiberin extends Liberin {
         model.put("postingSheriffMarks", postingSheriffMarks);
         model.put("commentOwnerName", commentOwnerName);
         model.put("commentOwnerFullName", commentOwnerFullName);
+        model.put("commentOwnerSourceUri", commentOwnerSourceUri);
         model.put("commentOwnerGender", commentOwnerGender);
         model.put("commentOwnerAvatar", commentOwnerAvatar);
         model.put("commentId", commentId);

@@ -90,6 +90,10 @@ public class UniversalContext {
         return isBackground() ? getOptions().getString("profile.full-name") : requestContext.fullName();
     }
 
+    public String sourceUri() {
+        return isBackground() ? getOptions().getString("profile.source-uri") : requestContext.sourceUri();
+    }
+
     public String gender() {
         return isBackground() ? getOptions().getString("profile.gender") : requestContext.gender();
     }

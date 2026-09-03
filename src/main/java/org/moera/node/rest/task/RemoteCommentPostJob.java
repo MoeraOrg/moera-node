@@ -382,7 +382,7 @@ public class RemoteCommentPostJob
 
     private CommentText buildComment() throws MoeraNodeException {
         CommentText commentText = CommentTextUtil.build(
-            nodeName(), fullName(), gender(), state.sourceText, textConverter
+            nodeName(), fullName(), sourceUri(), gender(), state.sourceText, textConverter
         );
         byte[] fingerprint = CommentFingerprintBuilder.build(
             commentText,
@@ -416,6 +416,7 @@ public class RemoteCommentPostJob
             caption -> PostingSourceTextUtil.build(
                 state.postingInfo,
                 state.commentText.getOwnerFullName(),
+                state.commentText.getOwnerSourceUri(),
                 state.commentText.getOwnerAvatar(),
                 caption
             )
@@ -434,6 +435,7 @@ public class RemoteCommentPostJob
                     ownComment.setNodeId(nodeId);
                     ownComment.setRemoteNodeName(parameters.targetNodeName);
                     ownComment.setRemoteFullName(state.target.getFullName());
+                    ownComment.setRemoteSourceUri(state.target.getSourceUri());
                     if (state.targetAvatarMediaFileId != null) {
                         MediaFile mediaFile = mediaFileRepository.findById(state.targetAvatarMediaFileId).orElse(null);
                         ownComment.setRemoteAvatarMediaFile(mediaFile);

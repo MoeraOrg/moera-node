@@ -11,7 +11,7 @@ public class MentionPostingAddedNotificationUtil {
     public static MentionPostingAddedNotification build(
         UUID postingId,
         String ownerName,
-        String ownerFullName,
+        String ownerFullName, String ownerSourceUri,
         String ownerGender,
         AvatarImage ownerAvatar,
         String heading,
@@ -22,6 +22,7 @@ public class MentionPostingAddedNotificationUtil {
         notification.setPostingId(postingId.toString());
         notification.setOwnerName(ownerName);
         notification.setOwnerFullName(ownerFullName);
+        notification.setOwnerSourceUri(ownerSourceUri);
         notification.setOwnerGender(ownerGender);
         notification.setOwnerAvatar(ownerAvatar);
         notification.setHeading(heading);

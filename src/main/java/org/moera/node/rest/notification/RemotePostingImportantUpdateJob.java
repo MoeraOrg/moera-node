@@ -16,7 +16,7 @@ public class RemotePostingImportantUpdateJob extends Job<RemotePostingImportantU
         String senderNodeName,
         String postingId,
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingOwnerGender,
         AvatarImage postingOwnerAvatar,
         String postingHeading,
@@ -52,7 +52,8 @@ public class RemotePostingImportantUpdateJob extends Job<RemotePostingImportantU
                 mediaManager.downloadAvatar(parameters.senderNodeName, parameters.postingOwnerAvatar));
         universalContext.send(
                 new RemotePostingImportantUpdateLiberin(parameters.senderNodeName, parameters.postingOwnerName,
-                        parameters.postingOwnerFullName, parameters.postingOwnerGender, parameters.postingOwnerAvatar,
+                        parameters.postingOwnerFullName,
+                        parameters.postingOwnerSourceUri, parameters.postingOwnerGender, parameters.postingOwnerAvatar,
                         parameters.postingId, parameters.postingHeading, parameters.description));
     }
 

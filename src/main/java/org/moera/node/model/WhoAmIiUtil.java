@@ -22,6 +22,7 @@ public class WhoAmIiUtil {
         );
                 
         whoAmI.setFullName(requestContext.fullName());
+        whoAmI.setSourceUri(requestContext.sourceUri());
         whoAmI.setGender(requestContext.getOptions().getString("profile.gender"));
         whoAmI.setTitle(requestContext.getOptions().getString("profile.title"));
         

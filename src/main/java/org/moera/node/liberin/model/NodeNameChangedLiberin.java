@@ -63,6 +63,7 @@ public class NodeNameChangedLiberin extends Liberin {
         model.put("nodeName", nodeName);
         model.put("prevNodeName", prevNodeName);
         model.put("fullName", options.getString("profile.full-name"));
+        model.put("nodeSourceUri", options.getString("profile.source-uri"));
         model.put("gender", options.getString("profile.gender"));
         model.put("title", options.getString("profile.title"));
         if (avatar != null) {

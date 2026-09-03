@@ -66,15 +66,17 @@ public class ContactsUpgradeTask extends Task {
 
         try {
             WhoAmI whoAmI = nodeApi.at(upgrade.getRemoteNodeName()).whoAmI();
-            boolean detailsPresent = whoAmI.getFullName() != null || whoAmI.getGender() != null;
+            boolean detailsPresent = whoAmI.getFullName() != null || whoAmI.getSourceUri() != null
+                || whoAmI.getGender() != null;
             if (detailsPresent || whoAmI.getTitle() != null) {
                 contactOperations.updateDetails(
-                    upgrade.getRemoteNodeName(), whoAmI.getFullName(), whoAmI.getGender(), whoAmI.getTitle(), null
+                    upgrade.getRemoteNodeName(), whoAmI.getFullName(), whoAmI.getSourceUri(), whoAmI.getGender(),
+                    whoAmI.getTitle(), null
                 );
             }
             if (detailsPresent) {
                 send(new RemoteNodeFullNameChangedLiberin(
-                    upgrade.getRemoteNodeName(), whoAmI.getFullName(), whoAmI.getTitle())
+                    upgrade.getRemoteNodeName(), whoAmI.getFullName(), whoAmI.getSourceUri(), whoAmI.getTitle())
                 );
             }
             AvatarImage targetAvatar = whoAmI.getAvatar();

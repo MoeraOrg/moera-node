@@ -96,7 +96,7 @@ public class RemoteCommentReceptor extends LiberinReceptorBase {
         mentionCommentInstants.added(
             liberin.getNodeName(),
             liberin.getPostingOwnerName(),
-            liberin.getPostingOwnerFullName(),
+            liberin.getPostingOwnerFullName(), liberin.getPostingOwnerSourceUri(),
             liberin.getPostingOwnerGender(),
             liberin.getPostingOwnerAvatar(),
             liberin.getPostingId(),
@@ -104,7 +104,7 @@ public class RemoteCommentReceptor extends LiberinReceptorBase {
             liberin.getPostingSheriffs(),
             liberin.getPostingSheriffMarks(),
             liberin.getCommentOwnerName(),
-            liberin.getCommentOwnerFullName(),
+            liberin.getCommentOwnerFullName(), liberin.getCommentOwnerSourceUri(),
             liberin.getCommentOwnerGender(),
             liberin.getCommentOwnerAvatar(),
             liberin.getCommentId(),

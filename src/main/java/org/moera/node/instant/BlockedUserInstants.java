@@ -71,6 +71,7 @@ public class BlockedUserInstants extends InstantsCreator {
             story.setFeedName(Feed.INSTANT);
             story.setRemoteNodeName(contact.getRemoteNodeName());
             story.setRemoteFullName(contact.getRemoteFullName());
+            story.setRemoteSourceUri(contact.getRemoteSourceUri());
             story.setRemoteAvatarMediaFile(contact.getRemoteAvatarMediaFile());;
             story.setRemoteAvatarShape(contact.getRemoteAvatarShape());
             story.setRemotePostingId(blockedByUser.getRemotePostingId());
@@ -109,11 +110,13 @@ public class BlockedUserInstants extends InstantsCreator {
 
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setNode(StorySummaryNodeUtil.build(
-            contact.getRemoteNodeName(), contact.getRemoteFullName(), contact.getRemoteGender()
+            contact.getRemoteNodeName(), contact.getRemoteFullName(), contact.getRemoteSourceUri(),
+            contact.getRemoteGender()
         ));
         summaryData.setBlocked(StorySummaryBlockedUtil.build(operations, period));
         if (entryHeading != null) {
-            summaryData.setPosting(StorySummaryEntryUtil.build(null, null, null, entryHeading));
+            summaryData.setPosting(StorySummaryEntryUtil.build(null, null,
+            null, null, entryHeading));
         }
         return summaryData;
     }

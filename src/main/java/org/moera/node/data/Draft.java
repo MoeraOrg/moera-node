@@ -57,6 +57,9 @@ public class Draft {
     @Size(max = 96)
     private String ownerFullName;
 
+    @Size(max = 1024)
+    private String ownerSourceUri;
+
     @ManyToOne
     private MediaFile ownerAvatarMediaFile;
 
@@ -201,6 +204,14 @@ public class Draft {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerSourceUri() {
+        return ownerSourceUri;
+    }
+
+    public void setOwnerSourceUri(String ownerSourceUri) {
+        this.ownerSourceUri = ownerSourceUri;
     }
 
     public MediaFile getOwnerAvatarMediaFile() {

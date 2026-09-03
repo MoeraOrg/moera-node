@@ -165,6 +165,7 @@ public class PostingReceptor extends LiberinReceptorBase {
                 PostingImportantUpdateNotificationUtil.build(
                     posting.getOwnerName(),
                     posting.getOwnerFullName(),
+                    posting.getOwnerSourceUri(),
                     posting.getOwnerGender(),
                     ownerAvatar, posting.getId(),
                     posting.getCurrentRevision().getHeading(),
@@ -279,6 +280,7 @@ public class PostingReceptor extends LiberinReceptorBase {
                         posting.getId(),
                         posting.getOwnerName(),
                         posting.getOwnerFullName(),
+                        posting.getOwnerSourceUri(),
                         posting.getOwnerGender(),
                         postingInfo.getOwnerAvatar(),
                         postingInfo.getHeading(),

@@ -55,6 +55,7 @@ public class StoryInfoUtil {
                 info.setPostingId(story.getEntry().getId().toString());
                 info.setSummaryNodeName(story.getRemoteOwnerName());
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
+                info.setSummarySourceUri(story.getRemoteOwnerSourceUri());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
                     info.setSummaryAvatar(AvatarImageUtil.build(
                         story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape(), directServe
@@ -68,8 +69,10 @@ public class StoryInfoUtil {
             case POSTING_REACTION_TASK_FAILED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
+                info.setRemoteSourceUri(story.getRemoteSourceUri());
                 info.setSummaryNodeName(story.getRemotePostingNodeName());
                 info.setSummaryFullName(story.getRemotePostingFullName());
+                info.setSummarySourceUri(story.getRemotePostingSourceUri());
                 if (story.getRemotePostingAvatarMediaFile() != null) {
                     info.setSummaryAvatar(AvatarImageUtil.build(
                         story.getRemotePostingAvatarMediaFile(), story.getRemotePostingAvatarShape(), directServe
@@ -84,8 +87,10 @@ public class StoryInfoUtil {
             case VIDEO_POSTING_PUBLISHED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
+                info.setRemoteSourceUri(story.getRemoteSourceUri());
                 info.setSummaryNodeName(story.getRemoteNodeName());
                 info.setSummaryFullName(story.getRemoteFullName());
+                info.setSummarySourceUri(story.getRemoteSourceUri());
                 if (story.getRemoteAvatarMediaFile() != null) {
                     info.setSummaryAvatar(AvatarImageUtil.build(
                         story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape(), directServe
@@ -106,8 +111,10 @@ public class StoryInfoUtil {
             case UNBLOCKED_USER:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
+                info.setRemoteSourceUri(story.getRemoteSourceUri());
                 info.setSummaryNodeName(story.getRemoteNodeName());
                 info.setSummaryFullName(story.getRemoteFullName());
+                info.setSummarySourceUri(story.getRemoteSourceUri());
                 if (story.getRemoteAvatarMediaFile() != null) {
                     info.setSummaryAvatar(AvatarImageUtil.build(
                         story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape(), directServe
@@ -120,6 +127,7 @@ public class StoryInfoUtil {
                 info.setRemoteCommentId(story.getRemoteCommentId());
                 info.setSummaryNodeName(story.getRemoteOwnerName());
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
+                info.setSummarySourceUri(story.getRemoteOwnerSourceUri());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
                     info.setSummaryAvatar(AvatarImageUtil.build(
                         story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape(), directServe
@@ -132,6 +140,7 @@ public class StoryInfoUtil {
                 info.setCommentId(story.getEntry().getId().toString());
                 info.setSummaryNodeName(story.getRemoteOwnerName());
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
+                info.setSummarySourceUri(story.getRemoteOwnerSourceUri());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
                     info.setSummaryAvatar(AvatarImageUtil.build(
                         story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape(), directServe
@@ -147,8 +156,10 @@ public class StoryInfoUtil {
             case REMOTE_COMMENT_ADDED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
+                info.setRemoteSourceUri(story.getRemoteSourceUri());
                 info.setSummaryNodeName(story.getRemoteOwnerName());
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
+                info.setSummarySourceUri(story.getRemoteOwnerSourceUri());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
                     info.setSummaryAvatar(AvatarImageUtil.build(
                         story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape(), directServe
@@ -165,6 +176,7 @@ public class StoryInfoUtil {
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setSummaryNodeName(story.getRemotePostingNodeName());
                 info.setSummaryFullName(story.getRemotePostingFullName());
+                info.setSummarySourceUri(story.getRemotePostingSourceUri());
                 if (story.getRemotePostingAvatarMediaFile() != null) {
                     info.setSummaryAvatar(AvatarImageUtil.build(
                         story.getRemotePostingAvatarMediaFile(), story.getRemotePostingAvatarShape(), directServe
@@ -178,6 +190,7 @@ public class StoryInfoUtil {
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setSummaryNodeName(story.getRemotePostingNodeName());
                 info.setSummaryFullName(story.getRemotePostingFullName());
+                info.setSummarySourceUri(story.getRemotePostingSourceUri());
                 if (story.getRemotePostingAvatarMediaFile() != null) {
                     info.setSummaryAvatar(AvatarImageUtil.build(
                         story.getRemotePostingAvatarMediaFile(), story.getRemotePostingAvatarShape(), directServe
@@ -190,8 +203,10 @@ public class StoryInfoUtil {
             case POSTING_MEDIA_REACTION_ADDED_NEGATIVE:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
+                info.setRemoteSourceUri(story.getRemoteSourceUri());
                 info.setSummaryNodeName(story.getRemoteOwnerName());
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
+                info.setSummarySourceUri(story.getRemoteOwnerSourceUri());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
                     info.setSummaryAvatar(AvatarImageUtil.build(
                         story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape(), directServe
@@ -206,8 +221,10 @@ public class StoryInfoUtil {
             case COMMENT_MEDIA_REACTION_FAILED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
+                info.setRemoteSourceUri(story.getRemoteSourceUri());
                 info.setSummaryNodeName(story.getRemoteOwnerName());
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
+                info.setSummarySourceUri(story.getRemoteOwnerSourceUri());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
                     info.setSummaryAvatar(AvatarImageUtil.build(
                         story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape(), directServe
@@ -221,8 +238,10 @@ public class StoryInfoUtil {
             case POSTING_MEDIA_REACTION_FAILED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
+                info.setRemoteSourceUri(story.getRemoteSourceUri());
                 info.setSummaryNodeName(story.getRemotePostingNodeName());
                 info.setSummaryFullName(story.getRemotePostingFullName());
+                info.setSummarySourceUri(story.getRemotePostingSourceUri());
                 if (story.getRemotePostingAvatarMediaFile() != null) {
                     info.setSummaryAvatar(AvatarImageUtil.build(
                         story.getRemotePostingAvatarMediaFile(), story.getRemotePostingAvatarShape(), directServe
@@ -258,6 +277,7 @@ public class StoryInfoUtil {
             case DEFROSTING:
                 info.setSummaryNodeName(story.getRemoteOwnerName());
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
+                info.setSummarySourceUri(story.getRemoteOwnerSourceUri());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
                     info.setSummaryAvatar(AvatarImageUtil.build(
                         story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape(), directServe

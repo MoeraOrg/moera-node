@@ -13,7 +13,7 @@ public class PostingReactionDeletedNotificationUtil {
         UUID parentMediaId,
         UUID postingId,
         String ownerName,
-        String ownerFullName,
+        String ownerFullName, String ownerSourceUri,
         String ownerGender,
         AvatarImage ownerAvatar,
         boolean negative
@@ -26,6 +26,7 @@ public class PostingReactionDeletedNotificationUtil {
         notification.setPostingId(postingId.toString());
         notification.setOwnerName(ownerName);
         notification.setOwnerFullName(ownerFullName);
+        notification.setOwnerSourceUri(ownerSourceUri);
         notification.setOwnerGender(ownerGender);
         notification.setOwnerAvatar(ownerAvatar);
         notification.setNegative(negative);

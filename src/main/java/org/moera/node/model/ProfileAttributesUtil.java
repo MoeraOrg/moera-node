@@ -1,7 +1,5 @@
 package org.moera.node.model;
 
-import jakarta.transaction.Transactional;
-
 import org.moera.lib.node.types.FundraiserInfo;
 import org.moera.lib.node.types.ProfileAttributes;
 import org.moera.lib.node.types.ProfileOperations;
@@ -13,7 +11,6 @@ import org.springframework.util.ObjectUtils;
 
 public class ProfileAttributesUtil {
 
-    @Transactional
     public static void toOptions(ProfileAttributes attributes, Options options, TextConverter textConverter) {
         SourceFormat bioSrcFormat = attributes.getBioSrcFormat() != null
             ? attributes.getBioSrcFormat()
@@ -26,6 +23,7 @@ public class ProfileAttributesUtil {
         }
         options.runInTransaction(opt -> {
             toOption("profile.full-name", attributes.getFullName(), opt);
+            toOption("profile.source-uri", attributes.getSourceUri(), opt);
             toOption("profile.gender", attributes.getGender(), opt);
             toOption("profile.email", attributes.getEmail(), opt);
             toOption(

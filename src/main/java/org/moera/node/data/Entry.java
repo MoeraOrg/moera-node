@@ -51,6 +51,9 @@ public class Entry {
     @Size(max = 96)
     private String receiverFullName;
 
+    @Size(max = 1024)
+    private String receiverSourceUri;
+
     @Size(max = 31)
     private String receiverGender;
 
@@ -69,6 +72,9 @@ public class Entry {
 
     @Size(max = 96)
     private String ownerFullName;
+
+    @Size(max = 1024)
+    private String ownerSourceUri;
 
     @Size(max = 31)
     private String ownerGender;
@@ -165,6 +171,9 @@ public class Entry {
 
     @Size(max = 96)
     private String repliedToFullName;
+
+    @Size(max = 1024)
+    private String repliedToSourceUri;
 
     @Size(max = 31)
     private String repliedToGender;
@@ -366,6 +375,14 @@ public class Entry {
         this.receiverFullName = receiverFullName;
     }
 
+    public String getReceiverSourceUri() {
+        return receiverSourceUri;
+    }
+
+    public void setReceiverSourceUri(String receiverSourceUri) {
+        this.receiverSourceUri = receiverSourceUri;
+    }
+
     public String getReceiverGender() {
         return receiverGender;
     }
@@ -412,6 +429,14 @@ public class Entry {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerSourceUri() {
+        return ownerSourceUri;
+    }
+
+    public void setOwnerSourceUri(String ownerSourceUri) {
+        this.ownerSourceUri = ownerSourceUri;
     }
 
     public String getOwnerGender() {
@@ -709,6 +734,14 @@ public class Entry {
 
     public void setRepliedToFullName(String repliedToFullName) {
         this.repliedToFullName = repliedToFullName;
+    }
+
+    public String getRepliedToSourceUri() {
+        return repliedToSourceUri;
+    }
+
+    public void setRepliedToSourceUri(String repliedToSourceUri) {
+        this.repliedToSourceUri = repliedToSourceUri;
     }
 
     public String getRepliedToGender() {

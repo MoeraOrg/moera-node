@@ -88,7 +88,7 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
         postingInstants.updated(
             liberin.getNodeName(),
             liberin.getOwnerName(),
-            liberin.getOwnerFullName(),
+            liberin.getOwnerFullName(), liberin.getOwnerSourceUri(),
             liberin.getOwnerGender(),
             liberin.getOwnerAvatar(),
             liberin.getId(),
@@ -123,7 +123,7 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
         mentionPostingInstants.added(
             liberin.getNodeName(),
             liberin.getOwnerName(),
-            liberin.getOwnerFullName(),
+            liberin.getOwnerFullName(), liberin.getOwnerSourceUri(),
             liberin.getOwnerGender(),
             liberin.getOwnerAvatar(),
             liberin.getId(),
@@ -143,7 +143,7 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
         remoteCommentInstants.added(
             liberin.getNodeName(),
             liberin.getPostingOwnerName(),
-            liberin.getPostingOwnerFullName(),
+            liberin.getPostingOwnerFullName(), liberin.getPostingOwnerSourceUri(),
             liberin.getPostingOwnerGender(),
             liberin.getPostingOwnerAvatar(),
             liberin.getPostingId(),
@@ -151,7 +151,7 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
             liberin.getPostingSheriffs(),
             liberin.getPostingSheriffMarks(),
             liberin.getCommentOwnerName(),
-            liberin.getCommentOwnerFullName(),
+            liberin.getCommentOwnerFullName(), liberin.getCommentOwnerSourceUri(),
             liberin.getCommentOwnerGender(),
             liberin.getCommentOwnerAvatar(),
             liberin.getCommentId(),
@@ -177,7 +177,7 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
         replyCommentInstants.added(
             liberin.getNodeName(),
             liberin.getPostingOwnerName(),
-            liberin.getPostingOwnerFullName(),
+            liberin.getPostingOwnerFullName(), liberin.getPostingOwnerSourceUri(),
             liberin.getPostingOwnerGender(),
             liberin.getPostingOwnerAvatar(),
             liberin.getPostingHeading(),
@@ -185,7 +185,7 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
             liberin.getPostingSheriffMarks(),
             liberin.getPostingId(),
             liberin.getCommentOwnerName(),
-            liberin.getCommentOwnerFullName(),
+            liberin.getCommentOwnerFullName(), liberin.getCommentOwnerSourceUri(),
             liberin.getCommentOwnerGender(),
             liberin.getCommentOwnerAvatar(),
             liberin.getCommentSheriffMarks(),
@@ -211,7 +211,7 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
             premoderatedCommentInstants.accepted(
                 liberin.getNodeName(),
                 liberin.getPostingOwnerName(),
-                liberin.getPostingOwnerFullName(),
+                liberin.getPostingOwnerFullName(), liberin.getPostingOwnerSourceUri(),
                 liberin.getPostingOwnerGender(),
                 liberin.getPostingOwnerAvatar(),
                 liberin.getPostingHeading(),
@@ -225,7 +225,7 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
             premoderatedCommentInstants.rejected(
                 liberin.getNodeName(),
                 liberin.getPostingOwnerName(),
-                liberin.getPostingOwnerFullName(),
+                liberin.getPostingOwnerFullName(), liberin.getPostingOwnerSourceUri(),
                 liberin.getPostingOwnerGender(),
                 liberin.getPostingOwnerAvatar(),
                 liberin.getPostingHeading(),

@@ -23,6 +23,7 @@ public class ProfileInfoUtil {
         Options options = requestContext.getOptions();
         
         profileInfo.setFullName(requestContext.fullName());
+        profileInfo.setSourceUri(requestContext.sourceUri());
         profileInfo.setGender(options.getString("profile.gender"));
         
         Principal viewEmail = options.getPrincipal("profile.email.view");
@@ -56,6 +57,7 @@ public class ProfileInfoUtil {
         ProfileInfo profileInfo = new ProfileInfo();
         
         profileInfo.setFullName(options.getString("profile.full-name"));
+        profileInfo.setSourceUri(options.getString("profile.source-uri"));
         profileInfo.setGender(options.getString("profile.gender"));
         
         Principal viewEmail = options.getPrincipal("profile.email.view");

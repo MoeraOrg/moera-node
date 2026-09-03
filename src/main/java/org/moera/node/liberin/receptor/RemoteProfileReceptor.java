@@ -15,7 +15,9 @@ public class RemoteProfileReceptor extends LiberinReceptorBase {
     public void fullNameChanged(RemoteNodeFullNameChangedLiberin liberin) {
         send(
             liberin,
-            new RemoteNodeFullNameChangedEvent(liberin.getNodeName(), liberin.getFullName(), liberin.getTitle())
+            new RemoteNodeFullNameChangedEvent(
+                liberin.getNodeName(), liberin.getFullName(), liberin.getNodeSourceUri(), liberin.getTitle()
+            )
         );
     }
 

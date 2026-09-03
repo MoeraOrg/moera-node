@@ -13,15 +13,18 @@ public class SheriffOrderInfoUtil {
         info.setSheriffName(sheriffName);
         info.setNodeName(sheriffOrder.getRemoteNodeName());
         info.setNodeFullName(sheriffOrder.getRemoteNodeFullName());
+        info.setNodeSourceUri(sheriffOrder.getRemoteNodeSourceUri());
         info.setFeedName(sheriffOrder.getRemoteFeedName());
         info.setPostingOwnerName(sheriffOrder.getRemotePostingOwnerName());
         info.setPostingOwnerFullName(sheriffOrder.getRemotePostingOwnerFullName());
+        info.setPostingOwnerSourceUri(sheriffOrder.getRemotePostingOwnerSourceUri());
         info.setPostingOwnerGender(sheriffOrder.getRemotePostingOwnerGender());
         info.setPostingHeading(sheriffOrder.getRemotePostingHeading());
         info.setPostingId(sheriffOrder.getRemotePostingId());
         info.setPostingRevisionId(sheriffOrder.getRemotePostingRevisionId());
         info.setCommentOwnerName(sheriffOrder.getRemoteCommentOwnerName());
         info.setCommentOwnerFullName(sheriffOrder.getRemoteCommentOwnerFullName());
+        info.setCommentOwnerSourceUri(sheriffOrder.getRemoteCommentOwnerSourceUri());
         info.setCommentOwnerGender(sheriffOrder.getRemoteCommentOwnerGender());
         info.setCommentHeading(sheriffOrder.getRemoteCommentHeading());
         info.setCommentId(sheriffOrder.getRemoteCommentId());

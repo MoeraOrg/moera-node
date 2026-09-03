@@ -10,6 +10,7 @@ public class RemotePostingImportantUpdateLiberin extends Liberin {
     private String nodeName;
     private String ownerName;
     private String ownerFullName;
+    private String ownerSourceUri;
     private String ownerGender;
     private AvatarImage ownerAvatar;
     private String id;
@@ -17,11 +18,13 @@ public class RemotePostingImportantUpdateLiberin extends Liberin {
     private String description;
 
     public RemotePostingImportantUpdateLiberin(String nodeName, String ownerName, String ownerFullName,
+        String ownerSourceUri,
                                                String ownerGender, AvatarImage ownerAvatar, String id, String heading,
                                                String description) {
         this.nodeName = nodeName;
         this.ownerName = ownerName;
         this.ownerFullName = ownerFullName;
+        this.ownerSourceUri = ownerSourceUri;
         this.ownerGender = ownerGender;
         this.ownerAvatar = ownerAvatar;
         this.id = id;
@@ -51,6 +54,14 @@ public class RemotePostingImportantUpdateLiberin extends Liberin {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerSourceUri() {
+        return ownerSourceUri;
+    }
+
+    public void setOwnerSourceUri(String ownerSourceUri) {
+        this.ownerSourceUri = ownerSourceUri;
     }
 
     public String getOwnerGender() {
@@ -99,6 +110,7 @@ public class RemotePostingImportantUpdateLiberin extends Liberin {
         model.put("nodeName", nodeName);
         model.put("ownerName", ownerName);
         model.put("ownerFullName", ownerFullName);
+        model.put("ownerSourceUri", ownerSourceUri);
         model.put("ownerGender", ownerGender);
         model.put("ownerAvatar", ownerAvatar);
         model.put("id", id);

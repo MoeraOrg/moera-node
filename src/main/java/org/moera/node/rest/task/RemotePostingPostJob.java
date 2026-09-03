@@ -290,7 +290,7 @@ public class RemotePostingPostJob
 
     private PostingText buildPosting() throws MoeraNodeException {
         PostingText postingText = PostingTextUtil.build(
-            nodeName(), fullName(), gender(), state.sourceText, textConverter
+            nodeName(), fullName(), sourceUri(), gender(), state.sourceText, textConverter
         );
         byte[] parentMediaDigest = state.prevPostingInfo != null
             ? mediaManager.getParentMediaDigest(
@@ -334,6 +334,7 @@ public class RemotePostingPostJob
                     ownPosting.setNodeId(nodeId);
                     ownPosting.setRemoteNodeName(parameters.targetNodeName);
                     ownPosting.setRemoteFullName(state.target.getFullName());
+                    ownPosting.setRemoteSourceUri(state.target.getSourceUri());
                     if (state.targetAvatarMediaFileId != null) {
                         MediaFile mediaFile = mediaFileRepository.findById(state.targetAvatarMediaFileId).orElse(null);
                         ownPosting.setRemoteAvatarMediaFile(mediaFile);

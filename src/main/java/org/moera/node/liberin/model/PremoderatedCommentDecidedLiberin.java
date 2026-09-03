@@ -13,6 +13,7 @@ public class PremoderatedCommentDecidedLiberin extends Liberin {
     private String nodeName;
     private String postingOwnerName;
     private String postingOwnerFullName;
+    private String postingOwnerSourceUri;
     private String postingOwnerGender;
     private AvatarImage postingOwnerAvatar;
     private String postingId;
@@ -27,6 +28,7 @@ public class PremoderatedCommentDecidedLiberin extends Liberin {
         nodeName = notification.getSenderNodeName();
         postingOwnerName = notification.getPostingOwnerName();
         postingOwnerFullName = notification.getPostingOwnerFullName();
+        postingOwnerSourceUri = notification.getPostingOwnerSourceUri();
         postingOwnerGender = notification.getPostingOwnerGender();
         postingOwnerAvatar = notification.getPostingOwnerAvatar();
         postingId = notification.getPostingId();
@@ -60,6 +62,14 @@ public class PremoderatedCommentDecidedLiberin extends Liberin {
 
     public void setPostingOwnerFullName(String postingOwnerFullName) {
         this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public String getPostingOwnerSourceUri() {
+        return postingOwnerSourceUri;
+    }
+
+    public void setPostingOwnerSourceUri(String postingOwnerSourceUri) {
+        this.postingOwnerSourceUri = postingOwnerSourceUri;
     }
 
     public String getPostingOwnerGender() {
@@ -140,6 +150,7 @@ public class PremoderatedCommentDecidedLiberin extends Liberin {
         model.put("nodeName", nodeName);
         model.put("postingOwnerName", postingOwnerName);
         model.put("postingOwnerFullName", postingOwnerFullName);
+        model.put("postingOwnerSourceUri", postingOwnerSourceUri);
         model.put("postingOwnerGender", postingOwnerGender);
         model.put("postingOwnerAvatar", postingOwnerAvatar);
         model.put("postingId", postingId);

@@ -8,7 +8,7 @@ public class PostingReactionAddedNotificationUtil {
     
     public static PostingReactionAddedNotification build(
         String parentPostingNodeName,
-        String parentPostingFullName,
+        String parentPostingFullName, String parentPostingSourceUri,
         String parentPostingGender,
         AvatarImage parentPostingAvatar,
         UUID parentPostingId,
@@ -18,7 +18,7 @@ public class PostingReactionAddedNotificationUtil {
         UUID postingId,
         String postingHeading,
         String ownerName,
-        String ownerFullName,
+        String ownerFullName, String ownerSourceUri,
         String ownerGender,
         AvatarImage ownerAvatar,
         boolean negative,
@@ -32,11 +32,13 @@ public class PostingReactionAddedNotificationUtil {
         notification.setPostingId(postingId.toString());
         notification.setOwnerName(ownerName);
         notification.setOwnerFullName(ownerFullName);
+        notification.setOwnerSourceUri(ownerSourceUri);
         notification.setOwnerGender(ownerGender);
         notification.setOwnerAvatar(ownerAvatar);
         notification.setNegative(negative);
         notification.setParentPostingNodeName(parentPostingNodeName);
         notification.setParentPostingFullName(parentPostingFullName);
+        notification.setParentPostingSourceUri(parentPostingSourceUri);
         notification.setParentPostingGender(parentPostingGender);
         notification.setParentPostingAvatar(parentPostingAvatar);
         notification.setParentHeading(parentHeading);

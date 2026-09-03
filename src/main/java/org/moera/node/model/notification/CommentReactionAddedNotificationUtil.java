@@ -8,7 +8,7 @@ public class CommentReactionAddedNotificationUtil {
     
     public static CommentReactionAddedNotification build(
         String postingNodeName,
-        String postingFullName,
+        String postingFullName, String postingSourceUri,
         String postingGender,
         AvatarImage postingAvatar,
         UUID postingId,
@@ -16,7 +16,7 @@ public class CommentReactionAddedNotificationUtil {
         String postingHeading,
         String commentHeading,
         String ownerName,
-        String ownerFullName,
+        String ownerFullName, String ownerSourceUri,
         String ownerGender,
         AvatarImage ownerAvatar,
         boolean negative,
@@ -26,6 +26,7 @@ public class CommentReactionAddedNotificationUtil {
         
         notification.setPostingNodeName(postingNodeName);
         notification.setPostingFullName(postingFullName);
+        notification.setPostingSourceUri(postingSourceUri);
         notification.setPostingGender(postingGender);
         notification.setPostingAvatar(postingAvatar);
         notification.setPostingId(postingId.toString());
@@ -34,6 +35,7 @@ public class CommentReactionAddedNotificationUtil {
         notification.setCommentHeading(commentHeading);
         notification.setOwnerName(ownerName);
         notification.setOwnerFullName(ownerFullName);
+        notification.setOwnerSourceUri(ownerSourceUri);
         notification.setOwnerGender(ownerGender);
         notification.setOwnerAvatar(ownerAvatar);
         notification.setNegative(negative);

@@ -44,6 +44,7 @@ public class SubscriberInstants extends InstantsCreator {
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(subscriber.getRemoteNodeName());
         story.setRemoteFullName(subscriber.getContact().getRemoteFullName());
+        story.setRemoteSourceUri(subscriber.getContact().getRemoteSourceUri());
         story.setRemoteAvatarMediaFile(subscriber.getContact().getRemoteAvatarMediaFile());
         story.setRemoteAvatarShape(subscriber.getContact().getRemoteAvatarShape());
         story.setSummaryData(buildSummary(subscriber));

@@ -17,6 +17,7 @@ public class RemoteSheriffOrderReceivedLiberin extends Liberin {
     private String remoteFeedName;
     private String postingOwnerName;
     private String postingOwnerFullName;
+    private String postingOwnerSourceUri;
     private String postingHeading;
     private String postingId;
     private String commentHeading;
@@ -53,6 +54,7 @@ public class RemoteSheriffOrderReceivedLiberin extends Liberin {
         remoteFeedName = notification.getRemoteFeedName();
         postingOwnerName = notification.getPostingOwnerName();
         postingOwnerFullName = notification.getPostingOwnerFullName();
+        postingOwnerSourceUri = notification.getPostingOwnerSourceUri();
         postingHeading = notification.getPostingHeading();
         postingId = notification.getPostingId();
         commentHeading = notification.getCommentHeading();
@@ -68,6 +70,7 @@ public class RemoteSheriffOrderReceivedLiberin extends Liberin {
         remoteFeedName = notification.getRemoteFeedName();
         postingOwnerName = notification.getPostingOwnerName();
         postingOwnerFullName = notification.getPostingOwnerFullName();
+        postingOwnerSourceUri = notification.getPostingOwnerSourceUri();
         postingHeading = notification.getPostingHeading();
         postingId = notification.getPostingId();
         commentHeading = notification.getCommentHeading();
@@ -115,6 +118,14 @@ public class RemoteSheriffOrderReceivedLiberin extends Liberin {
 
     public void setPostingOwnerFullName(String postingOwnerFullName) {
         this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public String getPostingOwnerSourceUri() {
+        return postingOwnerSourceUri;
+    }
+
+    public void setPostingOwnerSourceUri(String postingOwnerSourceUri) {
+        this.postingOwnerSourceUri = postingOwnerSourceUri;
     }
 
     public String getPostingHeading() {
@@ -181,6 +192,7 @@ public class RemoteSheriffOrderReceivedLiberin extends Liberin {
         model.put("remoteFeedName", remoteFeedName);
         model.put("postingOwnerName", postingOwnerName);
         model.put("postingOwnerFullName", postingOwnerFullName);
+        model.put("postingOwnerSourceUri", postingOwnerSourceUri);
         model.put("postingHeading", postingHeading);
         model.put("postingId", postingId);
         model.put("commentHeading", commentHeading);

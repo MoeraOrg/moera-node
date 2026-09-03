@@ -116,6 +116,7 @@ public class CommentInfoUtil {
         commentInfo.setId(comment.getId().toString());
         commentInfo.setOwnerName(comment.getOwnerName());
         commentInfo.setOwnerFullName(comment.getOwnerFullName());
+        commentInfo.setOwnerSourceUri(comment.getOwnerSourceUri());
         commentInfo.setOwnerGender(comment.getOwnerGender());
         if (comment.getOwnerAvatarMediaFile() != null) {
             commentInfo.setOwnerAvatar(
@@ -276,6 +277,10 @@ public class CommentInfoUtil {
         return info.getRepliedTo() != null ? info.getRepliedTo().getFullName() : null;
     }
 
+    public static String getRepliedToSourceUri(CommentInfo info) {
+        return info.getRepliedTo() != null ? info.getRepliedTo().getSourceUri() : null;
+    }
+
     public static AvatarImage getRepliedToAvatar(CommentInfo info) {
         return info.getRepliedTo() != null ? info.getRepliedTo().getAvatar() : null;
     }
@@ -322,6 +327,7 @@ public class CommentInfoUtil {
         ownComment.setRemoteCommentId(info.getId());
         ownComment.setRemoteRepliedToName(getRepliedToName(info));
         ownComment.setRemoteRepliedToFullName(getRepliedToFullName(info));
+        ownComment.setRemoteRepliedToSourceUri(getRepliedToSourceUri(info));
         ownComment.setHeading(info.getHeading());
         ownComment.setCreatedAt(Util.now());
     }

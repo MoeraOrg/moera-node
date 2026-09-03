@@ -118,11 +118,13 @@ public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingA
             state.contact = contactOperations.updateDetails(
                 parameters.senderNodeName,
                 state.sender.getFullName(),
+                state.sender.getSourceUri(),
                 state.sender.getGender(),
                 state.sender.getTitle(),
                 () -> universalContext.send(
                     new RemoteNodeFullNameChangedLiberin(
-                        parameters.senderNodeName, state.sender.getFullName(), state.sender.getTitle()
+                        parameters.senderNodeName, state.sender.getFullName(), state.sender.getSourceUri(),
+                            state.sender.getTitle()
                     )
                 )
             );

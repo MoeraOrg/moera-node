@@ -48,6 +48,7 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
                     comment.getId(),
                     deletedReaction.getOwnerName(),
                     deletedReaction.getOwnerFullName(),
+                    deletedReaction.getOwnerSourceUri(),
                     deletedReaction.getOwnerGender(),
                     AvatarImageUtil.build(
                         deletedReaction.getOwnerAvatarMediaFile(),
@@ -80,6 +81,7 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
                 CommentReactionAddedNotificationUtil.build(
                     posting.getOwnerName(),
                     posting.getOwnerFullName(),
+                    posting.getOwnerSourceUri(),
                     posting.getOwnerGender(),
                     postingOwnerAvatar,
                     posting.getId(),
@@ -88,6 +90,7 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
                     comment.getCurrentRevision().getHeading(),
                     addedReaction.getOwnerName(),
                     addedReaction.getOwnerFullName(),
+                    addedReaction.getOwnerSourceUri(),
                     addedReaction.getOwnerGender(),
                     AvatarImageUtil.build(
                         addedReaction.getOwnerAvatarMediaFile(),

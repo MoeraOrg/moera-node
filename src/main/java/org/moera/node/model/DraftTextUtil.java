@@ -33,6 +33,9 @@ public class DraftTextUtil {
         if (draftText.getOwnerFullName() != null) {
             draft.setOwnerFullName(draftText.getOwnerFullName());
         }
+        if (draftText.getOwnerSourceUri() != null) {
+            draft.setOwnerSourceUri(draftText.getOwnerSourceUri());
+        }
         if (draftText.getOwnerAvatar() != null) {
             MediaFile ownerAvatarMediaFile = AvatarDescriptionUtil.getMediaFile(draftText.getOwnerAvatar());
             if (ownerAvatarMediaFile != null) {

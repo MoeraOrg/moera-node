@@ -12,7 +12,7 @@ public class ReplyCommentDeletedNotificationUtil {
         UUID commentId,
         UUID repliedToId,
         String commentOwnerName,
-        String commentOwnerFullName,
+        String commentOwnerFullName, String commentOwnerSourceUri,
         String commentOwnerGender,
         AvatarImage commentOwnerAvatar
     ) {
@@ -23,6 +23,7 @@ public class ReplyCommentDeletedNotificationUtil {
         notification.setRepliedToId(repliedToId.toString());
         notification.setCommentOwnerName(commentOwnerName);
         notification.setCommentOwnerFullName(commentOwnerFullName);
+        notification.setCommentOwnerSourceUri(commentOwnerSourceUri);
         notification.setCommentOwnerGender(commentOwnerGender);
         notification.setCommentOwnerAvatar(commentOwnerAvatar);
 

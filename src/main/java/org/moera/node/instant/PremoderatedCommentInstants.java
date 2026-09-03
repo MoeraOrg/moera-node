@@ -25,7 +25,7 @@ public class PremoderatedCommentInstants extends InstantsCreator {
     public void accepted(
         String nodeName,
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingOwnerGender,
         AvatarImage postingOwnerAvatar,
         String postingHeading,
@@ -40,6 +40,7 @@ public class PremoderatedCommentInstants extends InstantsCreator {
             nodeName,
             postingOwnerName,
             postingOwnerFullName,
+            postingOwnerSourceUri,
             postingOwnerGender,
             postingOwnerAvatar,
             postingHeading,
@@ -54,7 +55,7 @@ public class PremoderatedCommentInstants extends InstantsCreator {
     public void rejected(
         String nodeName,
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingOwnerGender,
         AvatarImage postingOwnerAvatar,
         String postingHeading,
@@ -69,6 +70,7 @@ public class PremoderatedCommentInstants extends InstantsCreator {
             nodeName,
             postingOwnerName,
             postingOwnerFullName,
+            postingOwnerSourceUri,
             postingOwnerGender,
             postingOwnerAvatar,
             postingHeading,
@@ -84,7 +86,7 @@ public class PremoderatedCommentInstants extends InstantsCreator {
         StoryType storyType,
         String nodeName,
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingOwnerGender,
         AvatarImage postingOwnerAvatar,
         String postingHeading,
@@ -103,6 +105,7 @@ public class PremoderatedCommentInstants extends InstantsCreator {
         story.setRemoteNodeName(nodeName);
         story.setRemotePostingNodeName(postingOwnerName);
         story.setRemotePostingFullName(postingOwnerFullName);
+        story.setRemotePostingSourceUri(postingOwnerSourceUri);
         if (postingOwnerAvatar != null) {
             story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(postingOwnerAvatar));
             story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
@@ -112,6 +115,7 @@ public class PremoderatedCommentInstants extends InstantsCreator {
         story.setSummaryData(buildSummary(
             postingOwnerName,
             postingOwnerFullName,
+            postingOwnerSourceUri,
             postingOwnerGender,
             postingHeading,
             postingSheriffs,
@@ -126,7 +130,7 @@ public class PremoderatedCommentInstants extends InstantsCreator {
 
     private static StorySummaryData buildSummary(
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingOwnerGender,
         String postingHeading,
         List<String> postingSheriffs,
@@ -137,12 +141,14 @@ public class PremoderatedCommentInstants extends InstantsCreator {
         summaryData.setPosting(StorySummaryEntryUtil.build(
             postingOwnerName,
             postingOwnerFullName,
+            postingOwnerSourceUri,
             postingOwnerGender,
             postingHeading,
             postingSheriffs,
             postingSheriffMarks
         ));
-        summaryData.setComment(StorySummaryEntryUtil.build(null, null, null, commentHeading));
+        summaryData.setComment(StorySummaryEntryUtil.build(null, null,
+            null, null, commentHeading));
         return summaryData;
     }
 

@@ -35,7 +35,8 @@ public class PostingReactionInstants extends InstantsCreator {
     private StoryRepository storyRepository;
 
     public void added(
-        Posting posting, String ownerName, String ownerFullName, String ownerGender, AvatarImage ownerAvatar,
+        Posting posting, String ownerName, String ownerFullName, String ownerSourceUri, String ownerGender,
+            AvatarImage ownerAvatar,
         boolean negative, int emoji
     ) {
         if (ownerName.equals(nodeName())) {
@@ -68,6 +69,7 @@ public class PostingReactionInstants extends InstantsCreator {
         substory.setEntry(posting);
         substory.setRemoteOwnerName(ownerName);
         substory.setRemoteOwnerFullName(ownerFullName);
+story.setRemoteOwnerSourceUri(ownerSourceUri);
         if (ownerAvatar != null) {
             substory.setRemoteOwnerAvatarMediaFile(AvatarImageUtil.getMediaFile(ownerAvatar));
             substory.setRemoteOwnerAvatarShape(ownerAvatar.getShape());
@@ -82,7 +84,8 @@ public class PostingReactionInstants extends InstantsCreator {
 
     private static StorySummaryData buildReactionSummary(String gender, int emoji) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setReaction(StorySummaryReactionUtil.build(null, null, gender, emoji));
+        summaryData.setReaction(StorySummaryReactionUtil.build(null, null,
+            null, gender, emoji));
         return summaryData;
     }
 
@@ -133,6 +136,7 @@ public class PostingReactionInstants extends InstantsCreator {
         story.setSummaryData(buildAddedSummary(story, stories));
         story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
         story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
+        story.setRemoteOwnerSourceUri(stories.get(0).getRemoteOwnerSourceUri());
         story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
         story.setRemoteOwnerAvatarShape(stories.get(0).getRemoteOwnerAvatarShape());
         story.setPublishedAt(Util.now());
@@ -153,6 +157,7 @@ public class PostingReactionInstants extends InstantsCreator {
             reactions.add(StorySummaryReactionUtil.build(
                 substory.getRemoteOwnerName(),
                 substory.getRemoteOwnerFullName(),
+                substory.getRemoteOwnerSourceUri(),
                 reaction.getOwnerGender(),
                 reaction.getEmoji()
             ));
@@ -162,6 +167,7 @@ public class PostingReactionInstants extends InstantsCreator {
         summaryData.setPosting(StorySummaryEntryUtil.build(
             story.getRemotePostingNodeName(),
             story.getRemotePostingFullName(),
+            story.getRemotePostingSourceUri(),
             story.getEntry().getOwnerGender(),
             story.getEntry().getCurrentRevision().getHeading()
         ));
@@ -175,6 +181,7 @@ public class PostingReactionInstants extends InstantsCreator {
 
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
+        String postingOwnerSourceUri = postingInfo != null ? postingInfo.getOwnerSourceUri() : null;
         String postingOwnerGender = postingInfo != null ? postingInfo.getOwnerGender() : null;
         AvatarImage postingOwnerAvatar = postingInfo != null ? postingInfo.getOwnerAvatar() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
@@ -184,13 +191,14 @@ public class PostingReactionInstants extends InstantsCreator {
         story.setRemoteNodeName(nodeName);
         story.setRemotePostingNodeName(postingOwnerName);
         story.setRemotePostingFullName(postingOwnerFullName);
+        story.setRemotePostingSourceUri(postingOwnerSourceUri);
         if (postingOwnerAvatar != null) {
             story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(postingOwnerAvatar));
             story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
         }
         story.setRemotePostingId(postingId);
         story.setSummaryData(buildAddingFailedSummary(
-            postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading
+            postingOwnerName, postingOwnerFullName, postingOwnerSourceUri, postingOwnerGender, postingHeading
         ));
         story.setPublishedAt(Util.now());
         updateMoment(story);
@@ -199,10 +207,10 @@ public class PostingReactionInstants extends InstantsCreator {
     }
 
     private static StorySummaryData buildAddingFailedSummary(
-        String nodeName, String fullName, String gender, String postingHeading
+        String nodeName, String fullName, String sourceUri, String gender, String postingHeading
     ) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(StorySummaryEntryUtil.build(nodeName, fullName, gender, postingHeading));
+        summaryData.setPosting(StorySummaryEntryUtil.build(nodeName, fullName, sourceUri, gender, postingHeading));
         return summaryData;
     }
 

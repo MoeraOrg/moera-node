@@ -11,6 +11,7 @@ public class SheriffComplaintInfoUtil {
         info.setId(sheriffComplaint.getId().toString());
         info.setOwnerName(sheriffComplaint.getOwnerName());
         info.setOwnerFullName(sheriffComplaint.getOwnerFullName());
+        info.setOwnerSourceUri(sheriffComplaint.getOwnerSourceUri());
         info.setOwnerGender(sheriffComplaint.getOwnerGender());
         if (withGroup && sheriffComplaint.getGroup() != null) {
             info.setGroup(SheriffComplaintGroupInfoUtil.build(sheriffComplaint.getGroup()));

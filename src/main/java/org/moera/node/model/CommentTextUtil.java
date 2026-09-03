@@ -25,6 +25,7 @@ public class CommentTextUtil {
     public static CommentText build(
         String ownerName,
         String ownerFullName,
+        String ownerSourceUri,
         String ownerGender,
         CommentSourceText sourceText,
         TextConverter textConverter
@@ -34,6 +35,9 @@ public class CommentTextUtil {
         commentText.setOwnerName(ownerName);
         commentText.setOwnerFullName(
             sourceText.getOwnerFullName() != null ? sourceText.getOwnerFullName() : ownerFullName
+        );
+        commentText.setOwnerSourceUri(
+            sourceText.getOwnerSourceUri() != null ? sourceText.getOwnerSourceUri() : ownerSourceUri
         );
         commentText.setOwnerGender(ownerGender);
         commentText.setOwnerAvatar(sourceText.getOwnerAvatar());
@@ -91,6 +95,9 @@ public class CommentTextUtil {
         }
         if (commentText.getOwnerFullName() != null) {
             entry.setOwnerFullName(commentText.getOwnerFullName());
+        }
+        if (commentText.getOwnerSourceUri() != null) {
+            entry.setOwnerSourceUri(commentText.getOwnerSourceUri());
         }
         if (commentText.getOwnerGender() != null) {
             entry.setOwnerGender(commentText.getOwnerGender());
@@ -221,6 +228,10 @@ public class CommentTextUtil {
             && (
                 commentText.getOwnerFullName() == null
                 || commentText.getOwnerFullName().equals(entry.getOwnerFullName())
+            )
+            && (
+                commentText.getOwnerSourceUri() == null
+                || commentText.getOwnerSourceUri().equals(entry.getOwnerSourceUri())
             )
             && (commentText.getOwnerGender() == null || commentText.getOwnerGender().equals(entry.getOwnerGender()))
             && (

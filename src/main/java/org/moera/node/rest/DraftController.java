@@ -218,6 +218,7 @@ public class DraftController {
         draft.setReceiverPostingId(draftText.getReceiverPostingId());
         draft.setReceiverCommentId(draftText.getReceiverCommentId());
         draft.setOwnerFullName(requestContext.fullName());
+        draft.setOwnerSourceUri(requestContext.sourceUri());
         if (requestContext.getAvatar() != null) {
             draft.setOwnerAvatarMediaFile(requestContext.getAvatar().getMediaFile());
             draft.setOwnerAvatarShape(requestContext.getAvatar().getShape());

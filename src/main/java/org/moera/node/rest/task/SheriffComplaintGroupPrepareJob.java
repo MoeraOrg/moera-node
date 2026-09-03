@@ -169,9 +169,13 @@ public class SheriffComplaintGroupPrepareJob
             if (complaintGroup.getRemoteNodeFullName() == null) {
                 complaintGroup.setRemoteNodeFullName(state.whoAmI.getFullName());
             }
+            if (complaintGroup.getRemoteNodeSourceUri() == null) {
+                complaintGroup.setRemoteNodeSourceUri(state.whoAmI.getSourceUri());
+            }
             if (state.postingInfo != null) {
                 complaintGroup.setRemotePostingOwnerName(state.postingInfo.getOwnerName());
                 complaintGroup.setRemotePostingOwnerFullName(state.postingInfo.getOwnerFullName());
+                complaintGroup.setRemotePostingOwnerSourceUri(state.postingInfo.getOwnerSourceUri());
                 complaintGroup.setRemotePostingOwnerGender(state.postingInfo.getOwnerGender());
                 complaintGroup.setRemotePostingHeading(state.postingInfo.getHeading());
                 complaintGroup.setRemotePostingRevisionId(state.postingInfo.getRevisionId());
@@ -179,6 +183,7 @@ public class SheriffComplaintGroupPrepareJob
             if (state.commentInfo != null) {
                 complaintGroup.setRemoteCommentOwnerName(state.commentInfo.getOwnerName());
                 complaintGroup.setRemoteCommentOwnerFullName(state.commentInfo.getOwnerFullName());
+                complaintGroup.setRemoteCommentOwnerSourceUri(state.commentInfo.getOwnerSourceUri());
                 complaintGroup.setRemoteCommentOwnerGender(state.commentInfo.getOwnerGender());
                 complaintGroup.setRemoteCommentHeading(state.commentInfo.getHeading());
                 complaintGroup.setRemoteCommentRevisionId(state.commentInfo.getRevisionId());

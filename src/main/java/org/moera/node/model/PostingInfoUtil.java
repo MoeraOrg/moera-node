@@ -171,6 +171,7 @@ public class PostingInfoUtil {
         info.setTotalRevisions(posting.getTotalRevisions());
         info.setReceiverName(posting.getReceiverName());
         info.setReceiverFullName(posting.getReceiverFullName());
+        info.setReceiverSourceUri(posting.getReceiverSourceUri());
         info.setReceiverGender(posting.getReceiverGender());
         if (posting.getReceiverAvatarMediaFile() != null) {
             info.setReceiverAvatar(AvatarImageUtil.build(
@@ -183,6 +184,7 @@ public class PostingInfoUtil {
         }
         info.setOwnerName(posting.getOwnerName());
         info.setOwnerFullName(posting.getOwnerFullName());
+        info.setOwnerSourceUri(posting.getOwnerSourceUri());
         info.setOwnerGender(posting.getOwnerGender());
         if (posting.getOwnerAvatarMediaFile() != null) {
             info.setOwnerAvatar(
@@ -523,6 +525,7 @@ public class PostingInfoUtil {
         posting.setReceiverEntryId(isOriginal(info) ? info.getId() : info.getReceiverPostingId());
         posting.setOwnerName(info.getOwnerName());
         posting.setOwnerFullName(info.getOwnerFullName());
+        posting.setOwnerSourceUri(info.getOwnerSourceUri());
         posting.setOwnerGender(info.getOwnerGender());
         if (info.getOwnerAvatar() != null && info.getOwnerAvatar().getShape() != null) {
             posting.setOwnerAvatarShape(info.getOwnerAvatar().getShape());

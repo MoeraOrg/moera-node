@@ -10,6 +10,7 @@ public class AskedToFriendLiberin extends Liberin {
 
     private String remoteNodeName;
     private String remoteFullName;
+    private String remoteSourceUri;
     private String remoteGender;
     private AvatarImage remoteAvatar;
     private UUID friendGroupId;
@@ -18,7 +19,7 @@ public class AskedToFriendLiberin extends Liberin {
 
     public AskedToFriendLiberin(
         String remoteNodeName,
-        String remoteFullName,
+        String remoteFullName, String remoteSourceUri,
         String remoteGender,
         AvatarImage remoteAvatar,
         UUID friendGroupId,
@@ -27,6 +28,7 @@ public class AskedToFriendLiberin extends Liberin {
     ) {
         this.remoteNodeName = remoteNodeName;
         this.remoteFullName = remoteFullName;
+        this.remoteSourceUri = remoteSourceUri;
         this.remoteGender = remoteGender;
         this.remoteAvatar = remoteAvatar;
         this.friendGroupId = friendGroupId;
@@ -48,6 +50,14 @@ public class AskedToFriendLiberin extends Liberin {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
+    }
+
+    public String getRemoteSourceUri() {
+        return remoteSourceUri;
+    }
+
+    public void setRemoteSourceUri(String remoteSourceUri) {
+        this.remoteSourceUri = remoteSourceUri;
     }
 
     public String getRemoteGender() {
@@ -95,6 +105,7 @@ public class AskedToFriendLiberin extends Liberin {
         super.toModel(model);
         model.put("remoteNodeName", remoteNodeName);
         model.put("remoteFullName", remoteFullName);
+        model.put("remoteSourceUri", remoteSourceUri);
         model.put("remoteGender", remoteGender);
         model.put("friendGroupId", friendGroupId);
         model.put("friendGroupTitle", friendGroupTitle);

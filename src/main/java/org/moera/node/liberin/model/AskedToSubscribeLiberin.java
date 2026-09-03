@@ -9,14 +9,17 @@ public class AskedToSubscribeLiberin extends Liberin {
 
     private String remoteNodeName;
     private String remoteFullName;
+    private String remoteSourceUri;
     private String remoteGender;
     private AvatarImage remoteAvatar;
     private String message;
 
-    public AskedToSubscribeLiberin(String remoteNodeName, String remoteFullName, String remoteGender,
+    public AskedToSubscribeLiberin(String remoteNodeName, String remoteFullName, String remoteSourceUri,
+        String remoteGender,
                                    AvatarImage remoteAvatar, String message) {
         this.remoteNodeName = remoteNodeName;
         this.remoteFullName = remoteFullName;
+        this.remoteSourceUri = remoteSourceUri;
         this.remoteGender = remoteGender;
         this.remoteAvatar = remoteAvatar;
         this.message = message;
@@ -36,6 +39,14 @@ public class AskedToSubscribeLiberin extends Liberin {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
+    }
+
+    public String getRemoteSourceUri() {
+        return remoteSourceUri;
+    }
+
+    public void setRemoteSourceUri(String remoteSourceUri) {
+        this.remoteSourceUri = remoteSourceUri;
     }
 
     public String getRemoteGender() {
@@ -67,6 +78,7 @@ public class AskedToSubscribeLiberin extends Liberin {
         super.toModel(model);
         model.put("remoteNodeName", remoteNodeName);
         model.put("remoteFullName", remoteFullName);
+        model.put("remoteSourceUri", remoteSourceUri);
         model.put("remoteGender", remoteGender);
         model.put("remoteAvatar", remoteAvatar);
         model.put("message", message);

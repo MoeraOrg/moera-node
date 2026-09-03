@@ -11,6 +11,7 @@ public class ActivityReactionInfoUtil {
         ActivityReactionInfo info = new ActivityReactionInfo();
         info.setRemoteNodeName(reaction.getRemoteNodeName());
         info.setRemoteFullName(reaction.getRemoteFullName());
+        info.setRemoteSourceUri(reaction.getRemoteSourceUri());
         if (reaction.getRemoteAvatarMediaFile() != null) {
             info.setRemoteAvatar(
                 AvatarImageUtil.build(reaction.getRemoteAvatarMediaFile(), reaction.getRemoteAvatarShape(), directServe)

@@ -12,6 +12,7 @@ public class PostingSourceInfoUtil {
         
         postingSourceInfo.setNodeName(entrySource.getRemoteNodeName());
         postingSourceInfo.setFullName(entrySource.getRemoteFullName());
+        postingSourceInfo.setNodeSourceUri(entrySource.getRemoteSourceUri());
         
         if (entrySource.getRemoteAvatarMediaFile() != null) {
             postingSourceInfo.setAvatar(AvatarImageUtil.build(

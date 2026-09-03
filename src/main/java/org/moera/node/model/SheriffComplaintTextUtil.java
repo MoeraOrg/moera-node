@@ -9,6 +9,7 @@ public class SheriffComplaintTextUtil {
 
     public static void toSheriffComplaint(SheriffComplaintText complaintText, SheriffComplaint sheriffComplaint) {
         sheriffComplaint.setOwnerFullName(complaintText.getOwnerFullName());
+        sheriffComplaint.setOwnerSourceUri(complaintText.getOwnerSourceUri());
         sheriffComplaint.setOwnerGender(complaintText.getOwnerGender());
         sheriffComplaint.setReasonCode(
             complaintText.getReasonCode() != null ? complaintText.getReasonCode() : SheriffOrderReason.OTHER
@@ -24,15 +25,18 @@ public class SheriffComplaintTextUtil {
     ) {
         sheriffComplaintGroup.setRemoteNodeName(complaintText.getNodeName());
         sheriffComplaintGroup.setRemoteNodeFullName(complaintText.getFullName());
+        sheriffComplaintGroup.setRemoteNodeSourceUri(complaintText.getNodeSourceUri());
         sheriffComplaintGroup.setRemoteFeedName(complaintText.getFeedName());
         sheriffComplaintGroup.setRemotePostingId(complaintText.getPostingId());
         sheriffComplaintGroup.setRemotePostingOwnerName(complaintText.getPostingOwnerName());
         sheriffComplaintGroup.setRemotePostingOwnerFullName(complaintText.getPostingOwnerFullName());
+        sheriffComplaintGroup.setRemotePostingOwnerSourceUri(complaintText.getPostingOwnerSourceUri());
         sheriffComplaintGroup.setRemotePostingOwnerGender(complaintText.getPostingOwnerGender());
         sheriffComplaintGroup.setRemotePostingHeading(complaintText.getPostingHeading());
         sheriffComplaintGroup.setRemoteCommentId(complaintText.getCommentId());
         sheriffComplaintGroup.setRemoteCommentOwnerName(complaintText.getCommentOwnerName());
         sheriffComplaintGroup.setRemoteCommentOwnerFullName(complaintText.getCommentOwnerFullName());
+        sheriffComplaintGroup.setRemoteCommentOwnerSourceUri(complaintText.getCommentOwnerSourceUri());
         sheriffComplaintGroup.setRemoteCommentOwnerGender(complaintText.getOwnerGender());
         sheriffComplaintGroup.setRemoteCommentHeading(complaintText.getCommentHeading());
     }

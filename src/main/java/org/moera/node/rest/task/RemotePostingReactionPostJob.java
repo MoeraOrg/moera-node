@@ -233,7 +233,7 @@ public class RemotePostingReactionPostJob
                 )
         );
         ReactionDescription description = ReactionDescriptionUtil.build(
-            nodeName(), fullName(), gender(), getAvatar(), parameters.attributes
+            nodeName(), fullName(), sourceUri(), gender(), getAvatar(), parameters.attributes
         );
         description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         description.setSignatureVersion(ReactionFingerprintBuilder.LATEST_VERSION);
@@ -252,6 +252,7 @@ public class RemotePostingReactionPostJob
                     ownReaction.setNodeId(nodeId);
                     ownReaction.setRemoteNodeName(parameters.targetNodeName);
                     ownReaction.setRemoteFullName(state.target.getFullName());
+                    ownReaction.setRemoteSourceUri(state.target.getSourceUri());
                     if (state.targetAvatarMediaFileId != null) {
                         MediaFile mediaFile = mediaFileRepository.findById(state.targetAvatarMediaFileId).orElse(null);
                         ownReaction.setRemoteAvatarMediaFile(mediaFile);

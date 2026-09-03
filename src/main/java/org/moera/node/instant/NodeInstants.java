@@ -22,6 +22,7 @@ public class NodeInstants extends InstantsCreator {
         story.setFeedName(Feed.INSTANT);
         story.setRemoteOwnerName(nodeName());
         story.setRemoteOwnerFullName(universalContext.fullName());
+        story.setRemoteOwnerSourceUri(universalContext.sourceUri());
         if (universalContext.getAvatar() != null) {
             story.setRemoteOwnerAvatarMediaFile(universalContext.getAvatar().getMediaFile());
             story.setRemoteOwnerAvatarShape(universalContext.getAvatar().getShape());

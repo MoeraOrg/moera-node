@@ -78,6 +78,9 @@ public class Story {
     @Size(max = 96)
     private String remoteFullName;
 
+    @Size(max = 1024)
+    private String remoteSourceUri;
+
     @ManyToOne
     private MediaFile remoteAvatarMediaFile;
 
@@ -90,6 +93,9 @@ public class Story {
     @Size(max = 96)
     private String remotePostingFullName;
 
+    @Size(max = 1024)
+    private String remotePostingSourceUri;
+
     @ManyToOne
     private MediaFile remotePostingAvatarMediaFile;
 
@@ -101,6 +107,9 @@ public class Story {
 
     @Size(max = 96)
     private String remoteOwnerFullName;
+
+    @Size(max = 1024)
+    private String remoteOwnerSourceUri;
 
     @ManyToOne
     private MediaFile remoteOwnerAvatarMediaFile;
@@ -280,6 +289,14 @@ public class Story {
         this.remoteFullName = remoteFullName;
     }
 
+    public String getRemoteSourceUri() {
+        return remoteSourceUri;
+    }
+
+    public void setRemoteSourceUri(String remoteSourceUri) {
+        this.remoteSourceUri = remoteSourceUri;
+    }
+
     public MediaFile getRemoteAvatarMediaFile() {
         return remoteAvatarMediaFile;
     }
@@ -312,6 +329,14 @@ public class Story {
         this.remotePostingFullName = remotePostingFullName;
     }
 
+    public String getRemotePostingSourceUri() {
+        return remotePostingSourceUri;
+    }
+
+    public void setRemotePostingSourceUri(String remotePostingSourceUri) {
+        this.remotePostingSourceUri = remotePostingSourceUri;
+    }
+
     public MediaFile getRemotePostingAvatarMediaFile() {
         return remotePostingAvatarMediaFile;
     }
@@ -342,6 +367,14 @@ public class Story {
 
     public void setRemoteOwnerFullName(String remoteOwnerFullName) {
         this.remoteOwnerFullName = remoteOwnerFullName;
+    }
+
+    public String getRemoteOwnerSourceUri() {
+        return remoteOwnerSourceUri;
+    }
+
+    public void setRemoteOwnerSourceUri(String remoteOwnerSourceUri) {
+        this.remoteOwnerSourceUri = remoteOwnerSourceUri;
     }
 
     public MediaFile getRemoteOwnerAvatarMediaFile() {

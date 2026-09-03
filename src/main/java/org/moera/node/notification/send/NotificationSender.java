@@ -207,6 +207,7 @@ public class NotificationSender extends Task {
         packet.setId(UUID.randomUUID().toString());
         packet.setNodeName(nodeName());
         packet.setFullName(fullName());
+        packet.setNodeSourceUri(sourceUri());
         packet.setGender(gender());
         if (getAvatar() != null) {
             packet.setAvatar(AvatarImageUtil.build(getAvatar(), directServeOperations));

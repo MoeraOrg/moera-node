@@ -21,7 +21,7 @@ public class MentionPostingInstants extends InstantsCreator {
     @Inject
     private StoryRepository storyRepository;
 
-    public void added(String nodeName, String ownerName, String ownerFullName, String ownerGender,
+    public void added(String nodeName, String ownerName, String ownerFullName, String ownerSourceUri, String ownerGender,
                       AvatarImage ownerAvatar, String id, String heading, List<String> sheriffs,
                       List<SheriffMark> sheriffMarks) {
         if (isBlocked(StoryType.MENTION_POSTING, null, nodeName, id, ownerName)) {
@@ -36,6 +36,7 @@ public class MentionPostingInstants extends InstantsCreator {
         story.setRemoteNodeName(nodeName);
         story.setRemotePostingNodeName(ownerName);
         story.setRemotePostingFullName(ownerFullName);
+        story.setRemotePostingSourceUri(ownerSourceUri);
         if (ownerAvatar != null) {
             story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(ownerAvatar));
             story.setRemotePostingAvatarShape(ownerAvatar.getShape());
@@ -67,6 +68,7 @@ public class MentionPostingInstants extends InstantsCreator {
         summaryData.setPosting(StorySummaryEntryUtil.build(
             story.getRemotePostingNodeName(),
             story.getRemotePostingFullName(),
+            story.getRemotePostingSourceUri(),
             ownerGender,
             heading,
             sheriffs,

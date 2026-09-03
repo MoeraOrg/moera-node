@@ -30,6 +30,9 @@ public class OwnReaction {
     @Size(max = 96)
     private String remoteFullName;
 
+    @Size(max = 1024)
+    private String remoteSourceUri;
+
     @ManyToOne
     private MediaFile remoteAvatarMediaFile;
 
@@ -83,6 +86,14 @@ public class OwnReaction {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
+    }
+
+    public String getRemoteSourceUri() {
+        return remoteSourceUri;
+    }
+
+    public void setRemoteSourceUri(String remoteSourceUri) {
+        this.remoteSourceUri = remoteSourceUri;
     }
 
     public MediaFile getRemoteAvatarMediaFile() {

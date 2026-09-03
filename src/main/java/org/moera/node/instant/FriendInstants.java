@@ -40,6 +40,7 @@ public class FriendInstants extends InstantsCreator {
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(friend.getRemoteNodeName());
         story.setRemoteFullName(friend.getContact().getRemoteFullName());
+        story.setRemoteSourceUri(friend.getContact().getRemoteSourceUri());
         story.setRemoteAvatarMediaFile(friend.getContact().getRemoteAvatarMediaFile());
         story.setRemoteAvatarShape(friend.getContact().getRemoteAvatarShape());
         story.setSummaryData(buildSummary(friend));

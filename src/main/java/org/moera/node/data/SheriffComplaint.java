@@ -29,6 +29,9 @@ public class SheriffComplaint {
     @Size(max = 96)
     private String ownerFullName;
 
+    @Size(max = 1024)
+    private String ownerSourceUri;
+
     @Size(max = 31)
     private String ownerGender;
 
@@ -78,6 +81,14 @@ public class SheriffComplaint {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerSourceUri() {
+        return ownerSourceUri;
+    }
+
+    public void setOwnerSourceUri(String ownerSourceUri) {
+        this.ownerSourceUri = ownerSourceUri;
     }
 
     public String getOwnerGender() {

@@ -10,7 +10,7 @@ public class PostingCommentDeletedNotificationUtil {
         UUID postingId,
         UUID commentId,
         String commentOwnerName,
-        String commentOwnerFullName,
+        String commentOwnerFullName, String commentOwnerSourceUri,
         String commentOwnerGender,
         AvatarImage commentOwnerAvatar
     ) {
@@ -19,6 +19,7 @@ public class PostingCommentDeletedNotificationUtil {
         notification.setCommentId(commentId.toString());
         notification.setCommentOwnerName(commentOwnerName);
         notification.setCommentOwnerFullName(commentOwnerFullName);
+        notification.setCommentOwnerSourceUri(commentOwnerSourceUri);
         notification.setCommentOwnerGender(commentOwnerGender);
         notification.setCommentOwnerAvatar(commentOwnerAvatar);
         return notification;

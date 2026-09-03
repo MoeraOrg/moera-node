@@ -20,12 +20,13 @@ public class AskReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void askedToSubscribe(AskedToSubscribeLiberin liberin) {
         askInstants.askedToSubscribe(liberin.getRemoteNodeName(), liberin.getRemoteFullName(),
+            liberin.getRemoteSourceUri(),
                 liberin.getRemoteGender(), liberin.getRemoteAvatar(), liberin.getMessage());
     }
 
     @LiberinMapping
     public void askedToFriend(AskedToFriendLiberin liberin) {
-        askInstants.askedToFriend(liberin.getRemoteNodeName(), liberin.getRemoteFullName(),
+        askInstants.askedToFriend(liberin.getRemoteNodeName(), liberin.getRemoteFullName(), liberin.getRemoteSourceUri(),
                 liberin.getRemoteGender(), liberin.getRemoteAvatar(), liberin.getFriendGroupId(),
                 liberin.getFriendGroupTitle(), liberin.getMessage());
     }

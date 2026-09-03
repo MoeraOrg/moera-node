@@ -12,7 +12,7 @@ public class PostingCommentAddedNotificationUtil {
     
     public static PostingCommentAddedNotification build(
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingOwnerGender,
         AvatarImage postingOwnerAvatar,
         UUID postingId,
@@ -21,7 +21,7 @@ public class PostingCommentAddedNotificationUtil {
         List<SheriffMark> postingSheriffMarks,
         UUID commentId,
         String commentOwnerName,
-        String commentOwnerFullName,
+        String commentOwnerFullName, String commentOwnerSourceUri,
         String commentOwnerGender,
         AvatarImage commentOwnerAvatar,
         String commentHeading,
@@ -34,10 +34,12 @@ public class PostingCommentAddedNotificationUtil {
         notification.setCommentId(commentId.toString());
         notification.setCommentOwnerName(commentOwnerName);
         notification.setCommentOwnerFullName(commentOwnerFullName);
+        notification.setCommentOwnerSourceUri(commentOwnerSourceUri);
         notification.setCommentOwnerGender(commentOwnerGender);
         notification.setCommentOwnerAvatar(commentOwnerAvatar);
         notification.setPostingOwnerName(postingOwnerName);
         notification.setPostingOwnerFullName(postingOwnerFullName);
+        notification.setPostingOwnerSourceUri(postingOwnerSourceUri);
         notification.setPostingOwnerGender(postingOwnerGender);
         notification.setPostingOwnerAvatar(postingOwnerAvatar);
         notification.setPostingHeading(postingHeading);

@@ -21,6 +21,7 @@ public class ContactInfoUtil {
         ContactInfo contactInfo = new ContactInfo();
         contactInfo.setNodeName(contact.getRemoteNodeName());
         contactInfo.setFullName(contact.getRemoteFullName());
+        contactInfo.setNodeSourceUri(contact.getRemoteSourceUri());
         contactInfo.setTitle(contact.getRemoteTitle());
         contactInfo.setGender(contact.getRemoteGender());
         if (contact.getRemoteAvatarMediaFile() != null) {

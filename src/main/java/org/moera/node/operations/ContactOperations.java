@@ -188,13 +188,14 @@ public class ContactOperations {
     }
 
     public Contact updateDetails(
-        String remoteNodeName, String remoteFullName, String remoteGender, String remoteTitle
+        String remoteNodeName, String remoteFullName, String remoteSourceUri, String remoteGender, String remoteTitle
     ) {
-        return updateDetails(remoteNodeName, remoteFullName, remoteGender, remoteTitle, null);
+        return updateDetails(remoteNodeName, remoteFullName, remoteSourceUri, remoteGender, remoteTitle, null);
     }
 
     public Contact updateDetails(
-        String remoteNodeName, String remoteFullName, String remoteGender, String remoteTitle, Runnable changed
+        String remoteNodeName, String remoteFullName, String remoteSourceUri, String remoteGender, String remoteTitle,
+        Runnable changed
     ) {
         return updateAtomically(
             universalContext.nodeId(),
@@ -202,10 +203,12 @@ public class ContactOperations {
             contact -> {
                 boolean detailsChanged =
                     !Objects.equals(contact.getRemoteFullName(), remoteFullName)
+                    || !Objects.equals(contact.getRemoteSourceUri(), remoteSourceUri)
                     || !Objects.equals(contact.getRemoteGender(), remoteGender)
                     || !Objects.equals(contact.getRemoteTitle(), remoteTitle);
                 if (detailsChanged) {
                     contact.setRemoteFullName(remoteFullName);
+                    contact.setRemoteSourceUri(remoteSourceUri);
                     contact.setRemoteGender(remoteGender);
                     contact.setRemoteTitle(remoteTitle);
                     if (changed != null) {

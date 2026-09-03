@@ -149,6 +149,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 comment.getId(),
                 comment.getOwnerName(),
                 comment.getOwnerFullName(),
+                comment.getOwnerSourceUri(),
                 comment.getOwnerGender(),
                 AvatarImageUtil.build(
                     comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), directServeOperations
@@ -194,6 +195,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 comment.getId(),
                 comment.getOwnerName(),
                 comment.getOwnerFullName(),
+                comment.getOwnerSourceUri(),
                 comment.getOwnerGender(),
                 AvatarImageUtil.build(
                     comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), directServeOperations
@@ -242,6 +244,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 PostingCommentAddedNotificationUtil.build(
                     posting.getOwnerName(),
                     posting.getOwnerFullName(),
+                    posting.getOwnerSourceUri(),
                     posting.getOwnerGender(),
                     postingInfo.getOwnerAvatar(),
                     posting.getId(),
@@ -251,6 +254,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                     comment.getId(),
                     comment.getOwnerName(),
                     comment.getOwnerFullName(),
+                    comment.getOwnerSourceUri(),
                     comment.getOwnerGender(),
                     commentInfo.getOwnerAvatar(),
                     commentInfo.getHeading(),
@@ -301,6 +305,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 ReplyCommentAddedNotificationUtil.build(
                     aposting.getOwnerName(),
                     aposting.getOwnerFullName(),
+                    aposting.getOwnerSourceUri(),
                     aposting.getOwnerGender(),
                     postingInfo.getOwnerAvatar(),
                     aposting.getId(),
@@ -311,6 +316,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                     postingInfo.getSheriffMarks(),
                     acomment.getOwnerName(),
                     acomment.getOwnerFullName(),
+                    acomment.getOwnerSourceUri(),
                     acomment.getOwnerGender(),
                     commentInfo.getOwnerAvatar(),
                     commentInfo.getHeading(),
@@ -333,6 +339,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 comment.getRepliedTo().getId(),
                 comment.getOwnerName(),
                 comment.getOwnerFullName(),
+                comment.getOwnerSourceUri(),
                 comment.getOwnerGender(),
                 AvatarImageUtil.build(
                     comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape(), directServeOperations
@@ -364,6 +371,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                     comment.getId(),
                     posting.getOwnerName(),
                     posting.getOwnerFullName(),
+                    posting.getOwnerSourceUri(),
                     posting.getOwnerGender(),
                     postingInfo.getOwnerAvatar(),
                     postingInfo.getHeading(),
@@ -388,6 +396,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         // signed revision
         String ownerName = comment.getOwnerName();
         String ownerFullName = comment.getOwnerFullName();
+        String ownerSourceUri = comment.getOwnerSourceUri();
         Set<String> currentMentions = current != null
             ? filterMentions(MentionsExtractor.extract(new Body(current.getBody())), ownerName, currentView)
             : Collections.emptySet();
@@ -421,6 +430,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                         MentionCommentAddedNotificationUtil.build(
                             posting.getOwnerName(),
                             posting.getOwnerFullName(),
+                            posting.getOwnerSourceUri(),
                             posting.getOwnerGender(),
                             postingInfo.getOwnerAvatar(),
                             posting.getId(),
@@ -430,6 +440,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                             postingInfo.getSheriffMarks(),
                             ownerName,
                             ownerFullName,
+                            ownerSourceUri,
                             comment.getOwnerGender(),
                             commentInfo.getOwnerAvatar(),
                             commentInfo.getHeading(),

@@ -92,6 +92,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                             posting.getId(),
                             deletedReaction.getOwnerName(),
                             deletedReaction.getOwnerFullName(),
+                            deletedReaction.getOwnerSourceUri(),
                             deletedReaction.getOwnerGender(),
                             ownerAvatar,
                             deletedReaction.isNegative()
@@ -136,6 +137,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                         posting.getId(),
                         deletedReaction.getOwnerName(),
                         deletedReaction.getOwnerFullName(),
+                        deletedReaction.getOwnerSourceUri(),
                         deletedReaction.getOwnerGender(),
                         ownerAvatar,
                         deletedReaction.isNegative()
@@ -164,6 +166,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                         PostingReactionAddedNotificationUtil.build(
                             posting.getOwnerName(),
                             posting.getOwnerFullName(),
+                            posting.getOwnerSourceUri(),
                             posting.getOwnerGender(),
                             postingOwnerAvatar,
                             null,
@@ -174,6 +177,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                             posting.getCurrentRevision().getHeading(),
                             addedReaction.getOwnerName(),
                             addedReaction.getOwnerFullName(),
+                            addedReaction.getOwnerSourceUri(),
                             addedReaction.getOwnerGender(),
                             ownerAvatar,
                             addedReaction.isNegative(),
@@ -193,6 +197,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                             posting,
                             addedReaction.getOwnerName(),
                             addedReaction.getOwnerFullName(),
+                            addedReaction.getOwnerSourceUri(),
                             addedReaction.getOwnerGender(),
                             ownerAvatar,
                             addedReaction.isNegative(),
@@ -224,6 +229,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                     PostingReactionAddedNotificationUtil.build(
                         parentPosting.getOwnerName(),
                         parentPosting.getOwnerFullName(),
+                        parentPosting.getOwnerSourceUri(),
                         parentPosting.getOwnerGender(),
                         parentPostingAvatar,
                         parentPosting.getId(),
@@ -234,6 +240,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                         posting.getCurrentRevision().getHeading(),
                         addedReaction.getOwnerName(),
                         addedReaction.getOwnerFullName(),
+                        addedReaction.getOwnerSourceUri(),
                         addedReaction.getOwnerGender(),
                         ownerAvatar,
                         addedReaction.isNegative(),

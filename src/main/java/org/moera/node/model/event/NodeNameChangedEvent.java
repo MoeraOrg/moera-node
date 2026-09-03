@@ -15,6 +15,7 @@ public class NodeNameChangedEvent extends Event {
 
     private String name;
     private String fullName;
+    private String nodeSourceUri;
     private String gender;
     private String title;
     private AvatarImage avatar;
@@ -27,6 +28,7 @@ public class NodeNameChangedEvent extends Event {
         this();
         this.name = name;
         fullName = options.getString("profile.full-name");
+        nodeSourceUri = options.getString("profile.source-uri");
         gender = options.getString("profile.gender");
         title = options.getString("profile.title");
         if (avatar != null) {
@@ -48,6 +50,14 @@ public class NodeNameChangedEvent extends Event {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public String getNodeSourceUri() {
+        return nodeSourceUri;
+    }
+
+    public void setNodeSourceUri(String nodeSourceUri) {
+        this.nodeSourceUri = nodeSourceUri;
     }
 
     public String getGender() {
@@ -79,6 +89,7 @@ public class NodeNameChangedEvent extends Event {
         super.logParameters(parameters);
         parameters.add(Pair.of("name", LogUtil.format(name)));
         parameters.add(Pair.of("fullName", LogUtil.format(fullName)));
+        parameters.add(Pair.of("nodeSourceUri", LogUtil.format(nodeSourceUri)));
         parameters.add(Pair.of("gender", LogUtil.format(gender)));
         parameters.add(Pair.of("title", LogUtil.format(title)));
         parameters.add(Pair.of("avatar", avatar != null ? AvatarImageUtil.toLogString(avatar) : "null"));

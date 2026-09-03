@@ -18,6 +18,7 @@ public class RepliedToUtil {
             
             repliedTo.setName(comment.getRepliedToName());
             repliedTo.setFullName(comment.getRepliedToFullName());
+            repliedTo.setSourceUri(comment.getRepliedToSourceUri());
             repliedTo.setGender(comment.getRepliedToGender());
             
             if (comment.getRepliedToAvatarMediaFile() != null) {

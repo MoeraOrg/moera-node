@@ -10,12 +10,14 @@ public class RemoteCommentReactionAddedLiberin extends Liberin {
     private String nodeName;
     private String postingOwnerName;
     private String postingOwnerFullName;
+    private String postingOwnerSourceUri;
     private String postingOwnerGender;
     private AvatarImage postingOwnerAvatar;
     private String postingId;
     private String commentId;
     private String reactionNodeName;
     private String reactionFullName;
+    private String reactionSourceUri;
     private String reactionGender;
     private AvatarImage reactionAvatar;
     private String commentHeading;
@@ -23,19 +25,23 @@ public class RemoteCommentReactionAddedLiberin extends Liberin {
     private int reactionEmoji;
 
     public RemoteCommentReactionAddedLiberin(String nodeName, String postingOwnerName, String postingOwnerFullName,
+        String postingOwnerSourceUri,
                                              String postingOwnerGender, AvatarImage postingOwnerAvatar,
                                              String postingId, String commentId, String reactionNodeName,
-                                             String reactionFullName, String reactionGender, AvatarImage reactionAvatar,
+                                             String reactionFullName, String reactionSourceUri, String reactionGender,
+                                                 AvatarImage reactionAvatar,
                                              String commentHeading, boolean reactionNegative, int reactionEmoji) {
         this.nodeName = nodeName;
         this.postingOwnerName = postingOwnerName;
         this.postingOwnerFullName = postingOwnerFullName;
+        this.postingOwnerSourceUri = postingOwnerSourceUri;
         this.postingOwnerGender = postingOwnerGender;
         this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingId = postingId;
         this.commentId = commentId;
         this.reactionNodeName = reactionNodeName;
         this.reactionFullName = reactionFullName;
+        this.reactionSourceUri = reactionSourceUri;
         this.reactionGender = reactionGender;
         this.reactionAvatar = reactionAvatar;
         this.commentHeading = commentHeading;
@@ -65,6 +71,14 @@ public class RemoteCommentReactionAddedLiberin extends Liberin {
 
     public void setPostingOwnerFullName(String postingOwnerFullName) {
         this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public String getPostingOwnerSourceUri() {
+        return postingOwnerSourceUri;
+    }
+
+    public void setPostingOwnerSourceUri(String postingOwnerSourceUri) {
+        this.postingOwnerSourceUri = postingOwnerSourceUri;
     }
 
     public String getPostingOwnerGender() {
@@ -115,6 +129,14 @@ public class RemoteCommentReactionAddedLiberin extends Liberin {
         this.reactionFullName = reactionFullName;
     }
 
+    public String getReactionSourceUri() {
+        return reactionSourceUri;
+    }
+
+    public void setReactionSourceUri(String reactionSourceUri) {
+        this.reactionSourceUri = reactionSourceUri;
+    }
+
     public String getReactionGender() {
         return reactionGender;
     }
@@ -161,12 +183,14 @@ public class RemoteCommentReactionAddedLiberin extends Liberin {
         model.put("nodeName", nodeName);
         model.put("postingOwnerName", postingOwnerName);
         model.put("postingOwnerFullName", postingOwnerFullName);
+        model.put("postingOwnerSourceUri", postingOwnerSourceUri);
         model.put("postingOwnerGender", postingOwnerGender);
         model.put("postingOwnerAvatar", postingOwnerAvatar);
         model.put("postingId", postingId);
         model.put("commentId", commentId);
         model.put("reactionNodeName", reactionNodeName);
         model.put("reactionFullName", reactionFullName);
+        model.put("reactionSourceUri", reactionSourceUri);
         model.put("reactionGender", reactionGender);
         model.put("reactionAvatar", reactionAvatar);
         model.put("commentHeading", commentHeading);

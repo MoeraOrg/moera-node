@@ -27,6 +27,7 @@ public class PostingTextUtil {
     public static PostingText build(
         String ownerName,
         String ownerFullName,
+        String ownerSourceUri,
         String ownerGender,
         PostingSourceText sourceText,
         TextConverter textConverter
@@ -36,6 +37,9 @@ public class PostingTextUtil {
         postingText.setOwnerName(ownerName);
         postingText.setOwnerFullName(
             sourceText.getOwnerFullName() != null ? sourceText.getOwnerFullName() : ownerFullName
+        );
+        postingText.setOwnerSourceUri(
+            sourceText.getOwnerSourceUri() != null ? sourceText.getOwnerSourceUri() : ownerSourceUri
         );
         postingText.setOwnerGender(ownerGender);
         postingText.setOwnerAvatar(sourceText.getOwnerAvatar());
@@ -107,6 +111,9 @@ public class PostingTextUtil {
         }
         if (postingText.getOwnerFullName() != null) {
             entry.setOwnerFullName(postingText.getOwnerFullName());
+        }
+        if (postingText.getOwnerSourceUri() != null) {
+            entry.setOwnerSourceUri(postingText.getOwnerSourceUri());
         }
         if (postingText.getOwnerGender() != null) {
             entry.setOwnerGender(postingText.getOwnerGender());
@@ -229,6 +236,10 @@ public class PostingTextUtil {
             && (
                 postingText.getOwnerFullName() == null
                 || postingText.getOwnerFullName().equals(entry.getOwnerFullName())
+            )
+            && (
+                postingText.getOwnerSourceUri() == null
+                || postingText.getOwnerSourceUri().equals(entry.getOwnerSourceUri())
             )
             && (postingText.getOwnerGender() == null || postingText.getOwnerGender().equals(entry.getOwnerGender()))
             && (

@@ -20,9 +20,11 @@ public class RemoteCommentMediaReactionReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void added(RemoteCommentMediaReactionAddedLiberin liberin) {
         commentMediaReactionInstants.added(liberin.getNodeName(), liberin.getParentPostingNodeName(),
-                liberin.getParentPostingFullName(), liberin.getParentPostingGender(), liberin.getParentPostingAvatar(),
+                liberin.getParentPostingFullName(), liberin.getParentPostingSourceUri(),
+                    liberin.getParentPostingGender(), liberin.getParentPostingAvatar(),
                 liberin.getMediaPostingId(), liberin.getParentPostingId(), liberin.getParentCommentId(),
                 liberin.getParentMediaId(), liberin.getReactionNodeName(), liberin.getReactionFullName(),
+                    liberin.getReactionSourceUri(),
                 liberin.getReactionGender(), liberin.getReactionAvatar(), liberin.getCommentHeading(),
                 liberin.isReactionNegative(), liberin.getReactionEmoji());
     }

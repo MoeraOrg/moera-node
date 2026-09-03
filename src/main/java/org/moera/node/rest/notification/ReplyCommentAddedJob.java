@@ -18,7 +18,7 @@ public class ReplyCommentAddedJob extends Job<ReplyCommentAddedJob.Parameters, O
         String senderNodeName,
         String postingId,
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingOwnerGender,
         AvatarImage postingOwnerAvatar,
         String postingHeading,
@@ -28,7 +28,7 @@ public class ReplyCommentAddedJob extends Job<ReplyCommentAddedJob.Parameters, O
         String repliedToId,
         String repliedToHeading,
         String commentOwnerName,
-        String commentOwnerFullName,
+        String commentOwnerFullName, String commentOwnerSourceUri,
         String commentOwnerGender,
         AvatarImage commentOwnerAvatar,
         List<SheriffMark> commentSheriffMarks
@@ -68,10 +68,12 @@ public class ReplyCommentAddedJob extends Job<ReplyCommentAddedJob.Parameters, O
                         new AvatarImage[] {parameters.postingOwnerAvatar, parameters.commentOwnerAvatar}));
         universalContext.send(
                 new ReplyCommentAddedLiberin(parameters.senderNodeName, parameters.postingOwnerName,
-                        parameters.postingOwnerFullName, parameters.postingOwnerGender, parameters.postingOwnerAvatar,
+                        parameters.postingOwnerFullName,
+                        parameters.postingOwnerSourceUri, parameters.postingOwnerGender, parameters.postingOwnerAvatar,
                         parameters.postingHeading, parameters.postingSheriffs, parameters.postingSheriffMarks,
                         parameters.postingId, parameters.repliedToHeading, parameters.repliedToId,
-                        parameters.commentOwnerName, parameters.commentOwnerFullName, parameters.commentOwnerGender,
+                        parameters.commentOwnerName, parameters.commentOwnerFullName, parameters.commentOwnerSourceUri,
+                            parameters.commentOwnerGender,
                         parameters.commentOwnerAvatar, parameters.commentSheriffMarks, parameters.commentId));
     }
 

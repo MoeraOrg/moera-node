@@ -11,15 +11,18 @@ public class SheriffComplaintGroupInfoUtil {
         info.setId(sheriffComplaintGroup.getId().toString());
         info.setRemoteNodeName(sheriffComplaintGroup.getRemoteNodeName());
         info.setRemoteNodeFullName(sheriffComplaintGroup.getRemoteNodeFullName());
+        info.setRemoteNodeSourceUri(sheriffComplaintGroup.getRemoteNodeSourceUri());
         info.setRemoteFeedName(sheriffComplaintGroup.getRemoteFeedName());
         info.setRemotePostingOwnerName(sheriffComplaintGroup.getRemotePostingOwnerName());
         info.setRemotePostingOwnerFullName(sheriffComplaintGroup.getRemotePostingOwnerFullName());
+        info.setRemotePostingOwnerSourceUri(sheriffComplaintGroup.getRemotePostingOwnerSourceUri());
         info.setRemotePostingOwnerGender(sheriffComplaintGroup.getRemotePostingOwnerGender());
         info.setRemotePostingHeading(sheriffComplaintGroup.getRemotePostingHeading());
         info.setRemotePostingId(sheriffComplaintGroup.getRemotePostingId());
         info.setRemotePostingRevisionId(sheriffComplaintGroup.getRemotePostingRevisionId());
         info.setRemoteCommentOwnerName(sheriffComplaintGroup.getRemoteCommentOwnerName());
         info.setRemoteCommentOwnerFullName(sheriffComplaintGroup.getRemoteCommentOwnerFullName());
+        info.setRemoteCommentOwnerSourceUri(sheriffComplaintGroup.getRemoteCommentOwnerSourceUri());
         info.setRemoteCommentOwnerGender(sheriffComplaintGroup.getRemoteCommentOwnerGender());
         info.setRemoteCommentHeading(sheriffComplaintGroup.getRemoteCommentHeading());
         info.setRemoteCommentId(sheriffComplaintGroup.getRemoteCommentId());

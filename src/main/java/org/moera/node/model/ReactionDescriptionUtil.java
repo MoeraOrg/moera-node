@@ -11,12 +11,14 @@ import org.moera.node.data.Reaction;
 public class ReactionDescriptionUtil {
 
     public static ReactionDescription build(
-        String ownerName, String ownerFullName, String ownerGender, Avatar ownerAvatar, ReactionAttributes attributes
+        String ownerName, String ownerFullName, String ownerSourceUri, String ownerGender, Avatar ownerAvatar,
+        ReactionAttributes attributes
     ) {
         ReactionDescription description = new ReactionDescription();
         
         description.setOwnerName(ownerName);
         description.setOwnerFullName(ownerFullName);
+        description.setOwnerSourceUri(ownerSourceUri);
         description.setOwnerGender(ownerGender);
         description.setOwnerAvatar(ownerAvatar != null ? AvatarDescriptionUtil.build(ownerAvatar) : null);
         description.setNegative(attributes.isNegative());
@@ -35,6 +37,7 @@ public class ReactionDescriptionUtil {
     public static void toReaction(ReactionDescription description, Reaction reaction) {
         reaction.setOwnerName(description.getOwnerName());
         reaction.setOwnerFullName(description.getOwnerFullName());
+        reaction.setOwnerSourceUri(description.getOwnerSourceUri());
         reaction.setOwnerGender(description.getOwnerGender());
         if (description.getOwnerAvatar() != null) {
             MediaFile ownerAvatarMediaFile = AvatarDescriptionUtil.getMediaFile(description.getOwnerAvatar());

@@ -37,6 +37,7 @@ public class DraftInfoUtil {
         draftInfo.setEditedAt(Util.toEpochSecond(draft.getEditedAt()));
         draftInfo.setDeadline(Util.toEpochSecond(draft.getDeadline()));
         draftInfo.setOwnerFullName(draft.getOwnerFullName());
+        draftInfo.setOwnerSourceUri(draft.getOwnerSourceUri());
 
         if (draft.getOwnerAvatarMediaFile() != null) {
             draftInfo.setOwnerAvatar(

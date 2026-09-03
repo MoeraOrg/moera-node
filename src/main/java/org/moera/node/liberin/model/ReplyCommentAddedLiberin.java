@@ -12,6 +12,7 @@ public class ReplyCommentAddedLiberin extends Liberin {
     private String nodeName;
     private String postingOwnerName;
     private String postingOwnerFullName;
+    private String postingOwnerSourceUri;
     private String postingOwnerGender;
     private AvatarImage postingOwnerAvatar;
     private String postingHeading;
@@ -22,21 +23,25 @@ public class ReplyCommentAddedLiberin extends Liberin {
     private String repliedToId;
     private String commentOwnerName;
     private String commentOwnerFullName;
+    private String commentOwnerSourceUri;
     private String commentOwnerGender;
     private AvatarImage commentOwnerAvatar;
     private List<SheriffMark> commentSheriffMarks;
     private String commentId;
 
     public ReplyCommentAddedLiberin(String nodeName, String postingOwnerName, String postingOwnerFullName,
+        String postingOwnerSourceUri,
                                     String postingOwnerGender, AvatarImage postingOwnerAvatar, String postingHeading,
                                     List<String> postingSheriffs, List<SheriffMark> postingSheriffMarks,
                                     String postingId, String repliedToHeading, String repliedToId,
-                                    String commentOwnerName, String commentOwnerFullName, String commentOwnerGender,
+                                    String commentOwnerName, String commentOwnerFullName, String commentOwnerSourceUri,
+                                        String commentOwnerGender,
                                     AvatarImage commentOwnerAvatar, List<SheriffMark> commentSheriffMarks,
                                     String commentId) {
         this.nodeName = nodeName;
         this.postingOwnerName = postingOwnerName;
         this.postingOwnerFullName = postingOwnerFullName;
+        this.postingOwnerSourceUri = postingOwnerSourceUri;
         this.postingOwnerGender = postingOwnerGender;
         this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingHeading = postingHeading;
@@ -47,6 +52,7 @@ public class ReplyCommentAddedLiberin extends Liberin {
         this.repliedToId = repliedToId;
         this.commentOwnerName = commentOwnerName;
         this.commentOwnerFullName = commentOwnerFullName;
+        this.commentOwnerSourceUri = commentOwnerSourceUri;
         this.commentOwnerGender = commentOwnerGender;
         this.commentOwnerAvatar = commentOwnerAvatar;
         this.commentSheriffMarks = commentSheriffMarks;
@@ -75,6 +81,14 @@ public class ReplyCommentAddedLiberin extends Liberin {
 
     public void setPostingOwnerFullName(String postingOwnerFullName) {
         this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public String getPostingOwnerSourceUri() {
+        return postingOwnerSourceUri;
+    }
+
+    public void setPostingOwnerSourceUri(String postingOwnerSourceUri) {
+        this.postingOwnerSourceUri = postingOwnerSourceUri;
     }
 
     public String getPostingOwnerGender() {
@@ -157,6 +171,14 @@ public class ReplyCommentAddedLiberin extends Liberin {
         this.commentOwnerFullName = commentOwnerFullName;
     }
 
+    public String getCommentOwnerSourceUri() {
+        return commentOwnerSourceUri;
+    }
+
+    public void setCommentOwnerSourceUri(String commentOwnerSourceUri) {
+        this.commentOwnerSourceUri = commentOwnerSourceUri;
+    }
+
     public String getCommentOwnerGender() {
         return commentOwnerGender;
     }
@@ -195,6 +217,7 @@ public class ReplyCommentAddedLiberin extends Liberin {
         model.put("nodeName", nodeName);
         model.put("postingOwnerName", postingOwnerName);
         model.put("postingOwnerFullName", postingOwnerFullName);
+        model.put("postingOwnerSourceUri", postingOwnerSourceUri);
         model.put("postingOwnerGender", postingOwnerGender);
         model.put("postingOwnerAvatar", postingOwnerAvatar);
         model.put("postingHeading", postingHeading);
@@ -205,6 +228,7 @@ public class ReplyCommentAddedLiberin extends Liberin {
         model.put("repliedToId", repliedToId);
         model.put("commentOwnerName", commentOwnerName);
         model.put("commentOwnerFullName", commentOwnerFullName);
+        model.put("commentOwnerSourceUri", commentOwnerSourceUri);
         model.put("commentOwnerGender", commentOwnerGender);
         model.put("commentOwnerAvatar", commentOwnerAvatar);
         model.put("commentSheriffMarks", commentSheriffMarks);

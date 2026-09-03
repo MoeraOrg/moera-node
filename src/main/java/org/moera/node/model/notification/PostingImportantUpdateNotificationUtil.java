@@ -9,7 +9,7 @@ public class PostingImportantUpdateNotificationUtil {
     
     public static PostingImportantUpdateNotification build(
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingOwnerGender,
         AvatarImage postingOwnerAvatar,
         UUID postingId,
@@ -19,6 +19,7 @@ public class PostingImportantUpdateNotificationUtil {
         PostingImportantUpdateNotification notification = new PostingImportantUpdateNotification();
         notification.setPostingOwnerName(postingOwnerName);
         notification.setPostingOwnerFullName(postingOwnerFullName);
+        notification.setPostingOwnerSourceUri(postingOwnerSourceUri);
         notification.setPostingOwnerGender(postingOwnerGender);
         notification.setPostingOwnerAvatar(postingOwnerAvatar);
         notification.setPostingId(postingId.toString());

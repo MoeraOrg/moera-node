@@ -113,6 +113,7 @@ public class NotificationController {
 
         notification.setSenderNodeName(packet.getNodeName());
         notification.setSenderFullName(packet.getFullName());
+        notification.setSenderSourceUri(packet.getNodeSourceUri());
         notification.setSenderGender(packet.getGender());
         notification.setSenderAvatar(packet.getAvatar());
         try {

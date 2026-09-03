@@ -29,6 +29,7 @@ public class MentionPostingProcessor {
                 notification.getPostingId(),
                 notification.getOwnerName(),
                 notification.getOwnerFullName(),
+                notification.getOwnerSourceUri(),
                 notification.getOwnerGender(),
                 notification.getOwnerAvatar(),
                 notification.getHeading(),

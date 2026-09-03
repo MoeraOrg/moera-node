@@ -32,10 +32,12 @@ public class RemoteCommentInstants extends InstantsCreator {
     @Inject
     private StoryRepository storyRepository;
 
-    public void added(String nodeName, String postingOwnerName, String postingOwnerFullName, String postingOwnerGender,
+    public void added(String nodeName, String postingOwnerName, String postingOwnerFullName,
+        String postingOwnerSourceUri, String postingOwnerGender,
                       AvatarImage postingOwnerAvatar, String postingId, String postingHeading,
                       List<String> postingSheriffs, List<SheriffMark> postingSheriffMarks, String commentOwnerName,
-                      String commentOwnerFullName, String commentOwnerGender, AvatarImage commentOwnerAvatar,
+                      String commentOwnerFullName, String commentOwnerSourceUri, String commentOwnerGender,
+                          AvatarImage commentOwnerAvatar,
                       String commentId, String commentHeading, List<SheriffMark> commentSheriffMarks,
                       SubscriptionReason reason) {
         if (commentOwnerName.equals(nodeName())) {
@@ -64,6 +66,7 @@ public class RemoteCommentInstants extends InstantsCreator {
             story.setRemoteNodeName(nodeName);
             story.setRemotePostingNodeName(postingOwnerName);
             story.setRemotePostingFullName(postingOwnerFullName);
+            story.setRemotePostingSourceUri(postingOwnerSourceUri);
             if (postingOwnerAvatar != null) {
                 story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(postingOwnerAvatar));
                 story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
@@ -80,6 +83,7 @@ public class RemoteCommentInstants extends InstantsCreator {
         substory.setRemotePostingId(postingId);
         substory.setRemoteOwnerName(commentOwnerName);
         substory.setRemoteOwnerFullName(commentOwnerFullName);
+story.setRemoteOwnerSourceUri(commentOwnerSourceUri);
         if (commentOwnerAvatar != null) {
             substory.setRemoteOwnerAvatarMediaFile(AvatarImageUtil.getMediaFile(commentOwnerAvatar));
             substory.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
@@ -96,13 +100,15 @@ public class RemoteCommentInstants extends InstantsCreator {
     private static StorySummaryData buildPostingSummary(String gender, String heading, List<String> sheriffs,
                                                         List<SheriffMark> sheriffMarks) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(StorySummaryEntryUtil.build(null, null, gender, heading, sheriffs, sheriffMarks));
+        summaryData.setPosting(StorySummaryEntryUtil.build(null, null,
+            null, gender, heading, sheriffs, sheriffMarks));
         return summaryData;
     }
 
     private static StorySummaryData buildCommentSummary(String gender, String heading, List<SheriffMark> sheriffMarks) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setComment(StorySummaryEntryUtil.build(null, null, gender, heading, null, sheriffMarks));
+        summaryData.setComment(StorySummaryEntryUtil.build(null, null,
+            null, gender, heading, null, sheriffMarks));
         return summaryData;
     }
 
@@ -137,6 +143,7 @@ public class RemoteCommentInstants extends InstantsCreator {
         story.setSummaryData(buildAddedSummary(story, stories, reason));
         story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
         story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
+        story.setRemoteOwnerSourceUri(stories.get(0).getRemoteOwnerSourceUri());
         story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
         story.setRemoteOwnerAvatarShape(stories.get(0).getRemoteOwnerAvatarShape());
         story.setRemoteCommentId(stories.get(stories.size() - 1).getRemoteCommentId());
@@ -156,6 +163,7 @@ public class RemoteCommentInstants extends InstantsCreator {
         comments.add(StorySummaryEntryUtil.build(
             firstStory.getRemoteOwnerName(),
             firstStory.getRemoteOwnerFullName(),
+            firstStory.getRemoteOwnerSourceUri(),
             firstStory.getSummaryData().getComment().getOwnerGender(),
             firstStory.getSummaryData().getComment().getHeading(),
             firstStory.getSummaryData().getComment().getSheriffs(),
@@ -172,6 +180,7 @@ public class RemoteCommentInstants extends InstantsCreator {
                     comments.add(StorySummaryEntryUtil.build(
                         secondStory.getRemoteOwnerName(),
                         secondStory.getRemoteOwnerFullName(),
+                        secondStory.getRemoteOwnerSourceUri(),
                         secondStory.getSummaryData().getComment().getOwnerGender(),
                         secondStory.getSummaryData().getComment().getHeading(),
                         secondStory.getSummaryData().getComment().getSheriffs(),
@@ -187,6 +196,7 @@ public class RemoteCommentInstants extends InstantsCreator {
         summaryData.setPosting(StorySummaryEntryUtil.build(
             story.getRemotePostingNodeName(),
             story.getRemotePostingFullName(),
+            story.getRemotePostingSourceUri(),
             story.getSummaryData().getPosting().getOwnerGender(),
             story.getSummaryData().getPosting().getHeading(),
             story.getSummaryData().getPosting().getSheriffs(),

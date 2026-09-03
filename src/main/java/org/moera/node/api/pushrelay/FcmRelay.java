@@ -131,7 +131,7 @@ public class FcmRelay {
             "Called send(nodeId = {}, pushContent.type = {}, pushContent.feedName = {})",
             LogUtil.format(nodeId),
             LogUtil.format(pushContent.getType().getValue()),
-            LogUtil.format(pushContent.getFeedStatus().getFeedName())
+            LogUtil.format(pushContent.getFeedStatus() != null ? pushContent.getFeedStatus().getFeedName() : null)
         );
         if (
             pushContent.getType() == PushContentType.FEED_UPDATED

@@ -30,6 +30,7 @@ public class PostingInstants extends InstantsCreator {
 
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
+        String postingOwnerSourceUri = postingInfo != null ? postingInfo.getOwnerSourceUri() : null;
         String postingOwnerGender = postingInfo != null ? postingInfo.getOwnerGender() : null;
         AvatarImage postingOwnerAvatar = postingInfo != null ? postingInfo.getOwnerAvatar() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
@@ -39,13 +40,14 @@ public class PostingInstants extends InstantsCreator {
         story.setRemoteNodeName(nodeName);
         story.setRemotePostingNodeName(postingOwnerName);
         story.setRemotePostingFullName(postingOwnerFullName);
+        story.setRemotePostingSourceUri(postingOwnerSourceUri);
         if (postingOwnerAvatar != null) {
             story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(postingOwnerAvatar));
             story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
         }
         story.setRemotePostingId(postingId);
         story.setSummaryData(buildSubscribingToCommentsFailedSummary(
-                postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading));
+                postingOwnerName, postingOwnerFullName, postingOwnerSourceUri, postingOwnerGender, postingHeading));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
@@ -53,17 +55,19 @@ public class PostingInstants extends InstantsCreator {
     }
 
     private static StorySummaryData buildSubscribingToCommentsFailedSummary(
-            String ownerName, String ownerFullName, String ownerGender, String postingHeading
+            String ownerName, String ownerFullName, String ownerSourceUri, String ownerGender, String postingHeading
     ) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(StorySummaryEntryUtil.build(ownerName, ownerFullName, ownerGender, postingHeading));
+        summaryData.setPosting(
+            StorySummaryEntryUtil.build(ownerName, ownerFullName, ownerSourceUri, ownerGender, postingHeading)
+        );
         return summaryData;
     }
 
     public void updated(
         String nodeName,
         String ownerName,
-        String ownerFullName,
+        String ownerFullName, String ownerSourceUri,
         String ownerGender,
         AvatarImage ownerAvatar,
         String id,
@@ -79,12 +83,14 @@ public class PostingInstants extends InstantsCreator {
         story.setRemoteNodeName(nodeName);
         story.setRemotePostingNodeName(ownerName);
         story.setRemotePostingFullName(ownerFullName);
+        story.setRemotePostingSourceUri(ownerSourceUri);
         if (ownerAvatar != null) {
             story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(ownerAvatar));
             story.setRemotePostingAvatarShape(ownerAvatar.getShape());
         }
         story.setRemotePostingId(id);
-        story.setSummaryData(buildPostingUpdatedSummary(ownerName, ownerFullName, ownerGender, heading, description));
+        story.setSummaryData(buildPostingUpdatedSummary(ownerName, ownerFullName, ownerSourceUri, ownerGender, heading,
+            description));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
@@ -92,10 +98,13 @@ public class PostingInstants extends InstantsCreator {
     }
 
     private static StorySummaryData buildPostingUpdatedSummary(
-        String ownerName, String ownerFullName, String ownerGender, String heading, String description
+        String ownerName, String ownerFullName, String ownerSourceUri, String ownerGender, String heading,
+        String description
     ) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(StorySummaryEntryUtil.build(ownerName, ownerFullName, ownerGender, heading));
+        summaryData.setPosting(
+            StorySummaryEntryUtil.build(ownerName, ownerFullName, ownerSourceUri, ownerGender, heading)
+        );
         summaryData.setDescription(description);
         return summaryData;
     }
@@ -103,6 +112,7 @@ public class PostingInstants extends InstantsCreator {
     public void remoteAddingFailed(WhoAmI nodeInfo) {
         String remoteNodeName = nodeInfo != null ? nodeInfo.getNodeName() : "";
         String remoteFullName = nodeInfo != null ? nodeInfo.getFullName() : null;
+        String remoteSourceUri = nodeInfo != null ? nodeInfo.getSourceUri() : null;
         String remoteGender = nodeInfo != null ? nodeInfo.getGender() : null;
         AvatarImage remoteAvatar = nodeInfo != null ? nodeInfo.getAvatar() : null;
 
@@ -114,26 +124,31 @@ public class PostingInstants extends InstantsCreator {
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
         story.setRemoteFullName(remoteFullName);
+        story.setRemoteSourceUri(remoteSourceUri);
         if (remoteAvatar != null) {
             story.setRemoteAvatarMediaFile(AvatarImageUtil.getMediaFile(remoteAvatar));
             story.setRemoteAvatarShape(remoteAvatar.getShape());
         }
-        story.setSummaryData(buildRemoteAddingFailedSummary(remoteNodeName, remoteFullName, remoteGender));
+        story.setSummaryData(buildRemoteAddingFailedSummary(
+            remoteNodeName, remoteFullName, remoteSourceUri, remoteGender
+        ));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
         storyAdded(story);
     }
 
-    private static StorySummaryData buildRemoteAddingFailedSummary(String nodeName, String fullName, String gender) {
+    private static StorySummaryData buildRemoteAddingFailedSummary(String nodeName, String fullName, String sourceUri,
+        String gender) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(StorySummaryNodeUtil.build(nodeName, fullName, gender));
+        summaryData.setNode(StorySummaryNodeUtil.build(nodeName, fullName, sourceUri, gender));
         return summaryData;
     }
 
     public void remoteUpdateFailed(WhoAmI nodeInfo, String postingId, PostingInfo postingInfo) {
         String remoteNodeName = nodeInfo != null ? nodeInfo.getNodeName() : "";
         String remoteFullName = nodeInfo != null ? nodeInfo.getFullName() : null;
+        String remoteSourceUri = nodeInfo != null ? nodeInfo.getSourceUri() : null;
         String remoteGender = nodeInfo != null ? nodeInfo.getGender() : null;
         AvatarImage remoteAvatar = nodeInfo != null ? nodeInfo.getAvatar() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
@@ -146,13 +161,14 @@ public class PostingInstants extends InstantsCreator {
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
         story.setRemoteFullName(remoteFullName);
+        story.setRemoteSourceUri(remoteSourceUri);
         if (remoteAvatar != null) {
             story.setRemoteAvatarMediaFile(AvatarImageUtil.getMediaFile(remoteAvatar));
             story.setRemoteAvatarShape(remoteAvatar.getShape());
         }
         story.setRemotePostingId(postingId);
         story.setSummaryData(buildRemoteUpdateFailedSummary(
-                remoteNodeName, remoteFullName, remoteGender, postingHeading));
+                remoteNodeName, remoteFullName, remoteSourceUri, remoteGender, postingHeading));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
@@ -160,11 +176,12 @@ public class PostingInstants extends InstantsCreator {
     }
 
     private static StorySummaryData buildRemoteUpdateFailedSummary(
-        String nodeName, String fullName, String gender, String postingHeading
+        String nodeName, String fullName, String sourceUri, String gender, String postingHeading
     ) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(StorySummaryNodeUtil.build(nodeName, fullName, gender));
-        summaryData.setPosting(StorySummaryEntryUtil.build(null, null, null, postingHeading));
+        summaryData.setNode(StorySummaryNodeUtil.build(nodeName, fullName, sourceUri, gender));
+        summaryData.setPosting(StorySummaryEntryUtil.build(null, null,
+            null, null, postingHeading));
         return summaryData;
     }
 

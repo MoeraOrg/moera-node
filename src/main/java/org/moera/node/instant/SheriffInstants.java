@@ -28,7 +28,8 @@ public class SheriffInstants extends InstantsCreator {
         String orderId
     ) {
         buildStory(
-            StoryType.SHERIFF_MARKED, nodeName(), remoteFeedName, null, null, null, null, null, null, null, null,
+            StoryType.SHERIFF_MARKED, nodeName(), remoteFeedName, null, null, null, null, null, null, null, null, null,
+                null,
             sheriffName, sheriffAvatar, orderId, null
         );
     }
@@ -43,7 +44,8 @@ public class SheriffInstants extends InstantsCreator {
         String orderId
     ) {
         buildStory(
-            StoryType.SHERIFF_MARKED, remoteNodeName, remoteFeedName, null, null, postingHeading, postingId, null, null,
+            StoryType.SHERIFF_MARKED, remoteNodeName, remoteFeedName, null, null, null, postingHeading, postingId,
+                null, null, null,
             null, null, sheriffName, sheriffAvatar, orderId, null
         );
     }
@@ -52,7 +54,7 @@ public class SheriffInstants extends InstantsCreator {
         String remoteNodeName,
         String remoteFeedName,
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingHeading,
         String postingId,
         String commentHeading,
@@ -63,7 +65,9 @@ public class SheriffInstants extends InstantsCreator {
     ) {
         buildStory(
             StoryType.SHERIFF_MARKED, remoteNodeName, remoteFeedName, postingOwnerName, postingOwnerFullName,
-            postingHeading, postingId, null, null, commentHeading, commentId, sheriffName, sheriffAvatar, orderId, null
+                postingOwnerSourceUri,
+            postingHeading, postingId, null, null, null, commentHeading, commentId, sheriffName, sheriffAvatar,
+                orderId, null
         );
     }
 
@@ -75,6 +79,7 @@ public class SheriffInstants extends InstantsCreator {
     ) {
         buildStory(
             StoryType.SHERIFF_UNMARKED, nodeName(), remoteFeedName, null, null, null, null, null, null, null, null,
+                null, null,
             sheriffName, sheriffAvatar, orderId, null
         );
     }
@@ -89,8 +94,8 @@ public class SheriffInstants extends InstantsCreator {
         String orderId
     ) {
         buildStory(
-            StoryType.SHERIFF_UNMARKED, remoteNodeName, remoteFeedName, null, null, postingHeading, postingId, null,
-            null, null, null, sheriffName, sheriffAvatar, orderId, null
+            StoryType.SHERIFF_UNMARKED, remoteNodeName, remoteFeedName, null, null, null, postingHeading, postingId, null,
+            null, null, null, null, sheriffName, sheriffAvatar, orderId, null
         );
     }
 
@@ -98,7 +103,7 @@ public class SheriffInstants extends InstantsCreator {
         String remoteNodeName,
         String remoteFeedName,
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingHeading,
         String postingId,
         String commentHeading,
@@ -109,13 +114,16 @@ public class SheriffInstants extends InstantsCreator {
     ) {
         buildStory(
             StoryType.SHERIFF_UNMARKED, remoteNodeName, remoteFeedName, postingOwnerName, postingOwnerFullName,
-            postingHeading, postingId, null, null, commentHeading, commentId, sheriffName, sheriffAvatar, orderId, null
+                postingOwnerSourceUri,
+            postingHeading, postingId, null, null, null, commentHeading, commentId, sheriffName, sheriffAvatar,
+                orderId, null
         );
     }
 
     public void complaintAdded(String sheriffName, AvatarImage sheriffAvatar, String complaintId) {
         buildStory(
-            StoryType.SHERIFF_COMPLAINT_ADDED, null, null, null, null, null, null, null, null, null, null, sheriffName,
+            StoryType.SHERIFF_COMPLAINT_ADDED, null, null, null, null, null, null, null, null, null, null, null, null,
+                sheriffName,
             sheriffAvatar, null, complaintId
         );
     }
@@ -124,11 +132,11 @@ public class SheriffInstants extends InstantsCreator {
         String remoteNodeName,
         String remoteFeedName,
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingHeading,
         String postingId,
         String commentOwnerName,
-        String commentOwnerFullName,
+        String commentOwnerFullName, String commentOwnerSourceUri,
         String commentHeading,
         String commentId,
         String sheriffName,
@@ -136,8 +144,10 @@ public class SheriffInstants extends InstantsCreator {
         String complaintId
     ) {
         buildStory(
-            StoryType.SHERIFF_COMPLAINT_DECIDED, remoteNodeName, remoteFeedName, postingOwnerName, postingOwnerFullName,
-            postingHeading, postingId, commentOwnerName, commentOwnerFullName, commentHeading, commentId, sheriffName,
+            StoryType.SHERIFF_COMPLAINT_DECIDED, remoteNodeName, remoteFeedName, postingOwnerName,
+                postingOwnerFullName, postingOwnerSourceUri,
+            postingHeading, postingId, commentOwnerName, commentOwnerFullName, commentOwnerSourceUri, commentHeading,
+                commentId, sheriffName,
             sheriffAvatar, null, complaintId
         );
     }
@@ -147,11 +157,11 @@ public class SheriffInstants extends InstantsCreator {
         String remoteNodeName,
         String remoteFeedName,
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingHeading,
         String postingId,
         String commentOwnerName,
-        String commentOwnerFullName,
+        String commentOwnerFullName, String commentOwnerSourceUri,
         String commentHeading,
         String commentId,
         String sheriffName,
@@ -173,7 +183,8 @@ public class SheriffInstants extends InstantsCreator {
         story.setRemoteCommentId(commentId);
         story.setSummaryData(
             buildSummary(
-                remoteFeedName, postingOwnerName, postingOwnerFullName, postingHeading, null, null, commentHeading,
+                remoteFeedName, postingOwnerName, postingOwnerFullName, postingOwnerSourceUri, postingHeading, null,
+                    null, null, commentHeading,
                 sheriffName, orderId, complaintId
             )
         );
@@ -188,10 +199,10 @@ public class SheriffInstants extends InstantsCreator {
     private static StorySummaryData buildSummary(
         String remoteFeedName,
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingHeading,
         String commentOwnerName,
-        String commentOwnerFullName,
+        String commentOwnerFullName, String commentOwnerSourceUri,
         String commentHeading,
         String sheriffName,
         String orderId,
@@ -200,12 +211,16 @@ public class SheriffInstants extends InstantsCreator {
         StorySummaryData summaryData = new StorySummaryData();
         if (postingHeading != null) {
             summaryData.setPosting(
-                StorySummaryEntryUtil.build(postingOwnerName, postingOwnerFullName, null, postingHeading)
+                StorySummaryEntryUtil.build(
+                    postingOwnerName, postingOwnerFullName, postingOwnerSourceUri, null, postingHeading
+                )
             );
         }
         if (commentHeading != null) {
             summaryData.setComment(
-                StorySummaryEntryUtil.build(commentOwnerName, commentOwnerFullName, null, commentHeading)
+                StorySummaryEntryUtil.build(
+                    commentOwnerName, commentOwnerFullName, commentOwnerSourceUri, null, commentHeading
+                )
             );
         }
         summaryData.setFeedName(remoteFeedName);

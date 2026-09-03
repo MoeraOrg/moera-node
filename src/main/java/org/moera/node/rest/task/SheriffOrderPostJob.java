@@ -232,6 +232,7 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
         SheriffOrder order = new SheriffOrder(state.sheriffOrderId, nodeId, parameters.remoteNodeName);
         order.setComplaintGroup(complaintGroup);
         order.setRemoteNodeFullName(state.whoAmI.getFullName());
+        order.setRemoteNodeSourceUri(state.whoAmI.getSourceUri());
         if (state.postingInfo != null) {
             order.setRemotePosting(state.postingInfo);
         }

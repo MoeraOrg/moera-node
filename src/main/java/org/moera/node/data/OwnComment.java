@@ -28,6 +28,9 @@ public class OwnComment {
     @Size(max = 96)
     private String remoteFullName;
 
+    @Size(max = 1024)
+    private String remoteSourceUri;
+
     @ManyToOne
     private MediaFile remoteAvatarMediaFile;
 
@@ -47,6 +50,9 @@ public class OwnComment {
 
     @Size(max = 96)
     private String remoteRepliedToFullName;
+
+    @Size(max = 1024)
+    private String remoteRepliedToSourceUri;
 
     @ManyToOne
     private MediaFile remoteRepliedToAvatarMediaFile;
@@ -97,6 +103,14 @@ public class OwnComment {
         this.remoteFullName = remoteFullName;
     }
 
+    public String getRemoteSourceUri() {
+        return remoteSourceUri;
+    }
+
+    public void setRemoteSourceUri(String remoteSourceUri) {
+        this.remoteSourceUri = remoteSourceUri;
+    }
+
     public MediaFile getRemoteAvatarMediaFile() {
         return remoteAvatarMediaFile;
     }
@@ -143,6 +157,14 @@ public class OwnComment {
 
     public void setRemoteRepliedToFullName(String remoteRepliedToFullName) {
         this.remoteRepliedToFullName = remoteRepliedToFullName;
+    }
+
+    public String getRemoteRepliedToSourceUri() {
+        return remoteRepliedToSourceUri;
+    }
+
+    public void setRemoteRepliedToSourceUri(String remoteRepliedToSourceUri) {
+        this.remoteRepliedToSourceUri = remoteRepliedToSourceUri;
     }
 
     public MediaFile getRemoteRepliedToAvatarMediaFile() {

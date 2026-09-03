@@ -8,11 +8,11 @@ public class SheriffComplaintDecidedNotificationUtil {
         String remoteNodeName,
         String remoteFeedName,
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingHeading,
         String postingId,
         String commentOwnerName,
-        String commentOwnerFullName,
+        String commentOwnerFullName, String commentOwnerSourceUri,
         String commentHeading,
         String commentId,
         String complaintGroupId
@@ -23,10 +23,12 @@ public class SheriffComplaintDecidedNotificationUtil {
         notification.setRemoteFeedName(remoteFeedName);
         notification.setPostingOwnerName(postingOwnerName);
         notification.setPostingOwnerFullName(postingOwnerFullName);
+        notification.setPostingOwnerSourceUri(postingOwnerSourceUri);
         notification.setPostingHeading(postingHeading);
         notification.setPostingId(postingId);
         notification.setCommentOwnerName(commentOwnerName);
         notification.setCommentOwnerFullName(commentOwnerFullName);
+        notification.setCommentOwnerSourceUri(commentOwnerSourceUri);
         notification.setCommentHeading(commentHeading);
         notification.setCommentId(commentId);
         notification.setComplaintGroupId(complaintGroupId);

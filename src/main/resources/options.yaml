@@ -69,6 +69,10 @@
   type: string
   internal: true
 
+- name: profile.source-uri
+  type: string
+  internal: true
+
 - name: profile.gender
   type: string
   internal: true

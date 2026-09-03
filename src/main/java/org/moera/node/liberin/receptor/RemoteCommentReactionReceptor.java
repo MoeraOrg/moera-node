@@ -20,9 +20,11 @@ public class RemoteCommentReactionReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void added(RemoteCommentReactionAddedLiberin liberin) {
         commentReactionInstants.added(liberin.getNodeName(), liberin.getPostingOwnerName(),
-                liberin.getPostingOwnerFullName(), liberin.getPostingOwnerGender(), liberin.getPostingOwnerAvatar(),
+                liberin.getPostingOwnerFullName(), liberin.getPostingOwnerSourceUri(), liberin.getPostingOwnerGender(),
+                    liberin.getPostingOwnerAvatar(),
                 liberin.getPostingId(), liberin.getCommentId(), liberin.getReactionNodeName(),
-                liberin.getReactionFullName(), liberin.getReactionGender(), liberin.getReactionAvatar(),
+                liberin.getReactionFullName(), liberin.getReactionSourceUri(), liberin.getReactionGender(),
+                    liberin.getReactionAvatar(),
                 liberin.getCommentHeading(), liberin.isReactionNegative(), liberin.getReactionEmoji());
     }
 

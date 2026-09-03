@@ -35,11 +35,13 @@ public class StoryEvent extends Event {
     private Boolean satisfied;
     private String summaryNodeName;
     private String summaryFullName;
+    private String summarySourceUri;
     private AvatarImage summaryAvatar;
     private String summary;
     private StorySummaryData summaryData;
     private String remoteNodeName;
     private String remoteFullName;
+    private String remoteSourceUri;
     private String remotePostingId;
     private String remoteCommentId;
     private Map<String, Principal> operations;
@@ -72,10 +74,12 @@ public class StoryEvent extends Event {
         }
         remoteNodeName = storyInfo.getRemoteNodeName();
         remoteFullName = storyInfo.getRemoteFullName();
+        remoteSourceUri = storyInfo.getRemoteSourceUri();
         remotePostingId = storyInfo.getRemotePostingId();
         remoteCommentId = storyInfo.getRemoteCommentId();
         summaryNodeName = storyInfo.getSummaryNodeName();
         summaryFullName = storyInfo.getSummaryFullName();
+        summarySourceUri = storyInfo.getSummarySourceUri();
         summaryAvatar = storyInfo.getSummaryAvatar();
         summaryData = storyInfo.getSummaryData();
         summary = storyInfo.getSummary();
@@ -188,6 +192,14 @@ public class StoryEvent extends Event {
         this.summaryFullName = summaryFullName;
     }
 
+    public String getSummarySourceUri() {
+        return summarySourceUri;
+    }
+
+    public void setSummarySourceUri(String summarySourceUri) {
+        this.summarySourceUri = summarySourceUri;
+    }
+
     public AvatarImage getSummaryAvatar() {
         return summaryAvatar;
     }
@@ -228,6 +240,14 @@ public class StoryEvent extends Event {
         this.remoteFullName = remoteFullName;
     }
 
+    public String getRemoteSourceUri() {
+        return remoteSourceUri;
+    }
+
+    public void setRemoteSourceUri(String remoteSourceUri) {
+        this.remoteSourceUri = remoteSourceUri;
+    }
+
     public String getRemotePostingId() {
         return remotePostingId;
     }
@@ -266,6 +286,7 @@ public class StoryEvent extends Event {
         parameters.add(Pair.of("satisfied", LogUtil.format(satisfied)));
         parameters.add(Pair.of("summary", LogUtil.format(summary)));
         parameters.add(Pair.of("remoteNodeName", LogUtil.format(remoteNodeName)));
+        parameters.add(Pair.of("remoteSourceUri", LogUtil.format(remoteSourceUri)));
         parameters.add(Pair.of("remotePostingId", LogUtil.format(remotePostingId)));
         parameters.add(Pair.of("remoteCommentId", LogUtil.format(remoteCommentId)));
     }

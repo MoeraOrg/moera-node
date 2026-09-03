@@ -116,6 +116,8 @@ public interface RequestContext extends AccessChecker {
 
     String fullName();
 
+    String sourceUri();
+
     String gender();
 
     UUID avatarId();

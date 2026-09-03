@@ -8,11 +8,13 @@ public class RemoteNodeFullNameChangedLiberin extends Liberin {
 
     private String nodeName;
     private String fullName;
+    private String nodeSourceUri;
     private String title;
 
-    public RemoteNodeFullNameChangedLiberin(String nodeName, String fullName, String title) {
+    public RemoteNodeFullNameChangedLiberin(String nodeName, String fullName, String nodeSourceUri, String title) {
         this.nodeName = nodeName;
         this.fullName = fullName;
+        this.nodeSourceUri = nodeSourceUri;
         this.title = title;
     }
 
@@ -32,6 +34,14 @@ public class RemoteNodeFullNameChangedLiberin extends Liberin {
         this.fullName = fullName;
     }
 
+    public String getNodeSourceUri() {
+        return nodeSourceUri;
+    }
+
+    public void setNodeSourceUri(String nodeSourceUri) {
+        this.nodeSourceUri = nodeSourceUri;
+    }
+
     public String getTitle() {
         return title;
     }
@@ -45,6 +55,7 @@ public class RemoteNodeFullNameChangedLiberin extends Liberin {
         super.toModel(model);
         model.put("nodeName", nodeName);
         model.put("fullName", fullName);
+        model.put("nodeSourceUri", nodeSourceUri);
         model.put("title", title);
     }
 

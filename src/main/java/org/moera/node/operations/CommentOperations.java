@@ -114,6 +114,7 @@ public class CommentOperations {
         comment.setNodeId(requestContext.nodeId());
         comment.setOwnerName(commentText.getOwnerName());
         comment.setOwnerFullName(commentText.getOwnerFullName());
+        comment.setOwnerSourceUri(commentText.getOwnerSourceUri());
         comment.setOwnerGender(commentText.getOwnerGender());
         if (commentText.getOwnerAvatar() != null) {
             MediaFile ownerAvatarMediaFile = AvatarDescriptionUtil.getMediaFile(commentText.getOwnerAvatar());
@@ -133,6 +134,7 @@ public class CommentOperations {
             comment.setRepliedToRevision(repliedTo.getCurrentRevision());
             comment.setRepliedToName(repliedTo.getOwnerName());
             comment.setRepliedToFullName(repliedTo.getOwnerFullName());
+            comment.setRepliedToSourceUri(repliedTo.getOwnerSourceUri());
             comment.setRepliedToGender(repliedTo.getOwnerGender());
             if (repliedTo.getOwnerAvatarMediaFile() != null) {
                 comment.setRepliedToAvatarMediaFile(repliedTo.getOwnerAvatarMediaFile());

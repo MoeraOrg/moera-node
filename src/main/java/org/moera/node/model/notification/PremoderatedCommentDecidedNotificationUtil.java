@@ -13,7 +13,7 @@ public class PremoderatedCommentDecidedNotificationUtil {
         UUID postingId,
         UUID commentId,
         String postingOwnerName,
-        String postingOwnerFullName,
+        String postingOwnerFullName, String postingOwnerSourceUri,
         String postingOwnerGender,
         AvatarImage postingOwnerAvatar,
         String postingHeading,
@@ -28,6 +28,7 @@ public class PremoderatedCommentDecidedNotificationUtil {
         notification.setCommentId(commentId.toString());
         notification.setPostingOwnerName(postingOwnerName);
         notification.setPostingOwnerFullName(postingOwnerFullName);
+        notification.setPostingOwnerSourceUri(postingOwnerSourceUri);
         notification.setPostingOwnerGender(postingOwnerGender);
         notification.setPostingOwnerAvatar(postingOwnerAvatar);
         notification.setPostingHeading(postingHeading);

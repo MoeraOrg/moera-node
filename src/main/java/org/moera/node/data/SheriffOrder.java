@@ -36,6 +36,9 @@ public class SheriffOrder {
     @Size(max = 96)
     private String remoteNodeFullName;
 
+    @Size(max = 1024)
+    private String remoteNodeSourceUri;
+
     @NotNull
     @Size(max = 63)
     private String remoteFeedName;
@@ -45,6 +48,9 @@ public class SheriffOrder {
 
     @Size(max = 96)
     private String remotePostingOwnerFullName;
+
+    @Size(max = 1024)
+    private String remotePostingOwnerSourceUri;
 
     @Size(max = 31)
     private String remotePostingOwnerGender;
@@ -63,6 +69,9 @@ public class SheriffOrder {
 
     @Size(max = 96)
     private String remoteCommentOwnerFullName;
+
+    @Size(max = 1024)
+    private String remoteCommentOwnerSourceUri;
 
     @Size(max = 31)
     private String remoteCommentOwnerGender;
@@ -150,6 +159,14 @@ public class SheriffOrder {
         this.remoteNodeFullName = remoteNodeFullName;
     }
 
+    public String getRemoteNodeSourceUri() {
+        return remoteNodeSourceUri;
+    }
+
+    public void setRemoteNodeSourceUri(String remoteNodeSourceUri) {
+        this.remoteNodeSourceUri = remoteNodeSourceUri;
+    }
+
     public String getRemoteFeedName() {
         return remoteFeedName;
     }
@@ -172,6 +189,14 @@ public class SheriffOrder {
 
     public void setRemotePostingOwnerFullName(String remotePostingOwnerFullName) {
         this.remotePostingOwnerFullName = remotePostingOwnerFullName;
+    }
+
+    public String getRemotePostingOwnerSourceUri() {
+        return remotePostingOwnerSourceUri;
+    }
+
+    public void setRemotePostingOwnerSourceUri(String remotePostingOwnerSourceUri) {
+        this.remotePostingOwnerSourceUri = remotePostingOwnerSourceUri;
     }
 
     public String getRemotePostingOwnerGender() {
@@ -209,6 +234,7 @@ public class SheriffOrder {
     public void setRemotePosting(PostingInfo info) {
         remotePostingOwnerName = info.getOwnerName();
         remotePostingOwnerFullName = info.getOwnerFullName();
+        remotePostingOwnerSourceUri = info.getOwnerSourceUri();
         remotePostingOwnerGender = info.getOwnerGender();
         remotePostingOwnerGender = info.getOwnerGender();
         remotePostingHeading = info.getHeading();
@@ -230,6 +256,14 @@ public class SheriffOrder {
 
     public void setRemoteCommentOwnerFullName(String remoteCommentOwnerFullName) {
         this.remoteCommentOwnerFullName = remoteCommentOwnerFullName;
+    }
+
+    public String getRemoteCommentOwnerSourceUri() {
+        return remoteCommentOwnerSourceUri;
+    }
+
+    public void setRemoteCommentOwnerSourceUri(String remoteCommentOwnerSourceUri) {
+        this.remoteCommentOwnerSourceUri = remoteCommentOwnerSourceUri;
     }
 
     public String getRemoteCommentOwnerGender() {
@@ -267,6 +301,7 @@ public class SheriffOrder {
     public void setRemoteComment(CommentInfo info) {
         remoteCommentOwnerName = info.getOwnerName();
         remoteCommentOwnerFullName = info.getOwnerFullName();
+        remoteCommentOwnerSourceUri = info.getOwnerSourceUri();
         remoteCommentOwnerGender = info.getOwnerGender();
         remoteCommentOwnerGender = info.getOwnerGender();
         remoteCommentHeading = info.getHeading();

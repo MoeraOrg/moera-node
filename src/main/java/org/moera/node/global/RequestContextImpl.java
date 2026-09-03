@@ -325,6 +325,11 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
+    public String sourceUri() {
+        return options != null ? options.getString("profile.source-uri") : null;
+    }
+
+    @Override
     public String gender() {
         return options != null ? options.getString("profile.gender") : null;
     }

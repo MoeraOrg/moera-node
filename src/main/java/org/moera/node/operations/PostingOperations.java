@@ -109,6 +109,7 @@ public class PostingOperations {
         if (ObjectUtils.isEmpty(ownerName)) {
             posting.setOwnerName(universalContext.nodeName());
             posting.setOwnerFullName(universalContext.fullName());
+            posting.setOwnerSourceUri(universalContext.sourceUri());
             posting.setOwnerGender(universalContext.gender());
             if (universalContext.getAvatar() != null) {
                 posting.setOwnerAvatarMediaFile(universalContext.getAvatar().getMediaFile());
