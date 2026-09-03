@@ -23,6 +23,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.ProviderApi;
+import org.moera.node.global.RateLimit;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.DomainAddedLiberin;
@@ -94,6 +95,8 @@ public class DomainsController {
 
     @ProviderApi
     @PostMapping
+    @RateLimit(limit = 15, period = 3600)
+    @RateLimit(limit = 5, period = 86400, perIp = true)
     @Transactional
     public ResponseEntity<DomainInfo> post(@RequestBody DomainAttributes domainAttributes) {
         log.info(
