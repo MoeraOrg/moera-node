@@ -2,8 +2,11 @@ package org.moera.node.api.pushrelay;
 
 import java.security.interfaces.ECPrivateKey;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.WeakHashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import jakarta.annotation.PostConstruct;
@@ -12,6 +15,7 @@ import jakarta.inject.Inject;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.jsonrpc.OkHttpJsonRpcFetcher;
 import org.moera.lib.node.Fingerprints;
+import org.moera.lib.node.types.FeedWithStatus;
 import org.moera.lib.node.types.PushContent;
 import org.moera.lib.node.types.PushContentType;
 import org.moera.lib.pushrelay.PushRelay;
@@ -35,6 +39,8 @@ public class FcmRelay {
     private PushRelay service;
     private final BlockingQueue<Pair<UUID, PushContent>> queue = new LinkedBlockingQueue<>();
 
+    private final Map<UUID, Map<String, FeedNumbers>> lastFeedNumbers = new WeakHashMap<>();
+
     @Inject
     private Config config;
 
@@ -53,73 +59,102 @@ public class FcmRelay {
             while (true) {
                 Pair<UUID, PushContent> packet = queue.take();
                 UUID nodeId = packet.getFirst();
-                String nodeName = domains.getDomainOptions(nodeId).nodeName();
                 PushContent content = packet.getSecond();
-                log.info(
-                    "Sending {} to the FCM relay to the clients of node {} ({})",
-                    LogUtil.format(content.getType().getValue()), LogUtil.format(nodeId), LogUtil.format(nodeName)
-                );
-                int retry = 0;
-                do {
-                    if (retry > 0) {
-                        log.info("Retries left: {}", retry);
-                    }
-                    long now = Instant.now().getEpochSecond();
-                    byte[] signature = getSignature(nodeId, now);
-
-                    try {
-                        switch (content.getType()) {
-                            case FEED_UPDATED ->
-                                service.feedStatus(
-                                    content.getFeedStatus().getFeedName(),
-                                    content.getFeedStatus().getNotViewed(),
-                                    content.getFeedStatus().getNotViewedMoment(),
-                                    nodeName,
-                                    now,
-                                    signature
-                                );
-                            case STORY_ADDED ->
-                                service.storyAdded(content.getStory(), nodeName, now, signature);
-                            case STORY_DELETED ->
-                                service.storyDeleted(content.getId(), nodeName, now, signature);
-                        }
-                    } catch (PushRelayApiException e) {
-                        log.error("RPC error {} returned from FCM relay call", e.getRpcCode());
-                        switch (e.getRpcCode()) {
-                            case PushRelayError.NODE_NAME_UNKNOWN -> {
-                                // Maybe a temporary error
-                                if (retry == 0) {
-                                    retry = 3;
-                                }
-                            }
-                            case PushRelayError.NO_CLIENTS ->
-                                domains.getDomainOptions(nodeId).set("push-relay.fcm.active", false);
-                        }
-                    } catch (Exception e) {
-                        log.error("Error sending to the FCM relay: {}", e.getMessage());
-                        log.debug("Error sending to the FCM relay", e);
-                        if (retry == 0) {
-                            retry = 20;
-                        }
-                    }
-
-                    retry--;
-                    if (retry > 0) {
-                        Thread.sleep(90000);
-                    } else if (retry == 0) {
-                        log.error("Permanent error from the FCM relay, giving up");
-                    }
-                } while (retry > 0);
+                if (!isDuplicate(nodeId, content)) {
+                    deliver(nodeId, content);
+                }
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
 
+    private void deliver(UUID nodeId, PushContent content) throws InterruptedException {
+        String nodeName = domains.getDomainOptions(nodeId).nodeName();
+        log.info(
+            "Sending {} to the FCM relay to the clients of node {} ({})",
+            LogUtil.format(content.getType().getValue()), LogUtil.format(nodeId), LogUtil.format(nodeName)
+        );
+
+        int retry = 0;
+        do {
+            if (retry > 0) {
+                log.info("Retries left: {}", retry);
+            }
+            long now = Instant.now().getEpochSecond();
+            byte[] signature = getSignature(nodeId, now);
+
+            try {
+                switch (content.getType()) {
+                    case FEED_UPDATED -> {
+                        service.feedStatus(
+                            content.getFeedStatus().getFeedName(),
+                            content.getFeedStatus().getNotViewed(),
+                            content.getFeedStatus().getNotViewedMoment(),
+                            nodeName,
+                            now,
+                            signature
+                        );
+                        saveFeedNumbers(nodeId, content.getFeedStatus());
+                    }
+                    case STORY_ADDED ->
+                        service.storyAdded(content.getStory(), nodeName, now, signature);
+                    case STORY_DELETED ->
+                        service.storyDeleted(content.getId(), nodeName, now, signature);
+                }
+                retry = 0;
+            } catch (PushRelayApiException e) {
+                log.error("RPC error {} returned from FCM relay call", e.getRpcCode());
+                switch (e.getRpcCode()) {
+                    case PushRelayError.NODE_NAME_UNKNOWN -> {
+                        // Maybe a temporary error
+                        if (retry == 0) {
+                            retry = 3;
+                        }
+                    }
+                    case PushRelayError.NO_CLIENTS ->
+                        domains.getDomainOptions(nodeId).set("push-relay.fcm.active", false);
+                }
+            } catch (Exception e) {
+                log.error("Error sending to the FCM relay: {}", e.getMessage());
+                log.debug("Error sending to the FCM relay", e);
+                if (retry == 0) {
+                    retry = 20;
+                }
+            }
+
+            retry--;
+            if (retry > 0) {
+                Thread.sleep(90000);
+            } else if (retry == 0) {
+                log.error("Permanent error from the FCM relay, giving up");
+            }
+        } while (retry > 0);
+    }
+
     private byte[] getSignature(UUID nodeId, long signedAt) {
         ECPrivateKey signingKey = (ECPrivateKey) domains.getDomainOptions(nodeId).getPrivateKey("profile.signing-key");
         byte[] fingerprint = Fingerprints.pushRelayMessage(Util.toTimestamp(signedAt));
         return CryptoUtil.sign(fingerprint, signingKey);
+    }
+
+    private boolean isDuplicate(UUID nodeId, PushContent content) {
+        if (content.getType() != PushContentType.FEED_UPDATED) {
+            return false;
+        }
+        FeedWithStatus feedStatus = content.getFeedStatus();
+        Map<String, FeedNumbers> nodeFeedNumbers = lastFeedNumbers.get(nodeId);
+        return nodeFeedNumbers != null
+            && Objects.equals(
+                nodeFeedNumbers.get(feedStatus.getFeedName()),
+                new FeedNumbers(feedStatus.getNotViewed(), feedStatus.getNotViewedMoment())
+            );
+    }
+
+    private void saveFeedNumbers(UUID nodeId, FeedWithStatus feedStatus) {
+        lastFeedNumbers.computeIfAbsent(nodeId, ignored -> new HashMap<>()).put(
+            feedStatus.getFeedName(), new FeedNumbers(feedStatus.getNotViewed(), feedStatus.getNotViewedMoment())
+        );
     }
 
     public void register(String clientId, String nodeName, String lang, long signedAt, byte[] signature) {
@@ -148,6 +183,9 @@ public class FcmRelay {
                 log.warn("Failed to send to node {}", LogUtil.format(nodeId));
             }
         }
+    }
+
+    private record FeedNumbers(int notViewed, Long notViewedMoment) {
     }
 
 }
