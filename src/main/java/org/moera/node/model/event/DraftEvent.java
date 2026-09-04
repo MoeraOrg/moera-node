@@ -7,7 +7,6 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Draft;
-import org.springframework.data.util.Pair;
 
 public class DraftEvent extends Event {
 
@@ -71,13 +70,13 @@ public class DraftEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("id", LogUtil.format(id)));
-        parameters.add(Pair.of("draftType", LogUtil.format(draftType.toString())));
-        parameters.add(Pair.of("receiverName", LogUtil.format(receiverName)));
-        parameters.add(Pair.of("receiverPostingId", LogUtil.format(receiverPostingId)));
-        parameters.add(Pair.of("receiverCommentId", LogUtil.format(receiverCommentId)));
+        parameters.add(new LogParameter("id", LogUtil.format(id)));
+        parameters.add(new LogParameter("draftType", LogUtil.format(draftType.toString())));
+        parameters.add(new LogParameter("receiverName", LogUtil.format(receiverName)));
+        parameters.add(new LogParameter("receiverPostingId", LogUtil.format(receiverPostingId)));
+        parameters.add(new LogParameter("receiverCommentId", LogUtil.format(receiverCommentId)));
     }
 
 }

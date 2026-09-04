@@ -6,7 +6,6 @@ import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.model.AvatarImageUtil;
-import org.springframework.data.util.Pair;
 
 public class RemoteNodeAvatarChangedEvent extends Event {
 
@@ -40,10 +39,10 @@ public class RemoteNodeAvatarChangedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("name", LogUtil.format(name)));
-        parameters.add(Pair.of("avatar", avatar != null ? AvatarImageUtil.toLogString(avatar) : "null"));
+        parameters.add(new LogParameter("name", LogUtil.format(name)));
+        parameters.add(new LogParameter("avatar", avatar != null ? AvatarImageUtil.toLogString(avatar) : "null"));
     }
 
 }

@@ -43,7 +43,6 @@ import org.moera.node.operations.OperationsValidator;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.util.Pair;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -185,7 +184,7 @@ public class FriendController {
             );
             result.add(friendInfo);
 
-            Map<UUID, Pair<FriendGroupAssignment, Friend>> targetGroups = new HashMap<>();
+            Map<UUID, FriendGroupTarget> targetGroups = new HashMap<>();
             if (friendDescription.getGroups() != null) {
                 for (var ga : friendDescription.getGroups()) {
                     OperationsValidator.validateOperations(
@@ -194,7 +193,7 @@ public class FriendController {
                         "friend.operations.wrong-principal"
                     );
                     Util.uuid(ga.getId()).ifPresent(
-                        groupId -> targetGroups.put(groupId, Pair.of(ga, new Friend()))
+                        groupId -> targetGroups.put(groupId, new FriendGroupTarget(ga, new Friend()))
                     );
                 }
             }
@@ -205,7 +204,10 @@ public class FriendController {
             for (Friend friend : friends) {
                 var target = targetGroups.get(friend.getFriendGroup().getId());
                 if (target != null) {
-                    targetGroups.put(friend.getFriendGroup().getId(), Pair.of(target.getFirst(), friend));
+                    targetGroups.put(
+                        friend.getFriendGroup().getId(),
+                        new FriendGroupTarget(target.assignment(), friend)
+                    );
                 } else {
                     friendRepository.delete(friend);
                     contact = contactOperations.updateFriendCount(friend.getRemoteNodeName(), -1);
@@ -213,7 +215,7 @@ public class FriendController {
             }
 
             for (var target : targetGroups.entrySet()) {
-                Friend friend = target.getValue().getSecond();
+                Friend friend = target.getValue().friend();
                 if (friend.getId() == null) {
                     friend.setId(UUID.randomUUID());
                     friend.setNodeId(requestContext.nodeId());
@@ -224,12 +226,12 @@ public class FriendController {
                             .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"))
                     );
                     friend.setFriendGroup(group);
-                    FriendGroupAssignmentUtil.toFriend(target.getValue().getFirst(), friend);
+                    FriendGroupAssignmentUtil.toFriend(target.getValue().assignment(), friend);
                     friend = friendRepository.save(friend);
 
                     contactOperations.updateFriendCount(friend.getRemoteNodeName(), 1);
                 } else {
-                    FriendGroupAssignmentUtil.toFriend(target.getValue().getFirst(), friend);
+                    FriendGroupAssignmentUtil.toFriend(target.getValue().assignment(), friend);
                 }
                 contact = contactOperations.updateViewPrincipal(friend);
                 contact.fill(friend);
@@ -252,6 +254,12 @@ public class FriendController {
         }
 
         return result;
+    }
+
+    private record FriendGroupTarget(
+        FriendGroupAssignment assignment,
+        Friend friend
+    ) {
     }
 
 }

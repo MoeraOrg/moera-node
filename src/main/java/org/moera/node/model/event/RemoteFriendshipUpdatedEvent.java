@@ -8,7 +8,6 @@ import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.event.EventSubscriber;
 import org.moera.node.model.FriendOfInfoUtil;
-import org.springframework.data.util.Pair;
 
 public class RemoteFriendshipUpdatedEvent extends Event {
 
@@ -33,9 +32,9 @@ public class RemoteFriendshipUpdatedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("nodeName", LogUtil.format(friendOf.getRemoteNodeName())));
+        parameters.add(new LogParameter("nodeName", LogUtil.format(friendOf.getRemoteNodeName())));
     }
 
 }

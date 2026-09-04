@@ -5,7 +5,6 @@ import java.util.List;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Avatar;
-import org.springframework.data.util.Pair;
 
 public class AvatarDeletedEvent extends Event {
 
@@ -38,10 +37,10 @@ public class AvatarDeletedEvent extends Event {
         this.mediaId = mediaId;
     }
 
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("id", LogUtil.format(id)));
-        parameters.add(Pair.of("mediaId", LogUtil.format(mediaId)));
+        parameters.add(new LogParameter("id", LogUtil.format(id)));
+        parameters.add(new LogParameter("mediaId", LogUtil.format(mediaId)));
     }
 
 }

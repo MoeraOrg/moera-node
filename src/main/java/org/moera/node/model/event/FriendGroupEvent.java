@@ -6,7 +6,6 @@ import org.moera.lib.node.types.FriendGroupInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class FriendGroupEvent extends Event {
 
@@ -31,10 +30,10 @@ public class FriendGroupEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("id", LogUtil.format(friendGroup.getId())));
-        parameters.add(Pair.of("title", LogUtil.format(friendGroup.getTitle())));
+        parameters.add(new LogParameter("id", LogUtil.format(friendGroup.getId())));
+        parameters.add(new LogParameter("title", LogUtil.format(friendGroup.getTitle())));
     }
 
 }

@@ -5,7 +5,6 @@ import java.util.List;
 import org.moera.lib.node.types.AvatarInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class AvatarAddedEvent extends Event {
 
@@ -29,11 +28,11 @@ public class AvatarAddedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("id", LogUtil.format(avatar.getId())));
-        parameters.add(Pair.of("mediaId", LogUtil.format(avatar.getMediaId())));
-        parameters.add(Pair.of("ordinal", LogUtil.format(avatar.getOrdinal())));
+        parameters.add(new LogParameter("id", LogUtil.format(avatar.getId())));
+        parameters.add(new LogParameter("mediaId", LogUtil.format(avatar.getMediaId())));
+        parameters.add(new LogParameter("ordinal", LogUtil.format(avatar.getOrdinal())));
     }
 
 }

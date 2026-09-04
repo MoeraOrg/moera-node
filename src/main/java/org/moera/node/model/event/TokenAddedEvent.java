@@ -6,7 +6,6 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.TokenInfo;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class TokenAddedEvent extends Event {
 
@@ -26,9 +25,9 @@ public class TokenAddedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("id", LogUtil.format(token.getId())));
+        parameters.add(new LogParameter("id", LogUtil.format(token.getId())));
     }
 
 }

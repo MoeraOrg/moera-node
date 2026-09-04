@@ -6,7 +6,6 @@ import org.moera.lib.node.types.BlockedInstantInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class BlockedInstantEvent extends Event {
 
@@ -30,11 +29,11 @@ public class BlockedInstantEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("id", LogUtil.format(blockedInstant.getId())));
-        parameters.add(Pair.of("storyType", LogUtil.format(blockedInstant.getStoryType().toString())));
-        parameters.add(Pair.of("entryId", LogUtil.format(blockedInstant.getEntryId())));
+        parameters.add(new LogParameter("id", LogUtil.format(blockedInstant.getId())));
+        parameters.add(new LogParameter("storyType", LogUtil.format(blockedInstant.getStoryType().toString())));
+        parameters.add(new LogParameter("entryId", LogUtil.format(blockedInstant.getEntryId())));
     }
 
 }

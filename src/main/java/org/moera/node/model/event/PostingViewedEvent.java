@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class PostingViewedEvent extends PostingEvent {
 
@@ -29,9 +28,9 @@ public class PostingViewedEvent extends PostingEvent {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("viewCount", LogUtil.format(viewCount)));
+        parameters.add(new LogParameter("viewCount", LogUtil.format(viewCount)));
     }
 
 }

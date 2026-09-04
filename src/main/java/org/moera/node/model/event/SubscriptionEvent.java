@@ -9,7 +9,6 @@ import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.event.EventSubscriber;
 import org.moera.node.model.SubscriptionInfoUtil;
-import org.springframework.data.util.Pair;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SubscriptionEvent extends Event {
@@ -39,13 +38,13 @@ public class SubscriptionEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("subscriptionType", LogUtil.format(subscription.getType().toString())));
-        parameters.add(Pair.of("feedName", LogUtil.format(subscription.getFeedName())));
-        parameters.add(Pair.of("remoteNodeName", LogUtil.format(subscription.getRemoteNodeName())));
-        parameters.add(Pair.of("remoteFeedName", LogUtil.format(subscription.getRemoteFeedName())));
-        parameters.add(Pair.of("remotePostingId", LogUtil.format(subscription.getRemotePostingId())));
+        parameters.add(new LogParameter("subscriptionType", LogUtil.format(subscription.getType().toString())));
+        parameters.add(new LogParameter("feedName", LogUtil.format(subscription.getFeedName())));
+        parameters.add(new LogParameter("remoteNodeName", LogUtil.format(subscription.getRemoteNodeName())));
+        parameters.add(new LogParameter("remoteFeedName", LogUtil.format(subscription.getRemoteFeedName())));
+        parameters.add(new LogParameter("remotePostingId", LogUtil.format(subscription.getRemotePostingId())));
     }
 
 }

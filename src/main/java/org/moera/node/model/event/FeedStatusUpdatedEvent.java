@@ -6,7 +6,6 @@ import org.moera.lib.node.types.FeedStatus;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class FeedStatusUpdatedEvent extends Event {
 
@@ -41,13 +40,13 @@ public class FeedStatusUpdatedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("feedName", LogUtil.format(feedName)));
-        parameters.add(Pair.of("total", LogUtil.format(status.getTotal())));
-        parameters.add(Pair.of("totalPinned", LogUtil.format(status.getTotalPinned())));
-        parameters.add(Pair.of("notViewed", LogUtil.format(status.getNotViewed())));
-        parameters.add(Pair.of("notRead", LogUtil.format(status.getNotRead())));
+        parameters.add(new LogParameter("feedName", LogUtil.format(feedName)));
+        parameters.add(new LogParameter("total", LogUtil.format(status.getTotal())));
+        parameters.add(new LogParameter("totalPinned", LogUtil.format(status.getTotalPinned())));
+        parameters.add(new LogParameter("notViewed", LogUtil.format(status.getNotViewed())));
+        parameters.add(new LogParameter("notRead", LogUtil.format(status.getNotRead())));
     }
 
 }

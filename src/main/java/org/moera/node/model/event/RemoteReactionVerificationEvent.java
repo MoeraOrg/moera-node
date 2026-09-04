@@ -6,7 +6,6 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.RemoteReactionVerification;
-import org.springframework.data.util.Pair;
 
 public abstract class RemoteReactionVerificationEvent extends Event {
 
@@ -70,12 +69,12 @@ public abstract class RemoteReactionVerificationEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("nodeName", LogUtil.format(nodeName)));
-        parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
-        parameters.add(Pair.of("commentId", LogUtil.format(commentId)));
-        parameters.add(Pair.of("reactionOwnerName", LogUtil.format(reactionOwnerName)));
+        parameters.add(new LogParameter("nodeName", LogUtil.format(nodeName)));
+        parameters.add(new LogParameter("postingId", LogUtil.format(postingId)));
+        parameters.add(new LogParameter("commentId", LogUtil.format(commentId)));
+        parameters.add(new LogParameter("reactionOwnerName", LogUtil.format(reactionOwnerName)));
     }
 
 }

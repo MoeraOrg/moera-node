@@ -19,7 +19,6 @@ import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -46,14 +45,17 @@ public class ContactOperations {
     @Inject
     private Transaction tx;
 
-    private final ParametrizedLock<Pair<UUID, String>> lock = new ParametrizedLock<>();
+    private final ParametrizedLock<ContactKey> lock = new ParametrizedLock<>();
+
+    private record ContactKey(UUID nodeId, String remoteNodeName) {
+    }
 
     private Contact updateAtomically(UUID nodeId, String remoteNodeName, Consumer<Contact> updater) {
         if (remoteNodeName == null) {
             return null;
         }
 
-        try (var ignored = lock.lock(Pair.of(nodeId, remoteNodeName))) {
+        try (var ignored = lock.lock(new ContactKey(nodeId, remoteNodeName))) {
             return tx.executeWrite(() -> {
                 Contact contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName).orElse(null);
                 if (contact == null) {

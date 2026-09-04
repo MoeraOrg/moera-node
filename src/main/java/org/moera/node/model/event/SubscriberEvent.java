@@ -7,7 +7,6 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SubscriberInfo;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SubscriberEvent extends Event {
@@ -32,12 +31,12 @@ public class SubscriberEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("subscriptionType", LogUtil.format(subscriber.getType().toString())));
-        parameters.add(Pair.of("feedName", LogUtil.format(subscriber.getFeedName())));
-        parameters.add(Pair.of("postingId", LogUtil.format(subscriber.getPostingId())));
-        parameters.add(Pair.of("nodeName", LogUtil.format(subscriber.getNodeName())));
+        parameters.add(new LogParameter("subscriptionType", LogUtil.format(subscriber.getType().toString())));
+        parameters.add(new LogParameter("feedName", LogUtil.format(subscriber.getFeedName())));
+        parameters.add(new LogParameter("postingId", LogUtil.format(subscriber.getPostingId())));
+        parameters.add(new LogParameter("nodeName", LogUtil.format(subscriber.getNodeName())));
     }
 
 }

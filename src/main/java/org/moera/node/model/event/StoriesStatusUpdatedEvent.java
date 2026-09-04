@@ -7,7 +7,6 @@ import org.moera.lib.node.types.FeedStatusChange;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StoriesStatusUpdatedEvent extends Event {
@@ -63,12 +62,12 @@ public class StoriesStatusUpdatedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("feedName", LogUtil.format(feedName)));
-        parameters.add(Pair.of("viewed", LogUtil.format(viewed)));
-        parameters.add(Pair.of("read", LogUtil.format(read)));
-        parameters.add(Pair.of("before", LogUtil.format(before)));
+        parameters.add(new LogParameter("feedName", LogUtil.format(feedName)));
+        parameters.add(new LogParameter("viewed", LogUtil.format(viewed)));
+        parameters.add(new LogParameter("read", LogUtil.format(read)));
+        parameters.add(new LogParameter("before", LogUtil.format(before)));
     }
 
 }

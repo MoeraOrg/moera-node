@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.util.Pair;
 import org.springframework.util.ObjectUtils;
 
 public class InstantsCreator {
@@ -126,15 +125,15 @@ public class InstantsCreator {
         if (universalContext.getOptions().getBool("instants.prioritize")) {
             log.debug("Finding position for story {}, node {}",
                     LogUtil.format(story.getId()), LogUtil.format(story.getNodeId()));
-            Pair<Long, Long> feedPosition = findFeedPosition(story);
-            storyOperations.updateMoment(story, nodeId(), feedPosition.getFirst(), feedPosition.getSecond());
+            FeedPosition feedPosition = findFeedPosition(story);
+            storyOperations.updateMoment(story, nodeId(), feedPosition.momentBase(), feedPosition.momentLimit());
             log.debug("Final position is {}", story.getMoment());
         } else {
             storyOperations.updateMoment(story, nodeId());
         }
     }
 
-    private Pair<Long, Long> findFeedPosition(Story story) {
+    private FeedPosition findFeedPosition(Story story) {
         long momentBase = Util.toEpochSecond(story.getPublishedAt()) * 1000;
         log.debug("Moment base is {}", momentBase);
 
@@ -162,7 +161,9 @@ public class InstantsCreator {
                         top ? momentBase : prev.getMoment(),
                         top ? SafeInteger.MAX_VALUE : momentBase
                     );
-                    return top ? Pair.of(momentBase, SafeInteger.MAX_VALUE) : Pair.of(prev.getMoment(), momentBase);
+                    return top
+                        ? new FeedPosition(momentBase, SafeInteger.MAX_VALUE)
+                        : new FeedPosition(prev.getMoment(), momentBase);
                 }
                 top = false;
                 momentBase = prev.getMoment();
@@ -173,7 +174,13 @@ public class InstantsCreator {
             log.debug("Fetched next {} stories", stories.size());
         }
         log.debug("Found nothing, placing at {}..{}", momentBase - 2000, momentBase);
-        return Pair.of(momentBase - 2000, momentBase);
+        return new FeedPosition(momentBase - 2000, momentBase);
+    }
+
+    private record FeedPosition(
+        long momentBase,
+        long momentLimit
+    ) {
     }
 
 }

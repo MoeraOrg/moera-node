@@ -6,7 +6,6 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Comment;
-import org.springframework.data.util.Pair;
 
 public class CommentEvent extends Event {
 
@@ -54,11 +53,11 @@ public class CommentEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("id", LogUtil.format(id)));
-        parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
-        parameters.add(Pair.of("moment", LogUtil.format(moment)));
+        parameters.add(new LogParameter("id", LogUtil.format(id)));
+        parameters.add(new LogParameter("postingId", LogUtil.format(postingId)));
+        parameters.add(new LogParameter("moment", LogUtil.format(moment)));
     }
 
 }

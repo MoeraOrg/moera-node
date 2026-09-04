@@ -5,7 +5,6 @@ import java.util.List;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class RemotePostingEvent extends Event {
 
@@ -39,10 +38,10 @@ public class RemotePostingEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("remoteNodeName", LogUtil.format(remoteNodeName)));
-        parameters.add(Pair.of("remotePostingId", LogUtil.format(remotePostingId)));
+        parameters.add(new LogParameter("remoteNodeName", LogUtil.format(remoteNodeName)));
+        parameters.add(new LogParameter("remotePostingId", LogUtil.format(remotePostingId)));
     }
 
 }

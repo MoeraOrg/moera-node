@@ -28,7 +28,6 @@ import org.moera.node.domain.Domains;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -37,7 +36,7 @@ public class FcmRelay {
     private static final Logger log = LoggerFactory.getLogger(FcmRelay.class);
 
     private PushRelay service;
-    private final BlockingQueue<Pair<UUID, PushContent>> queue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<RelayPacket> queue = new LinkedBlockingQueue<>();
 
     private final Map<UUID, Map<String, FeedNumbers>> lastFeedNumbers = new WeakHashMap<>();
 
@@ -57,11 +56,9 @@ public class FcmRelay {
     private void deliver() {
         try {
             while (true) {
-                Pair<UUID, PushContent> packet = queue.take();
-                UUID nodeId = packet.getFirst();
-                PushContent content = packet.getSecond();
-                if (!isDuplicate(nodeId, content)) {
-                    deliver(nodeId, content);
+                RelayPacket packet = queue.take();
+                if (!isDuplicate(packet.nodeId(), packet.pushContent())) {
+                    deliver(packet.nodeId(), packet.pushContent());
                 }
             }
         } catch (InterruptedException e) {
@@ -178,11 +175,14 @@ public class FcmRelay {
 
         boolean active = domains.getDomainOptions(nodeId).getBool("push-relay.fcm.active");
         if (active) {
-            boolean success = queue.offer(Pair.of(nodeId, pushContent));
+            boolean success = queue.offer(new RelayPacket(nodeId, pushContent));
             if (!success) {
                 log.warn("Failed to send to node {}", LogUtil.format(nodeId));
             }
         }
+    }
+
+    private record RelayPacket(UUID nodeId, PushContent pushContent) {
     }
 
     private record FeedNumbers(int notViewed, Long notViewedMoment) {

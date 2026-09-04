@@ -5,7 +5,6 @@ import java.util.List;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Avatar;
-import org.springframework.data.util.Pair;
 
 public class AvatarOrderedEvent extends Event {
 
@@ -48,11 +47,11 @@ public class AvatarOrderedEvent extends Event {
         this.ordinal = ordinal;
     }
 
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("id", LogUtil.format(id)));
-        parameters.add(Pair.of("mediaId", LogUtil.format(mediaId)));
-        parameters.add(Pair.of("ordinal", LogUtil.format(ordinal)));
+        parameters.add(new LogParameter("id", LogUtil.format(id)));
+        parameters.add(new LogParameter("mediaId", LogUtil.format(mediaId)));
+        parameters.add(new LogParameter("ordinal", LogUtil.format(ordinal)));
     }
 
 }

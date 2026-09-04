@@ -5,7 +5,6 @@ import java.util.List;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class SubscriptionsTotalChangedEvent extends Event {
 
@@ -33,9 +32,9 @@ public class SubscriptionsTotalChangedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("feedSubscriptionsTotal", LogUtil.format(feedSubscriptionsTotal)));
+        parameters.add(new LogParameter("feedSubscriptionsTotal", LogUtil.format(feedSubscriptionsTotal)));
     }
 
 }

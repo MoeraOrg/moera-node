@@ -8,7 +8,6 @@ import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.event.EventSubscriber;
 import org.moera.node.model.BlockedUserInfoUtil;
-import org.springframework.data.util.Pair;
 
 public class BlockedUserEvent extends Event {
 
@@ -37,15 +36,17 @@ public class BlockedUserEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("id", LogUtil.format(blockedUser.getId())));
-        parameters.add(Pair.of("blockedOperation", LogUtil.format(blockedUser.getBlockedOperation().getValue())));
-        parameters.add(Pair.of("nodeName", LogUtil.format(blockedUser.getNodeName())));
-        parameters.add(Pair.of("entryId", LogUtil.format(blockedUser.getEntryId())));
-        parameters.add(Pair.of("entryNodeName", LogUtil.format(blockedUser.getEntryNodeName())));
-        parameters.add(Pair.of("entryPostingId", LogUtil.format(blockedUser.getEntryPostingId())));
-        parameters.add(Pair.of("deadline", LogUtil.format(blockedUser.getDeadline())));
+        parameters.add(new LogParameter("id", LogUtil.format(blockedUser.getId())));
+        parameters.add(new LogParameter(
+            "blockedOperation", LogUtil.format(blockedUser.getBlockedOperation().getValue())
+        ));
+        parameters.add(new LogParameter("nodeName", LogUtil.format(blockedUser.getNodeName())));
+        parameters.add(new LogParameter("entryId", LogUtil.format(blockedUser.getEntryId())));
+        parameters.add(new LogParameter("entryNodeName", LogUtil.format(blockedUser.getEntryNodeName())));
+        parameters.add(new LogParameter("entryPostingId", LogUtil.format(blockedUser.getEntryPostingId())));
+        parameters.add(new LogParameter("deadline", LogUtil.format(blockedUser.getDeadline())));
     }
 
 }

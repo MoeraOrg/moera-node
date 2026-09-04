@@ -8,7 +8,6 @@ import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StoryDeletedEvent extends Event {
@@ -96,13 +95,13 @@ public class StoryDeletedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("storyType", LogUtil.format(storyType.toString())));
-        parameters.add(Pair.of("feedName", LogUtil.format(feedName)));
-        parameters.add(Pair.of("moment", LogUtil.format(moment)));
-        parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
-        parameters.add(Pair.of("commentId", LogUtil.format(commentId)));
+        parameters.add(new LogParameter("storyType", LogUtil.format(storyType.toString())));
+        parameters.add(new LogParameter("feedName", LogUtil.format(feedName)));
+        parameters.add(new LogParameter("moment", LogUtil.format(moment)));
+        parameters.add(new LogParameter("postingId", LogUtil.format(postingId)));
+        parameters.add(new LogParameter("commentId", LogUtil.format(commentId)));
     }
 
 }

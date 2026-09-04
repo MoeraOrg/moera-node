@@ -5,7 +5,6 @@ import java.util.List;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class FriendGroupDeletedEvent extends Event {
 
@@ -25,9 +24,9 @@ public class FriendGroupDeletedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("id", LogUtil.format(friendGroupId)));
+        parameters.add(new LogParameter("id", LogUtil.format(friendGroupId)));
     }
 
 }

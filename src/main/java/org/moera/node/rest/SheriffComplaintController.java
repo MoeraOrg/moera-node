@@ -32,7 +32,6 @@ import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -86,8 +85,8 @@ public class SheriffComplaintController {
         sheriffComplaint.setId(UUID.randomUUID());
         sheriffComplaint.setNodeId(requestContext.nodeId());
         var groupAndCreated = findOrCreateComplaintGroup(sheriffComplaintText);
-        SheriffComplaintGroup group = groupAndCreated.getFirst();
-        boolean groupCreated = groupAndCreated.getSecond();
+        SheriffComplaintGroup group = groupAndCreated.group();
+        boolean groupCreated = groupAndCreated.created();
         sheriffComplaint.setGroup(group);
         sheriffComplaint.setOwnerName(clientName);
         SheriffComplaintTextUtil.toSheriffComplaint(sheriffComplaintText, sheriffComplaint);
@@ -122,10 +121,10 @@ public class SheriffComplaintController {
             .body(SheriffComplaintInfoUtil.build(sheriffComplaint, true));
     }
 
-    private Pair<SheriffComplaintGroup, Boolean> findOrCreateComplaintGroup(SheriffComplaintText sheriffComplaintText) {
+    private ComplaintGroupResult findOrCreateComplaintGroup(SheriffComplaintText sheriffComplaintText) {
         SheriffComplaintGroup group = findComplaintGroup(sheriffComplaintText).orElse(null);
         if (group != null) {
-            return Pair.of(group, false);
+            return new ComplaintGroupResult(group, false);
         }
         try {
             return tx.executeWrite(() -> {
@@ -137,11 +136,17 @@ public class SheriffComplaintController {
                     moment -> sheriffComplaintGroupRepository.countMoments(requestContext.nodeId(), moment) == 0,
                     Util.now()
                 ));
-                return Pair.of(sheriffComplaintGroupRepository.save(grp), true);
+                return new ComplaintGroupResult(sheriffComplaintGroupRepository.save(grp), true);
             });
         } catch (DataIntegrityViolationException e) {
-            return Pair.of(findComplaintGroup(sheriffComplaintText).orElseThrow(), false);
+            return new ComplaintGroupResult(findComplaintGroup(sheriffComplaintText).orElseThrow(), false);
         }
+    }
+
+    private record ComplaintGroupResult(
+        SheriffComplaintGroup group,
+        boolean created
+    ) {
     }
 
     private Optional<SheriffComplaintGroup> findComplaintGroup(SheriffComplaintText sheriffComplaintText) {

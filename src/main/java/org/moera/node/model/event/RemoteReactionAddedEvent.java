@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.moera.lib.node.types.ReactionInfo;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class RemoteReactionAddedEvent extends RemoteReactionEvent {
 
@@ -48,10 +47,10 @@ public class RemoteReactionAddedEvent extends RemoteReactionEvent {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("negative", LogUtil.format(negative)));
-        parameters.add(Pair.of("emoji", LogUtil.format(emoji)));
+        parameters.add(new LogParameter("negative", LogUtil.format(negative)));
+        parameters.add(new LogParameter("emoji", LogUtil.format(emoji)));
     }
 
 }

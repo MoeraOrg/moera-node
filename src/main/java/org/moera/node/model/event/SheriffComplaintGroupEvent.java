@@ -10,7 +10,6 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.model.SheriffComplaintGroupInfoUtil;
-import org.springframework.data.util.Pair;
 
 public class SheriffComplaintGroupEvent extends Event {
 
@@ -34,19 +33,21 @@ public class SheriffComplaintGroupEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("id", LogUtil.format(group.getId())));
-        parameters.add(Pair.of("remoteNodeName", LogUtil.format(group.getRemoteNodeName())));
-        parameters.add(Pair.of("remoteFeedName", LogUtil.format(group.getRemoteFeedName())));
-        parameters.add(Pair.of("remotePostingOwnerName", LogUtil.format(group.getRemotePostingOwnerName())));
-        parameters.add(Pair.of("remotePostingId", LogUtil.format(group.getRemotePostingId())));
-        parameters.add(Pair.of("remotePostingRevisionId", LogUtil.format(group.getRemotePostingRevisionId())));
-        parameters.add(Pair.of("remoteCommentOwnerName", LogUtil.format(group.getRemoteCommentOwnerName())));
-        parameters.add(Pair.of("remoteCommentId", LogUtil.format(group.getRemoteCommentId())));
-        parameters.add(Pair.of("remoteCommentRevisionId", LogUtil.format(group.getRemoteCommentRevisionId())));
-        parameters.add(Pair.of("status", LogUtil.format(SheriffComplaintStatus.toValue(group.getStatus()))));
-        parameters.add(Pair.of("decisionCode", LogUtil.format(SheriffOrderReason.toValue(group.getDecisionCode()))));
+        parameters.add(new LogParameter("id", LogUtil.format(group.getId())));
+        parameters.add(new LogParameter("remoteNodeName", LogUtil.format(group.getRemoteNodeName())));
+        parameters.add(new LogParameter("remoteFeedName", LogUtil.format(group.getRemoteFeedName())));
+        parameters.add(new LogParameter("remotePostingOwnerName", LogUtil.format(group.getRemotePostingOwnerName())));
+        parameters.add(new LogParameter("remotePostingId", LogUtil.format(group.getRemotePostingId())));
+        parameters.add(new LogParameter("remotePostingRevisionId", LogUtil.format(group.getRemotePostingRevisionId())));
+        parameters.add(new LogParameter("remoteCommentOwnerName", LogUtil.format(group.getRemoteCommentOwnerName())));
+        parameters.add(new LogParameter("remoteCommentId", LogUtil.format(group.getRemoteCommentId())));
+        parameters.add(new LogParameter("remoteCommentRevisionId", LogUtil.format(group.getRemoteCommentRevisionId())));
+        parameters.add(new LogParameter("status", LogUtil.format(SheriffComplaintStatus.toValue(group.getStatus()))));
+        parameters.add(new LogParameter(
+            "decisionCode", LogUtil.format(SheriffOrderReason.toValue(group.getDecisionCode()))
+        ));
     }
 
 }

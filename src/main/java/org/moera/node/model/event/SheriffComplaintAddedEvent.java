@@ -10,7 +10,6 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.SheriffComplaint;
 import org.moera.node.model.SheriffComplaintInfoUtil;
-import org.springframework.data.util.Pair;
 
 public class SheriffComplaintAddedEvent extends Event {
 
@@ -44,12 +43,14 @@ public class SheriffComplaintAddedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("id", LogUtil.format(complaint.getId())));
-        parameters.add(Pair.of("ownerName", LogUtil.format(complaint.getOwnerName())));
-        parameters.add(Pair.of("reasonCode", LogUtil.format(SheriffOrderReason.toValue(complaint.getReasonCode()))));
-        parameters.add(Pair.of("groupId", LogUtil.format(groupId)));
+        parameters.add(new LogParameter("id", LogUtil.format(complaint.getId())));
+        parameters.add(new LogParameter("ownerName", LogUtil.format(complaint.getOwnerName())));
+        parameters.add(new LogParameter(
+            "reasonCode", LogUtil.format(SheriffOrderReason.toValue(complaint.getReasonCode()))
+        ));
+        parameters.add(new LogParameter("groupId", LogUtil.format(groupId)));
     }
 
 }

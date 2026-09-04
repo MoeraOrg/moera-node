@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,16 +42,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/sitemaps")
 public class SitemapController {
 
+    private record StaticPage(
+        String location,
+        String changeFrequency
+    ) {
+    }
+
     private static final Instant SITEMAPS_UPGRADE_DATE =
         LocalDateTime
             .of(2022, Month.FEBRUARY, 12, 0, 0)
             .toInstant(ZoneOffset.UTC);
     private static final int MAX_SITEMAP_RECORD = 40000;
-    private static final List<Pair<String, String>> STATIC_PAGES = List.of(
-        Pair.of("/timeline", "hourly"),
-        Pair.of("/profile", "monthly"),
-        Pair.of("/people/subscribers", "monthly"),
-        Pair.of("/people/subscriptions", "monthly")
+    private static final List<StaticPage> STATIC_PAGES = List.of(
+        new StaticPage("/timeline", "hourly"),
+        new StaticPage("/profile", "monthly"),
+        new StaticPage("/people/subscribers", "monthly"),
+        new StaticPage("/people/subscriptions", "monthly")
     );
 
     private static final Logger log = LoggerFactory.getLogger(SitemapController.class);
@@ -94,7 +99,9 @@ public class SitemapController {
 
         return new SitemapUrlSet(
             STATIC_PAGES.stream()
-                .map(p -> SitemapUrl.staticPage(requestContext.getSiteUrl(), p.getFirst(), p.getSecond()))
+                .map(page -> SitemapUrl.staticPage(
+                    requestContext.getSiteUrl(), page.location(), page.changeFrequency()
+                ))
                 .collect(Collectors.toList())
         );
     }

@@ -5,7 +5,6 @@ import java.util.List;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SheriffMark;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class FeedSheriffDataUpdatedEvent extends Event {
 
@@ -49,9 +48,9 @@ public class FeedSheriffDataUpdatedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("feedName", LogUtil.format(feedName)));
+        parameters.add(new LogParameter("feedName", LogUtil.format(feedName)));
     }
 
 }

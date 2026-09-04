@@ -16,7 +16,6 @@ import org.moera.lib.node.types.PushContentType;
 import org.moera.lib.pushrelay.PushRelay;
 import org.moera.node.domain.Domains;
 import org.moera.node.option.Options;
-import org.springframework.data.util.Pair;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -60,8 +59,8 @@ class FcmRelayTest {
     @Test
     void identicalFeedStatusIsDeliveredOnlyOnce() {
         deliver(
-            Pair.of(NODE_ID, feedUpdated("news", 3, 1000L)),
-            Pair.of(NODE_ID, feedUpdated("news", 3, 1000L))
+            new Delivery(NODE_ID, feedUpdated("news", 3, 1000L)),
+            new Delivery(NODE_ID, feedUpdated("news", 3, 1000L))
         );
 
         verify(service).feedStatus(
@@ -72,8 +71,8 @@ class FcmRelayTest {
     @Test
     void changedNotViewedIsDelivered() {
         deliver(
-            Pair.of(NODE_ID, feedUpdated("news", 3, 1000L)),
-            Pair.of(NODE_ID, feedUpdated("news", 4, 1000L))
+            new Delivery(NODE_ID, feedUpdated("news", 3, 1000L)),
+            new Delivery(NODE_ID, feedUpdated("news", 4, 1000L))
         );
 
         verifyFeedStatusCalls(2);
@@ -82,8 +81,8 @@ class FcmRelayTest {
     @Test
     void changedNotViewedMomentIsDelivered() {
         deliver(
-            Pair.of(NODE_ID, feedUpdated("news", 3, 1000L)),
-            Pair.of(NODE_ID, feedUpdated("news", 3, 1001L))
+            new Delivery(NODE_ID, feedUpdated("news", 3, 1000L)),
+            new Delivery(NODE_ID, feedUpdated("news", 3, 1001L))
         );
 
         verifyFeedStatusCalls(2);
@@ -92,8 +91,8 @@ class FcmRelayTest {
     @Test
     void identicalNumbersForDifferentFeedsAreDelivered() {
         deliver(
-            Pair.of(NODE_ID, feedUpdated("news", 3, 1000L)),
-            Pair.of(NODE_ID, feedUpdated("explore", 3, 1000L))
+            new Delivery(NODE_ID, feedUpdated("news", 3, 1000L)),
+            new Delivery(NODE_ID, feedUpdated("explore", 3, 1000L))
         );
 
         verifyFeedStatusCalls(2);
@@ -102,21 +101,20 @@ class FcmRelayTest {
     @Test
     void identicalFeedStatusForDifferentNodesIsDelivered() {
         deliver(
-            Pair.of(NODE_ID, feedUpdated("news", 3, 1000L)),
-            Pair.of(OTHER_NODE_ID, feedUpdated("news", 3, 1000L))
+            new Delivery(NODE_ID, feedUpdated("news", 3, 1000L)),
+            new Delivery(OTHER_NODE_ID, feedUpdated("news", 3, 1000L))
         );
 
         verifyFeedStatusCalls(2);
     }
 
-    @SafeVarargs
-    private final void deliver(Pair<UUID, PushContent>... packets) {
-        for (Pair<UUID, PushContent> packet : packets) {
+    private void deliver(Delivery... deliveries) {
+        for (Delivery delivery : deliveries) {
             Boolean duplicate = ReflectionTestUtils.invokeMethod(
-                fcmRelay, "isDuplicate", packet.getFirst(), packet.getSecond()
+                fcmRelay, "isDuplicate", delivery.nodeId(), delivery.pushContent()
             );
             if (!Boolean.TRUE.equals(duplicate)) {
-                ReflectionTestUtils.invokeMethod(fcmRelay, "deliver", packet.getFirst(), packet.getSecond());
+                ReflectionTestUtils.invokeMethod(fcmRelay, "deliver", delivery.nodeId(), delivery.pushContent());
             }
         }
     }
@@ -136,6 +134,12 @@ class FcmRelayTest {
         content.setType(PushContentType.FEED_UPDATED);
         content.setFeedStatus(feedStatus);
         return content;
+    }
+
+    private record Delivery(
+        UUID nodeId,
+        PushContent pushContent
+    ) {
     }
 
 }

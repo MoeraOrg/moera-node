@@ -17,7 +17,6 @@ import org.moera.node.data.EntryType;
 import org.moera.node.data.Story;
 import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.util.Util;
-import org.springframework.data.util.Pair;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StoryEvent extends Event {
@@ -273,22 +272,22 @@ public class StoryEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("storyType", LogUtil.format(storyType.toString())));
-        parameters.add(Pair.of("feedName", LogUtil.format(feedName)));
-        parameters.add(Pair.of("pinned", LogUtil.format(pinned)));
-        parameters.add(Pair.of("moment", LogUtil.format(moment)));
-        parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
-        parameters.add(Pair.of("commentId", LogUtil.format(commentId)));
-        parameters.add(Pair.of("viewed", LogUtil.format(viewed)));
-        parameters.add(Pair.of("read", LogUtil.format(read)));
-        parameters.add(Pair.of("satisfied", LogUtil.format(satisfied)));
-        parameters.add(Pair.of("summary", LogUtil.format(summary)));
-        parameters.add(Pair.of("remoteNodeName", LogUtil.format(remoteNodeName)));
-        parameters.add(Pair.of("remoteSourceUri", LogUtil.format(remoteSourceUri)));
-        parameters.add(Pair.of("remotePostingId", LogUtil.format(remotePostingId)));
-        parameters.add(Pair.of("remoteCommentId", LogUtil.format(remoteCommentId)));
+        parameters.add(new LogParameter("storyType", LogUtil.format(storyType.toString())));
+        parameters.add(new LogParameter("feedName", LogUtil.format(feedName)));
+        parameters.add(new LogParameter("pinned", LogUtil.format(pinned)));
+        parameters.add(new LogParameter("moment", LogUtil.format(moment)));
+        parameters.add(new LogParameter("postingId", LogUtil.format(postingId)));
+        parameters.add(new LogParameter("commentId", LogUtil.format(commentId)));
+        parameters.add(new LogParameter("viewed", LogUtil.format(viewed)));
+        parameters.add(new LogParameter("read", LogUtil.format(read)));
+        parameters.add(new LogParameter("satisfied", LogUtil.format(satisfied)));
+        parameters.add(new LogParameter("summary", LogUtil.format(summary)));
+        parameters.add(new LogParameter("remoteNodeName", LogUtil.format(remoteNodeName)));
+        parameters.add(new LogParameter("remoteSourceUri", LogUtil.format(remoteSourceUri)));
+        parameters.add(new LogParameter("remotePostingId", LogUtil.format(remotePostingId)));
+        parameters.add(new LogParameter("remoteCommentId", LogUtil.format(remoteCommentId)));
     }
 
 }

@@ -3,7 +3,6 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class RemoteMediaDownloadFailedEvent extends RemoteMediaDownloadEvent {
 
@@ -37,9 +36,9 @@ public class RemoteMediaDownloadFailedEvent extends RemoteMediaDownloadEvent {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("errorCode", LogUtil.format(errorCode)));
+        parameters.add(new LogParameter("errorCode", LogUtil.format(errorCode)));
     }
 
 }

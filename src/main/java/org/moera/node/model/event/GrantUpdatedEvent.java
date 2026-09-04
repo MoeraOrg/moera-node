@@ -6,7 +6,6 @@ import org.moera.lib.node.types.GrantInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class GrantUpdatedEvent extends Event {
 
@@ -26,10 +25,10 @@ public class GrantUpdatedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("nodeName", LogUtil.format(grant.getNodeName())));
-        parameters.add(Pair.of("scope", LogUtil.format(String.join(",", grant.getScope()))));
+        parameters.add(new LogParameter("nodeName", LogUtil.format(grant.getNodeName())));
+        parameters.add(new LogParameter("scope", LogUtil.format(String.join(",", grant.getScope()))));
     }
 
 }

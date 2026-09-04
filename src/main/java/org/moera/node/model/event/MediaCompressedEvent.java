@@ -6,7 +6,6 @@ import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class MediaCompressedEvent extends Event {
 
@@ -50,10 +49,10 @@ public class MediaCompressedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
-        parameters.add(Pair.of("originalMediaId", LogUtil.format(originalMediaId)));
-        parameters.add(Pair.of("originalMediaHash", LogUtil.format(originalMediaHash)));
-        parameters.add(Pair.of("mediaId", LogUtil.format(media != null ? media.getId() : null)));
+    public void logParameters(List<LogParameter> parameters) {
+        parameters.add(new LogParameter("originalMediaId", LogUtil.format(originalMediaId)));
+        parameters.add(new LogParameter("originalMediaHash", LogUtil.format(originalMediaHash)));
+        parameters.add(new LogParameter("mediaId", LogUtil.format(media != null ? media.getId() : null)));
     }
 
 }

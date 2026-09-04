@@ -9,7 +9,6 @@ import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Avatar;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.option.Options;
-import org.springframework.data.util.Pair;
 
 public class NodeNameChangedEvent extends Event {
 
@@ -85,14 +84,14 @@ public class NodeNameChangedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("name", LogUtil.format(name)));
-        parameters.add(Pair.of("fullName", LogUtil.format(fullName)));
-        parameters.add(Pair.of("nodeSourceUri", LogUtil.format(nodeSourceUri)));
-        parameters.add(Pair.of("gender", LogUtil.format(gender)));
-        parameters.add(Pair.of("title", LogUtil.format(title)));
-        parameters.add(Pair.of("avatar", avatar != null ? AvatarImageUtil.toLogString(avatar) : "null"));
+        parameters.add(new LogParameter("name", LogUtil.format(name)));
+        parameters.add(new LogParameter("fullName", LogUtil.format(fullName)));
+        parameters.add(new LogParameter("nodeSourceUri", LogUtil.format(nodeSourceUri)));
+        parameters.add(new LogParameter("gender", LogUtil.format(gender)));
+        parameters.add(new LogParameter("title", LogUtil.format(title)));
+        parameters.add(new LogParameter("avatar", avatar != null ? AvatarImageUtil.toLogString(avatar) : "null"));
     }
 
 }

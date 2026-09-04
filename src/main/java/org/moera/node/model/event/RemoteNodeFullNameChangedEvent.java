@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public class RemoteNodeFullNameChangedEvent extends Event {
 
@@ -58,12 +57,12 @@ public class RemoteNodeFullNameChangedEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("name", LogUtil.format(name)));
-        parameters.add(Pair.of("fullName", LogUtil.format(fullName)));
-        parameters.add(Pair.of("nodeSourceUri", LogUtil.format(nodeSourceUri)));
-        parameters.add(Pair.of("title", LogUtil.format(title)));
+        parameters.add(new LogParameter("name", LogUtil.format(name)));
+        parameters.add(new LogParameter("fullName", LogUtil.format(fullName)));
+        parameters.add(new LogParameter("nodeSourceUri", LogUtil.format(nodeSourceUri)));
+        parameters.add(new LogParameter("title", LogUtil.format(title)));
     }
 
 }

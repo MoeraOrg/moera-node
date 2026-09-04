@@ -8,7 +8,6 @@ import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Entry;
 import org.moera.node.data.Posting;
-import org.springframework.data.util.Pair;
 
 public class PostingEvent extends Event {
 
@@ -45,9 +44,9 @@ public class PostingEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("id", LogUtil.format(id)));
+        parameters.add(new LogParameter("id", LogUtil.format(id)));
     }
 
 }

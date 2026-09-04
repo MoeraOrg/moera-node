@@ -5,7 +5,6 @@ import java.util.List;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.springframework.data.util.Pair;
 
 public abstract class RemoteMediaDownloadEvent extends Event {
 
@@ -39,10 +38,10 @@ public abstract class RemoteMediaDownloadEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("nodeName", LogUtil.format(nodeName)));
-        parameters.add(Pair.of("mediaId", LogUtil.format(mediaId)));
+        parameters.add(new LogParameter("nodeName", LogUtil.format(nodeName)));
+        parameters.add(new LogParameter("mediaId", LogUtil.format(mediaId)));
     }
 
 }

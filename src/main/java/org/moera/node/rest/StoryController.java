@@ -29,7 +29,6 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.util.Pair;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -106,7 +105,7 @@ public class StoryController {
         );
 
         UUID storyId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
-        Pair<Story, StoryInfo> info = tx.executeWrite(() -> {
+        StoryUpdate update = tx.executeWrite(() -> {
             Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), storyId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
             if (
@@ -137,12 +136,18 @@ public class StoryController {
                 directServeOperations
             );
 
-            return Pair.of(story, storyInfo);
+            return new StoryUpdate(story, storyInfo);
         });
 
-        requestContext.send(new StoryUpdatedLiberin(info.getFirst()));
+        requestContext.send(new StoryUpdatedLiberin(update.story()));
 
-        return info.getSecond();
+        return update.info();
+    }
+
+    private record StoryUpdate(
+        Story story,
+        StoryInfo info
+    ) {
     }
 
     @DeleteMapping("/{id}")

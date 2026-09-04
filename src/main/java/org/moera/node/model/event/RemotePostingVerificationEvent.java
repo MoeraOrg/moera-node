@@ -6,7 +6,6 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.RemotePostingVerification;
-import org.springframework.data.util.Pair;
 
 public abstract class RemotePostingVerificationEvent extends Event {
 
@@ -70,12 +69,12 @@ public abstract class RemotePostingVerificationEvent extends Event {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("nodeName", LogUtil.format(nodeName)));
-        parameters.add(Pair.of("receiverName", LogUtil.format(receiverName)));
-        parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
-        parameters.add(Pair.of("revisionId", LogUtil.format(revisionId)));
+        parameters.add(new LogParameter("nodeName", LogUtil.format(nodeName)));
+        parameters.add(new LogParameter("receiverName", LogUtil.format(receiverName)));
+        parameters.add(new LogParameter("postingId", LogUtil.format(postingId)));
+        parameters.add(new LogParameter("revisionId", LogUtil.format(revisionId)));
     }
 
 }

@@ -9,7 +9,6 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.event.EventSubscriber;
-import org.springframework.data.util.Pair;
 
 public abstract class Event {
 
@@ -53,18 +52,18 @@ public abstract class Event {
     }
 
     public final String toLogMessage() {
-        List<Pair<String, String>> parameters = new ArrayList<>();
+        List<LogParameter> parameters = new ArrayList<>();
         logParameters(parameters);
         if (parameters.isEmpty()) {
             return getType().toString();
         }
         String params = parameters.stream()
-            .map(p -> p.getFirst() + " = " + p.getSecond())
+            .map(p -> p.name() + " = " + p.value())
             .collect(Collectors.joining(", "));
         return "%s (%s)".formatted(getType(), params);
     }
 
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
     }
 
 }

@@ -5,7 +5,6 @@ import java.util.List;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Entry;
-import org.springframework.data.util.Pair;
 
 public class PostingCommentsChangedEvent extends PostingEvent {
 
@@ -34,9 +33,9 @@ public class PostingCommentsChangedEvent extends PostingEvent {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("total", LogUtil.format(total)));
+        parameters.add(new LogParameter("total", LogUtil.format(total)));
     }
 
 }

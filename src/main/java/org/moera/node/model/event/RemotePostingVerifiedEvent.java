@@ -5,7 +5,6 @@ import java.util.List;
 import org.moera.lib.node.types.VerificationStatus;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.RemotePostingVerification;
-import org.springframework.data.util.Pair;
 
 public class RemotePostingVerifiedEvent extends RemotePostingVerificationEvent {
 
@@ -29,9 +28,9 @@ public class RemotePostingVerifiedEvent extends RemotePostingVerificationEvent {
     }
 
     @Override
-    public void logParameters(List<Pair<String, String>> parameters) {
+    public void logParameters(List<LogParameter> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("correct", LogUtil.format(correct)));
+        parameters.add(new LogParameter("correct", LogUtil.format(correct)));
     }
 
 }
