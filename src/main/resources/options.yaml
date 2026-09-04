@@ -61,6 +61,11 @@
   type: string
   internal: true
 
+- name: credentials.login-disabled
+  type: bool
+  defaultValue: false
+  internal: true
+
 - name: profile.node-name
   type: string
   internal: true

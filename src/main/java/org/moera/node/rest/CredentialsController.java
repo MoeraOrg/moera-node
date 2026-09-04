@@ -28,6 +28,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.model.PasswordResetLiberin;
 import org.moera.node.model.CredentialsCreatedUtil;
+import org.moera.node.operations.LoginUtil;
 import org.moera.node.model.EmailHintUtil;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.VerificationInfoUtil;
@@ -71,10 +72,7 @@ public class CredentialsController {
         log.info("GET /credentials");
 
         Options options = requestContext.getOptions();
-        return CredentialsCreatedUtil.build(
-            !ObjectUtils.isEmpty(options.getString("credentials.login"))
-            && !ObjectUtils.isEmpty(options.getString("credentials.password-hash"))
-        );
+        return CredentialsCreatedUtil.build(LoginUtil.isCreated(options), LoginUtil.isLoginDisabled(options));
     }
 
     @PostMapping
@@ -82,17 +80,21 @@ public class CredentialsController {
     public ResponseEntity<Result> post(@RequestBody Credentials credentials) {
         log.info("POST /credentials (login = {})", LogUtil.format(credentials.getLogin()));
 
-        credentials.validate();
+        boolean loginDisabled = Boolean.TRUE.equals(credentials.getLoginDisabled());
+        if (!loginDisabled) {
+            credentials.validate();
+        }
 
         requestContext.getOptions().runInTransaction(options -> {
-            if (
-                !ObjectUtils.isEmpty(options.getString("credentials.login"))
-                && !ObjectUtils.isEmpty(options.getString("credentials.password-hash"))
-            ) {
+            if (LoginUtil.isCreated(options)) {
                 throw new OperationFailure("credentials.already-created");
             }
-            options.set("credentials.login", credentials.getLogin());
-            options.set("credentials.password-hash", Password.hash(credentials.getPassword()));
+            if (loginDisabled) {
+                options.set("credentials.login-disabled", true);
+            } else {
+                options.set("credentials.login", credentials.getLogin());
+                options.set("credentials.password-hash", Password.hash(credentials.getPassword()));
+            }
         });
 
         return ResponseEntity.created(URI.create("/credentials")).body(Result.OK);
@@ -103,6 +105,7 @@ public class CredentialsController {
     public Result put(@RequestBody CredentialsChange credentials) {
         log.info("PUT /credentials (login = {})", LogUtil.format(credentials.getLogin()));
 
+        LoginUtil.checkLoginEnabled(requestContext.getOptions());
         credentials.validate();
 
         if (!ObjectUtils.isEmpty(credentials.getToken())) {
@@ -142,6 +145,7 @@ public class CredentialsController {
         requestContext.getOptions().runInTransaction(options -> {
             options.reset("credentials.login");
             options.reset("credentials.password-hash");
+            options.reset("credentials.login-disabled");
         });
 
         return Result.OK;
@@ -153,6 +157,7 @@ public class CredentialsController {
     public EmailHint reset() {
         log.info("POST /credentials/reset");
 
+        LoginUtil.checkLoginEnabled(requestContext.getOptions());
         String email = requestContext.getOptions().getString("profile.email");
         if (ObjectUtils.isEmpty(email)) {
             throw new OperationFailure("credentials.email-not-set");
@@ -182,6 +187,7 @@ public class CredentialsController {
     public VerificationInfo verifyResetToken(@RequestBody CredentialsResetToken resetToken) {
         log.info("POST /credentials/reset/verify");
 
+        LoginUtil.checkLoginEnabled(requestContext.getOptions());
         resetToken.validate();
 
         PasswordResetToken token = passwordResetTokenRepository.findById(resetToken.getToken()).orElse(null);

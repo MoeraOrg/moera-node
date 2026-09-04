@@ -33,6 +33,7 @@ import org.moera.node.liberin.model.DefrostLiberin;
 import org.moera.node.liberin.model.TokenAddedLiberin;
 import org.moera.node.liberin.model.TokenDeletedLiberin;
 import org.moera.node.liberin.model.TokenUpdatedLiberin;
+import org.moera.node.operations.LoginUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.TokenInfoUtil;
@@ -84,10 +85,8 @@ public class TokenController {
         attributes.validate();
 
         Options options = requestContext.getOptions();
-        if (
-            ObjectUtils.isEmpty(options.getString("credentials.login"))
-            || ObjectUtils.isEmpty(options.getString("credentials.password-hash"))
-        ) {
+        LoginUtil.checkLoginEnabled(options);
+        if (!LoginUtil.isCreated(options)) {
             throw new OperationFailure("credentials.not-created");
         }
         if (
