@@ -1,6 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.moera.node.liberin.Liberin;
@@ -65,16 +64,6 @@ public class PostingMediaTextUpdatedLiberin extends Liberin {
 
     public void setTextContent(String textContent) {
         this.textContent = textContent;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("postingId", postingId);
-        model.put("mediaId", mediaId);
-        model.put("mediaNodeName", mediaNodeName);
-        model.put("title", title);
-        model.put("textContent", textContent);
     }
 
 }

@@ -1,10 +1,7 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.node.liberin.Liberin;
 import org.moera.node.data.UserListItem;
-import org.moera.node.model.UserListItemInfoUtil;
 
 public class UserListItemDeletedLiberin extends Liberin {
 
@@ -20,14 +17,6 @@ public class UserListItemDeletedLiberin extends Liberin {
 
     public void setItem(UserListItem item) {
         this.item = item;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("id", item.getId());
-        model.put("listName", item.getListName());
-        model.put("item", UserListItemInfoUtil.build(item));
     }
 
 }

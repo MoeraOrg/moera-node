@@ -2,6 +2,7 @@ package org.moera.node.liberin;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -10,8 +11,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 
 import org.moera.node.global.UniversalContext;
-import org.moera.node.media.DirectServeOperations;
-import org.moera.node.plugin.Plugins;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,12 +35,6 @@ public class LiberinManager implements Runnable {
 
     @Inject
     private UniversalContext universalContext;
-
-    @Inject
-    private DirectServeOperations directServeOperations;
-
-    @Inject
-    private Plugins plugins;
 
     @Inject
     private Transaction tx;
@@ -89,10 +82,7 @@ public class LiberinManager implements Runnable {
     }
 
     public void send(Liberin... liberins) {
-        for (Liberin liberin : liberins) {
-            liberin.setDirectServeOperations(directServeOperations);
-            queue.add(liberin);
-        }
+        Collections.addAll(queue, liberins);
     }
 
     public void send(Collection<Liberin> liberins) {
@@ -101,14 +91,12 @@ public class LiberinManager implements Runnable {
 
     @Override
     public void run() {
-        boolean stopped = false;
         boolean interrupted = false;
-        while (!stopped || queue.peek() != null) {
+        while (!interrupted || queue.peek() != null) {
             Liberin liberin = null;
             try {
                 liberin = queue.take();
             } catch (InterruptedException e) {
-                stopped = true;
                 interrupted = true;
             }
             if (liberin == null) {
@@ -116,16 +104,6 @@ public class LiberinManager implements Runnable {
             }
 
             universalContext.associate(liberin.getNodeId());
-            if (liberin.getPluginContext() == null) {
-                liberin.setPluginContext(universalContext);
-            }
-
-            Liberin lb = liberin;
-            tx.executeWriteQuietly(
-                () -> plugins.send(lb),
-                e -> log.error("Error sending liberin %s to plugins:".formatted(lb.getClass().getSimpleName()), e)
-            );
-
             log.debug("Delivering liberin {}", liberin.getClass().getSimpleName());
             HandlerMethod handler = handlers.get(liberin.getClass());
             if (handler == null) {
@@ -133,6 +111,7 @@ public class LiberinManager implements Runnable {
                 continue;
             }
 
+            Liberin lb = liberin;
             tx.executeWriteQuietly(
                 () -> {
                     handler.getMethod().invoke(handler.getBean(), lb);
@@ -140,9 +119,8 @@ public class LiberinManager implements Runnable {
                 e -> log.error("Error handling liberin %s:".formatted(lb.getClass().getSimpleName()), e)
             );
         }
-        if (interrupted) {
-            Thread.currentThread().interrupt();
-        }
+        // interrupted == true
+        Thread.currentThread().interrupt();
     }
 
 }

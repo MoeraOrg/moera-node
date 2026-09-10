@@ -1,6 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.moera.node.liberin.Liberin;
@@ -19,12 +18,6 @@ public class TokenDeletedLiberin extends Liberin {
 
     public void setTokenId(UUID tokenId) {
         this.tokenId = tokenId;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("tokenId", tokenId);
     }
 
 }

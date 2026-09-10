@@ -20,7 +20,6 @@ import org.moera.node.option.OptionHookManager;
 import org.moera.node.option.type.BoolOptionType;
 import org.moera.node.option.type.OptionTypeBase;
 import org.moera.node.option.type.StringOptionType;
-import org.moera.node.plugin.Plugins;
 import org.springframework.test.util.ReflectionTestUtils;
 
 class ProfileSourceUriTest {
@@ -61,8 +60,6 @@ class ProfileSourceUriTest {
             frozenDescriptor.getName(), frozenDescriptor
         ));
         ReflectionTestUtils.setField(metadata, "typeModifiers", new HashMap<>());
-        ReflectionTestUtils.setField(metadata, "plugins", new Plugins());
-
         OptionRepository repository = (OptionRepository) Proxy.newProxyInstance(
             OptionRepository.class.getClassLoader(),
             new Class<?>[]{OptionRepository.class},

@@ -68,7 +68,7 @@ public class SseTask extends Task {
     protected void emitterClosed() {
     }
 
-    public void setLastSentMoment(long lastSentMoment) {
+    protected void setLastSentMoment(long lastSentMoment) {
         this.lastSentMoment = lastSentMoment;
     }
 

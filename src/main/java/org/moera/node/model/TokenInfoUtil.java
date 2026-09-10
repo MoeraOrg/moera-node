@@ -20,7 +20,6 @@ public class TokenInfoUtil {
         
         tokenInfo.setName(tokenData.getName());
         tokenInfo.setPermissions(Scope.toValues(tokenData.getAuthScope()));
-        tokenInfo.setPluginName(tokenData.getPluginName());
         tokenInfo.setCreatedAt(Util.toEpochSecond(tokenData.getCreatedAt()));
         tokenInfo.setDeadline(Util.toEpochSecond(tokenData.getDeadline()));
         tokenInfo.setLastUsedAt(Util.toEpochSecond(tokenData.getLastUsedAt()));

@@ -1,7 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.node.liberin.Liberin;
 
 public class RemoteCommentReactionDeletedAllLiberin extends Liberin {
@@ -38,14 +36,6 @@ public class RemoteCommentReactionDeletedAllLiberin extends Liberin {
 
     public void setCommentId(String commentId) {
         this.commentId = commentId;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("postingId", postingId);
-        model.put("commentId", commentId);
     }
 
 }

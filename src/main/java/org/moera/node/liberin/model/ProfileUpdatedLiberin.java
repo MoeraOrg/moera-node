@@ -1,11 +1,7 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.node.data.Avatar;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.AvatarInfoUtil;
-import org.moera.node.model.ProfileInfoUtil;
 import org.moera.node.option.Options;
 
 public class ProfileUpdatedLiberin extends Liberin {
@@ -52,15 +48,6 @@ public class ProfileUpdatedLiberin extends Liberin {
 
     public void setPrevEmail(String prevEmail) {
         this.prevEmail = prevEmail;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("profile", ProfileInfoUtil.build(options));
-        model.put("avatar", AvatarInfoUtil.build(avatar, getDirectServeOperations()));
-        model.put("prevEmail", prevEmail);
     }
 
 }

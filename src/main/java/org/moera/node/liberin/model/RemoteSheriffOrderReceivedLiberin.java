@@ -1,8 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-import jakarta.persistence.EntityManager;
-
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.notifications.SheriffOrderForCommentAddedNotification;
 import org.moera.lib.node.types.notifications.SheriffOrderForCommentDeletedNotification;
@@ -182,23 +179,6 @@ public class RemoteSheriffOrderReceivedLiberin extends Liberin {
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model, EntityManager entityManager) {
-        super.toModel(model);
-        model.put("deleted", deleted);
-        model.put("remoteNodeName", remoteNodeName);
-        model.put("remoteFeedName", remoteFeedName);
-        model.put("postingOwnerName", postingOwnerName);
-        model.put("postingOwnerFullName", postingOwnerFullName);
-        model.put("postingOwnerSourceUri", postingOwnerSourceUri);
-        model.put("postingHeading", postingHeading);
-        model.put("postingId", postingId);
-        model.put("commentHeading", commentHeading);
-        model.put("commentId", commentId);
-        model.put("sheriffName", sheriffName);
-        model.put("orderId", orderId);
     }
 
 }

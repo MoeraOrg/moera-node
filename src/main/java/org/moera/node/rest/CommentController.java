@@ -67,7 +67,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.CommentAddedLiberin;
 import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
-import org.moera.node.liberin.model.CommentsReadLiberin;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaOperations;
@@ -607,8 +606,6 @@ public class CommentController {
             sliceInfo = getCommentsAfter(posting, after, limit, sheriff);
         }
         calcSliceTotals(sliceInfo, posting);
-
-        requestContext.send(new CommentsReadLiberin(postingUuid, before, after, limit));
 
         return sliceInfo;
     }

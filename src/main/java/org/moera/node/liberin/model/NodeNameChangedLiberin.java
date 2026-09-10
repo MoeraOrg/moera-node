@@ -1,10 +1,7 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.node.data.Avatar;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.option.Options;
 
 public class NodeNameChangedLiberin extends Liberin {
@@ -55,20 +52,6 @@ public class NodeNameChangedLiberin extends Liberin {
 
     public void setAvatar(Avatar avatar) {
         this.avatar = avatar;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("prevNodeName", prevNodeName);
-        model.put("fullName", options.getString("profile.full-name"));
-        model.put("nodeSourceUri", options.getString("profile.source-uri"));
-        model.put("gender", options.getString("profile.gender"));
-        model.put("title", options.getString("profile.title"));
-        if (avatar != null) {
-            model.put("avatar", AvatarImageUtil.build(avatar, getDirectServeOperations()));
-        }
     }
 
 }

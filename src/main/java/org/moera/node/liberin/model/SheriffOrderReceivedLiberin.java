@@ -1,15 +1,9 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-import jakarta.persistence.EntityManager;
-
 import org.moera.lib.node.types.AvatarImage;
-import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Posting;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.CommentInfoUtil;
-import org.moera.node.model.PostingInfoUtil;
 
 public class SheriffOrderReceivedLiberin extends Liberin {
 
@@ -86,40 +80,6 @@ public class SheriffOrderReceivedLiberin extends Liberin {
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model, EntityManager entityManager) {
-        super.toModel(model);
-        model.put("deleted", deleted);
-        model.put("feedName", feedName);
-        if (posting != null) {
-            posting = entityManager.merge(posting);
-            model.put(
-                "posting",
-                PostingInfoUtil.build(
-                    posting,
-                    AccessCheckers.ADMIN,
-                    null,
-                    getDirectServeOperations()
-                )
-            );
-        }
-        if (comment != null) {
-            comment = entityManager.merge(comment);
-            model.put(
-                "comment",
-                CommentInfoUtil.build(
-                    comment,
-                    AccessCheckers.ADMIN,
-                    null,
-                    getDirectServeOperations()
-                )
-            );
-        }
-        model.put("sheriffName", sheriffName);
-        model.put("sheriffAvatar", sheriffAvatar);
-        model.put("orderId", orderId);
     }
 
 }

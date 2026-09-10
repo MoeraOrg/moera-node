@@ -1,10 +1,7 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.node.data.FriendGroup;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.FriendGroupInfoUtil;
 
 public class FriendGroupAddedLiberin extends Liberin {
 
@@ -20,12 +17,6 @@ public class FriendGroupAddedLiberin extends Liberin {
 
     public void setFriendGroup(FriendGroup friendGroup) {
         this.friendGroup = friendGroup;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("friendGroup", FriendGroupInfoUtil.build(friendGroup, true));
     }
 
 }

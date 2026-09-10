@@ -1,10 +1,7 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.node.data.Avatar;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.AvatarInfoUtil;
 
 public class AvatarDeletedLiberin extends Liberin {
 
@@ -20,12 +17,6 @@ public class AvatarDeletedLiberin extends Liberin {
 
     public void setAvatar(Avatar avatar) {
         this.avatar = avatar;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("avatar", AvatarInfoUtil.build(avatar, getDirectServeOperations()));
     }
 
 }

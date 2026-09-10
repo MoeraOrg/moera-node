@@ -1,7 +1,6 @@
 package org.moera.node.liberin.model;
 
 import java.util.List;
-import java.util.Map;
 
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.SheriffMark;
@@ -199,29 +198,6 @@ public class MentionInRemoteCommentAddedLiberin extends Liberin {
 
     public void setCommentSheriffMarks(List<SheriffMark> commentSheriffMarks) {
         this.commentSheriffMarks = commentSheriffMarks;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("postingOwnerName", postingOwnerName);
-        model.put("postingOwnerFullName", postingOwnerFullName);
-        model.put("postingOwnerSourceUri", postingOwnerSourceUri);
-        model.put("postingOwnerGender", postingOwnerGender);
-        model.put("postingOwnerAvatar", postingOwnerAvatar);
-        model.put("postingId", postingId);
-        model.put("postingHeading", postingHeading);
-        model.put("postingSheriffs", postingSheriffs);
-        model.put("postingSheriffMarks", postingSheriffMarks);
-        model.put("commentOwnerName", commentOwnerName);
-        model.put("commentOwnerFullName", commentOwnerFullName);
-        model.put("commentOwnerSourceUri", commentOwnerSourceUri);
-        model.put("commentOwnerGender", commentOwnerGender);
-        model.put("commentOwnerAvatar", commentOwnerAvatar);
-        model.put("commentId", commentId);
-        model.put("commentHeading", commentHeading);
-        model.put("commentSheriffMarks", commentSheriffMarks);
     }
 
 }

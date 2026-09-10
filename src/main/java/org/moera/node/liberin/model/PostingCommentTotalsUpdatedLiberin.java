@@ -1,13 +1,7 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
-import jakarta.persistence.EntityManager;
-
-import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Posting;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.PostingInfoUtil;
 
 public class PostingCommentTotalsUpdatedLiberin extends Liberin {
 
@@ -33,19 +27,6 @@ public class PostingCommentTotalsUpdatedLiberin extends Liberin {
 
     public void setTotal(int total) {
         this.total = total;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model, EntityManager entityManager) {
-        super.toModel(model);
-        posting = entityManager.merge(posting);
-        model.put(
-            "posting",
-            PostingInfoUtil.build(
-                posting, AccessCheckers.ADMIN, null, getDirectServeOperations()
-            )
-        );
-        model.put("total", total);
     }
 
 }

@@ -1,7 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.node.liberin.Liberin;
 
 public class RemoteCommentReactionDeletedLiberin extends Liberin {
@@ -59,16 +57,6 @@ public class RemoteCommentReactionDeletedLiberin extends Liberin {
 
     public void setNegative(boolean negative) {
         this.negative = negative;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("postingId", postingId);
-        model.put("commentId", commentId);
-        model.put("ownerName", ownerName);
-        model.put("negative", negative);
     }
 
 }

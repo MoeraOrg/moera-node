@@ -1,8 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-import jakarta.persistence.EntityManager;
-
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.notifications.SheriffComplaintDecidedNotification;
 import org.moera.node.liberin.Liberin;
@@ -158,25 +155,6 @@ public class RemoteSheriffComplaintDecidedLiberin extends Liberin {
 
     public void setComplaintGroupId(String complaintGroupId) {
         this.complaintGroupId = complaintGroupId;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model, EntityManager entityManager) {
-        super.toModel(model);
-        model.put("remoteNodeName", remoteNodeName);
-        model.put("remoteFeedName", remoteFeedName);
-        model.put("postingOwnerName", postingOwnerName);
-        model.put("postingOwnerFullName", postingOwnerFullName);
-        model.put("postingOwnerSourceUri", postingOwnerSourceUri);
-        model.put("postingHeading", postingHeading);
-        model.put("postingId", postingId);
-        model.put("commentOwnerName", commentOwnerName);
-        model.put("commentOwnerFullName", commentOwnerFullName);
-        model.put("commentOwnerSourceUri", commentOwnerSourceUri);
-        model.put("commentHeading", commentHeading);
-        model.put("commentId", commentId);
-        model.put("sheriffName", sheriffName);
-        model.put("complaintGroupId", complaintGroupId);
     }
 
 }

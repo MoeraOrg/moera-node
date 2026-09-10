@@ -1,7 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.node.liberin.Liberin;
@@ -62,16 +60,6 @@ public class RemoteCommentReactionAddingFailedLiberin extends Liberin {
 
     public void setCommentInfo(CommentInfo commentInfo) {
         this.commentInfo = commentInfo;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("postingId", postingId);
-        model.put("posting", postingInfo);
-        model.put("commentId", commentId);
-        model.put("comment", commentInfo);
     }
 
 }

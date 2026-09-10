@@ -1,7 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.node.liberin.Liberin;
 
@@ -175,27 +173,6 @@ public class RemoteCommentReactionAddedLiberin extends Liberin {
 
     public void setReactionEmoji(int reactionEmoji) {
         this.reactionEmoji = reactionEmoji;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("postingOwnerName", postingOwnerName);
-        model.put("postingOwnerFullName", postingOwnerFullName);
-        model.put("postingOwnerSourceUri", postingOwnerSourceUri);
-        model.put("postingOwnerGender", postingOwnerGender);
-        model.put("postingOwnerAvatar", postingOwnerAvatar);
-        model.put("postingId", postingId);
-        model.put("commentId", commentId);
-        model.put("reactionNodeName", reactionNodeName);
-        model.put("reactionFullName", reactionFullName);
-        model.put("reactionSourceUri", reactionSourceUri);
-        model.put("reactionGender", reactionGender);
-        model.put("reactionAvatar", reactionAvatar);
-        model.put("commentHeading", commentHeading);
-        model.put("reactionNegative", reactionNegative);
-        model.put("reactionEmoji", reactionEmoji);
     }
 
 }

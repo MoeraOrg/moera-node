@@ -8,6 +8,11 @@
 6. If a record declaration contains no methods, do not put an empty line between the opening and closing braces. Keep
    the opening and closing braces on separate lines.
 
+## Documents
+
+1. Keep all project documentation under `doc/`. Do not create documentation files in `docs/` or elsewhere.
+2. Format all documents with a maximum line length of 120 characters.
+
 # Testing
 
 1. This environment uses JDK 25, where Mockito cannot self-attach its Byte Buddy agent. Run Maven tests that use

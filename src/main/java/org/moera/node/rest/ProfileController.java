@@ -18,7 +18,6 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RateLimit;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.EmailVerificationLiberin;
-import org.moera.node.liberin.model.ProfileReadLiberin;
 import org.moera.node.liberin.model.ProfileUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -65,8 +64,6 @@ public class ProfileController {
         log.info("GET /profile (include = {})", LogUtil.format(include));
 
         Set<String> includeSet = Util.setParam(include);
-
-        requestContext.send(new ProfileReadLiberin());
 
         return ProfileInfoUtil.build(requestContext, includeSet.contains("source"), directServeOperations);
     }

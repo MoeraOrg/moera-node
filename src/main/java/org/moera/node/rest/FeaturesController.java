@@ -23,7 +23,6 @@ import org.moera.node.model.FeaturesUtil;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
 import org.moera.node.option.Options;
-import org.moera.node.plugin.Plugins;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -45,9 +44,6 @@ public class FeaturesController {
     private AskHistoryRepository askHistoryRepository;
 
     @Inject
-    private Plugins plugins;
-
-    @Inject
     private FriendCache friendCache;
 
     @Inject
@@ -62,7 +58,6 @@ public class FeaturesController {
 
         return FeaturesUtil.build(
             requestContext.getOptions(),
-            plugins.getNames(requestContext.nodeId()),
             friendCache.getNodeGroups(),
             friendCache.getClientGroups(requestContext.getClientName(Scope.IDENTIFY)),
             requestContext,

@@ -57,7 +57,7 @@ public class EncryptAllOptionsJob extends Job<EncryptAllOptionsJob.Parameters, O
         for (DomainUpgrade upgrade : upgrades) {
             UUID nodeId = upgrade.getNodeId();
             Options options = domains.getDomainOptions(nodeId);
-            optionsMetadata.getDescriptorsForNode(nodeId).stream()
+            optionsMetadata.getDescriptors().stream()
                 .filter(d -> Boolean.TRUE.equals(d.getEncrypted()))
                 .map(SettingDescriptor::getName)
                 .forEach(options::resave);

@@ -1,12 +1,10 @@
 package org.moera.node.liberin.model;
 
 import java.util.List;
-import java.util.Map;
 
 import org.moera.lib.node.types.FriendGroupDetails;
 import org.moera.node.data.Contact;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.ContactInfoUtil;
 
 public class FriendshipUpdatedLiberin extends Liberin {
 
@@ -42,17 +40,6 @@ public class FriendshipUpdatedLiberin extends Liberin {
 
     public void setContact(Contact contact) {
         this.contact = contact;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("friendNodeName", friendNodeName);
-        model.put("friendGroups", friendGroups);
-        model.put(
-            "contact",
-            ContactInfoUtil.build(contact, getPluginContext().getOptions(), getDirectServeOperations())
-        );
     }
 
 }

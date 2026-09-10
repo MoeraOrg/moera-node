@@ -1,7 +1,6 @@
 package org.moera.node.liberin.model;
 
 import java.util.List;
-import java.util.Map;
 
 import org.moera.lib.node.types.SheriffMark;
 import org.moera.node.liberin.Liberin;
@@ -42,14 +41,6 @@ public class FeedSheriffDataUpdatedLiberin extends Liberin {
 
     public void setSheriffMarks(List<SheriffMark> sheriffMarks) {
         this.sheriffMarks = sheriffMarks;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("feedName", feedName);
-        model.put("sheriffs", sheriffs);
-        model.put("sheriffMarks", sheriffMarks);
     }
 
 }

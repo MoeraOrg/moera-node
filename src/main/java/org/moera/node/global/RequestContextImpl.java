@@ -35,8 +35,6 @@ public class RequestContextImpl implements RequestContext {
     private String[] friendGroups;
     private long clientScope;
     private boolean owner;
-    private UUID tokenId;
-    private String domainName;
     private Options options;
     private Avatar avatar;
     private String url;
@@ -158,26 +156,6 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public void setOwner(boolean owner) {
         this.owner = owner;
-    }
-
-    @Override
-    public UUID getTokenId() {
-        return tokenId;
-    }
-
-    @Override
-    public void setTokenId(UUID tokenId) {
-        this.tokenId = tokenId;
-    }
-
-    @Override
-    public String getDomainName() {
-        return domainName;
-    }
-
-    @Override
-    public void setDomainName(String domainName) {
-        this.domainName = domainName;
     }
 
     @Override

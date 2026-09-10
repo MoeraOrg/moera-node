@@ -60,14 +60,6 @@ public interface RequestContext extends AccessChecker {
 
     void setOwner(boolean owner);
 
-    UUID getTokenId();
-
-    void setTokenId(UUID tokenId);
-
-    String getDomainName();
-
-    void setDomainName(String domainName);
-
     Options getOptions();
 
     void setOptions(Options options);

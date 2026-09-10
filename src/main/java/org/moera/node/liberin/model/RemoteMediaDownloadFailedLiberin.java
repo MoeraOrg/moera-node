@@ -1,7 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.node.liberin.Liberin;
 
 public class RemoteMediaDownloadFailedLiberin extends Liberin {
@@ -50,15 +48,6 @@ public class RemoteMediaDownloadFailedLiberin extends Liberin {
 
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("mediaId", mediaId);
-        model.put("errorCode", errorCode);
-        model.put("errorMessage", errorMessage);
     }
 
 }

@@ -54,7 +54,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
-import org.moera.node.liberin.model.FeedStoriesReadLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.FeedInfoUtil;
@@ -255,8 +254,6 @@ public class FeedController {
             sliceInfo = getStoriesAfter(feedName, after, limit);
         }
         calcSliceTotals(sliceInfo, feedName);
-
-        requestContext.send(new FeedStoriesReadLiberin(feedName, before, after, limit));
 
         return sliceInfo;
     }

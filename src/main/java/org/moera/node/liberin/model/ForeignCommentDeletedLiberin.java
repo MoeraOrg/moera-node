@@ -1,7 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.lib.node.types.SubscriptionReason;
 import org.moera.node.liberin.Liberin;
 
@@ -60,16 +58,6 @@ public class ForeignCommentDeletedLiberin extends Liberin {
 
     public void setReason(SubscriptionReason reason) {
         this.reason = reason;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("postingId", postingId);
-        model.put("ownerName", ownerName);
-        model.put("commentId", commentId);
-        model.put("reason", reason);
     }
 
 }

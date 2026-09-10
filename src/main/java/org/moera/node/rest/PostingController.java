@@ -47,7 +47,6 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.PostingAddedLiberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
-import org.moera.node.liberin.model.PostingReadLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaManager;
@@ -439,8 +438,6 @@ public class PostingController {
         ) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-
-        requestContext.send(new PostingReadLiberin(postingId));
 
         return withSheriffUserListMarks(withBlockings(withClientReaction(
             PostingInfoUtil.build(

@@ -1,7 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.node.liberin.Liberin;
@@ -55,14 +53,6 @@ public class RemoteCommentAddedLiberin extends Liberin {
 
     public void setVideoCompressionWaited(boolean videoCompressionWaited) {
         this.videoCompressionWaited = videoCompressionWaited;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("postingId", postingInfo.getId());
-        model.put("commentId", commentInfo.getId());
     }
 
 }

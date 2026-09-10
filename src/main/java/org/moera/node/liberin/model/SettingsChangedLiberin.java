@@ -1,7 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.node.liberin.Liberin;
 
 public class SettingsChangedLiberin extends Liberin {
@@ -28,13 +26,6 @@ public class SettingsChangedLiberin extends Liberin {
 
     public void setClientChanged(boolean clientChanged) {
         this.clientChanged = clientChanged;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeChanged", nodeChanged);
-        model.put("clientChanged", clientChanged);
     }
 
 }

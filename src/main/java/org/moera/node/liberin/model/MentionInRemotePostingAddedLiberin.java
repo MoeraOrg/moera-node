@@ -1,7 +1,6 @@
 package org.moera.node.liberin.model;
 
 import java.util.List;
-import java.util.Map;
 
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.SheriffMark;
@@ -121,21 +120,6 @@ public class MentionInRemotePostingAddedLiberin extends Liberin {
 
     public void setSheriffMarks(List<SheriffMark> sheriffMarks) {
         this.sheriffMarks = sheriffMarks;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("ownerName", ownerName);
-        model.put("ownerFullName", ownerFullName);
-        model.put("ownerSourceUri", ownerSourceUri);
-        model.put("ownerGender", ownerGender);
-        model.put("ownerAvatar", ownerAvatar);
-        model.put("id", id);
-        model.put("heading", heading);
-        model.put("sheriffs", sheriffs);
-        model.put("sheriffMarks", sheriffMarks);
     }
 
 }

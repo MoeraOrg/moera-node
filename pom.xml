@@ -37,7 +37,6 @@
         <commons-io.version>2.21.0</commons-io.version>
         <flexmark.version>0.64.8</flexmark.version>
         <flyway.version>12.1.1</flyway.version>
-        <guava.version>33.5.0-jre</guava.version>
         <hamcrest.version>3.0</hamcrest.version>
         <handlebars.version>4.5.2</handlebars.version>
         <handlebars-springmvc.version>4.5.0</handlebars-springmvc.version>
@@ -272,11 +271,6 @@
             <groupId>com.drewnoakes</groupId>
             <artifactId>metadata-extractor</artifactId>
             <version>${metadata-extractor.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
         </dependency>
         <dependency>
             <groupId>io.hypersistence</groupId>

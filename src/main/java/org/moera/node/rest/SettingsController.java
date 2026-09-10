@@ -101,7 +101,7 @@ public class SettingsController {
     public List<SettingMetaInfo> getMetadata(@RequestParam(required = false) String prefix) {
         log.info("GET /settings/node/metadata");
 
-        return optionsMetadata.getDescriptorsForNode(requestContext.nodeId()).stream()
+        return optionsMetadata.getDescriptors().stream()
             .filter(d -> !Boolean.TRUE.equals(d.getInternal()))
             .filter(d -> prefix == null || d.getName().startsWith(prefix))
             .map(SettingMetaInfoUtil::build)
@@ -121,9 +121,6 @@ public class SettingsController {
             for (SettingMetaAttributes meta : metaAttributes) {
                 if (meta.getName() == null) {
                     throw new OperationFailure("setting.unknown");
-                }
-                if (meta.getName().startsWith(OptionsMetadata.PLUGIN_PREFIX)) {
-                    throw new OperationFailure("setting.plugin");
                 }
                 SettingDescriptor descriptor = optionsMetadata.getDescriptor(meta.getName());
                 if (descriptor == null) {

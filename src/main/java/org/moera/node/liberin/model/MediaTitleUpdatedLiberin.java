@@ -1,6 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.moera.node.liberin.Liberin;
@@ -29,12 +28,6 @@ public class MediaTitleUpdatedLiberin extends Liberin {
 
     public void setTitle(String title) {
         this.title = title;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        model.put("mediaId", mediaId);
-        model.put("title", title);
     }
 
 }

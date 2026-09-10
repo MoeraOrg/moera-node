@@ -1,7 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.liberin.Liberin;
 
@@ -39,14 +37,6 @@ public class RemoteMediaDownloadedLiberin extends Liberin {
 
     public void setMediaInfo(PrivateMediaFileInfo mediaInfo) {
         this.mediaInfo = mediaInfo;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("mediaId", mediaId);
-        model.put("media", mediaInfo);
     }
 
 }

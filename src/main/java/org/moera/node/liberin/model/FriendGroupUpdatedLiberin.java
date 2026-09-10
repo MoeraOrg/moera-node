@@ -1,11 +1,8 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.FriendGroupInfoUtil;
 
 public class FriendGroupUpdatedLiberin extends Liberin {
 
@@ -31,13 +28,6 @@ public class FriendGroupUpdatedLiberin extends Liberin {
 
     public void setLatestViewPrincipal(Principal latestViewPrincipal) {
         this.latestViewPrincipal = latestViewPrincipal;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("friendGroup", FriendGroupInfoUtil.build(friendGroup, true));
-        model.put("latestViewPrincipal", latestViewPrincipal);
     }
 
 }

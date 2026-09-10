@@ -25,9 +25,7 @@ public class OptionsOperations {
                 .map(domains::getDomainOptions)
                 .forEach(options -> {
                     options.reload();
-                    liberinManager.send(new NodeSettingsMetadataChangedLiberin()
-                            .withNodeId(options.nodeId())
-                            .withPluginContext(requestContext));
+                    liberinManager.send(new NodeSettingsMetadataChangedLiberin().withNodeId(options.nodeId()));
                 });
     }
 

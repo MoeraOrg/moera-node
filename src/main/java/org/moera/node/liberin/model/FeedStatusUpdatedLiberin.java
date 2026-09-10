@@ -1,6 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
 import java.util.Set;
 
 import org.moera.lib.node.types.FeedStatus;
@@ -58,15 +57,6 @@ public class FeedStatusUpdatedLiberin extends Liberin {
 
     public void setInstantsUpdated(Set<Story> instantsUpdated) {
         this.instantsUpdated = instantsUpdated;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("feedName", feedName);
-        model.put("status", status);
-        model.put("change", change);
-        model.put("instantsUpdated", instantsUpdated);
     }
 
 }

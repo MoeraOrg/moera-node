@@ -1,7 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.node.liberin.Liberin;
 
@@ -102,20 +100,6 @@ public class RemotePostingImportantUpdateLiberin extends Liberin {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("ownerName", ownerName);
-        model.put("ownerFullName", ownerFullName);
-        model.put("ownerSourceUri", ownerSourceUri);
-        model.put("ownerGender", ownerGender);
-        model.put("ownerAvatar", ownerAvatar);
-        model.put("id", id);
-        model.put("heading", heading);
-        model.put("description", description);
     }
 
 }

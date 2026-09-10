@@ -1,7 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.lib.node.types.AskDescription;
 import org.moera.node.liberin.Liberin;
 
@@ -29,13 +27,6 @@ public class RemoteNodeAskedLiberin extends Liberin {
 
     public void setAskDescription(AskDescription askDescription) {
         this.askDescription = askDescription;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("askDescription", askDescription);
     }
 
 }

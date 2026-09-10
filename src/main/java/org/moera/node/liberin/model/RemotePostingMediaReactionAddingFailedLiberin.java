@@ -1,7 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.node.liberin.Liberin;
 
@@ -61,16 +59,6 @@ public class RemotePostingMediaReactionAddingFailedLiberin extends Liberin {
 
     public void setParentPostingInfo(PostingInfo parentPostingInfo) {
         this.parentPostingInfo = parentPostingInfo;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("nodeName", nodeName);
-        model.put("postingId", postingId);
-        model.put("parentPostingId", parentPostingId);
-        model.put("parentMediaId", parentMediaId);
-        model.put("parentPosting", parentPostingInfo);
     }
 
 }

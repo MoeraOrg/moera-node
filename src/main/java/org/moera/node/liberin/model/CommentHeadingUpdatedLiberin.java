@@ -1,6 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.moera.node.liberin.Liberin;
@@ -39,14 +38,6 @@ public class CommentHeadingUpdatedLiberin extends Liberin {
 
     public void setHeading(String heading) {
         this.heading = heading;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("commentId", commentId);
-        model.put("revisionId", revisionId);
-        model.put("heading", heading);
     }
 
 }

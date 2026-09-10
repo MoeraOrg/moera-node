@@ -1,6 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.moera.lib.node.types.AvatarImage;
@@ -98,18 +97,6 @@ public class AskedToFriendLiberin extends Liberin {
 
     public void setMessage(String message) {
         this.message = message;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("remoteNodeName", remoteNodeName);
-        model.put("remoteFullName", remoteFullName);
-        model.put("remoteSourceUri", remoteSourceUri);
-        model.put("remoteGender", remoteGender);
-        model.put("friendGroupId", friendGroupId);
-        model.put("friendGroupTitle", friendGroupTitle);
-        model.put("message", message);
     }
 
 }

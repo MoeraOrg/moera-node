@@ -1,6 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.moera.lib.node.types.principal.Principal;
@@ -40,14 +39,6 @@ public class FriendGroupDeletedLiberin extends Liberin {
 
     public void setFriendName(String friendName) {
         this.friendName = friendName;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("friendGroupId", friendGroupId);
-        model.put("latestViewPrincipal", latestViewPrincipal);
-        model.put("friendName", friendName);
     }
 
 }

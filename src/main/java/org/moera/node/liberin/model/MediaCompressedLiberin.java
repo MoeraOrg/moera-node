@@ -1,6 +1,5 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.moera.lib.node.types.PrivateMediaFileInfo;
@@ -40,13 +39,6 @@ public class MediaCompressedLiberin extends Liberin {
 
     public void setMedia(PrivateMediaFileInfo media) {
         this.media = media;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        model.put("originalMediaId", originalMediaId);
-        model.put("originalMediaHash", originalMediaHash);
-        model.put("media", media);
     }
 
 }

@@ -2,14 +2,9 @@ package org.moera.node.liberin.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.moera.lib.node.types.FriendOfInfo;
 import org.moera.node.data.Contact;
 import org.moera.node.data.FriendOf;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.FriendOfInfoUtil;
 
 public class RemoteFriendshipUpdatedLiberin extends Liberin {
 
@@ -46,22 +41,6 @@ public class RemoteFriendshipUpdatedLiberin extends Liberin {
         added.forEach(fo -> fo.setContact(contact));
         deleted.forEach(fo -> fo.setContact(contact));
         current.forEach(fo -> fo.setContact(contact));
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model) {
-        super.toModel(model);
-        model.put("added", toFriendOfInfos(added));
-        model.put("deleted", toFriendOfInfos(deleted));
-        model.put("current", toFriendOfInfos(current));
-    }
-
-    private List<FriendOfInfo> toFriendOfInfos(List<FriendOf> friendOfs) {
-        return friendOfs.stream()
-                .map(fo -> FriendOfInfoUtil.build(
-                    fo, getPluginContext().getOptions(), getDirectServeOperations()
-                ))
-                .collect(Collectors.toList());
     }
 
 }

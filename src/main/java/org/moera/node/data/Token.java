@@ -37,9 +37,6 @@ public class Token {
     @Column(columnDefinition = "inet")
     private Inet ip;
 
-    @Size(max = 48)
-    private String pluginName;
-
     @NotNull
     private Timestamp createdAt = Util.now();
 
@@ -97,14 +94,6 @@ public class Token {
 
     public void setIp(Inet ip) {
         this.ip = ip;
-    }
-
-    public String getPluginName() {
-        return pluginName;
-    }
-
-    public void setPluginName(String pluginName) {
-        this.pluginName = pluginName;
     }
 
     public Timestamp getCreatedAt() {

@@ -1,17 +1,9 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
-import jakarta.persistence.EntityManager;
-
-import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.CommentInfoUtil;
-import org.moera.node.model.CommentRevisionInfoUtil;
-import org.moera.node.operations.MediaAttachmentsProvider;
 
 public class CommentUpdatedLiberin extends Liberin {
 
@@ -66,31 +58,6 @@ public class CommentUpdatedLiberin extends Liberin {
 
     public void setLatestPremoderating(boolean latestPremoderating) {
         this.latestPremoderating = latestPremoderating;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model, EntityManager entityManager) {
-        super.toModel(model);
-        comment = entityManager.merge(comment);
-        latestRevision = entityManager.merge(latestRevision);
-        model.put(
-            "comment",
-            CommentInfoUtil.build(
-                comment, AccessCheckers.ADMIN, null, getDirectServeOperations()
-            )
-        );
-        model.put(
-            "latestRevision",
-            CommentRevisionInfoUtil.build(
-                comment,
-                latestRevision,
-                MediaAttachmentsProvider.relations(getDirectServeOperations()),
-                null,
-                AccessCheckers.ADMIN
-            )
-        );
-        model.put("latestViewPrincipal", latestViewE);
-        model.put("latestPremoderating", latestPremoderating);
     }
 
 }

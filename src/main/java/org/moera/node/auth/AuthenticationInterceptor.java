@@ -161,7 +161,6 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                 requestContext.setClientName(requestContext.nodeName());
                 requestContext.setClientScope(requestContext.getAdminScope());
                 requestContext.setOwner(true);
-                requestContext.setTokenId(token.getId());
             }
         }
         try {

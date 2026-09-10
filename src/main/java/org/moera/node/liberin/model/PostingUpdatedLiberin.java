@@ -1,17 +1,9 @@
 package org.moera.node.liberin.model;
 
-import java.util.Map;
-
-import jakarta.persistence.EntityManager;
-
-import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.PostingInfoUtil;
-import org.moera.node.model.PostingRevisionInfoUtil;
-import org.moera.node.operations.MediaAttachmentsProvider;
 
 public class PostingUpdatedLiberin extends Liberin {
 
@@ -47,30 +39,6 @@ public class PostingUpdatedLiberin extends Liberin {
 
     public void setLatestViewPrincipal(Principal latestViewPrincipal) {
         this.latestViewPrincipal = latestViewPrincipal;
-    }
-
-    @Override
-    protected void toModel(Map<String, Object> model, EntityManager entityManager) {
-        super.toModel(model);
-        posting = entityManager.merge(posting);
-        latestRevision = entityManager.merge(latestRevision);
-        model.put(
-            "posting",
-            PostingInfoUtil.build(
-                posting, AccessCheckers.ADMIN, null, getDirectServeOperations()
-            )
-        );
-        model.put(
-            "latestRevision",
-            PostingRevisionInfoUtil.build(
-                posting,
-                latestRevision,
-                MediaAttachmentsProvider.relations(getDirectServeOperations()),
-                null,
-                AccessCheckers.ADMIN
-            )
-        );
-        model.put("latestViewPrincipal", latestViewPrincipal);
     }
 
 }
