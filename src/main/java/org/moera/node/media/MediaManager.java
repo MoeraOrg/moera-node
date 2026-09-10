@@ -28,6 +28,7 @@ import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.PublicMediaFileInfo;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.node.MoeraNodeLocalStorageException;
+import org.moera.node.api.node.MoeraNodeConcurrencyException;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.config.Config;
 import org.moera.node.data.Avatar;
@@ -50,6 +51,7 @@ import org.moera.node.media.video.VideoCompressionJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.ParametrizedLock;
+import org.moera.node.util.Transaction;
 import org.moera.node.util.UriUtil;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -99,6 +101,9 @@ public class MediaManager {
 
     @Inject
     private Jobs jobs;
+
+    @Inject
+    private Transaction tx;
 
     @Inject
     @PersistenceContext
@@ -204,7 +209,9 @@ public class MediaManager {
                 }
                 mediaFile = mediaOperations.putInPlace(id, tmpMedia.contentType(), tmp.path(), null, true);
                 // the entity is detached after putInPlace() transaction closed
-                mediaFile = entityManager.merge(mediaFile);
+                if (entityManager.isJoinedToTransaction()) {
+                    mediaFile = entityManager.merge(mediaFile);
+                }
 
                 return mediaFile;
             } catch (IOException e) {
@@ -305,7 +312,9 @@ public class MediaManager {
         String textContent,
         int maxSize
     ) throws MoeraNodeException, IOException {
-        Collection<RemoteMediaCache> caches = remoteMediaCacheRepository.findByMediaWithoutNode(nodeName, id);
+        Collection<RemoteMediaCache> caches = tx.executeRead(() ->
+            remoteMediaCacheRepository.findByMediaWithoutNode(nodeName, id)
+        );
 
         MediaFile mediaFile = caches.stream()
             .map(RemoteMediaCache::getMediaFile)
@@ -398,6 +407,89 @@ public class MediaManager {
         }
 
         return null;
+    }
+
+    public record PreparedPrivateMedia(String mediaFileId, String title, String recognizedText) {
+    }
+
+    /**
+     * Downloads and verifies a file before the caller opens its write transaction. Only identifiers and scalar
+     * values cross the transaction boundary. The owner is created later, atomically with the caller's changes.
+     */
+    public PreparedPrivateMedia preparePrivateMedia(
+        String nodeName, String carte, PrivateMediaFileInfo info, int maxSize, UUID entryId
+    ) throws MoeraNodeException {
+        if (info == null || info.getId() == null) {
+            return null;
+        }
+
+        try (var ignored = mediaFileLocks.lock(info.getHash())) {
+            PreparedPrivateMedia existing = tx.executeRead(() -> {
+                MediaFileOwner owner = findAttachedMedia(info.getHash(), entryId);
+                return owner != null
+                    ? new PreparedPrivateMedia(info.getHash(), info.getTitle(), null)
+                    : null;
+            });
+            if (existing != null) {
+                return existing;
+            }
+
+            try {
+                MediaFile file = getCachedPrivateMedia(
+                    nodeName, carte, info.getId(), info.getGrant(), info.getHash(), info.getTextContent(), maxSize
+                );
+                return file != null
+                    ? new PreparedPrivateMedia(file.getId(), info.getTitle(), file.getRecognizedText())
+                    : null;
+            } catch (IOException e) {
+                throw new MoeraNodeLocalStorageException(
+                    "Error storing private media %s: %s".formatted(info.getId(), e.getMessage())
+                );
+            }
+        }
+    }
+
+    /**
+     * Creates or reuses an owner in the caller's transaction, without downloading anything.
+     */
+    public MediaFileOwner ownPreparedPrivateMedia(
+        PreparedPrivateMedia prepared, UUID entryId
+    ) throws MoeraNodeException {
+        if (prepared == null) {
+            return null;
+        }
+        // Another task may have started downloading this hash since preparation. Never wait for its network I/O
+        // while the caller's write transaction is open.
+        try (var lock = mediaFileLocks.tryLock(prepared.mediaFileId())) {
+            if (lock == null) {
+                throw new MoeraNodeConcurrencyException("Media is being downloaded by another task, retry later");
+            }
+            return ownPreparedPrivateMediaLocked(prepared, entryId);
+        }
+    }
+
+    private MediaFileOwner ownPreparedPrivateMediaLocked(
+        PreparedPrivateMedia prepared, UUID entryId
+    ) throws MoeraNodeException {
+        MediaFileOwner owner = findAttachedMedia(prepared.mediaFileId(), entryId);
+        if (owner != null) {
+            return owner;
+        }
+
+        MediaFile file = entityManager.find(MediaFile.class, prepared.mediaFileId());
+        if (file == null) {
+            throw new MoeraNodeConcurrencyException(
+                "Prepared media %s disappeared".formatted(prepared.mediaFileId())
+            );
+        }
+        if (prepared.recognizedText() != null && file.getRecognizedText() == null) {
+            file.setRecognizedText(prepared.recognizedText());
+        }
+        try {
+            return mediaOperations.own(file, prepared.title());
+        } catch (IOException e) {
+            throw new MoeraNodeLocalStorageException(e);
+        }
     }
 
     private MediaFileOwner downloadPrivateMedia(

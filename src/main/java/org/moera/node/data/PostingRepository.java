@@ -5,9 +5,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import jakarta.persistence.LockModeType;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
@@ -53,6 +55,10 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
 
     @Query("select p from Posting p where p.nodeId = ?1 and p.receiverName = ?2 and p.receiverEntryId = ?3")
     Optional<Posting> findByReceiverId(UUID nodeId, String receiverName, String receiverEntryId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Posting p where p.nodeId = ?1 and p.receiverName = ?2 and p.receiverEntryId = ?3")
+    Optional<Posting> findByReceiverIdForUpdate(UUID nodeId, String receiverName, String receiverEntryId);
 
     @Query(
         "select mfo from Posting p"

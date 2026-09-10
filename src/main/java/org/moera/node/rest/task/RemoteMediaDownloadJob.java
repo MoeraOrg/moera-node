@@ -108,21 +108,24 @@ public class RemoteMediaDownloadJob extends Job<RemoteMediaDownloadJob.Parameter
             );
             fail();
         }
-        MediaFileOwner mediaFileOwner = tx.executeWriteWithExceptions(() ->
-            mediaManager.downloadPrivateMediaNoLimits(
-                parameters.nodeName,
-                generateCarte(parameters.nodeName, Scope.VIEW_CONTENT),
-                state.mediaInfo
-            )
+        var prepared = mediaManager.preparePrivateMedia(
+            parameters.nodeName,
+            generateCarte(parameters.nodeName, Scope.VIEW_CONTENT),
+            state.mediaInfo,
+            -1,
+            null
         );
-        if (mediaFileOwner == null) {
+        if (prepared == null) {
             fail();
         }
-        state.downloadedMediaInfo = PrivateMediaFileInfoUtil.build(
-            mediaFileOwner,
-            directServeOperations,
-            new MediaGrantGenerator(universalContext.getOptions())
-        );
+        state.downloadedMediaInfo = tx.executeWriteWithExceptions(() -> {
+            MediaFileOwner mediaFileOwner = mediaManager.ownPreparedPrivateMedia(prepared, null);
+            return PrivateMediaFileInfoUtil.build(
+                mediaFileOwner,
+                directServeOperations,
+                new MediaGrantGenerator(universalContext.getOptions())
+            );
+        });
     }
 
     @Override
