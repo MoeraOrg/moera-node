@@ -40,22 +40,6 @@ import org.springframework.util.ObjectUtils;
 
 public class PostingInfoUtil {
 
-    // for liberin models
-    public static PostingInfo build(
-        Entry posting, AccessChecker accessChecker, Options options, DirectServeOperations directServe
-    ) {
-        return build(
-            posting,
-            posting.getCurrentRevision(),
-            null,
-            MediaAttachmentsProvider.relations(directServe),
-            false,
-            accessChecker,
-            options,
-            directServe
-        );
-    }
-
     public static PostingInfo build(
         Entry posting,
         MediaAttachmentsProvider mediaAttachmentsProvider,
@@ -520,7 +504,7 @@ public class PostingInfoUtil {
         }
     }
 
-    public static void toPickedPosting(PostingInfo info, Entry posting) {
+    public static void toPickedPosting(PostingInfo info, Entry posting, Principal viewPrincipal) {
         posting.setEditedAt(Util.toTimestamp(info.getEditedAt()));
         posting.setReceiverEntryId(isOriginal(info) ? info.getId() : info.getReceiverPostingId());
         posting.setOwnerName(info.getOwnerName());
@@ -549,7 +533,11 @@ public class PostingInfoUtil {
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207
         Principal principal = PostingOperations.getView(info.getOperations(), Principal.PUBLIC);
-        posting.setViewPrincipal(principal.isFriends() || principal.isSubscribed() ? Principal.PRIVATE : principal);
+        if (viewPrincipal != null) {
+            posting.setViewPrincipal(viewPrincipal);
+        } else {
+            posting.setViewPrincipal(principal.isFriends() || principal.isSubscribed() ? Principal.PRIVATE : principal);
+        }
         posting.setReceiverViewPrincipal(principal);
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207

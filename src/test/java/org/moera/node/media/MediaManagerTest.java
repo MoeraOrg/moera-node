@@ -8,7 +8,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.persistence.EntityManager;
@@ -62,8 +61,16 @@ public class MediaManagerTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void ownershipDoesNotWaitForConcurrentDownload() throws Exception {
+    void existingOwnerIsReturnedDuringConcurrentDownload() throws Exception {
+        UUID nodeId = UUID.randomUUID();
+        UniversalContext context = mock(UniversalContext.class);
+        when(context.nodeId()).thenReturn(nodeId);
+        MediaFileOwner existing = new MediaFileOwner();
+        MediaFileOwnerRepository owners = mock(MediaFileOwnerRepository.class);
+        when(owners.findByFile(nodeId, "hash")).thenReturn(List.of(existing));
         MediaManager manager = new MediaManager();
+        ReflectionTestUtils.setField(manager, "universalContext", context);
+        ReflectionTestUtils.setField(manager, "mediaFileOwnerRepository", owners);
         var locks = (ParametrizedLock<String>) ReflectionTestUtils.getField(manager, "mediaFileLocks");
         CountDownLatch downloading = new CountDownLatch(1);
         CountDownLatch release = new CountDownLatch(1);
@@ -78,7 +85,7 @@ public class MediaManagerTest {
         });
         try {
             Assertions.assertTrue(downloading.await(5, TimeUnit.SECONDS));
-            CompletableFuture<MediaFileOwner> owner = CompletableFuture.supplyAsync(() -> {
+            CompletableFuture<MediaFileOwner> result = CompletableFuture.supplyAsync(() -> {
                 try {
                     return manager.ownPreparedPrivateMedia(
                         new MediaManager.PreparedPrivateMedia("hash", "title", null), null
@@ -87,10 +94,60 @@ public class MediaManagerTest {
                     throw new java.util.concurrent.CompletionException(e);
                 }
             });
-            ExecutionException failure = Assertions.assertThrows(
-                ExecutionException.class, () -> owner.get(1, TimeUnit.SECONDS)
-            );
-            Assertions.assertInstanceOf(MoeraNodeConcurrencyException.class, failure.getCause());
+
+            Assertions.assertSame(existing, result.get(1, TimeUnit.SECONDS));
+        } finally {
+            release.countDown();
+            download.get(5, TimeUnit.SECONDS);
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void cachedMediaIsReturnedDuringConcurrentDownload() throws Exception {
+        UUID nodeId = UUID.randomUUID();
+        UniversalContext context = mock(UniversalContext.class);
+        when(context.nodeId()).thenReturn(nodeId);
+        MediaFileOwnerRepository owners = mock(MediaFileOwnerRepository.class);
+        when(owners.findByFile(nodeId, "hash")).thenReturn(List.of());
+        MediaFile file = new MediaFile();
+        file.setId("hash");
+        RemoteMediaCache cache = new RemoteMediaCache();
+        cache.setMediaFile(file);
+        RemoteMediaCacheRepository caches = mock(RemoteMediaCacheRepository.class);
+        when(caches.findByMediaWithoutNode("remote", "media-id")).thenReturn(List.of(cache));
+        MediaManager manager = new MediaManager();
+        ReflectionTestUtils.setField(manager, "universalContext", context);
+        ReflectionTestUtils.setField(manager, "mediaFileOwnerRepository", owners);
+        ReflectionTestUtils.setField(manager, "remoteMediaCacheRepository", caches);
+        ReflectionTestUtils.setField(manager, "tx", new Transaction());
+        var locks = (ParametrizedLock<String>) ReflectionTestUtils.getField(manager, "mediaFileLocks");
+        CountDownLatch downloading = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        CompletableFuture<Void> download = CompletableFuture.runAsync(() -> {
+            try (var ignored = locks.lock("hash")) {
+                downloading.countDown();
+                Assertions.assertTrue(release.await(10, TimeUnit.SECONDS));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException(e);
+            }
+        });
+        try {
+            Assertions.assertTrue(downloading.await(5, TimeUnit.SECONDS));
+            PrivateMediaFileInfo info = new PrivateMediaFileInfo();
+            info.setId("media-id");
+            info.setHash("hash");
+            CompletableFuture<MediaManager.PreparedPrivateMedia> result = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return manager.preparePrivateMedia("remote", "carte", info, 1024, null);
+                } catch (MoeraNodeException e) {
+                    throw new java.util.concurrent.CompletionException(e);
+                }
+            });
+
+            MediaManager.PreparedPrivateMedia prepared = result.get(1, TimeUnit.SECONDS);
+            Assertions.assertEquals("hash", prepared.mediaFileId());
         } finally {
             release.countDown();
             download.get(5, TimeUnit.SECONDS);

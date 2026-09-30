@@ -4,6 +4,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -16,11 +17,13 @@ import jakarta.transaction.Transactional;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.PostingInfo;
+import org.moera.lib.node.types.PostingRepublishAttributes;
 import org.moera.lib.node.types.PostingText;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.principal.PrincipalFlag;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
@@ -280,6 +283,60 @@ public class PostingController {
                 directServeOperations
             )
         ));
+    }
+
+    @PostMapping("/{id}/republish")
+    @Entitled
+    @Transactional
+    public Result republish(@PathVariable String id, @RequestBody PostingRepublishAttributes attributes) {
+        log.info("POST /postings/{id}/republish (id = {})", LogUtil.format(id));
+
+        attributes.validate();
+        ValidationUtil.assertion(
+            attributes.getPublications().stream().noneMatch(Objects::isNull),
+            "posting.publications.missing"
+        );
+        ValidationUtil.assertion(
+            attributes.getPostingView() == null
+            || attributes.getPostingView().isOneOf(
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+                | PrincipalFlag.PRIVATE
+            ),
+            "posting.operations.wrong-principal"
+        );
+
+        UUID postingId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        boolean changeView = attributes.getPostingView() != null
+            && !attributes.getPostingView().equals(posting.getViewPrincipal());
+        if (
+            changeView
+            && !requestContext.isPrincipal(posting.getEditE(), Scope.UPDATE_POST)
+            && !requestContext.isAdmin(Scope.UPDATE_POST)
+        ) {
+            throw new AuthenticationException();
+        }
+        if (!ObjectUtils.isEmpty(attributes.getPublications()) && !requestContext.isAdmin(Scope.UPDATE_FEEDS)) {
+            throw new AuthenticationException();
+        }
+        if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
+            throw new UserBlockedException();
+        }
+
+        entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
+        if (changeView) {
+            Principal latestView = posting.getViewE();
+            posting.setViewPrincipal(attributes.getPostingView());
+            posting.setEditedAt(Util.now());
+            requestContext.send(new PostingUpdatedLiberin(posting, posting.getCurrentRevision(), latestView));
+        }
+        storyOperations.publish(posting, attributes.getPublications(), true);
+
+        return Result.OK;
     }
 
     private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {

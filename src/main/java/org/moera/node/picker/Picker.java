@@ -2,9 +2,8 @@ package org.moera.node.picker;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -25,11 +24,9 @@ import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryAttributes;
-import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.media.DirectServeOperations;
 import org.moera.node.api.node.MoeraNodeConcurrencyException;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
@@ -45,13 +42,12 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.data.RemoteMediaFile;
-import org.moera.node.data.StoryRepository;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.global.ServeContext;
-import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.model.PostingAddedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaManager.PreparedPrivateMedia;
 import org.moera.node.media.MediaOperations;
@@ -92,9 +88,6 @@ public class Picker extends Task {
 
     @Inject
     private ReactionTotalRepository reactionTotalRepository;
-
-    @Inject
-    private StoryRepository storyRepository;
 
     @Inject
     private EntrySourceRepository entrySourceRepository;
@@ -203,7 +196,6 @@ public class Picker extends Task {
                 ? prepareMedia(postingInfo, snapshot)
                 : List.of();
 
-        List<Liberin> liberins = new ArrayList<>();
         List<Pick> picks = new ArrayList<>();
         Posting posting = tx.executeWriteWithExceptions(() -> {
             Posting p = savePosting(
@@ -218,15 +210,18 @@ public class Picker extends Task {
                 pick.getRemoteMediaFile(),
                 pick.getParentMediaEntry(),
                 pick.isRecommended(),
+                pick.isPinned(),
                 pick.isViewed(),
+                pick.isRead(),
+                pick.isSatisfied(),
+                pick.getPostingViewPrincipal(),
+                pick.isAllowMultiple(),
                 pick.getPublishAt(),
-                liberins,
                 picks
             );
             saveSources(p, pick);
             return p;
         });
-        liberins.forEach(this::send);
         picks.forEach(pool::pick);
 
         succeeded(posting, pick);
@@ -274,9 +269,13 @@ public class Picker extends Task {
         RemoteMediaFile parentRemoteMedia,
         Entry parentMediaEntry,
         boolean recommended,
+        boolean pinned,
         boolean viewed,
+        boolean read,
+        boolean satisfied,
+        Principal postingViewPrincipal,
+        boolean allowMultiple,
         Timestamp publishAt,
-        List<Liberin> liberins,
         List<Pick> picks
     ) throws MoeraNodeException {
         boolean original = PostingInfoUtil.isOriginal(postingInfo);
@@ -337,38 +336,46 @@ public class Picker extends Task {
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             posting.setRecommended(recommended);
             posting = postingRepository.save(posting);
-            PostingInfoUtil.toPickedPosting(postingInfo, posting);
+            PostingInfoUtil.toPickedPosting(postingInfo, posting, postingViewPrincipal);
             createRevision(posting, postingInfo);
             attachMedia(attachments, null, posting.getCurrentRevision(), null, picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
             universalContext.subscriptionsUpdated();
-            liberins.add(new PostingAddedLiberin(posting));
-            publish(feedName, posting, viewed, publishAt, liberins);
+            universalContext.send(new PostingAddedLiberin(posting));
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
             Principal latestView = posting.getViewE();
             posting.setOwnerAvatarMediaFile(ownerAvatar);
-            PostingInfoUtil.toPickedPosting(postingInfo, posting);
+            PostingInfoUtil.toPickedPosting(postingInfo, posting, postingViewPrincipal);
             EntryRevision latest = posting.getCurrentRevision();
             createRevision(posting, postingInfo);
             attachMedia(attachments, posting.getId(), posting.getCurrentRevision(), latest, picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
             if (posting.getDeletedAt() == null) {
-                liberins.add(new PostingUpdatedLiberin(posting, latest, latestView));
+                universalContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
             } else {
-                posting.setDeletedAt(null);
-                publish(feedName, posting, viewed, publishAt, liberins);
-                liberins.add(new PostingRestoredLiberin(posting));
+                restorePosting(posting);
+                universalContext.send(new PostingRestoredLiberin(posting));
             }
         } else {
-            boolean published = storyRepository.countByFeedAndTypeAndEntryId(
-                nodeId, feedName, StoryType.POSTING_ADDED, posting.getId()
-            ) > 0;
-            if (!published) {
-                publish(feedName, posting, viewed, publishAt, liberins);
+            if (posting.getDeletedAt() != null) {
+                restorePosting(posting);
+                universalContext.send(new PostingRestoredLiberin(posting));
+            }
+            if (postingViewPrincipal != null) {
+                posting.setViewPrincipal(postingViewPrincipal);
             }
         }
         posting = postingRepository.saveAndFlush(posting);
         mediaOperations.updatePermissions(posting);
+
+        StoryAttributes publication = new StoryAttributes();
+        publication.setFeedName(feedName);
+        publication.setPinned(pinned);
+        publication.setViewed(viewed);
+        publication.setRead(read);
+        publication.setSatisfied(satisfied);
+        publication.setPublishAt(Util.toEpochSecond(publishAt));
+        storyOperations.publish(posting, List.of(publication), allowMultiple);
 
         var reactionTotals = reactionTotalRepository.findAllByEntryId(posting.getId());
         if (!reactionTotalOperations.isSame(reactionTotals, postingInfo.getReactions())) {
@@ -566,23 +573,12 @@ public class Picker extends Task {
         }
     }
 
-    private void publish(
-        String feedName, Posting posting, boolean viewed, Timestamp publishAt, List<Liberin> liberins
-    ) {
-        if (feedName == null) {
-            return;
+    private static void restorePosting(Posting posting) {
+        posting.setDeletedAt(null);
+        posting.setDeadline(null);
+        if (posting.getCurrentRevision() != null) {
+            posting.getCurrentRevision().setDeletedAt(null);
         }
-        int totalStories = storyRepository.countByFeedAndTypeAndEntryId(
-            nodeId, feedName, StoryType.POSTING_ADDED, posting.getId()
-        );
-        if (totalStories > 0) {
-            return;
-        }
-        StoryAttributes publication = new StoryAttributes();
-        publication.setFeedName(feedName);
-        publication.setViewed(viewed);
-        publication.setPublishAt(Util.toEpochSecond(publishAt));
-        storyOperations.publish(posting, Collections.singletonList(publication), nodeId, liberins::add);
     }
 
     private void saveSources(Posting posting, Pick pick) {

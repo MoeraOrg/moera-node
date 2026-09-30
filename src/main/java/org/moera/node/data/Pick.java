@@ -10,6 +10,7 @@ import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.util.Util;
 
 @Entity
@@ -47,7 +48,17 @@ public class Pick {
 
     private boolean recommended;
 
+    private boolean pinned;
+
     private boolean viewed;
+
+    private boolean read;
+
+    private boolean satisfied;
+
+    private Principal postingViewPrincipal;
+
+    private boolean allowMultiple;
 
     @NotNull
     private Timestamp createdAt = Util.now();
@@ -139,12 +150,52 @@ public class Pick {
         this.recommended = recommended;
     }
 
+    public boolean isPinned() {
+        return pinned;
+    }
+
+    public void setPinned(boolean pinned) {
+        this.pinned = pinned;
+    }
+
     public boolean isViewed() {
         return viewed;
     }
 
     public void setViewed(boolean viewed) {
         this.viewed = viewed;
+    }
+
+    public boolean isRead() {
+        return read;
+    }
+
+    public void setRead(boolean read) {
+        this.read = read;
+    }
+
+    public boolean isSatisfied() {
+        return satisfied;
+    }
+
+    public void setSatisfied(boolean satisfied) {
+        this.satisfied = satisfied;
+    }
+
+    public Principal getPostingViewPrincipal() {
+        return postingViewPrincipal;
+    }
+
+    public void setPostingViewPrincipal(Principal postingViewPrincipal) {
+        this.postingViewPrincipal = postingViewPrincipal;
+    }
+
+    public boolean isAllowMultiple() {
+        return allowMultiple;
+    }
+
+    public void setAllowMultiple(boolean allowMultiple) {
+        this.allowMultiple = allowMultiple;
     }
 
     public Timestamp getCreatedAt() {

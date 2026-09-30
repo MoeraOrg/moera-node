@@ -303,15 +303,12 @@ public class MediaManager {
         return result.get();
     }
 
-    private MediaFile getCachedPrivateMedia(
-        String nodeName,
-        String carte,
-        String id,
-        String grant,
-        String mediaFileId,
-        String textContent,
-        int maxSize
-    ) throws MoeraNodeException, IOException {
+    private record CachedPrivateMedia(boolean resolved, MediaFile file) {
+    }
+
+    private CachedPrivateMedia findCachedPrivateMedia(
+        String nodeName, String id, String mediaFileId
+    ) throws MoeraNodeException {
         Collection<RemoteMediaCache> caches = tx.executeRead(() ->
             remoteMediaCacheRepository.findByMediaWithoutNode(nodeName, id)
         );
@@ -324,9 +321,9 @@ public class MediaManager {
         if (mediaFile != null) {
             if (!mediaFile.getId().equals(mediaFileId)) {
                 log.warn("Cached media {} has hash {} instead of {}", id, mediaFile.getId(), mediaFileId);
-                return null;
+                return new CachedPrivateMedia(true, null);
             }
-            return mediaFile;
+            return new CachedPrivateMedia(true, mediaFile);
         }
 
         RemoteMediaError error = caches.stream()
@@ -342,6 +339,24 @@ public class MediaManager {
             throw new MoeraNodeException(error.getErrorCode());
         }
 
+        return new CachedPrivateMedia(false, null);
+    }
+
+    private MediaFile getCachedPrivateMedia(
+        String nodeName,
+        String carte,
+        String id,
+        String grant,
+        String mediaFileId,
+        String textContent,
+        int maxSize
+    ) throws MoeraNodeException, IOException {
+        CachedPrivateMedia cached = findCachedPrivateMedia(nodeName, id, mediaFileId);
+        if (cached.resolved()) {
+            return cached.file();
+        }
+
+        MediaFile mediaFile;
         var tmp = mediaOperations.tmpFile();
         try {
             var tmpMedia = getPrivateMedia(nodeName, carte, id, grant, tmp, maxSize);
@@ -412,6 +427,29 @@ public class MediaManager {
     public record PreparedPrivateMedia(String mediaFileId, String title, String recognizedText) {
     }
 
+    private PreparedPrivateMedia findPreparedPrivateMedia(
+        String nodeName, PrivateMediaFileInfo info, UUID entryId
+    ) throws MoeraNodeException {
+        PreparedPrivateMedia existing = tx.executeRead(() -> {
+            MediaFileOwner owner = findAttachedMedia(info.getHash(), entryId);
+            return owner != null
+                ? new PreparedPrivateMedia(info.getHash(), info.getTitle(), null)
+                : null;
+        });
+        if (existing != null) {
+            return existing;
+        }
+
+        CachedPrivateMedia cached = findCachedPrivateMedia(nodeName, info.getId(), info.getHash());
+        if (!cached.resolved()) {
+            return null;
+        }
+        MediaFile file = cached.file();
+        return file != null
+            ? new PreparedPrivateMedia(file.getId(), info.getTitle(), file.getRecognizedText())
+            : null;
+    }
+
     /**
      * Downloads and verifies a file before the caller opens its write transaction. Only identifiers and scalar
      * values cross the transaction boundary. The owner is created later, atomically with the caller's changes.
@@ -423,15 +461,15 @@ public class MediaManager {
             return null;
         }
 
+        PreparedPrivateMedia prepared = findPreparedPrivateMedia(nodeName, info, entryId);
+        if (prepared != null) {
+            return prepared;
+        }
+
         try (var ignored = mediaFileLocks.lock(info.getHash())) {
-            PreparedPrivateMedia existing = tx.executeRead(() -> {
-                MediaFileOwner owner = findAttachedMedia(info.getHash(), entryId);
-                return owner != null
-                    ? new PreparedPrivateMedia(info.getHash(), info.getTitle(), null)
-                    : null;
-            });
-            if (existing != null) {
-                return existing;
+            prepared = findPreparedPrivateMedia(nodeName, info, entryId);
+            if (prepared != null) {
+                return prepared;
             }
 
             try {
@@ -458,19 +496,6 @@ public class MediaManager {
         if (prepared == null) {
             return null;
         }
-        // Another task may have started downloading this hash since preparation. Never wait for its network I/O
-        // while the caller's write transaction is open.
-        try (var lock = mediaFileLocks.tryLock(prepared.mediaFileId())) {
-            if (lock == null) {
-                throw new MoeraNodeConcurrencyException("Media is being downloaded by another task, retry later");
-            }
-            return ownPreparedPrivateMediaLocked(prepared, entryId);
-        }
-    }
-
-    private MediaFileOwner ownPreparedPrivateMediaLocked(
-        PreparedPrivateMedia prepared, UUID entryId
-    ) throws MoeraNodeException {
         MediaFileOwner owner = findAttachedMedia(prepared.mediaFileId(), entryId);
         if (owner != null) {
             return owner;

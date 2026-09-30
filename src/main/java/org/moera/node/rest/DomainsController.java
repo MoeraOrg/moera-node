@@ -88,8 +88,8 @@ public class DomainsController {
 
     @ProviderApi
     @PostMapping
-    @RateLimit(limit = 15, period = 3600)
-    @RateLimit(limit = 5, period = 86400, perIp = true)
+    @RateLimit(limit = 15, period = 3600, exceptRootAdmin = true)
+    @RateLimit(limit = 5, period = 86400, perIp = true, exceptRootAdmin = true)
     @Transactional
     public ResponseEntity<DomainInfo> post(@RequestBody DomainAttributes domainAttributes) {
         log.info(

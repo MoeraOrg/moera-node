@@ -27,7 +27,7 @@ public class RemoteFeedFetchJob extends Job<RemoteFeedFetchJob.Parameters, Objec
     ) {
     }
 
-    public static final int FETCH_LIMIT = 10;
+    public static final int FETCH_LIMIT = 5;
 
     private static final Logger log = LoggerFactory.getLogger(RemoteFeedFetchJob.class);
 

@@ -11,7 +11,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.moera.lib.node.types.DomainAttributes;
 import org.moera.node.model.TooManyRequestsFailure;
+import org.moera.node.rest.DomainsController;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.method.HandlerMethod;
 
@@ -91,6 +93,21 @@ public class RateLimitInterceptorTest {
 
         requestContext.setRemoteAddr(InetAddress.getByName("192.0.2.2"));
         Assertions.assertDoesNotThrow(() -> interceptor.preHandle(null, null, handler));
+    }
+
+    @Test
+    void allowsUnlimitedDomainCreationRequestsFromRootAdmin() throws Exception {
+        HandlerMethod domainPostHandler = new HandlerMethod(
+            new DomainsController(), DomainsController.class.getMethod("post", DomainAttributes.class)
+        );
+        requestContext.setRootAdmin(true);
+        requestContext.setRemoteAddr(InetAddress.getByName("192.0.2.1"));
+
+        Assertions.assertDoesNotThrow(() -> {
+            for (int i = 0; i < 20; i++) {
+                interceptor.preHandle(null, null, domainPostHandler);
+            }
+        });
     }
 
     @Test

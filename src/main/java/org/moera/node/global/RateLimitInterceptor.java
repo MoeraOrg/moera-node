@@ -94,7 +94,10 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         List<LimitBucket> limitBuckets = new ArrayList<>();
         for (int i = 0; i < rateLimits.length; i++) {
             RateLimit rateLimit = rateLimits[i];
-            if (rateLimit.perIp() != perIp) {
+            if (
+                rateLimit.perIp() != perIp
+                || rateLimit.exceptRootAdmin() && requestContext.isRootAdmin()
+            ) {
                 continue;
             }
             String ip = perIp ? requestContext.getRemoteAddr().getHostAddress() : null;

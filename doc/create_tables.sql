@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict sRj30j6Rd72SjmH9jGolxnnqwjTH0s3Slu7nWCZHyTV2BDMFBnVnTi2c1gsicwy
+\restrict JO342jIFOYeDdXDzpCiK0sqLjKy4winmoo3gBbSCTv0oSPBHpnfg7Wj0fI0ruS0
 
--- Dumped from database version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
--- Dumped by pg_dump version 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1)
+-- Dumped from database version 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)
+-- Dumped by pg_dump version 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -251,7 +251,7 @@ $$;
 ALTER FUNCTION public.update_entity_remote_owner_avatar_media_file_id() OWNER TO moera;
 
 --
--- Name: update_entity_remote_posting_avatar_media_file_id(); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: update_entity_remote_posting_avatar_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
 --
 
 CREATE FUNCTION public.update_entity_remote_posting_avatar_media_file_id() RETURNS trigger
@@ -274,7 +274,7 @@ CREATE FUNCTION public.update_entity_remote_posting_avatar_media_file_id() RETUR
 $$;
 
 
-ALTER FUNCTION public.update_entity_remote_posting_avatar_media_file_id() OWNER TO postgres;
+ALTER FUNCTION public.update_entity_remote_posting_avatar_media_file_id() OWNER TO moera;
 
 --
 -- Name: update_entity_remote_replied_to_avatar_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
@@ -975,7 +975,7 @@ CREATE SEQUENCE public.contact_upgrades_seq
     CACHE 1;
 
 
-ALTER TABLE public.contact_upgrades_seq OWNER TO moera;
+ALTER SEQUENCE public.contact_upgrades_seq OWNER TO moera;
 
 --
 -- Name: contacts; Type: TABLE; Schema: public; Owner: moera
@@ -1004,7 +1004,8 @@ CREATE TABLE public.contacts (
     blocked_by_user_posting_count integer DEFAULT 0 NOT NULL,
     distance real DEFAULT 3 NOT NULL,
     visit_count integer DEFAULT 0 NOT NULL,
-    remote_title character varying(120)
+    remote_title character varying(120),
+    remote_source_uri character varying(1024)
 );
 
 
@@ -1035,7 +1036,7 @@ CREATE SEQUENCE public.domain_upgrades_seq
     CACHE 1;
 
 
-ALTER TABLE public.domain_upgrades_seq OWNER TO moera;
+ALTER SEQUENCE public.domain_upgrades_seq OWNER TO moera;
 
 --
 -- Name: domains; Type: TABLE; Schema: public; Owner: moera
@@ -1082,8 +1083,8 @@ CREATE TABLE public.drafts (
     rejected_reactions_negative character varying(255) DEFAULT '*'::character varying NOT NULL,
     child_rejected_reactions_positive character varying(255) DEFAULT ''::character varying NOT NULL,
     child_rejected_reactions_negative character varying(255) DEFAULT ''::character varying NOT NULL,
-    allow_anonymous_children boolean DEFAULT false NOT NULL,
-    media_captions text
+    media_captions text,
+    owner_source_uri character varying(1024)
 );
 
 
@@ -1149,6 +1150,8 @@ CREATE TABLE public.entries (
     receiver_view_comments_principal character varying(70),
     add_comment_principal character varying(70) DEFAULT 'signed'::character varying NOT NULL,
     receiver_add_comment_principal character varying(70),
+    receiver_edit_principal character varying(70),
+    receiver_delete_principal character varying(70),
     view_reactions_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     receiver_view_reactions_principal character varying(70),
     view_negative_reactions_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
@@ -1157,16 +1160,14 @@ CREATE TABLE public.entries (
     receiver_view_reaction_totals_principal character varying(70),
     view_negative_reaction_totals_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     receiver_view_negative_reaction_totals_principal character varying(70),
-    add_reaction_principal character varying(70) DEFAULT 'signed'::character varying NOT NULL,
-    receiver_add_reaction_principal character varying(70),
-    add_negative_reaction_principal character varying(70) DEFAULT 'signed'::character varying NOT NULL,
-    receiver_add_negative_reaction_principal character varying(70),
     view_reaction_ratios_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     receiver_view_reaction_ratios_principal character varying(70),
     view_negative_reaction_ratios_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     receiver_view_negative_reaction_ratios_principal character varying(70),
-    receiver_edit_principal character varying(70),
-    receiver_delete_principal character varying(70),
+    add_reaction_principal character varying(70) DEFAULT 'signed'::character varying NOT NULL,
+    receiver_add_reaction_principal character varying(70),
+    add_negative_reaction_principal character varying(70) DEFAULT 'signed'::character varying NOT NULL,
+    receiver_add_negative_reaction_principal character varying(70),
     parent_view_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
     parent_edit_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
     parent_delete_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
@@ -1204,8 +1205,7 @@ CREATE TABLE public.entries (
     child_rejected_reactions_positive character varying(255) DEFAULT ''::character varying NOT NULL,
     child_rejected_reactions_negative character varying(255) DEFAULT ''::character varying NOT NULL,
     index_now_updated_at timestamp without time zone DEFAULT '1970-01-01 00:00:00'::timestamp without time zone NOT NULL,
-    external_source_uri character varying(1024) DEFAULT ''::character varying NOT NULL,
-    allow_anonymous_children boolean DEFAULT false NOT NULL,
+    external_source_uri character varying(1024)[] DEFAULT (ARRAY[]::character varying[])::character varying(1024)[] NOT NULL,
     trust_comment_principal character varying(70) DEFAULT 'signed'::character varying NOT NULL,
     parent_trust_comment_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
     receiver_trust_comment_principal character varying(70),
@@ -1213,7 +1213,10 @@ CREATE TABLE public.entries (
     client_id character varying(40),
     parent_media_entry_id uuid,
     parent_remote_media_id uuid,
-    view_count integer DEFAULT 0 NOT NULL
+    view_count integer DEFAULT 0 NOT NULL,
+    receiver_source_uri character varying(1024),
+    owner_source_uri character varying(1024),
+    replied_to_source_uri character varying(1024)
 );
 
 
@@ -1249,7 +1252,7 @@ CREATE SEQUENCE public.entry_revision_seq
     CACHE 1;
 
 
-ALTER TABLE public.entry_revision_seq OWNER TO moera;
+ALTER SEQUENCE public.entry_revision_seq OWNER TO moera;
 
 --
 -- Name: entry_revision_upgrades; Type: TABLE; Schema: public; Owner: moera
@@ -1312,7 +1315,8 @@ CREATE TABLE public.entry_sources (
     created_at timestamp without time zone NOT NULL,
     remote_full_name character varying(96),
     remote_avatar_media_file_id character varying(40),
-    remote_avatar_shape character varying(8)
+    remote_avatar_shape character varying(8),
+    remote_source_uri character varying(1024)
 );
 
 
@@ -1512,7 +1516,7 @@ CREATE SEQUENCE public.media_file_removals_seq
     CACHE 1;
 
 
-ALTER TABLE public.media_file_removals_seq OWNER TO moera;
+ALTER SEQUENCE public.media_file_removals_seq OWNER TO moera;
 
 --
 -- Name: media_file_upgrades; Type: TABLE; Schema: public; Owner: moera
@@ -1539,7 +1543,7 @@ CREATE SEQUENCE public.media_file_upgrades_seq
     CACHE 1;
 
 
-ALTER TABLE public.media_file_upgrades_seq OWNER TO moera;
+ALTER SEQUENCE public.media_file_upgrades_seq OWNER TO moera;
 
 --
 -- Name: media_files; Type: TABLE; Schema: public; Owner: moera
@@ -1582,8 +1586,8 @@ CREATE TABLE public.media_leases (
     node_id uuid NOT NULL,
     owner_name character varying(135) NOT NULL,
     media_file_owner_id uuid NOT NULL,
-    created_at timestamp without time zone NOT NULL,
     entry_id uuid,
+    created_at timestamp without time zone NOT NULL,
     draft_only boolean DEFAULT false NOT NULL,
     deadline timestamp without time zone
 );
@@ -1657,7 +1661,9 @@ CREATE TABLE public.own_comments (
     remote_avatar_shape character varying(8),
     remote_replied_to_avatar_media_file_id character varying(40),
     remote_replied_to_avatar_shape character varying(8),
-    posting_heading character varying(255) DEFAULT ''::character varying NOT NULL
+    posting_heading character varying(255) DEFAULT ''::character varying NOT NULL,
+    remote_source_uri character varying(1024),
+    remote_replied_to_source_uri character varying(1024)
 );
 
 
@@ -1679,7 +1685,8 @@ CREATE TABLE public.own_postings (
     remote_avatar_shape character varying(8),
     remote_parent_media_id character varying(40),
     remote_parent_media_entry_id character varying(40),
-    remote_parent_media_node_name character varying(135)
+    remote_parent_media_node_name character varying(135),
+    remote_source_uri character varying(1024)
 );
 
 
@@ -1700,7 +1707,8 @@ CREATE TABLE public.own_reactions (
     remote_full_name character varying(96),
     remote_avatar_media_file_id character varying(40),
     remote_avatar_shape character varying(8),
-    posting_heading character varying(255) DEFAULT ''::character varying NOT NULL
+    posting_heading character varying(255) DEFAULT ''::character varying NOT NULL,
+    remote_source_uri character varying(1024)
 );
 
 
@@ -1727,7 +1735,7 @@ ALTER TABLE public.password_reset_tokens OWNER TO moera;
 CREATE TABLE public.pending_jobs (
     id uuid NOT NULL,
     node_id uuid,
-    job_type character varying(63) NOT NULL,
+    job_type character varying(127) NOT NULL,
     parameters text NOT NULL,
     state text,
     created_at timestamp without time zone NOT NULL,
@@ -1806,7 +1814,7 @@ CREATE SEQUENCE public.public_pages_seq
     CACHE 1;
 
 
-ALTER TABLE public.public_pages_seq OWNER TO moera;
+ALTER SEQUENCE public.public_pages_seq OWNER TO moera;
 
 --
 -- Name: push_clients; Type: TABLE; Schema: public; Owner: moera
@@ -1879,7 +1887,8 @@ CREATE TABLE public.reactions (
     posting_delete_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
     comment_view_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
     comment_delete_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
-    owner_gender character varying(31)
+    owner_gender character varying(31),
+    owner_source_uri character varying(1024)
 );
 
 
@@ -2102,7 +2111,10 @@ CREATE TABLE public.sheriff_complaint_groups (
     decision_code smallint,
     decision_details text,
     decided_at timestamp without time zone,
-    anonymous boolean DEFAULT false NOT NULL
+    anonymous boolean DEFAULT false NOT NULL,
+    remote_node_source_uri character varying(1024),
+    remote_posting_owner_source_uri character varying(1024),
+    remote_comment_owner_source_uri character varying(1024)
 );
 
 
@@ -2122,7 +2134,8 @@ CREATE TABLE public.sheriff_complaints (
     reason_code smallint NOT NULL,
     reason_details text,
     created_at timestamp without time zone NOT NULL,
-    anonymous_requested boolean DEFAULT false NOT NULL
+    anonymous_requested boolean DEFAULT false NOT NULL,
+    owner_source_uri character varying(1024)
 );
 
 
@@ -2146,6 +2159,7 @@ CREATE TABLE public.sheriff_orders (
     created_at timestamp without time zone NOT NULL,
     signature bytea NOT NULL,
     signature_version smallint NOT NULL,
+    remote_node_full_name character varying(96),
     remote_posting_owner_name character varying(135),
     remote_posting_owner_full_name character varying(96),
     remote_posting_owner_gender character varying(31),
@@ -2156,9 +2170,11 @@ CREATE TABLE public.sheriff_orders (
     remote_comment_owner_gender character varying(31),
     remote_comment_heading character varying(255),
     remote_comment_revision_id character varying(40),
-    remote_node_full_name character varying(96),
     complaint_group_id uuid,
-    moment bigint DEFAULT 0 NOT NULL
+    moment bigint DEFAULT 0 NOT NULL,
+    remote_node_source_uri character varying(1024),
+    remote_posting_owner_source_uri character varying(1024),
+    remote_comment_owner_source_uri character varying(1024)
 );
 
 
@@ -2218,7 +2234,10 @@ CREATE TABLE public.stories (
     remote_posting_full_name character varying(96),
     remote_posting_avatar_media_file_id character varying(40),
     remote_posting_avatar_shape character varying(8),
-    satisfied boolean DEFAULT false NOT NULL
+    satisfied boolean DEFAULT false NOT NULL,
+    remote_source_uri character varying(1024),
+    remote_posting_source_uri character varying(1024),
+    remote_owner_source_uri character varying(1024)
 );
 
 
@@ -2278,7 +2297,6 @@ CREATE TABLE public.tokens (
     auth_scope bigint DEFAULT 0 NOT NULL,
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     ip inet,
-    plugin_name character varying(48),
     last_used_at timestamp without time zone,
     last_used_browser character varying(32),
     last_used_ip inet
@@ -3094,7 +3112,7 @@ CREATE INDEX entries_entry_type_idx ON public.entries USING btree (entry_type);
 -- Name: entries_external_source_uri_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX entries_external_source_uri_idx ON public.entries USING btree (external_source_uri);
+CREATE INDEX entries_external_source_uri_idx ON public.entries USING gin (external_source_uri);
 
 
 --
@@ -3298,6 +3316,20 @@ CREATE INDEX entry_sources_remote_avatar_media_file_id_idx ON public.entry_sourc
 --
 
 CREATE INDEX entry_visits_deadline_idx ON public.entry_visits USING btree (deadline);
+
+
+--
+-- Name: entry_visits_entry_id_client_id_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_visits_entry_id_client_id_deadline_idx ON public.entry_visits USING btree (entry_id, client_id, deadline);
+
+
+--
+-- Name: entry_visits_entry_id_client_name_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_visits_entry_id_client_name_deadline_idx ON public.entry_visits USING btree (entry_id, client_name, deadline);
 
 
 --
@@ -3532,10 +3564,10 @@ CREATE INDEX media_leases_media_file_owner_id_idx ON public.media_leases USING b
 
 
 --
--- Name: media_leases_node_name_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: media_leases_node_id_owner_name_media_file_owner_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX media_leases_node_name_idx ON public.media_leases USING btree (node_id, owner_name);
+CREATE INDEX media_leases_node_id_owner_name_media_file_owner_id_idx ON public.media_leases USING btree (node_id, owner_name, media_file_owner_id);
 
 
 --
@@ -4952,5 +4984,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict sRj30j6Rd72SjmH9jGolxnnqwjTH0s3Slu7nWCZHyTV2BDMFBnVnTi2c1gsicwy
+\unrestrict JO342jIFOYeDdXDzpCiK0sqLjKy4winmoo3gBbSCTv0oSPBHpnfg7Wj0fI0ruS0
 

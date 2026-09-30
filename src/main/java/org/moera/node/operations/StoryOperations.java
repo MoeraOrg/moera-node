@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.FeedStatus;
@@ -86,29 +85,39 @@ public class StoryOperations {
         ));
     }
 
-    public void publish(Entry posting, List<StoryAttributes> publications) {
-        publish(posting, publications, universalContext.nodeId(), universalContext::send);
-    }
-
-    public void publish(
-        Entry posting, List<StoryAttributes> publications, UUID nodeId, Consumer<Liberin> liberinSender
-    ) {
+    public void publish(Entry entry, List<StoryAttributes> publications) {
         if (publications == null) {
             return;
         }
 
         for (StoryAttributes publication : publications) {
-            Story story = new Story(UUID.randomUUID(), nodeId, StoryType.POSTING_ADDED);
-            story.setEntry(posting);
+            Story story = new Story(UUID.randomUUID(), universalContext.nodeId(), StoryType.POSTING_ADDED);
+            story.setEntry(entry);
             story.setFeedName(Feed.TIMELINE);
             StoryAttributesUtil.toStory(publication, story);
-            updateMoment(story, nodeId);
+            updateMoment(story, universalContext.nodeId());
             story = storyRepository.saveAndFlush(story);
-            posting.addStory(story);
+            entry.addStory(story);
 
             sheriffUserListOperations.sheriffListReference(story);
 
-            liberinSender.accept(new StoryAddedLiberin(story).withNodeId(nodeId));
+            universalContext.send(new StoryAddedLiberin(story));
+        }
+    }
+
+    public void publish(Entry entry, List<StoryAttributes> publications, boolean allowMultiple) {
+        var newPublications = publications.stream().filter(p ->
+            p.getFeedName() != null
+            && (
+                allowMultiple
+                || storyRepository.countByFeedAndTypeAndEntryId(
+                    universalContext.nodeId(), p.getFeedName(), StoryType.POSTING_ADDED, entry.getId()
+                ) <= 0
+            )
+        ).toList();
+
+        if (!newPublications.isEmpty()) {
+            publish(entry, newPublications);
         }
     }
 

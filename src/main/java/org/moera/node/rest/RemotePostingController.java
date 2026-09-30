@@ -2,10 +2,13 @@ package org.moera.node.rest;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Objects;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import org.moera.lib.node.types.AsyncOperationCreated;
+import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.RemotePostingRepublishAttributes;
 import org.moera.lib.node.types.PostingSourceText;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
@@ -13,8 +16,12 @@ import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.UserBlockedException;
+import org.moera.node.data.FavorType;
 import org.moera.node.data.OwnPosting;
 import org.moera.node.data.OwnPostingRepository;
+import org.moera.node.data.Pick;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
 import org.moera.node.global.ApiController;
@@ -24,12 +31,14 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AsyncOperationCreatedUtil;
+import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.FavorOperations;
-import org.moera.node.data.FavorType;
+import org.moera.node.picker.PickerPool;
 import org.moera.node.rest.task.RemotePostingPostJob;
 import org.moera.node.rest.task.verification.RemotePostingVerifyTask;
 import org.moera.node.task.Jobs;
 import org.moera.node.task.TaskAutowire;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -63,6 +72,12 @@ public class RemotePostingController {
 
     @Inject
     private FavorOperations favorOperations;
+
+    @Inject
+    private BlockedUserOperations blockedUserOperations;
+
+    @Inject
+    private PickerPool pickerPool;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -142,6 +157,59 @@ public class RemotePostingController {
         if (ownPosting != null && !ownPosting.hasParentMedia()) {
             favorOperations.asyncAddFavor(nodeName, FavorType.UNPOST);
             requestContext.send(new RemotePostingUpdatedLiberin(nodeName, postingId));
+        }
+
+        return Result.OK;
+    }
+
+    @PostMapping("/{id}/republish")
+    @Entitled
+    @Transactional
+    public Result republish(
+        @PathVariable String nodeName,
+        @PathVariable String id,
+        @RequestBody RemotePostingRepublishAttributes attributes
+    ) {
+        log.info(
+            "POST /nodes/{nodeName}/postings/{id}/republish (nodeName = {}, id = {})",
+            LogUtil.format(nodeName), LogUtil.format(id)
+        );
+
+        attributes.validate();
+        ValidationUtil.assertion(
+            attributes.getPublications().stream().noneMatch(Objects::isNull),
+            "posting.publications.missing"
+        );
+        if (
+            !requestContext.isAdmin(Scope.ADD_POST)
+            && (
+                ObjectUtils.isEmpty(requestContext.getClientName(Scope.ADD_POST))
+                || !requestContext.getOptions().getBool("posting.non-admin.allowed")
+            )
+        ) {
+            throw new AuthenticationException();
+        }
+        if (!ObjectUtils.isEmpty(attributes.getPublications()) && !requestContext.isAdmin(Scope.UPDATE_FEEDS)) {
+            throw new AuthenticationException();
+        }
+        if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
+            throw new UserBlockedException();
+        }
+
+        for (var publication : attributes.getPublications()) {
+            Pick pick = new Pick();
+            pick.setRemoteNodeName(nodeName);
+            pick.setRemoteFeedName(attributes.getRemoteFeedName());
+            pick.setRemotePostingId(id);
+            pick.setFeedName(publication.getFeedName());
+            pick.setPublishAt(Util.toTimestamp(publication.getPublishAt()));
+            pick.setPinned(Boolean.TRUE.equals(publication.getPinned()));
+            pick.setViewed(Boolean.TRUE.equals(publication.getViewed()));
+            pick.setRead(Boolean.TRUE.equals(publication.getRead()));
+            pick.setSatisfied(Boolean.TRUE.equals(publication.getSatisfied()));
+            pick.setPostingViewPrincipal(attributes.getPostingView());
+            pick.setAllowMultiple(true);
+            pickerPool.pick(pick);
         }
 
         return Result.OK;

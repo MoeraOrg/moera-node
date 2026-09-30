@@ -1,0 +1,112 @@
+# Federation
+
+## Locating and calling nodes
+
+`NamingClient` talks to the Moera naming service. `NamingCache` caches registered-name details, including the current
+node URI and signing key. `NodeApi` resolves a remote registered name through this cache and creates a generated
+`MoeraNode` client over OkHttp. Calls may be anonymous or carry a carte and authenticated mode.
+
+Remote writes are generally performed by jobs under `rest.task`. A job retains enough parameters and state to retry a
+multi-step exchange without keeping an HTTP request open. Remote verification tasks fetch signed objects again and
+record whether a posting, comment, or reaction still matches its claimed fingerprint.
+
+## Outgoing notifications
+
+Liberin receptors construct typed notification objects and send them through `NotificationSenderPool`. Directions can
+target one node, subscribers to a feed or entry, members of a friend group, or holders of a media lease. Principal
+filters are evaluated before a notification is queued for a recipient.
+
+Each outbound notification is serialized into `pending_notifications` before delivery. A
+`NotificationSender` is serialized per `(local node ID, remote node name)` direction, which preserves order to one
+peer while allowing unrelated peers to progress concurrently. Pending rows are restored after domains are configured.
+
+The sender wraps the notification in a `NotificationPacket` containing a unique ID, local profile snapshot, creation
+time, notification type, and JSON payload. It signs a versioned packet fingerprint with the local node's signing key.
+Delivery uses exponential delay from 30 seconds to six hours, normally for up to seven days. Naming failures have a
+shorter overall retry period, and permanent authentication, validation, or not-found failures stop delivery.
+
+The receiver's `FROZEN` result records the peer as frozen and delays further sends. Connectivity state is retained so a
+known failing or frozen peer does not consume sender capacity as aggressively as a healthy peer.
+
+## Incoming notifications
+
+`POST /moera/api/notifications` validates the packet type and freshness, resolves the sender's current signing key, and
+verifies the fingerprint before deserializing the typed notification. `NotificationRouter` maps each notification type
+to one method on an `@NotificationProcessor` component.
+
+If the local node is frozen, the original packet is stored in `frozen_notifications` for later processing. Otherwise,
+sender name, full name, source URI, gender, and avatar are attached to the notification before its processor runs.
+Processors may update small state synchronously or enqueue a persistent after-commit job.
+
+Versioned fingerprints preserve compatibility. The current notification signature covers the source URI as well as
+the sender's full name; receivers can still verify older packet versions that did not include it.
+
+## Picking remote content
+
+A `Pick` is durable work to fetch or refresh a remote posting and its related data. `PickerPool` restores pending picks
+at startup and runs one `Picker` for each `(local node ID, remote node name)` direction. This prevents concurrent
+fetches from the same peer from stepping on each other's posting state.
+
+A picker retries recoverable failures with an increasing delay from 30 seconds up to six hours. The final write
+transaction locks and reloads the local posting, revalidates the earlier snapshot, and commits the entry, revision,
+attachments, permissions, reaction totals, and sources together. Liberins and child picks follow the successful
+commit.
+
+The remote-posting republish API creates one durable pick for each requested feed publication. Each pick retains the
+remote source feed name, local destination feed name, publication time, and pinned, viewed, read, and satisfied flags,
+so retries and process restarts preserve the publication intent. After downloading or refreshing the posting, the
+picker adds the story unless the posting is already present in that feed. A publication without an explicit local feed
+name downloads the posting without adding a story.
+
+Remote attachments initially use `RemoteMediaFile` metadata and an optional lease. A later download may add a local
+`MediaFileOwner` to the same attachment. The remote record retains origin identity and metadata needed for federation,
+while the local owner supplies bytes and local access control.
+
+## Node source URI
+
+Every public structure that carries a node full-name snapshot also carries an optional source URI snapshot. The usual
+field-name rule replaces the final `FullName` with `SourceUri`, preserving any prefix. Profile structures use the
+shorter `sourceUri` name because the subject is already unambiguous.
+
+The source URI is historical identity metadata. Creation and ingestion code captures it from the same profile or
+notification object as the full name and stores both in one transaction. Conversion helpers return the stored pair;
+they do not decorate an old object with the node's current profile. A contact refresh may update its current snapshot,
+but it does not rewrite older entries, reactions, stories, or moderation records.
+
+The value is optional, at most 1024 characters, and is not validated as a URI by `moera-node`. Omission leaves a
+profile value unchanged on update; an empty profile attribute resets it.
+
+Moeralib provides `NodeSourceUri` helpers for the serialized form:
+
+```text
+<uri>;<parameter-name>=<parameter-value>;...
+```
+
+The first semicolon begins the parameter block. Names and values use UTF-8 RFC 3986 percent encoding, duplicate names
+keep their first position and last value, empty names are ignored, and unknown parameters are preserved. `via_email`
+is the currently published parameter name. The node itself stores and transports the full string as opaque metadata.
+
+## Federated OCR metadata
+
+Locally recognized media text is stored as `MediaFile.recognizedText` and exposed as `textContent`. For every local
+owner of a non-empty recognized result, a liberin sends `LEASED_MEDIA_TEXT_UPDATED` to nodes holding a lease for that
+owner.
+
+The receiving processor first verifies the exact tuple of local node, sender node, media ID, and lease ID. It then
+schedules a persistent after-commit `MediaTextUpdatedJob`. The job updates only matching `RemoteMediaFile` rows,
+recomputes derived headings and descriptions, invalidates attachment caches, and emits media-text and heading changes.
+If the lease has disappeared before the job runs, the operation becomes a no-op.
+
+Media-text notifications carry an optional media node name so equal media IDs from different nodes cannot collide in
+posting or search updates. Empty OCR results mark recognition complete on the source node but do not clear text already
+propagated to lease holders.
+
+## Search subscribers
+
+Moera Search participates as a normal subscriber to search-oriented notifications. Node receptors send full posting,
+comment, reaction, profile, and incremental media-text updates through the same durable notification pipeline used for
+other peers.
+
+Source URI fields and remote-media node names are retained in these payloads. This lets search preserve historical
+identity metadata and update the correct attachment when two nodes use the same media ID. The search index itself is
+owned by the separate `moera-search` service; it is not part of the node's PostgreSQL schema.

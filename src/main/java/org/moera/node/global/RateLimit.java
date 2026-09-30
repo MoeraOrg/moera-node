@@ -14,5 +14,6 @@ public @interface RateLimit {
     int limit();
     int period();
     boolean perIp() default false;
+    boolean exceptRootAdmin() default false;
 
 }

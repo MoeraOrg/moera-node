@@ -12,6 +12,14 @@
 
 1. Keep all project documentation under `doc/`. Do not create documentation files in `docs/` or elsewhere.
 2. Format all documents with a maximum line length of 120 characters.
+3. `doc/architecture.md` is the entry point to the architecture documentation. Put detailed architecture descriptions
+   in the most specific chapter under `doc/architecture/` and update the entry point when adding or renaming a chapter.
+4. Architecture documentation describes the current implementation. Verify claims against code, configuration, and
+   migrations; do not put implementation plans, rollout instructions, or historical behavior in these documents.
+5. When a change alters component boundaries, data ownership, transaction boundaries, durable workflows, federation,
+   or deployment requirements, update the affected architecture chapter in the same change.
+6. Keep detailed wire fields in the public API specifications and exact database definitions in Flyway migrations.
+   Architecture documents should explain their stable relationships and invariants and link to the source of truth.
 
 # Testing
 
