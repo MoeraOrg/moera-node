@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -111,9 +112,15 @@ public class CommentTextUtil {
                 entry.setOwnerAvatarShape(commentText.getOwnerAvatar().getShape());
             }
         }
+        if (commentText.getExternalSourceUri() != null) {
+            entry.setExternalSourceUri(commentText.getExternalSourceUri().toArray(String[]::new));
+        }
 
         if (commentText.getOperations() != null) {
             toPrincipal(commentText.getOperations().getView(), entry::setViewPrincipal);
+            toPrincipal(
+                commentText.getOperations().getViewExternalSource(), entry::setViewExternalSourcePrincipal
+            );
             toPrincipal(commentText.getOperations().getViewReactions(), entry::setViewReactionsPrincipal);
             toPrincipal(
                 commentText.getOperations().getViewNegativeReactions(),
@@ -160,6 +167,9 @@ public class CommentTextUtil {
         }
 
         toPrincipal(commentText.getSeniorOperations().getView(), entry::setParentViewPrincipal);
+        toPrincipal(
+            commentText.getSeniorOperations().getViewExternalSource(), entry::setParentViewExternalSourcePrincipal
+        );
         toPrincipal(commentText.getSeniorOperations().getViewReactions(), entry::setParentViewReactionsPrincipal);
         toPrincipal(
             commentText.getSeniorOperations().getViewNegativeReactions(),
@@ -241,8 +251,15 @@ public class CommentTextUtil {
                         .equals(entry.getOwnerAvatarMediaFile().getId())
             )
             && (
+                commentText.getExternalSourceUri() == null
+                || Arrays.equals(commentText.getExternalSourceUri().toArray(String[]::new), entry.getExternalSourceUri())
+            )
+            && (
                 commentText.getOperations() == null
                 || samePrincipalAs(commentText.getOperations().getView(), entry.getViewPrincipal())
+                    && samePrincipalAs(
+                        commentText.getOperations().getViewExternalSource(), entry.getViewExternalSourcePrincipal()
+                    )
                     && samePrincipalAs(
                         commentText.getOperations().getViewReactions(),
                         entry.getViewReactionsPrincipal()
@@ -287,6 +304,10 @@ public class CommentTextUtil {
             && (
                 commentText.getSeniorOperations() == null
                 || samePrincipalAs(commentText.getSeniorOperations().getView(), entry.getParentViewPrincipal())
+                    && samePrincipalAs(
+                        commentText.getSeniorOperations().getViewExternalSource(),
+                        entry.getParentViewExternalSourcePrincipal()
+                    )
                     && samePrincipalAs(
                         commentText.getSeniorOperations().getViewReactions(),
                         entry.getParentViewReactionsPrincipal()

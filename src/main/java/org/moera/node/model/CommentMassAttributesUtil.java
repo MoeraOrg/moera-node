@@ -26,6 +26,7 @@ public class CommentMassAttributesUtil {
         }
 
         toPrincipal(operations.getView(), entry::setParentViewPrincipal);
+        toPrincipal(operations.getViewExternalSource(), entry::setParentViewExternalSourcePrincipal);
         toPrincipal(operations.getViewReactions(), entry::setParentViewReactionsPrincipal);
         toPrincipal(operations.getViewNegativeReactions(), entry::setParentViewNegativeReactionsPrincipal);
         toPrincipal(operations.getViewReactionTotals(), entry::setParentViewReactionTotalsPrincipal);
@@ -49,6 +50,7 @@ public class CommentMassAttributesUtil {
         }
 
         return samePrincipalAs(operations.getView(), entry.getParentViewPrincipal())
+            && samePrincipalAs(operations.getViewExternalSource(), entry.getParentViewExternalSourcePrincipal())
             && samePrincipalAs(operations.getViewReactions(), entry.getParentViewReactionsPrincipal())
             && samePrincipalAs(operations.getViewNegativeReactions(), entry.getParentViewNegativeReactionsPrincipal())
             && samePrincipalAs(operations.getViewReactionTotals(), entry.getParentViewReactionTotalsPrincipal())

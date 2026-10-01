@@ -147,6 +147,9 @@ public class CommentOperations {
         comment.setParentViewPrincipal(orUnset(posting.getChildOperations().getView()));
         comment.setParentEditPrincipal(orUnset(posting.getChildOperations().getEdit()));
         comment.setParentDeletePrincipal(orUnset(posting.getChildOperations().getDelete()));
+        comment.setParentViewExternalSourcePrincipal(
+            orUnset(posting.getChildOperations().getViewExternalSource())
+        );
         comment.setParentViewReactionsPrincipal(orUnset(posting.getChildOperations().getViewReactions()));
         comment.setParentViewNegativeReactionsPrincipal(
             orUnset(posting.getChildOperations().getViewNegativeReactions())

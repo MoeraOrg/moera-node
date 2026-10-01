@@ -134,6 +134,9 @@ public class PostingTextUtil {
         if (entry.getParentMediaEntry() == null) {
             if (postingText.getOperations() != null) {
                 toPrincipal(postingText.getOperations().getView(), entry::setViewPrincipal);
+                toPrincipal(
+                    postingText.getOperations().getViewExternalSource(), entry::setViewExternalSourcePrincipal
+                );
                 toPrincipal(postingText.getOperations().getViewComments(), entry::setViewCommentsPrincipal);
                 toPrincipal(postingText.getOperations().getAddComment(), entry::setAddCommentPrincipal);
                 toPrincipal(postingText.getOperations().getTrustComment(), entry::setTrustCommentPrincipal);
@@ -164,6 +167,7 @@ public class PostingTextUtil {
                 toPrincipal(postingText.getCommentOperations().getView(), ops::setView);
                 toPrincipal(postingText.getCommentOperations().getEdit(), ops::setEdit);
                 toPrincipal(postingText.getCommentOperations().getDelete(), ops::setDelete);
+                toPrincipal(postingText.getCommentOperations().getViewExternalSource(), ops::setViewExternalSource);
                 toPrincipal(postingText.getCommentOperations().getViewReactions(), ops::setViewReactions);
                 toPrincipal(
                     postingText.getCommentOperations().getViewNegativeReactions(),
@@ -255,6 +259,9 @@ public class PostingTextUtil {
             && (
                 postingText.getOperations() == null
                 || samePrincipalAs(postingText.getOperations().getView(), entry.getViewPrincipal())
+                && samePrincipalAs(
+                    postingText.getOperations().getViewExternalSource(), entry.getViewExternalSourcePrincipal()
+                )
                 && samePrincipalAs(postingText.getOperations().getViewComments(), entry.getViewCommentsPrincipal())
                 && samePrincipalAs(postingText.getOperations().getAddComment(), entry.getAddCommentPrincipal())
                 && samePrincipalAs(postingText.getOperations().getTrustComment(), entry.getTrustCommentPrincipal())
@@ -291,6 +298,10 @@ public class PostingTextUtil {
                 && samePrincipalAs(
                     postingText.getCommentOperations().getDelete(),
                     entry.getChildOperations().getDelete()
+                )
+                && samePrincipalAs(
+                    postingText.getCommentOperations().getViewExternalSource(),
+                    entry.getChildOperations().getViewExternalSource()
                 )
                 && samePrincipalAs(
                     postingText.getCommentOperations().getViewReactions(),

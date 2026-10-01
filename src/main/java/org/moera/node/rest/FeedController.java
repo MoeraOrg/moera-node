@@ -315,7 +315,7 @@ public class FeedController {
         QStory story = QStory.story;
         QEntry entry = QEntry.entry;
         QEntryRevision currentRevision = QEntryRevision.entryRevision;
-        List<StoryInfo> stories = new JPAQueryFactory(entityManager)
+        List<Story> foundStories = new JPAQueryFactory(entityManager)
             .selectFrom(story)
             .distinct()
             .leftJoin(story.remoteAvatarMediaFile).fetchJoin()
@@ -327,7 +327,22 @@ public class FeedController {
             .leftJoin(entry.ownerAvatarMediaFile).fetchJoin()
             .leftJoin(entry.blockedInstants).fetchJoin()
             .where(storyFilter(requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore()))
-            .fetch()
+            .fetch();
+
+        Set<UUID> postingIds = foundStories.stream()
+            .filter(s -> s.getStoryType() == StoryType.POSTING_ADDED && isStoryValid(s))
+            .map(s -> s.getEntry().getId())
+            .collect(Collectors.toSet());
+        if (!postingIds.isEmpty()) {
+            new JPAQueryFactory(entityManager)
+                .selectFrom(entry)
+                .distinct()
+                .leftJoin(entry.stories, story).fetchJoin()
+                .where(entry.id.in(postingIds).and(story.parent.isNull()))
+                .fetch();
+        }
+
+        List<StoryInfo> stories = foundStories
             .stream()
             .filter(this::isStoryValid)
             .map(this::buildStoryInfo)
@@ -532,7 +547,7 @@ public class FeedController {
             requestContext.isAdmin(Scope.VIEW_FEEDS),
             t -> PostingInfoUtil.build(
                 t.getEntry(),
-                List.of(t),
+                t.getEntry().getStories(),
                 entryOperations,
                 requestContext,
                 requestContext.getOptions(),

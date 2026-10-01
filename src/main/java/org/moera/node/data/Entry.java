@@ -105,6 +105,8 @@ public class Entry {
 
     private Timestamp receiverDeletedAt;
 
+    private Timestamp receiverPublishedAt;
+
     private Timestamp deadline;
 
     @NotNull
@@ -202,6 +204,12 @@ public class Entry {
     private Principal parentDeletePrincipal = Principal.UNSET;
 
     private Principal receiverDeletePrincipal;
+
+    private Principal viewExternalSourcePrincipal = Principal.PUBLIC;
+
+    private Principal parentViewExternalSourcePrincipal = Principal.UNSET;
+
+    private Principal receiverViewExternalSourcePrincipal;
 
     private Principal viewCommentsPrincipal = Principal.PUBLIC;
 
@@ -525,6 +533,14 @@ public class Entry {
 
     public void setReceiverDeletedAt(Timestamp receiverDeletedAt) {
         this.receiverDeletedAt = receiverDeletedAt;
+    }
+
+    public Timestamp getReceiverPublishedAt() {
+        return receiverPublishedAt;
+    }
+
+    public void setReceiverPublishedAt(Timestamp receiverPublishedAt) {
+        this.receiverPublishedAt = receiverPublishedAt;
     }
 
     public Timestamp getDeadline() {
@@ -884,6 +900,42 @@ public class Entry {
 
     public void setReceiverDeletePrincipal(Principal receiverDeletePrincipal) {
         this.receiverDeletePrincipal = receiverDeletePrincipal;
+    }
+
+    public Principal getViewExternalSourcePrincipal() {
+        return viewExternalSourcePrincipal;
+    }
+
+    public void setViewExternalSourcePrincipal(Principal viewExternalSourcePrincipal) {
+        this.viewExternalSourcePrincipal = viewExternalSourcePrincipal;
+    }
+
+    public Principal getParentViewExternalSourcePrincipal() {
+        return parentViewExternalSourcePrincipal;
+    }
+
+    public void setParentViewExternalSourcePrincipal(Principal parentViewExternalSourcePrincipal) {
+        this.parentViewExternalSourcePrincipal = parentViewExternalSourcePrincipal;
+    }
+
+    public Principal getViewExternalSourceCompound() {
+        return getParentViewExternalSourcePrincipal().withSubordinate(getViewExternalSourcePrincipal());
+    }
+
+    public Principal getViewExternalSourceE() {
+        return toAbsolute(getViewExternalSourceCompound());
+    }
+
+    public Principal getReceiverViewExternalSourcePrincipal() {
+        return receiverViewExternalSourcePrincipal;
+    }
+
+    public void setReceiverViewExternalSourcePrincipal(Principal receiverViewExternalSourcePrincipal) {
+        this.receiverViewExternalSourcePrincipal = receiverViewExternalSourcePrincipal;
+    }
+
+    public Principal getReceiverViewExternalSourceE() {
+        return toReceiverAbsolute(getReceiverViewExternalSourcePrincipal());
     }
 
     public Principal getViewCommentsPrincipal() {

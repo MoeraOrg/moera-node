@@ -12,6 +12,7 @@ public class ChildOperations implements Cloneable {
     private Principal view;
     private Principal edit;
     private Principal delete;
+    private Principal viewExternalSource;
     private Principal viewReactions;
     private Principal viewNegativeReactions;
     private Principal viewReactionTotals;
@@ -52,6 +53,14 @@ public class ChildOperations implements Cloneable {
 
     public void setDelete(Principal delete) {
         this.delete = delete;
+    }
+
+    public Principal getViewExternalSource() {
+        return viewExternalSource;
+    }
+
+    public void setViewExternalSource(Principal viewExternalSource) {
+        this.viewExternalSource = viewExternalSource;
     }
 
     public Principal getViewReactions() {
@@ -138,6 +147,7 @@ public class ChildOperations implements Cloneable {
         return Objects.equals(view, that.view)
                 && Objects.equals(edit, that.edit)
                 && Objects.equals(delete, that.delete)
+                && Objects.equals(viewExternalSource, that.viewExternalSource)
                 && Objects.equals(viewReactions, that.viewReactions)
                 && Objects.equals(viewNegativeReactions, that.viewNegativeReactions)
                 && Objects.equals(viewReactionTotals, that.viewReactionTotals)
@@ -151,9 +161,9 @@ public class ChildOperations implements Cloneable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(view, edit, delete, viewReactions, viewNegativeReactions, viewReactionTotals,
-                viewNegativeReactionTotals, viewReactionRatios, viewNegativeReactionRatios, addReaction,
-                addNegativeReaction, overrideReaction);
+        return Objects.hash(view, edit, delete, viewExternalSource, viewReactions, viewNegativeReactions,
+                viewReactionTotals, viewNegativeReactionTotals, viewReactionRatios, viewNegativeReactionRatios,
+                addReaction, addNegativeReaction, overrideReaction);
     }
 
     @Override

@@ -49,6 +49,11 @@ public class OperationsValidator {
             | PrincipalFlag.PRIVATE
         );
         v.accept(
+            operations.getViewExternalSource(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+        );
+        v.accept(
             operations.getViewComments(),
             PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
             | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
@@ -118,6 +123,11 @@ public class OperationsValidator {
             operations.getView(),
             PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
             | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE
+        );
+        v.accept(
+            operations.getViewExternalSource(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
         );
         v.accept(
             operations.getEdit(),

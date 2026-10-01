@@ -400,6 +400,7 @@ public class CommentController {
                     valid = true;
                 }
             }
+            valid = valid && (requestContext.isAdmin(scope) || commentText.getExternalSourceUri() == null);
             if (!valid) {
                 // posting owner may change seniorOperations or senior rejected reactions
                 if (comment == null || !isSenior) {

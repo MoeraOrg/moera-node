@@ -159,6 +159,7 @@ public class CommentInfoUtil {
         operations.setView(comment.getViewCompound(), Principal.PUBLIC);
         operations.setEdit(comment.getEditCompound(), Principal.OWNER);
         operations.setDelete(comment.getDeleteCompound(), Principal.PRIVATE);
+        operations.setViewExternalSource(comment.getViewExternalSourceCompound(), Principal.PUBLIC);
         operations.setViewReactions(comment.getViewReactionsCompound(), Principal.PUBLIC);
         operations.setViewNegativeReactions(comment.getViewNegativeReactionsCompound(), Principal.PUBLIC);
         operations.setViewReactionTotals(comment.getViewReactionTotalsCompound(), Principal.PUBLIC);
@@ -179,6 +180,7 @@ public class CommentInfoUtil {
             ownerOperations.setView(comment.getViewPrincipal(), Principal.PUBLIC);
             ownerOperations.setEdit(comment.getEditPrincipal(), Principal.OWNER);
             ownerOperations.setDelete(comment.getDeletePrincipal(), Principal.PRIVATE);
+            ownerOperations.setViewExternalSource(comment.getViewExternalSourcePrincipal(), Principal.PUBLIC);
             ownerOperations.setViewReactions(comment.getViewReactionsPrincipal(), Principal.PUBLIC);
             ownerOperations.setViewNegativeReactions(comment.getViewNegativeReactionsPrincipal(), Principal.PUBLIC);
             ownerOperations.setViewReactionTotals(comment.getViewReactionTotalsPrincipal(), Principal.PUBLIC);
@@ -197,6 +199,9 @@ public class CommentInfoUtil {
             seniorOperations.setView(comment.getParentViewPrincipal(), Principal.UNSET);
             seniorOperations.setEdit(comment.getParentEditPrincipal(), Principal.UNSET);
             seniorOperations.setDelete(comment.getParentDeletePrincipal(), Principal.UNSET);
+            seniorOperations.setViewExternalSource(
+                comment.getParentViewExternalSourcePrincipal(), Principal.UNSET
+            );
             seniorOperations.setViewReactions(comment.getParentViewReactionsPrincipal(), Principal.UNSET);
             seniorOperations.setViewNegativeReactions(
                 comment.getParentViewNegativeReactionsPrincipal(), Principal.UNSET
@@ -234,6 +239,12 @@ public class CommentInfoUtil {
         );
 
         commentInfo.setReactions(ReactionTotalsInfoUtil.build(comment.getReactionTotals(), comment, accessChecker));
+        if (
+            accessChecker.isPrincipal(comment.getViewExternalSourceE(), Scope.VIEW_CONTENT)
+            && comment.getExternalSourceUri().length > 0
+        ) {
+            commentInfo.setExternalSourceUri(List.of(comment.getExternalSourceUri()));
+        }
     }
 
     public static CommentUiInfo buildForUi(

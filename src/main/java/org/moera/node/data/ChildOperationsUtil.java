@@ -32,6 +32,7 @@ public class ChildOperationsUtil {
         operations.setView(Principal.ADMIN);
         operations.setEdit(Principal.NONE);
         operations.setDelete(Principal.ADMIN);
+        operations.setViewExternalSource(Principal.ADMIN);
         operations.setViewReactions(Principal.ADMIN);
         operations.setViewNegativeReactions(Principal.ADMIN);
         operations.setViewReactionTotals(Principal.ADMIN);

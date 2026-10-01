@@ -20,14 +20,14 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.data.Feed;
-import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
+import org.moera.node.data.Feed;
 import org.moera.node.data.OwnPosting;
 import org.moera.node.data.Story;
 import org.moera.node.global.ServeContext;
+import org.moera.node.media.DirectServeOperations;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.grant.MediaGrantGenerator;
 import org.moera.node.operations.FeedOperations;
@@ -197,6 +197,7 @@ public class PostingInfoUtil {
         info.setReceiverCreatedAt(Util.toEpochSecond(posting.getReceiverCreatedAt()));
         info.setReceiverEditedAt(Util.toEpochSecond(posting.getReceiverEditedAt()));
         info.setReceiverDeletedAt(Util.toEpochSecond(posting.getReceiverDeletedAt()));
+        info.setReceiverPublishedAt(Util.toEpochSecond(posting.getReceiverPublishedAt()));
         info.setRevisionCreatedAt(Util.toEpochSecond(revision.getCreatedAt()));
         info.setReceiverRevisionCreatedAt(Util.toEpochSecond(revision.getReceiverCreatedAt()));
         info.setDeadline(Util.toEpochSecond(posting.getDeadline()));
@@ -213,6 +214,11 @@ public class PostingInfoUtil {
                 .toList();
             if (!ObjectUtils.isEmpty(feedReferences)) {
                 info.setFeedReferences(feedReferences);
+                info.setEarliestPublishedAt(feedReferences.stream()
+                    .filter(reference -> Feed.TIMELINE.equals(reference.getFeedName()))
+                    .map(FeedReference::getPublishedAt)
+                    .min(Long::compareTo)
+                    .orElse(null));
             }
         }
 
@@ -229,6 +235,7 @@ public class PostingInfoUtil {
         operations.setView(posting.getViewPrincipal(), Principal.PUBLIC);
         operations.setEdit(posting.getEditPrincipal(), Principal.OWNER);
         operations.setDelete(posting.getDeletePrincipal(), Principal.PRIVATE);
+        operations.setViewExternalSource(posting.getViewExternalSourcePrincipal(), Principal.PUBLIC);
         operations.setViewComments(posting.getViewCommentsPrincipal(), Principal.PUBLIC);
         operations.setAddComment(posting.getAddCommentPrincipal(), Principal.SIGNED);
         operations.setTrustComment(posting.getTrustCommentPrincipal(), Principal.SIGNED);
@@ -250,6 +257,9 @@ public class PostingInfoUtil {
             receiverOperations.setView(posting.getReceiverViewPrincipal(), Principal.PUBLIC);
             receiverOperations.setEdit(posting.getReceiverEditPrincipal(), Principal.OWNER);
             receiverOperations.setDelete(posting.getReceiverDeletePrincipal(), Principal.PRIVATE);
+            receiverOperations.setViewExternalSource(
+                posting.getReceiverViewExternalSourcePrincipal(), Principal.PUBLIC
+            );
             receiverOperations.setViewComments(posting.getReceiverViewCommentsPrincipal(), Principal.PUBLIC);
             receiverOperations.setAddComment(posting.getReceiverAddCommentPrincipal(), Principal.SIGNED);
             receiverOperations.setTrustComment(posting.getReceiverTrustCommentPrincipal(), Principal.SIGNED);
@@ -285,6 +295,9 @@ public class PostingInfoUtil {
         commentOperations.setView(posting.getChildOperations().getView(), Principal.UNSET);
         commentOperations.setEdit(posting.getChildOperations().getEdit(), Principal.UNSET);
         commentOperations.setDelete(posting.getChildOperations().getDelete(), Principal.UNSET);
+        commentOperations.setViewExternalSource(
+            posting.getChildOperations().getViewExternalSource(), Principal.UNSET
+        );
         commentOperations.setViewReactions(posting.getChildOperations().getViewReactions(), Principal.UNSET);
         commentOperations.setViewNegativeReactions(
             posting.getChildOperations().getViewNegativeReactions(), Principal.UNSET
@@ -341,8 +354,11 @@ public class PostingInfoUtil {
             info.setViewCount(posting.getViewCount());
         }
         info.setRecommended(posting.isRecommended());
+        Principal viewExternalSource = posting.isOriginal()
+            ? posting.getViewExternalSourceE()
+            : posting.getReceiverViewExternalSourceE();
         if (
-            accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_CONTENT)
+            accessChecker.isPrincipal(viewExternalSource, Scope.VIEW_CONTENT)
             && !ObjectUtils.isEmpty(posting.getExternalSourceUri())
         ) {
             info.setExternalSourceUri(List.of(posting.getExternalSourceUri()));
@@ -521,6 +537,9 @@ public class PostingInfoUtil {
             Util.toTimestamp(isOriginal(info) ? info.getEditedAt() : info.getReceiverEditedAt())
         );
         posting.setReceiverDeletedAt(null);
+        posting.setReceiverPublishedAt(Util.toTimestamp(
+            isOriginal(info) ? info.getEarliestPublishedAt() : info.getReceiverPublishedAt()
+        ));
         if (info.getRejectedReactions() != null) {
             if (info.getRejectedReactions().getPositive() != null) {
                 posting.setRejectedReactionsPositive(info.getRejectedReactions().getPositive());
@@ -530,6 +549,9 @@ public class PostingInfoUtil {
             }
         }
         posting.setTotalChildren(info.getTotalComments());
+        if (info.getExternalSourceUri() != null) {
+            posting.setExternalSourceUri(info.getExternalSourceUri().toArray(String[]::new));
+        }
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207
         Principal principal = PostingOperations.getView(info.getOperations(), Principal.PUBLIC);
@@ -545,6 +567,11 @@ public class PostingInfoUtil {
         posting.setReceiverEditPrincipal(principal);
         principal = PostingOperations.getDelete(info.getOperations(), Principal.PRIVATE);
         posting.setReceiverDeletePrincipal(principal);
+        principal = PostingOperations.getViewExternalSource(info.getOperations(), Principal.PUBLIC);
+        posting.setViewExternalSourcePrincipal(
+            principal.isFriends() || principal.isSubscribed() ? Principal.PRIVATE : principal
+        );
+        posting.setReceiverViewExternalSourcePrincipal(principal);
         principal = PostingOperations.getViewComments(info.getOperations(), Principal.PUBLIC);
         posting.setViewCommentsPrincipal(Principal.NONE);
         posting.setReceiverViewCommentsPrincipal(principal);

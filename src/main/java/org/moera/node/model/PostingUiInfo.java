@@ -14,26 +14,42 @@ public class PostingUiInfo extends PostingInfo {
         return PostingInfoUtil.getSaneBody(this);
     }
 
-    private FeedReference getFeedReference(String feedName) {
+    private record FeedReferenceSummary(boolean pinned, long moment) {
+    }
+
+    private FeedReferenceSummary getFeedReferenceSummary(String feedName) {
         if (getFeedReferences() == null) {
             return null;
         }
-        return getFeedReferences().stream().filter(fr -> fr.getFeedName().equals(feedName)).findFirst().orElse(null);
+
+        FeedReference latest = null;
+        boolean pinned = false;
+        for (var fr : getFeedReferences()) {
+            if (!fr.getFeedName().equals(feedName)) {
+                continue;
+            }
+            if (latest == null || fr.getPublishedAt() > latest.getPublishedAt()) {
+                latest = fr;
+            }
+            pinned = pinned || fr.getPinned();
+        }
+
+        return latest != null ? new FeedReferenceSummary(pinned, latest.getMoment()) : null;
     }
 
     public Long getTimelinePublishedAt() {
-        FeedReference fr = getFeedReference(Feed.TIMELINE);
-        return fr != null ? fr.getPublishedAt() : null;
+        Long publishedAt = getEarliestPublishedAt();
+        return publishedAt != null ? publishedAt : getCreatedAt();
     }
 
     public Boolean isTimelinePinned() {
-        FeedReference fr = getFeedReference(Feed.TIMELINE);
-        return fr != null ? fr.getPinned() : null;
+        var frs = getFeedReferenceSummary(Feed.TIMELINE);
+        return frs != null ? frs.pinned : null;
     }
 
     public Long getTimelineMoment() {
-        FeedReference fr = getFeedReference(Feed.TIMELINE);
-        return fr != null ? fr.getMoment() : null;
+        var frs = getFeedReferenceSummary(Feed.TIMELINE);
+        return frs != null ? frs.moment : null;
     }
 
 }
