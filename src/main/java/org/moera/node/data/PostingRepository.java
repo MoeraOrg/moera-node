@@ -18,6 +18,10 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     @Query("select p from Posting p where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null")
     Optional<Posting> findByNodeIdAndId(UUID nodeId, UUID id);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Posting p where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null")
+    Optional<Posting> findByNodeIdAndIdForUpdate(UUID nodeId, UUID id);
+
     @Query("select p from Posting p where p.nodeId = ?1 and p.id in (?2) and p.deletedAt is null")
     List<Posting> findByNodeIdAndIds(UUID nodeId, Collection<UUID> ids);
 

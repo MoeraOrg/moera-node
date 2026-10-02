@@ -138,6 +138,9 @@ public class Story {
     @ManyToOne(fetch = FetchType.LAZY)
     private Entry entry;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private EntrySharing sharing;
+
     @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "parent")
     private Set<Story> substories = new HashSet<>();
 
@@ -447,6 +450,14 @@ public class Story {
 
     public void setEntry(Entry entry) {
         this.entry = entry;
+    }
+
+    public EntrySharing getSharing() {
+        return sharing;
+    }
+
+    public void setSharing(EntrySharing sharing) {
+        this.sharing = sharing;
     }
 
     @Transient

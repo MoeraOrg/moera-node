@@ -93,7 +93,7 @@ public class PostingMediaReactionInstants extends InstantsCreator {
         Story substory = new Story(UUID.randomUUID(), nodeId(), storyType);
         substory.setRemoteOwnerName(reactionNodeName);
         substory.setRemoteOwnerFullName(reactionFullName);
-story.setRemoteOwnerSourceUri(reactionSourceUri);
+        substory.setRemoteOwnerSourceUri(reactionSourceUri);
         if (reactionAvatar != null) {
             substory.setRemoteOwnerAvatarMediaFile(AvatarImageUtil.getMediaFile(reactionAvatar));
             substory.setRemoteOwnerAvatarShape(reactionAvatar.getShape());

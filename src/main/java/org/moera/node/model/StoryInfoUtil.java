@@ -50,6 +50,21 @@ public class StoryInfoUtil {
                 info.setPosting(buildPostingInfo.apply(story));
                 break;
 
+            case POSTING_SHARED:
+                info.setPostingId(story.getEntry().getId().toString());
+                info.setSummaryNodeName(story.getRemoteOwnerName());
+                info.setSummaryFullName(story.getRemoteOwnerFullName());
+                info.setSummarySourceUri(story.getRemoteOwnerSourceUri());
+                if (story.getRemoteOwnerAvatarMediaFile() != null) {
+                    info.setSummaryAvatar(AvatarImageUtil.build(
+                        story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape(), directServe
+                    ));
+                }
+                if (story.getSharing() != null) {
+                    info.setRemoteStoryMoment(story.getSharing().getRemoteStoryMoment());
+                }
+                break;
+
             case REACTION_ADDED_POSITIVE:
             case REACTION_ADDED_NEGATIVE:
                 info.setPostingId(story.getEntry().getId().toString());

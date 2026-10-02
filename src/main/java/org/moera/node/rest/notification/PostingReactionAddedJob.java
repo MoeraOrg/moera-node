@@ -16,13 +16,15 @@ public class PostingReactionAddedJob extends Job<PostingReactionAddedJob.Paramet
     public record Parameters(
         String senderNodeName,
         String ownerName,
-        String ownerFullName, String ownerSourceUri,
+        String ownerFullName,
+        String ownerSourceUri,
         String ownerGender,
         AvatarImage ownerAvatar,
         boolean negative,
         int emoji,
         String parentPostingNodeName,
-        String parentPostingFullName, String parentPostingSourceUri,
+        String parentPostingFullName,
+        String parentPostingSourceUri,
         String parentPostingGender,
         AvatarImage parentPostingAvatar,
         String parentPostingId,
@@ -55,39 +57,67 @@ public class PostingReactionAddedJob extends Job<PostingReactionAddedJob.Paramet
     @Override
     protected void execute() throws Exception {
         Contact.toAvatar(
-                contactOperations.find(parameters.parentPostingNodeName),
-                parameters.parentPostingAvatar);
+            contactOperations.find(parameters.parentPostingNodeName),
+            parameters.parentPostingAvatar
+        );
         Contact.toAvatar(
-                contactOperations.find(parameters.ownerName),
-                parameters.ownerAvatar);
+            contactOperations.find(parameters.ownerName),
+            parameters.ownerAvatar
+        );
 
         tx.executeWriteWithExceptions(() ->
-                mediaManager.downloadAvatars(
-                        parameters.senderNodeName,
-                        new AvatarImage[] {parameters.parentPostingAvatar, parameters.ownerAvatar}));
+            mediaManager.downloadAvatars(
+                parameters.senderNodeName,
+                new AvatarImage[] {parameters.parentPostingAvatar, parameters.ownerAvatar}
+            )
+        );
 
         if (parameters.parentPostingId != null) {
             if (parameters.parentCommentId == null) {
                 universalContext.send(
-                        new RemotePostingMediaReactionAddedLiberin(parameters.senderNodeName,
-                                parameters.parentPostingNodeName, parameters.parentPostingFullName,
-                                    parameters.parentPostingSourceUri,
-                                parameters.parentPostingGender, parameters.parentPostingAvatar, parameters.postingId,
-                                parameters.parentPostingId, parameters.parentMediaId, parameters.ownerName,
-                                parameters.ownerFullName,
-                                parameters.ownerSourceUri, parameters.ownerGender, parameters.ownerAvatar,
-                                parameters.parentHeading, parameters.negative, parameters.emoji));
+                    new RemotePostingMediaReactionAddedLiberin(
+                        parameters.senderNodeName,
+                        parameters.parentPostingNodeName,
+                        parameters.parentPostingFullName,
+                        parameters.parentPostingSourceUri,
+                        parameters.parentPostingGender,
+                        parameters.parentPostingAvatar,
+                        parameters.postingId,
+                        parameters.parentPostingId,
+                        parameters.parentMediaId,
+                        parameters.ownerName,
+                        parameters.ownerFullName,
+                        parameters.ownerSourceUri,
+                        parameters.ownerGender,
+                        parameters.ownerAvatar,
+                        parameters.parentHeading,
+                        parameters.negative,
+                        parameters.emoji
+                    )
+                );
             } else {
                 universalContext.send(
-                        new RemoteCommentMediaReactionAddedLiberin(parameters.senderNodeName,
-                                parameters.parentPostingNodeName, parameters.parentPostingFullName,
-                                    parameters.parentPostingSourceUri,
-                                parameters.parentPostingGender, parameters.parentPostingAvatar, parameters.postingId,
-                                parameters.parentPostingId, parameters.parentCommentId, parameters.parentMediaId,
-                                parameters.ownerName, parameters.ownerFullName, parameters.ownerSourceUri,
-                                    parameters.ownerGender,
-                                parameters.ownerAvatar, parameters.parentHeading, parameters.negative,
-                                parameters.emoji));
+                    new RemoteCommentMediaReactionAddedLiberin(
+                        parameters.senderNodeName,
+                        parameters.parentPostingNodeName,
+                        parameters.parentPostingFullName,
+                        parameters.parentPostingSourceUri,
+                        parameters.parentPostingGender,
+                        parameters.parentPostingAvatar,
+                        parameters.postingId,
+                        parameters.parentPostingId,
+                        parameters.parentCommentId,
+                        parameters.parentMediaId,
+                        parameters.ownerName,
+                        parameters.ownerFullName,
+                        parameters.ownerSourceUri,
+                        parameters.ownerGender,
+                        parameters.ownerAvatar,
+                        parameters.parentHeading,
+                        parameters.negative,
+                        parameters.emoji
+                    )
+                );
             }
         }
     }

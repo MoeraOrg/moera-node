@@ -31,6 +31,38 @@ dedicated endpoints.
 remote attachment has been downloaded locally. Its ordinal preserves attachment order, and `embedded` distinguishes
 inline use from a separate attachment.
 
+## Posting sharings
+
+`EntrySharing` records a sharing reported by another node. The original entry owns the list and its `totalSharings`
+counter; picked entries retain the counter received from the original. An optional revision link identifies the shared
+content revision and prevents revision cleanup while the sharing remains. The sharing keeps its remote identity
+snapshot and either a complete feed/story/moment reference, a remote posting reference, or both.
+Timeline republishing does not select a revision, so its revision link is null.
+
+Each sharing has a local pagination moment, unique within its entry and independent of the remote story moment.
+The API reads bounded slices in descending moment order. The inclusive upper bound and exclusive lower bound let
+clients continue from the returned lower bound without skipping sharings created at the same timestamp. The list and
+the total in a slice remain subject to their separate viewing permissions.
+
+Sharing mutations lock the original posting row and update the records and counter in one transaction. Duplicate
+shared notifications are idempotent. Unsharing matches every identity dimension exactly, including nulls for omitted
+values, and removes all matching rows. A remote story is identified solely by its ID. Feed name, story moment, and
+display metadata do not participate in identity matching.
+
+Sharing instants group substories by posting using the reaction instant grouping window. Each substory has an optional
+relationship to its `EntrySharing`. The group refers to the sharing of its latest substory and updates this relationship
+when its substories change. The foreign key becomes null when the sharing is deleted; the deletion liberin retains the
+affected substory IDs and removes them after commit. Removing the last substory removes its group.
+Sharing avatars participate in the usual media reference-count triggers.
+
+The sharing and publication schema is defined in
+[V313](../../src/main/resources/db/migration/V313__entry_sharings.sql),
+[V314](../../src/main/resources/db/migration/V314__entry_sharings_moment.sql),
+[V315](../../src/main/resources/db/migration/V315__drop_shared_story_moment.sql),
+[V316](../../src/main/resources/db/migration/V316__story_sharing_relationship.sql),
+[V317](../../src/main/resources/db/migration/V317__drop_sharing_remote_title.sql), and
+[V318](../../src/main/resources/db/migration/V318__drop_entry_sharings_created_at_index.sql).
+
 ## Feeds and stories
 
 `Story` is a materialized feed item. It belongs to a node and optional feed, has a `StoryType`, ordering moment,
@@ -68,6 +100,11 @@ to cover the parent media digest and attachment digests.
 `Contact` is the local cache and relationship summary for another node. It stores profile snapshots, relationship
 counts, a computed distance, and `visitCount`. `Favor` records decaying signals used by `FavorOperations` when
 calculating contact distance.
+
+Publishing a posting in the local timeline records a `PUBLICATION` favor for its author; removing that publication
+records an `UNPUBLICATION` favor. Each timeline story contributes separately, including stories removed with the
+posting itself. These local signals are independent of the author's access to the posting and of federation
+notification delivery. `StoryReceptor` records them through `FavorOperations` in the liberin delivery transaction.
 
 The admin-only `/moera/api/people/visited` API records and searches node visits. Every POST adds a separate `VISITED`
 favor with value `10` and a ten-day decay period, and increments the contact's visit count. DELETE removes all visited

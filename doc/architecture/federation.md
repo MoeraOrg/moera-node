@@ -62,6 +62,34 @@ Remote attachments initially use `RemoteMediaFile` metadata and an optional leas
 `MediaFileOwner` to the same attachment. The remote record retains origin identity and metadata needed for federation,
 while the local owner supplies bytes and local access control.
 
+## Sharing notifications
+
+Publishing a picked posting in `timeline` sends `POSTING_SHARED` to the original owner's node. Removing that
+publication, including moving it to another feed, sends `POSTING_UNSHARED`. Both notifications are delivered only if
+the owner's node can view the entry referenced by the story. Deletion uses the visibility filter captured in the
+deletion liberin. Owner name and original node name are assumed to coincide. Timeline republishing refers to the
+posting as a whole and omits the revision ID. A remote story is identified by its ID; feed name and moment are
+descriptive metadata and do not participate in deduplication or unsharing matches. Notifications carry the current
+story moment.
+
+The receiver validates the sharing type, posting ID, optional revision, and complete remote reference. Sharing
+mutations lock the tenant's original posting, deduplicate or remove exact matching sharings, and update the counter.
+For every new sharing, the processor persists a `PostingSharedJob` in the same transaction through
+`Jobs.runAfterCommit`, with the local node ID, sharing identity, and optional avatar snapshot. The job resolves any
+matching avatar from the contact before downloading it, then locks the posting and completes the sharing only if it
+still exists. The job cannot recreate a sharing removed by a subsequent unshared notification. It initiates the added
+liberin after completion, including when the notification has no avatar. Before deletion, sharing mutations capture
+the IDs of related instant substories for cleanup after commit. Committed liberins initiate instant creation or cleanup
+and send sharing-added or sharing-deleted events, independently of total events. List and total events use their own
+viewing permission and posting visibility. The creation receptor locks the posting and verifies that the sharing
+still exists, so a delayed added liberin cannot recreate an instant or announce a deleted sharing. Event payloads are
+defined in `moeraorg.github.io/_data/events.yml`.
+
+Posting subscribers receive counter updates through `POSTING_SHARINGS_UPDATED` when their access permits it. The
+picked copy updates its counter and emits the total event; it does not own the original sharing list. Public list and
+permission fields are specified in the [Node API](https://moera.org/development/api/node/), and notification payloads
+are defined in `moeraorg.github.io/_data/notifications.yml`.
+
 ## Node source URI
 
 Every public structure that carries a node full-name snapshot also carries an optional source URI snapshot. The usual
@@ -106,6 +134,15 @@ propagated to lease holders.
 Moera Search participates as a normal subscriber to search-oriented notifications. Node receptors send full posting,
 comment, reaction, profile, and incremental media-text updates through the same durable notification pipeline used for
 other peers.
+
+Removing a posting story from a public feed sends a search update to subscribers that can see the posting. The update
+identifies the removed story and the posting, preserving the original posting identity for picked copies. When posting
+deletion also removes its stories, those story deletions suppress their search updates; the posting receptor sends the
+posting deletion update instead. The deletion context is captured before the transaction closes, so delivery does not
+depend on loading a deleted story or its relationships. See
+[`StoryDeletedLiberin`](../../src/main/java/org/moera/node/liberin/model/StoryDeletedLiberin.java),
+[`StoryOperations`](../../src/main/java/org/moera/node/operations/StoryOperations.java), and
+[`StoryReceptor`](../../src/main/java/org/moera/node/liberin/receptor/StoryReceptor.java).
 
 Source URI fields and remote-media node names are retained in these payloads. This lets search preserve historical
 identity metadata and update the correct attachment when two nodes use the same media ID. The search index itself is

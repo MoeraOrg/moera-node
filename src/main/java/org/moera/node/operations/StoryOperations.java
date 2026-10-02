@@ -149,7 +149,7 @@ public class StoryOperations {
     public void unpublish(UUID entryId) {
         storyRepository.findByEntryId(universalContext.nodeId(), entryId).stream()
             .filter(story -> story.getFeedName() != null)
-            .peek(story -> universalContext.send(new StoryDeletedLiberin(story)))
+            .peek(story -> universalContext.send(new StoryDeletedLiberin(story, true)))
             .forEach(storyRepository::delete);
     }
 

@@ -90,45 +90,47 @@ public class PostingTextUtil {
         }
 
         entry.setEditedAt(Util.now());
-        if (postingText.getRejectedReactions() != null) {
-            if (postingText.getRejectedReactions().getPositive() != null) {
-                entry.setRejectedReactionsPositive(postingText.getRejectedReactions().getPositive());
+        if (entry.isOriginal()) {
+            if (postingText.getRejectedReactions() != null) {
+                if (postingText.getRejectedReactions().getPositive() != null) {
+                    entry.setRejectedReactionsPositive(postingText.getRejectedReactions().getPositive());
+                }
+                if (postingText.getRejectedReactions().getNegative() != null) {
+                    entry.setRejectedReactionsNegative(postingText.getRejectedReactions().getNegative());
+                }
             }
-            if (postingText.getRejectedReactions().getNegative() != null) {
-                entry.setRejectedReactionsNegative(postingText.getRejectedReactions().getNegative());
+            if (postingText.getCommentRejectedReactions() != null) {
+                if (postingText.getCommentRejectedReactions().getPositive() != null) {
+                    entry.setChildRejectedReactionsPositive(postingText.getCommentRejectedReactions().getPositive());
+                }
+                if (postingText.getCommentRejectedReactions().getNegative() != null) {
+                    entry.setChildRejectedReactionsNegative(postingText.getCommentRejectedReactions().getNegative());
+                }
             }
-        }
-        if (postingText.getCommentRejectedReactions() != null) {
-            if (postingText.getCommentRejectedReactions().getPositive() != null) {
-                entry.setChildRejectedReactionsPositive(postingText.getCommentRejectedReactions().getPositive());
+            if (postingText.getOwnerName() != null) {
+                entry.setOwnerName(postingText.getOwnerName());
             }
-            if (postingText.getCommentRejectedReactions().getNegative() != null) {
-                entry.setChildRejectedReactionsNegative(postingText.getCommentRejectedReactions().getNegative());
+            if (postingText.getOwnerFullName() != null) {
+                entry.setOwnerFullName(postingText.getOwnerFullName());
             }
-        }
-        if (postingText.getOwnerName() != null) {
-            entry.setOwnerName(postingText.getOwnerName());
-        }
-        if (postingText.getOwnerFullName() != null) {
-            entry.setOwnerFullName(postingText.getOwnerFullName());
-        }
-        if (postingText.getOwnerSourceUri() != null) {
-            entry.setOwnerSourceUri(postingText.getOwnerSourceUri());
-        }
-        if (postingText.getOwnerGender() != null) {
-            entry.setOwnerGender(postingText.getOwnerGender());
-        }
-        if (postingText.getOwnerAvatar() != null) {
-            MediaFile ownerAvatarMediaFile = AvatarDescriptionUtil.getMediaFile(postingText.getOwnerAvatar());
-            if (ownerAvatarMediaFile != null) {
-                entry.setOwnerAvatarMediaFile(ownerAvatarMediaFile);
+            if (postingText.getOwnerSourceUri() != null) {
+                entry.setOwnerSourceUri(postingText.getOwnerSourceUri());
             }
-            if (postingText.getOwnerAvatar().getShape() != null) {
-                entry.setOwnerAvatarShape(postingText.getOwnerAvatar().getShape());
+            if (postingText.getOwnerGender() != null) {
+                entry.setOwnerGender(postingText.getOwnerGender());
             }
-        }
-        if (postingText.getExternalSourceUri() != null) {
-            entry.setExternalSourceUri(postingText.getExternalSourceUri().toArray(String[]::new));
+            if (postingText.getOwnerAvatar() != null) {
+                MediaFile ownerAvatarMediaFile = AvatarDescriptionUtil.getMediaFile(postingText.getOwnerAvatar());
+                if (ownerAvatarMediaFile != null) {
+                    entry.setOwnerAvatarMediaFile(ownerAvatarMediaFile);
+                }
+                if (postingText.getOwnerAvatar().getShape() != null) {
+                    entry.setOwnerAvatarShape(postingText.getOwnerAvatar().getShape());
+                }
+            }
+            if (postingText.getExternalSourceUri() != null) {
+                entry.setExternalSourceUri(postingText.getExternalSourceUri().toArray(String[]::new));
+            }
         }
 
         if (entry.getParentMediaEntry() == null) {
@@ -137,6 +139,8 @@ public class PostingTextUtil {
                 toPrincipal(
                     postingText.getOperations().getViewExternalSource(), entry::setViewExternalSourcePrincipal
                 );
+                toPrincipal(postingText.getOperations().getViewSharings(), entry::setViewSharingsPrincipal);
+                toPrincipal(postingText.getOperations().getViewTotalSharings(), entry::setViewTotalSharingsPrincipal);
                 toPrincipal(postingText.getOperations().getViewComments(), entry::setViewCommentsPrincipal);
                 toPrincipal(postingText.getOperations().getAddComment(), entry::setAddCommentPrincipal);
                 toPrincipal(postingText.getOperations().getTrustComment(), entry::setTrustCommentPrincipal);
@@ -261,6 +265,10 @@ public class PostingTextUtil {
                 || samePrincipalAs(postingText.getOperations().getView(), entry.getViewPrincipal())
                 && samePrincipalAs(
                     postingText.getOperations().getViewExternalSource(), entry.getViewExternalSourcePrincipal()
+                )
+                && samePrincipalAs(postingText.getOperations().getViewSharings(), entry.getViewSharingsPrincipal())
+                && samePrincipalAs(
+                    postingText.getOperations().getViewTotalSharings(), entry.getViewTotalSharingsPrincipal()
                 )
                 && samePrincipalAs(postingText.getOperations().getViewComments(), entry.getViewCommentsPrincipal())
                 && samePrincipalAs(postingText.getOperations().getAddComment(), entry.getAddCommentPrincipal())

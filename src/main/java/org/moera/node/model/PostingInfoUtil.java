@@ -214,11 +214,13 @@ public class PostingInfoUtil {
                 .toList();
             if (!ObjectUtils.isEmpty(feedReferences)) {
                 info.setFeedReferences(feedReferences);
-                info.setEarliestPublishedAt(feedReferences.stream()
-                    .filter(reference -> Feed.TIMELINE.equals(reference.getFeedName()))
-                    .map(FeedReference::getPublishedAt)
-                    .min(Long::compareTo)
-                    .orElse(null));
+                info.setEarliestPublishedAt(
+                    feedReferences.stream()
+                        .filter(reference -> Feed.TIMELINE.equals(reference.getFeedName()))
+                        .map(FeedReference::getPublishedAt)
+                        .min(Long::compareTo)
+                        .orElse(null)
+                );
             }
         }
 
@@ -236,6 +238,8 @@ public class PostingInfoUtil {
         operations.setEdit(posting.getEditPrincipal(), Principal.OWNER);
         operations.setDelete(posting.getDeletePrincipal(), Principal.PRIVATE);
         operations.setViewExternalSource(posting.getViewExternalSourcePrincipal(), Principal.PUBLIC);
+        operations.setViewSharings(posting.getViewSharingsPrincipal(), Principal.PUBLIC);
+        operations.setViewTotalSharings(posting.getViewTotalSharingsPrincipal(), Principal.PUBLIC);
         operations.setViewComments(posting.getViewCommentsPrincipal(), Principal.PUBLIC);
         operations.setAddComment(posting.getAddCommentPrincipal(), Principal.SIGNED);
         operations.setTrustComment(posting.getTrustCommentPrincipal(), Principal.SIGNED);
@@ -260,6 +264,8 @@ public class PostingInfoUtil {
             receiverOperations.setViewExternalSource(
                 posting.getReceiverViewExternalSourcePrincipal(), Principal.PUBLIC
             );
+            receiverOperations.setViewSharings(posting.getReceiverViewSharingsPrincipal(), Principal.PUBLIC);
+            receiverOperations.setViewTotalSharings(posting.getReceiverViewTotalSharingsPrincipal(), Principal.PUBLIC);
             receiverOperations.setViewComments(posting.getReceiverViewCommentsPrincipal(), Principal.PUBLIC);
             receiverOperations.setAddComment(posting.getReceiverAddCommentPrincipal(), Principal.SIGNED);
             receiverOperations.setTrustComment(posting.getReceiverTrustCommentPrincipal(), Principal.SIGNED);
@@ -349,6 +355,12 @@ public class PostingInfoUtil {
             : posting.getReceiverViewCommentsE();
         info.setTotalComments(
             accessChecker.isPrincipal(viewComments, Scope.VIEW_CONTENT) ? posting.getTotalChildren() : 0
+        );
+        Principal viewTotalSharings = posting.isOriginal()
+            ? posting.getViewTotalSharingsE()
+            : posting.getReceiverViewTotalSharingsE();
+        info.setTotalSharings(
+            accessChecker.isPrincipal(viewTotalSharings, Scope.VIEW_CONTENT) ? posting.getTotalSharings() : 0
         );
         if (accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_CONTENT)) {
             info.setViewCount(posting.getViewCount());
@@ -549,6 +561,7 @@ public class PostingInfoUtil {
             }
         }
         posting.setTotalChildren(info.getTotalComments());
+        posting.setTotalSharings(info.getTotalSharings() != null ? info.getTotalSharings() : 0);
         if (info.getExternalSourceUri() != null) {
             posting.setExternalSourceUri(info.getExternalSourceUri().toArray(String[]::new));
         }
@@ -572,6 +585,14 @@ public class PostingInfoUtil {
             principal.isFriends() || principal.isSubscribed() ? Principal.PRIVATE : principal
         );
         posting.setReceiverViewExternalSourcePrincipal(principal);
+        principal = PostingOperations.getViewSharings(info.getOperations(), Principal.PUBLIC);
+        posting.setViewSharingsPrincipal(
+            principal.isFriends() || principal.isSubscribed() ? Principal.PRIVATE : principal
+        );
+        posting.setReceiverViewSharingsPrincipal(principal);
+        principal = PostingOperations.getViewTotalSharings(info.getOperations(), Principal.PUBLIC);
+        posting.setViewTotalSharingsPrincipal(principal);
+        posting.setReceiverViewTotalSharingsPrincipal(principal);
         principal = PostingOperations.getViewComments(info.getOperations(), Principal.PUBLIC);
         posting.setViewCommentsPrincipal(Principal.NONE);
         posting.setReceiverViewCommentsPrincipal(principal);

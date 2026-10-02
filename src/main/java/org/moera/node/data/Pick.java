@@ -37,6 +37,12 @@ public class Pick {
     @Size(max = 40)
     private String remotePostingId;
 
+    @Size(max = 135)
+    private String sourceNodeName;
+
+    @Size(max = 40)
+    private String sourcePostingId;
+
     @ManyToOne
     private MediaFileOwner mediaFileOwner;
 
@@ -116,6 +122,22 @@ public class Pick {
 
     public void setRemotePostingId(String remotePostingId) {
         this.remotePostingId = remotePostingId;
+    }
+
+    public String getSourceNodeName() {
+        return sourceNodeName;
+    }
+
+    public void setSourceNodeName(String sourceNodeName) {
+        this.sourceNodeName = sourceNodeName;
+    }
+
+    public String getSourcePostingId() {
+        return sourcePostingId;
+    }
+
+    public void setSourcePostingId(String sourcePostingId) {
+        this.sourcePostingId = sourcePostingId;
     }
 
     public MediaFileOwner getMediaFileOwner() {
@@ -230,16 +252,29 @@ public class Pick {
         this.running = running;
     }
 
+    public Pick redirectTo(String remoteNodeName, String remotePostingId) {
+        Pick pick = new Pick();
+        pick.feedName = feedName;
+        pick.remoteFeedName = remoteFeedName;
+        pick.recommended = recommended;
+        pick.pinned = pinned;
+        pick.viewed = viewed;
+        pick.read = read;
+        pick.satisfied = satisfied;
+        pick.postingViewPrincipal = postingViewPrincipal;
+        pick.allowMultiple = allowMultiple;
+        pick.publishAt = publishAt;
+        pick.sourceNodeName = sourceNodeName != null ? sourceNodeName : this.remoteNodeName;
+        pick.sourcePostingId = sourcePostingId != null ? sourcePostingId : this.remotePostingId;
+        pick.remoteNodeName = remoteNodeName;
+        pick.remotePostingId = remotePostingId;
+        return pick;
+    }
+
     public boolean isSame(EntrySource entrySource) {
         return entrySource.getRemoteFeedName().equals(remoteFeedName)
                 && entrySource.getRemoteNodeName().equals(remoteNodeName)
                 && entrySource.getRemotePostingId().equals(remotePostingId);
-    }
-
-    public void toEntrySource(EntrySource entrySource) {
-        entrySource.setRemoteFeedName(remoteFeedName);
-        entrySource.setRemoteNodeName(remoteNodeName);
-        entrySource.setRemotePostingId(remotePostingId);
     }
 
 }

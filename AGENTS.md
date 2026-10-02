@@ -7,6 +7,8 @@
 5. As an exception to the previous rule, always name an injected `Transaction` field `tx`.
 6. If a record declaration contains no methods, do not put an empty line between the opening and closing braces. Keep
    the opening and closing braces on separate lines.
+7. When parameters in a declaration or arguments in a call are arranged vertically, preserve that layout when adding
+   new parameters or arguments: put each on its own line, not alongside an existing one.
 
 ## Documents
 
@@ -55,6 +57,13 @@
 2. A liberin receptor must delegate this creation to a dedicated instant creator component that extends
    `InstantsCreator`; it must not construct or persist the story directly.
 
+# Notification handlers
+
+1. Notification handlers (methods annotated with `@NotificationMapping`) must not perform long-running operations
+   or call remote APIs directly, including downloading avatars or other media. Delegate this work to jobs. Schedule
+   persistent jobs with `Jobs.runAfterCommit` and the local node ID, keeping validation and short local operations in
+   the handler.
+
 # Other
  
 1. In src/main/resources/messages.properties, place codes with the same 1st or 1st and 2nd components together. Place
@@ -66,3 +75,5 @@
    transaction, so don't add an external mechanism for this.
 4. `UniversalContext.associate()` causes side effects that affect further execution of the whole thread. Avoid calling
    it in methods that are not semantically bound to a concrete job or background task.
+5. Before downloading avatars with `mediaManager.downloadAvatar/downloadAvatars`, call
+   `Contact.toAvatar(contactOperations.find(...), ...)` to fetch the avatar that is already downloaded.

@@ -70,6 +70,12 @@ public class Picker extends Task {
     private String remoteSourceUri;
     private MediaFile remoteAvatarMediaFile;
     private String remoteAvatarShape;
+
+    private String sourceFullName;
+    private String sourceSourceUri;
+    private MediaFile sourceAvatarMediaFile;
+    private String sourceAvatarShape;
+
     private final BlockingQueue<Pick> queue = new LinkedBlockingQueue<>();
     private boolean stopped = false;
     private final PickerPool pool;
@@ -177,11 +183,23 @@ public class Picker extends Task {
         remoteAvatarShape = remote.getAvatar() != null ? remote.getAvatar().getShape() : null;
     }
 
+    private void fetchSourceDetails(String sourceNodeName) throws MoeraNodeException {
+        WhoAmI source = nodeApi.at(sourceNodeName).whoAmI();
+        sourceFullName = source.getFullName();
+        sourceSourceUri = source.getSourceUri();
+        sourceAvatarMediaFile = mediaManager.downloadPublicMedia(sourceNodeName, source.getAvatar());
+        sourceAvatarShape = source.getAvatar() != null ? source.getAvatar().getShape() : null;
+    }
+
     private void download(Pick pick) throws Exception {
         log.info(
             "Downloading pick {} from node {}, postingId = {}",
             LogUtil.format(pick.getId()), LogUtil.format(remoteNodeName), LogUtil.format(pick.getRemotePostingId())
         );
+
+        if (pick.getSourceNodeName() != null) {
+            fetchSourceDetails(pick.getSourceNodeName());
+        }
 
         PostingInfo postingInfo = nodeApi
             .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
@@ -190,6 +208,13 @@ public class Picker extends Task {
         MediaFile receiverAvatar = PostingInfoUtil.isOriginal(postingInfo)
             ? ownerAvatar
             : mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getReceiverAvatar());
+
+        if (!PostingInfoUtil.isOriginal(postingInfo)) {
+            Pick redirectedPick = pick.redirectTo(postingInfo.getReceiverName(), postingInfo.getReceiverPostingId());
+            redirected(pick, redirectedPick);
+            return;
+        }
+
         PostingSnapshot snapshot = tx.executeRead(() -> snapshot(postingInfo, pick.getRemotePostingId()));
         List<PreparedAttachment> attachments =
             snapshot.postingId() == null || !postingInfo.getEditedAt().equals(snapshot.editedAt())
@@ -585,25 +610,54 @@ public class Picker extends Task {
         if (ObjectUtils.isEmpty(pick.getRemoteFeedName())) {
             return;
         }
+
         List<EntrySource> sources = entrySourceRepository.findAllByEntryId(posting.getId());
         if (sources.stream().anyMatch(pick::isSame)) {
             return;
         }
+
         EntrySource entrySource = new EntrySource();
         entrySource.setId(UUID.randomUUID());
         entrySource.setEntry(posting);
-        entrySource.setRemoteFullName(remoteFullName);
-        entrySource.setRemoteSourceUri(remoteSourceUri);
-        entrySource.setRemoteAvatarMediaFile(
-            remoteAvatarMediaFile != null ? entityManager.find(MediaFile.class, remoteAvatarMediaFile.getId()) : null
-        );
-        entrySource.setRemoteAvatarShape(remoteAvatarShape);
-        pick.toEntrySource(entrySource);
+        if (pick.getSourceNodeName() != null) {
+            entrySource.setRemoteFullName(sourceFullName);
+            entrySource.setRemoteSourceUri(sourceSourceUri);
+            entrySource.setRemoteAvatarMediaFile(
+                sourceAvatarMediaFile != null
+                    ? entityManager.find(MediaFile.class, sourceAvatarMediaFile.getId())
+                    : null
+            );
+            entrySource.setRemoteAvatarShape(sourceAvatarShape);
+            entrySource.setRemoteNodeName(pick.getSourceNodeName());
+            entrySource.setRemoteFeedName(pick.getRemoteFeedName());
+            entrySource.setRemotePostingId(pick.getSourcePostingId());
+        } else {
+            entrySource.setRemoteFullName(remoteFullName);
+            entrySource.setRemoteSourceUri(remoteSourceUri);
+            entrySource.setRemoteAvatarMediaFile(
+                remoteAvatarMediaFile != null
+                    ? entityManager.find(MediaFile.class, remoteAvatarMediaFile.getId())
+                    : null
+            );
+            entrySource.setRemoteAvatarShape(remoteAvatarShape);
+            entrySource.setRemoteNodeName(remoteNodeName);
+            entrySource.setRemoteFeedName(pick.getRemoteFeedName());
+            entrySource.setRemotePostingId(pick.getRemotePostingId());
+        }
         entrySourceRepository.save(entrySource);
     }
 
     private void succeeded(Posting posting, Pick pick) {
         log.info("Posting downloaded successfully, id = {}", posting.getId());
+        pool.pickSucceeded(pick);
+    }
+
+    private void redirected(Pick pick, Pick redirectedPick) {
+        log.info(
+            "Download will continue from node {}, postingId = {}",
+            LogUtil.format(redirectedPick.getRemoteNodeName()), LogUtil.format(redirectedPick.getRemotePostingId())
+        );
+        pool.pick(redirectedPick);
         pool.pickSucceeded(pick);
     }
 

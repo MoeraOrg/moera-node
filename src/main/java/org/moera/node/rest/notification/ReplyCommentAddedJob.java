@@ -18,7 +18,8 @@ public class ReplyCommentAddedJob extends Job<ReplyCommentAddedJob.Parameters, O
         String senderNodeName,
         String postingId,
         String postingOwnerName,
-        String postingOwnerFullName, String postingOwnerSourceUri,
+        String postingOwnerFullName,
+        String postingOwnerSourceUri,
         String postingOwnerGender,
         AvatarImage postingOwnerAvatar,
         String postingHeading,
@@ -28,7 +29,8 @@ public class ReplyCommentAddedJob extends Job<ReplyCommentAddedJob.Parameters, O
         String repliedToId,
         String repliedToHeading,
         String commentOwnerName,
-        String commentOwnerFullName, String commentOwnerSourceUri,
+        String commentOwnerFullName,
+        String commentOwnerSourceUri,
         String commentOwnerGender,
         AvatarImage commentOwnerAvatar,
         List<SheriffMark> commentSheriffMarks
@@ -57,24 +59,42 @@ public class ReplyCommentAddedJob extends Job<ReplyCommentAddedJob.Parameters, O
     @Override
     protected void execute() throws Exception {
         Contact.toAvatar(
-                contactOperations.find(parameters.postingOwnerName),
-                parameters.postingOwnerAvatar);
+            contactOperations.find(parameters.postingOwnerName),
+            parameters.postingOwnerAvatar
+        );
         Contact.toAvatar(
-                contactOperations.find(parameters.commentOwnerName),
-                parameters.commentOwnerAvatar);
+            contactOperations.find(parameters.commentOwnerName),
+            parameters.commentOwnerAvatar
+        );
         tx.executeWriteWithExceptions(
-                () -> mediaManager.downloadAvatars(
-                        parameters.senderNodeName,
-                        new AvatarImage[] {parameters.postingOwnerAvatar, parameters.commentOwnerAvatar}));
+            () -> mediaManager.downloadAvatars(
+                parameters.senderNodeName,
+                new AvatarImage[] {parameters.postingOwnerAvatar, parameters.commentOwnerAvatar}
+            )
+        );
         universalContext.send(
-                new ReplyCommentAddedLiberin(parameters.senderNodeName, parameters.postingOwnerName,
-                        parameters.postingOwnerFullName,
-                        parameters.postingOwnerSourceUri, parameters.postingOwnerGender, parameters.postingOwnerAvatar,
-                        parameters.postingHeading, parameters.postingSheriffs, parameters.postingSheriffMarks,
-                        parameters.postingId, parameters.repliedToHeading, parameters.repliedToId,
-                        parameters.commentOwnerName, parameters.commentOwnerFullName, parameters.commentOwnerSourceUri,
-                            parameters.commentOwnerGender,
-                        parameters.commentOwnerAvatar, parameters.commentSheriffMarks, parameters.commentId));
+            new ReplyCommentAddedLiberin(
+                parameters.senderNodeName,
+                parameters.postingOwnerName,
+                parameters.postingOwnerFullName,
+                parameters.postingOwnerSourceUri,
+                parameters.postingOwnerGender,
+                parameters.postingOwnerAvatar,
+                parameters.postingHeading,
+                parameters.postingSheriffs,
+                parameters.postingSheriffMarks,
+                parameters.postingId,
+                parameters.repliedToHeading,
+                parameters.repliedToId,
+                parameters.commentOwnerName,
+                parameters.commentOwnerFullName,
+                parameters.commentOwnerSourceUri,
+                parameters.commentOwnerGender,
+                parameters.commentOwnerAvatar,
+                parameters.commentSheriffMarks,
+                parameters.commentId
+            )
+        );
     }
 
 }

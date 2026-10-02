@@ -49,6 +49,10 @@ publish local events, queue signed notifications to other nodes, send push or ma
 start further jobs. This preserves the transaction boundary of the primary operation and gives related reactions one
 consistent ordering point.
 
+`StoryUpdatedLiberin` carries only the story ID. `StoryReceptor.updated()` reloads the story by node and story ID in the
+receptor's transaction before building client events and push content. Lazy relationships therefore belong to the
+active session, and updates for stories deleted before delivery are skipped.
+
 ## Client events
 
 `EventManager` distributes protected events to authenticated WebSocket/STOMP sessions. It maintains a time-limited

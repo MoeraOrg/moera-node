@@ -16,7 +16,10 @@ public enum FavorType {
     UNREPLY_TO_COMMENT(-5f, 7 * 24),
     UNSUBSCRIBE_TO_COMMENTS(-1f, 3 * 24),
 
-    VISITED(10f, 10 * 24);
+    VISITED(10f, 10 * 24),
+
+    PUBLICATION(20f, 14 * 24),
+    UNPUBLICATION(-20f, 14 * 24);
 
     private final float value;
     private final int decayHours;

@@ -1,0 +1,1 @@
+DROP INDEX entry_sharings_entry_id_created_at_id_idx;

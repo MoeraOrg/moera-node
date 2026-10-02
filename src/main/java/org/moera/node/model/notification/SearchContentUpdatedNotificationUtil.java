@@ -102,6 +102,20 @@ public class SearchContentUpdatedNotificationUtil {
         return notification;
     }
 
+    public static SearchContentUpdatedNotification buildPostingStoryDelete(
+        String nodeName, String postingId, String feedName, UUID storyId
+    ) {
+        var notification = new SearchContentUpdatedNotification();
+        notification.setUpdateType(SearchContentUpdateType.POSTING_DELETE);
+        var details = new SearchPostingUpdate();
+        details.setNodeName(nodeName);
+        details.setPostingId(postingId);
+        details.setFeedName(feedName);
+        details.setStoryId(storyId.toString());
+        notification.setPostingUpdate(details);
+        return notification;
+    }
+
     public static SearchContentUpdatedNotification buildCommentUpdate(
         SearchContentUpdateType updateType, Comment comment
     ) {

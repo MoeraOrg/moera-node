@@ -70,7 +70,7 @@ public class CommentInstants extends InstantsCreator {
         substory.setEntry(comment);
         substory.setRemoteOwnerName(comment.getOwnerName());
         substory.setRemoteOwnerFullName(comment.getOwnerFullName());
-story.setRemoteOwnerSourceUri(comment.getOwnerSourceUri());
+        substory.setRemoteOwnerSourceUri(comment.getOwnerSourceUri());
         substory.setRemoteOwnerAvatarMediaFile(comment.getOwnerAvatarMediaFile());
         substory.setRemoteOwnerAvatarShape(comment.getOwnerAvatarShape());
         substory.setMoment(0L);

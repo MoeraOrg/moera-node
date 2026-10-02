@@ -55,6 +55,9 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     )
     List<Story> findFullByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);
 
+    @Query("select s.id from Story s where s.nodeId = ?1 and s.sharing.id = ?2 and s.parent is not null")
+    List<UUID> findSubIdsBySharingId(UUID nodeId, UUID sharingId);
+
     @Query(
         "select s from Story s"
         + " left join fetch s.remoteAvatarMediaFile"

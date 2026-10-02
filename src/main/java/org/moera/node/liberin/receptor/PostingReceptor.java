@@ -13,6 +13,8 @@ import jakarta.inject.Inject;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.SearchContentUpdateType;
+import org.moera.lib.node.types.SharingType;
+import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
@@ -53,6 +55,8 @@ import org.moera.node.model.notification.PostingDeletedNotificationUtil;
 import org.moera.node.model.notification.PostingHeadingUpdatedNotificationUtil;
 import org.moera.node.model.notification.PostingImportantUpdateNotificationUtil;
 import org.moera.node.model.notification.PostingMediaTextUpdatedNotificationUtil;
+import org.moera.node.model.notification.PostingSharedNotificationUtil;
+import org.moera.node.model.notification.PostingUnsharedNotificationUtil;
 import org.moera.node.model.notification.PostingUpdatedNotificationUtil;
 import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.model.notification.StoryAddedNotificationUtil;
@@ -109,6 +113,7 @@ public class PostingReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void updated(PostingUpdatedLiberin liberin) {
         Posting posting = liberin.getPosting();
+        List<Story> stories = storyRepository.findByEntryId(posting.getNodeId(), posting.getId());
 
         if (posting.isOriginal()) {
             notifyMentioned(
@@ -119,13 +124,50 @@ public class PostingReceptor extends LiberinReceptorBase {
                 liberin.getLatestViewPrincipal(),
                 posting.getOwnerName()
             );
+        } else {
+            var timelineStories = stories.stream()
+                .filter(t -> Feed.TIMELINE.equals(t.getFeedName()) && t.getStoryType().equals(StoryType.POSTING_ADDED))
+                .toList();
+            for (var story : timelineStories) {
+                send(
+                    Directions.single(
+                        liberin.getNodeId(),
+                        posting.getOwnerName(),
+                        posting.getViewE().a().andNot(liberin.getLatestViewPrincipal())
+                    ),
+                    PostingSharedNotificationUtil.build(
+                        SharingType.REPUBLISH,
+                        posting.getReceiverEntryId(),
+                        null,
+                        story.getFeedName(),
+                        story.getId(),
+                        story.getMoment(),
+                        posting.getId()
+                    )
+                );
+                send(
+                    Directions.single(
+                        liberin.getNodeId(),
+                        posting.getOwnerName(),
+                        posting.getViewE().not().and(liberin.getLatestViewPrincipal())
+                    ),
+                    PostingUnsharedNotificationUtil.build(
+                        SharingType.REPUBLISH,
+                        posting.getReceiverEntryId(),
+                        null,
+                        story.getFeedName(),
+                        story.getId(),
+                        story.getMoment(),
+                        posting.getId()
+                    )
+                );
+            }
         }
 
         PrincipalExpression addedFilter = posting.getViewE().a()
             .andNot(liberin.getLatestViewPrincipal());
         send(liberin, new PostingAddedEvent(posting, addedFilter));
         boolean isNotify = isNotifyWhenRevealed(posting);
-        List<Story> stories = storyRepository.findByEntryId(posting.getNodeId(), posting.getId());
         for (Story story : stories) {
             if (!Feed.isAdmin(story.getFeedName())) {
                 if (isNotify) {
@@ -203,6 +245,7 @@ public class PostingReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void deleted(PostingDeletedLiberin liberin) {
         Posting posting = liberin.getPosting();
+        List<Story> stories = storyRepository.findByEntryId(posting.getNodeId(), posting.getId());
 
         if (posting.isOriginal()) {
             notifyMentioned(
@@ -213,7 +256,26 @@ public class PostingReceptor extends LiberinReceptorBase {
                 posting.getViewE(),
                 posting.getOwnerName()
             );
+        } else {
+            var timelineStories = stories.stream()
+                .filter(t -> Feed.TIMELINE.equals(t.getFeedName()) && t.getStoryType().equals(StoryType.POSTING_ADDED))
+                .toList();
+            for (var story : timelineStories) {
+                send(
+                    Directions.single(liberin.getNodeId(), posting.getOwnerName(), posting.getViewE()),
+                    PostingUnsharedNotificationUtil.build(
+                        SharingType.REPUBLISH,
+                        posting.getReceiverEntryId(),
+                        null,
+                        story.getFeedName(),
+                        story.getId(),
+                        story.getMoment(),
+                        posting.getId()
+                    )
+                );
+            }
         }
+
         send(liberin, new PostingDeletedEvent(posting, posting.getViewE()));
         send(
             Directions.postingSubscribers(posting.getNodeId(), posting.getId(), posting.getViewE()),

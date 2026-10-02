@@ -699,6 +699,8 @@ public class MediaOperations {
         posting.setViewExternalSourcePrincipal(parent.getViewExternalSourceCompound());
         posting.setParentViewCommentsPrincipal(Principal.UNSET);
         posting.setViewCommentsPrincipal(parent.getViewCommentsCompound());
+        posting.setViewSharingsPrincipal(parent.getViewSharingsPrincipal());
+        posting.setViewTotalSharingsPrincipal(parent.getViewTotalSharingsPrincipal());
         posting.setParentAddCommentPrincipal(Principal.UNSET);
         posting.setAddCommentPrincipal(parent.getAddCommentCompound());
         posting.setParentTrustCommentPrincipal(Principal.UNSET);
@@ -734,6 +736,8 @@ public class MediaOperations {
         posting.setViewExternalSourcePrincipal(Principal.ADMIN);
         posting.setParentViewCommentsPrincipal(Principal.UNSET);
         posting.setViewCommentsPrincipal(Principal.ADMIN);
+        posting.setViewSharingsPrincipal(Principal.ADMIN);
+        posting.setViewTotalSharingsPrincipal(Principal.ADMIN);
         posting.setParentAddCommentPrincipal(Principal.UNSET);
         posting.setAddCommentPrincipal(Principal.NONE);
         posting.setParentTrustCommentPrincipal(Principal.UNSET);

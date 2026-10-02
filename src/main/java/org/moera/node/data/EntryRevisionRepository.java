@@ -19,6 +19,7 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
         + " and not exists(select rp from EntryRevision rp where rp.parent.id = r.id)"
         + " and not exists(select rl from Entry rl where rl.repliedToRevision.id = r.id)"
         + " and not exists(select ra from Reaction ra where ra.entryRevision.id = r.id)"
+        + " and not exists(select es from EntrySharing es where es.entryRevision.id = r.id)"
         + " and not exists(select rt from ReactionTotal rt where rt.entryRevision.id = r.id)";
 
     @Query(

@@ -101,7 +101,7 @@ public class InstantsCreator {
     }
 
     protected void storyUpdated(Story story) {
-        universalContext.send(new StoryUpdatedLiberin(story));
+        universalContext.send(new StoryUpdatedLiberin(story.getId()));
     }
 
     protected void storyAddedOrUpdated(Story story, boolean isAdded) {

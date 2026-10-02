@@ -15,10 +15,18 @@ public class StoryDeletedLiberin extends Liberin {
     private String feedName;
     private long moment;
     private UUID postingId;
+    private String receiverName;
+    private String receiverPostingId;
+    private String postingOwnerName;
     private UUID commentId;
     private PrincipalFilter viewFilter;
+    private boolean postingDeleted;
 
     public StoryDeletedLiberin(Story story) {
+        this(story, false);
+    }
+
+    public StoryDeletedLiberin(Story story, boolean postingDeleted) {
         id = story.getId();
         storyType = story.getStoryType();
         feedName = story.getFeedName();
@@ -31,7 +39,37 @@ public class StoryDeletedLiberin extends Liberin {
                 postingId = story.getEntry().getId();
             }
         }
+        if (story.getEntry() != null) {
+            receiverName = story.getEntry().getReceiverName();
+            receiverPostingId = story.getEntry().getReceiverEntryId();
+            postingOwnerName = story.getEntry().getOwnerName();
+        }
         viewFilter = story.getViewPrincipalFilter();
+        this.postingDeleted = postingDeleted;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
+    }
+
+    public String getReceiverPostingId() {
+        return receiverPostingId;
+    }
+
+    public void setReceiverPostingId(String receiverPostingId) {
+        this.receiverPostingId = receiverPostingId;
+    }
+
+    public String getPostingOwnerName() {
+        return postingOwnerName;
+    }
+
+    public void setPostingOwnerName(String postingOwnerName) {
+        this.postingOwnerName = postingOwnerName;
     }
 
     public UUID getId() {
@@ -88,6 +126,14 @@ public class StoryDeletedLiberin extends Liberin {
 
     public void setViewFilter(PrincipalFilter viewFilter) {
         this.viewFilter = viewFilter;
+    }
+
+    public boolean isPostingDeleted() {
+        return postingDeleted;
+    }
+
+    public void setPostingDeleted(boolean postingDeleted) {
+        this.postingDeleted = postingDeleted;
     }
 
 }

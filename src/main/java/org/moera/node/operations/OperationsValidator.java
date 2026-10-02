@@ -46,7 +46,7 @@ public class OperationsValidator {
         v.accept(
             operations.getView(),
             PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
-            | PrincipalFlag.PRIVATE
+            | PrincipalFlag.PRIVATE | PrincipalFlag.ADMIN
         );
         v.accept(
             operations.getViewExternalSource(),
@@ -55,6 +55,16 @@ public class OperationsValidator {
         );
         v.accept(
             operations.getViewComments(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+        );
+        v.accept(
+            operations.getViewTotalSharings(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+        );
+        v.accept(
+            operations.getViewSharings(),
             PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
             | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
         );

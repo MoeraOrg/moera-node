@@ -8,6 +8,7 @@ public class StoryTypeUtil {
           return switch (storyType) {
               case POSTING_ADDED,
                    REACTION_ADDED_POSITIVE,
+                   POSTING_SHARED,
                    REACTION_ADDED_NEGATIVE,
                    COMMENT_REACTION_ADDED_POSITIVE,
                    COMMENT_REACTION_ADDED_NEGATIVE,

@@ -83,7 +83,7 @@ public class RemoteCommentInstants extends InstantsCreator {
         substory.setRemotePostingId(postingId);
         substory.setRemoteOwnerName(commentOwnerName);
         substory.setRemoteOwnerFullName(commentOwnerFullName);
-story.setRemoteOwnerSourceUri(commentOwnerSourceUri);
+        substory.setRemoteOwnerSourceUri(commentOwnerSourceUri);
         if (commentOwnerAvatar != null) {
             substory.setRemoteOwnerAvatarMediaFile(AvatarImageUtil.getMediaFile(commentOwnerAvatar));
             substory.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());

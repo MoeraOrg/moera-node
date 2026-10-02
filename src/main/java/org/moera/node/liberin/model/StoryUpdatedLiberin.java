@@ -1,22 +1,23 @@
 package org.moera.node.liberin.model;
 
-import org.moera.node.data.Story;
+import java.util.UUID;
+
 import org.moera.node.liberin.Liberin;
 
 public class StoryUpdatedLiberin extends Liberin {
 
-    private Story story;
+    private UUID storyId;
 
-    public StoryUpdatedLiberin(Story story) {
-        this.story = story;
+    public StoryUpdatedLiberin(UUID storyId) {
+        this.storyId = storyId;
     }
 
-    public Story getStory() {
-        return story;
+    public UUID getStoryId() {
+        return storyId;
     }
 
-    public void setStory(Story story) {
-        this.story = story;
+    public void setStoryId(UUID storyId) {
+        this.storyId = storyId;
     }
 
 }

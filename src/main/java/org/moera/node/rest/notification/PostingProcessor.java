@@ -13,6 +13,7 @@ import org.moera.lib.node.types.notifications.PostingHeadingUpdatedNotification;
 import org.moera.lib.node.types.notifications.PostingMediaTextUpdatedNotification;
 import org.moera.lib.node.types.notifications.PostingReactionsUpdatedNotification;
 import org.moera.lib.node.types.notifications.PostingSubscriberNotification;
+import org.moera.lib.node.types.notifications.PostingSharingsUpdatedNotification;
 import org.moera.lib.node.types.notifications.PostingUpdatedNotification;
 import org.moera.lib.node.types.notifications.StoryAddedNotification;
 import org.moera.lib.util.LogUtil;
@@ -26,6 +27,7 @@ import org.moera.node.data.UserSubscription;
 import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.PostingCommentTotalsUpdatedLiberin;
+import org.moera.node.liberin.model.PostingTotalSharingsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
 import org.moera.node.model.UnsubscribeFailure;
 import org.moera.node.notification.receive.NotificationMapping;
@@ -155,6 +157,15 @@ public class PostingProcessor {
             }
             // Totals may be the same, but events were not sent yet, because reactions weren't signed
             universalContext.send(new PostingReactionTotalsUpdatedLiberin(posting, notification.getTotals()));
+        });
+    }
+
+    @NotificationMapping(NotificationType.POSTING_SHARINGS_UPDATED)
+    @Transactional
+    public void sharingsUpdated(PostingSharingsUpdatedNotification notification) {
+        withValidPostingSubscription(notification, (subscription, posting) -> {
+            posting.setTotalSharings(notification.getTotal());
+            universalContext.send(new PostingTotalSharingsUpdatedLiberin(posting, notification.getTotal()));
         });
     }
 

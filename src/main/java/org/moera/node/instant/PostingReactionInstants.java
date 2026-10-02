@@ -69,7 +69,7 @@ public class PostingReactionInstants extends InstantsCreator {
         substory.setEntry(posting);
         substory.setRemoteOwnerName(ownerName);
         substory.setRemoteOwnerFullName(ownerFullName);
-story.setRemoteOwnerSourceUri(ownerSourceUri);
+        substory.setRemoteOwnerSourceUri(ownerSourceUri);
         if (ownerAvatar != null) {
             substory.setRemoteOwnerAvatarMediaFile(AvatarImageUtil.getMediaFile(ownerAvatar));
             substory.setRemoteOwnerAvatarShape(ownerAvatar.getShape());
@@ -84,8 +84,7 @@ story.setRemoteOwnerSourceUri(ownerSourceUri);
 
     private static StorySummaryData buildReactionSummary(String gender, int emoji) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setReaction(StorySummaryReactionUtil.build(null, null,
-            null, gender, emoji));
+        summaryData.setReaction(StorySummaryReactionUtil.build(null, null, null, gender, emoji));
         return summaryData;
     }
 
@@ -134,11 +133,11 @@ story.setRemoteOwnerSourceUri(ownerSourceUri);
         }
 
         story.setSummaryData(buildAddedSummary(story, stories));
-        story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
-        story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
-        story.setRemoteOwnerSourceUri(stories.get(0).getRemoteOwnerSourceUri());
-        story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
-        story.setRemoteOwnerAvatarShape(stories.get(0).getRemoteOwnerAvatarShape());
+        story.setRemoteOwnerName(stories.getFirst().getRemoteOwnerName());
+        story.setRemoteOwnerFullName(stories.getFirst().getRemoteOwnerFullName());
+        story.setRemoteOwnerSourceUri(stories.getFirst().getRemoteOwnerSourceUri());
+        story.setRemoteOwnerAvatarMediaFile(stories.getFirst().getRemoteOwnerAvatarMediaFile());
+        story.setRemoteOwnerAvatarShape(stories.getFirst().getRemoteOwnerAvatarShape());
         story.setPublishedAt(Util.now());
         if (isAdded) {
             story.setRead(false);

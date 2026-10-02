@@ -7,9 +7,12 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.FeedStatus;
 import org.moera.lib.node.types.SearchContentUpdateType;
+import org.moera.lib.node.types.SharingType;
 import org.moera.lib.node.types.StoryType;
+import org.moera.node.data.FavorType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
+import org.moera.node.data.StoryRepository;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
@@ -20,9 +23,12 @@ import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
+import org.moera.node.model.notification.PostingSharedNotificationUtil;
+import org.moera.node.model.notification.PostingUnsharedNotificationUtil;
 import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.model.notification.StoryAddedNotificationUtil;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.operations.FavorOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.push.PushContentBuilder;
 import org.moera.node.util.ExtendedDuration;
@@ -31,7 +37,13 @@ import org.moera.node.util.ExtendedDuration;
 public class StoryReceptor extends LiberinReceptorBase {
 
     @Inject
+    private StoryRepository storyRepository;
+
+    @Inject
     private StoryOperations storyOperations;
+
+    @Inject
+    private FavorOperations favorOperations;
 
     @LiberinMapping
     public void added(StoryAddedLiberin liberin) {
@@ -55,6 +67,30 @@ public class StoryReceptor extends LiberinReceptorBase {
                 StoryAddedNotificationUtil.build(story)
             );
         }
+        if (
+            story.getStoryType() == StoryType.POSTING_ADDED
+            && Feed.TIMELINE.equals(story.getFeedName())
+            && story.getEntry() != null
+        ) {
+            favorOperations.addFavor(liberin.getNodeId(), story.getEntry().getOwnerName(), FavorType.PUBLICATION);
+            if (!story.getEntry().isOriginal()) {
+                send(
+                    Directions.single(
+                        liberin.getNodeId(), story.getEntry().getOwnerName(), story.getViewPrincipalFilter()
+                    ),
+                    PostingSharedNotificationUtil.build(
+                        SharingType.REPUBLISH,
+                        story.getEntry().getReceiverEntryId(),
+                        null,
+                        story.getFeedName(),
+                        story.getId(),
+                        story.getMoment(),
+                        story.getEntry().getId()
+                    )
+                );
+            }
+        }
+
         push(story);
         feedStatusUpdated(story.getFeedName());
     }
@@ -72,7 +108,10 @@ public class StoryReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void updated(StoryUpdatedLiberin liberin) {
-        Story story = liberin.getStory();
+        Story story = storyRepository.findByNodeIdAndId(liberin.getNodeId(), liberin.getStoryId()).orElse(null);
+        if (story == null) {
+            return;
+        }
 
         if (!Feed.isAdmin(story.getFeedName())) {
             send(liberin, new StoryUpdatedEvent(story, false, directServeOperations));
@@ -89,6 +128,19 @@ public class StoryReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void deleted(StoryDeletedLiberin liberin) {
         if (!Feed.isAdmin(liberin.getFeedName())) {
+            if (liberin.getPostingId() != null && liberin.getCommentId() == null && !liberin.isPostingDeleted()) {
+                send(
+                    Directions.searchSubscribers(liberin.getNodeId(), liberin.getViewFilter()),
+                    SearchContentUpdatedNotificationUtil.buildPostingStoryDelete(
+                        liberin.getReceiverName() != null ? liberin.getReceiverName() : universalContext.nodeName(),
+                        liberin.getReceiverName() != null
+                            ? liberin.getReceiverPostingId()
+                            : liberin.getPostingId().toString(),
+                        liberin.getFeedName(),
+                        liberin.getId()
+                    )
+                );
+            }
             send(
                 liberin,
                 new StoryDeletedEvent(
@@ -116,6 +168,27 @@ public class StoryReceptor extends LiberinReceptorBase {
                 liberin.getViewFilter()
             )
         );
+        if (
+            liberin.getStoryType() == StoryType.POSTING_ADDED
+            && Feed.TIMELINE.equals(liberin.getFeedName())
+        ) {
+            favorOperations.addFavor(liberin.getNodeId(), liberin.getPostingOwnerName(), FavorType.UNPUBLICATION);
+            if (liberin.getReceiverName() != null) {
+                send(
+                    Directions.single(liberin.getNodeId(), liberin.getPostingOwnerName(), liberin.getViewFilter()),
+                    PostingUnsharedNotificationUtil.build(
+                        SharingType.REPUBLISH,
+                        liberin.getReceiverPostingId(),
+                        null,
+                        liberin.getFeedName(),
+                        liberin.getId(),
+                        liberin.getMoment(),
+                        liberin.getPostingId()
+                    )
+                );
+            }
+        }
+
         deletePush(liberin.getFeedName(), liberin.getId());
         feedStatusUpdated(liberin.getFeedName());
     }

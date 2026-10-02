@@ -37,7 +37,6 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.data.RemoteMediaFileRepository;
-import org.moera.node.data.Story;
 import org.moera.node.domain.Domains;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.global.RequestCounter;
@@ -162,6 +161,12 @@ public class PostingOperations {
         Consumer<EntryRevision> revisionUpdater,
         Consumer<Entry> mediaEntryUpdater
     ) {
+        if (!posting.isOriginal()) {
+            posting = postingRepository.saveAndFlush(posting);
+            updateRelatedObjects(posting, Collections.emptyList());
+            return posting;
+        }
+
         List<MediaFileOwner> affectedMedia = media.stream()
             .map(LocalRemoteMedia::mediaFileOwner)
             .filter(Objects::nonNull)
@@ -260,11 +265,11 @@ public class PostingOperations {
         mediaOperations.deleteObsoleteMediaPostings(affectedMedia);
 
         if (posting.getViewCompound().isPublic()) {
-            Story timelineStory = posting.getStory(Feed.TIMELINE);
-            if (timelineStory != null) {
+            var timelineStories = posting.getStories(Feed.TIMELINE);
+            for (var story : timelineStories) {
                 jobs.runAfterCommit(
                     UpdateTimelinePublicPagesJob.class,
-                    new UpdateTimelinePublicPagesJob.Parameters(timelineStory.getMoment()),
+                    new UpdateTimelinePublicPagesJob.Parameters(story.getMoment()),
                     universalContext.nodeId()
                 );
             }

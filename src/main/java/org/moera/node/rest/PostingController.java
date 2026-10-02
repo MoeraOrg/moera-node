@@ -3,6 +3,7 @@ package org.moera.node.rest;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -231,7 +232,6 @@ public class PostingController {
         UUID postingId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        ValidationUtil.assertion(posting.isOriginal(), "posting.not-original");
         Principal latestView = posting.getViewE();
         EntryRevision latest = posting.getCurrentRevision();
         mediaOperations.validateAvatar(postingText.getOwnerAvatar());
@@ -249,7 +249,7 @@ public class PostingController {
         );
         List<LocalRemoteMedia> media = mediaOperations.validateAttachments(
             postingText.getMedia(),
-            latest.getAttachments(),
+            latest != null ? latest.getAttachments() : Collections.emptyList(),
             requestContext.isAdmin(Scope.VIEW_CONTENT)
         );
 
@@ -350,7 +350,8 @@ public class PostingController {
             if (!ObjectUtils.isEmpty(ownerName)) {
                 valid =
                     ownerName.equals(clientName)
-                    || ownerName.equals(requestContext.nodeName()) && requestContext.isAdmin(scope);
+                    || ownerName.equals(requestContext.nodeName()) && requestContext.isAdmin(scope)
+                    || posting != null && !posting.isOriginal() && requestContext.isAdmin(scope);
             } else {
                 if (!ObjectUtils.isEmpty(clientName)) {
                     postingText.setOwnerName(clientName);

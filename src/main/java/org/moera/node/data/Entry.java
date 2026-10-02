@@ -2,6 +2,7 @@ package org.moera.node.data;
 
 import java.sql.Timestamp;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import jakarta.persistence.CascadeType;
@@ -158,6 +159,9 @@ public class Entry {
     private int totalChildren;
 
     @NotNull
+    private int totalSharings;
+
+    @NotNull
     private int viewCount;
 
     private Long moment;
@@ -210,6 +214,14 @@ public class Entry {
     private Principal parentViewExternalSourcePrincipal = Principal.UNSET;
 
     private Principal receiverViewExternalSourcePrincipal;
+
+    private Principal viewSharingsPrincipal = Principal.PUBLIC;
+
+    private Principal receiverViewSharingsPrincipal;
+
+    private Principal viewTotalSharingsPrincipal = Principal.PUBLIC;
+
+    private Principal receiverViewTotalSharingsPrincipal;
 
     private Principal viewCommentsPrincipal = Principal.PUBLIC;
 
@@ -704,6 +716,14 @@ public class Entry {
         this.totalChildren = totalChildren;
     }
 
+    public int getTotalSharings() {
+        return totalSharings;
+    }
+
+    public void setTotalSharings(int totalSharings) {
+        this.totalSharings = totalSharings;
+    }
+
     public int getViewCount() {
         return viewCount;
     }
@@ -847,7 +867,7 @@ public class Entry {
     }
 
     public Principal getEditPrincipal() {
-        return receiverName == null ? Principal.OWNER : Principal.NONE;
+        return receiverName == null ? Principal.OWNER : Principal.ADMIN;
     }
 
     public Principal getParentEditPrincipal() {
@@ -936,6 +956,54 @@ public class Entry {
 
     public Principal getReceiverViewExternalSourceE() {
         return toReceiverAbsolute(getReceiverViewExternalSourcePrincipal());
+    }
+
+    public Principal getViewSharingsPrincipal() {
+        return viewSharingsPrincipal;
+    }
+
+    public void setViewSharingsPrincipal(Principal viewSharingsPrincipal) {
+        this.viewSharingsPrincipal = viewSharingsPrincipal;
+    }
+
+    public Principal getReceiverViewSharingsPrincipal() {
+        return receiverViewSharingsPrincipal;
+    }
+
+    public void setReceiverViewSharingsPrincipal(Principal receiverViewSharingsPrincipal) {
+        this.receiverViewSharingsPrincipal = receiverViewSharingsPrincipal;
+    }
+
+    public Principal getViewSharingsE() {
+        return toAbsolute(getViewSharingsPrincipal());
+    }
+
+    public Principal getReceiverViewSharingsE() {
+        return toReceiverAbsolute(getReceiverViewSharingsPrincipal());
+    }
+
+    public Principal getViewTotalSharingsPrincipal() {
+        return viewTotalSharingsPrincipal;
+    }
+
+    public void setViewTotalSharingsPrincipal(Principal viewTotalSharingsPrincipal) {
+        this.viewTotalSharingsPrincipal = viewTotalSharingsPrincipal;
+    }
+
+    public Principal getReceiverViewTotalSharingsPrincipal() {
+        return receiverViewTotalSharingsPrincipal;
+    }
+
+    public void setReceiverViewTotalSharingsPrincipal(Principal receiverViewTotalSharingsPrincipal) {
+        this.receiverViewTotalSharingsPrincipal = receiverViewTotalSharingsPrincipal;
+    }
+
+    public Principal getViewTotalSharingsE() {
+        return toAbsolute(getViewTotalSharingsPrincipal());
+    }
+
+    public Principal getReceiverViewTotalSharingsE() {
+        return toReceiverAbsolute(getReceiverViewTotalSharingsPrincipal());
     }
 
     public Principal getViewCommentsPrincipal() {
@@ -1508,11 +1576,11 @@ public class Entry {
         story.setEntry(null);
     }
 
-    public Story getStory(String feedName) {
+    public List<Story> getStories(String feedName) {
         if (getStories() == null || feedName == null) {
             return null;
         }
-        return getStories().stream().filter(fr -> feedName.equals(fr.getFeedName())).findFirst().orElse(null);
+        return getStories().stream().filter(fr -> feedName.equals(fr.getFeedName())).toList();
     }
 
     public Set<EntrySource> getSources() {
