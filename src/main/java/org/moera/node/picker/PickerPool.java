@@ -12,6 +12,7 @@ import jakarta.inject.Inject;
 
 import org.moera.node.data.Pick;
 import org.moera.node.data.PickRepository;
+import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.task.TaskAutowire;
@@ -30,6 +31,7 @@ public class PickerPool {
 
     private static final Duration RETRY_MIN_DELAY = Duration.of(30, ChronoUnit.SECONDS);
     private static final Duration RETRY_MAX_DELAY = Duration.of(6, ChronoUnit.HOURS);
+    private static final Duration MAX_AGE = Duration.of(12, ChronoUnit.HOURS);
 
     private static final Logger log = LoggerFactory.getLogger(PickerPool.class);
 
@@ -50,6 +52,9 @@ public class PickerPool {
     private UniversalContext universalContext;
 
     @Inject
+    private Domains domains;
+
+    @Inject
     private Transaction tx;
 
     @Inject
@@ -57,7 +62,9 @@ public class PickerPool {
 
     @EventListener(DomainsConfiguredEvent.class)
     public void init() {
-        pickRepository.findAll().forEach(p -> pending.put(p.getId(), p));
+        pickRepository.findAll().stream()
+            .filter(this::validatePick)
+            .forEach(p -> pending.put(p.getId(), p));
     }
 
     public void pick(Pick pick) {
@@ -71,6 +78,10 @@ public class PickerPool {
                 log.error("Error storing a pick", e);
                 return;
             }
+        }
+
+        if (!validatePick(pick)) {
+            return;
         }
 
         Instant storedTime = Instant.now();
@@ -105,9 +116,24 @@ public class PickerPool {
     @Scheduled(fixedDelayString = "PT10S")
     public void retry() {
         pending.values().stream()
+            .filter(this::validatePick)
             .filter(p -> !p.isRunning())
             .filter(p -> p.getRetryAt() == null || p.getRetryAt().before(Util.now()))
             .forEach(this::pick);
+    }
+
+    private boolean validatePick(Pick pick) {
+        if (domains.getDomain(pick.getNodeId()) == null) {
+            log.info("Pick {} refers to unknown local node {}, deleting", pick.getId(), pick.getNodeId());
+            deletePick(pick);
+            return false;
+        }
+        if (pick.getCreatedAt().toInstant().plus(MAX_AGE).isBefore(Instant.now())) {
+            log.info("Pick {} expired, deleting", pick.getId());
+            deletePick(pick);
+            return false;
+        }
+        return true;
     }
 
     private Picker createPicker(String nodeName, UUID nodeId) {
@@ -167,9 +193,10 @@ public class PickerPool {
         log.info("Pick {} failed, retrying in {}s", pick.getId(), delay.getSeconds());
         pick.setRetryAt(Timestamp.from(pick.getRetryAt().toInstant().plus(delay)));
         tx.executeWriteQuietly(
-            () -> {
-                pickRepository.saveAndFlush(pick);
-            },
+            () -> pickRepository.findById(pick.getId()).ifPresent(p -> {
+                p.setRetryAt(pick.getRetryAt());
+                pickRepository.saveAndFlush(p);
+            }),
             e -> log.error("Error updating pick", e)
         );
         pick.setRunning(false);

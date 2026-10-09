@@ -52,6 +52,11 @@ transaction locks and reloads the local posting, revalidates the earlier snapsho
 attachments, permissions, reaction totals, and sources together. Liberins and child picks follow the successful
 commit.
 
+Picks expire six hours after creation. Startup restoration, scheduling, and the ten-second retry scan discard picks
+that have expired or refer to a local node absent from `Domains`. This also removes picks left marked as running after
+a picker stops before processing its queue. Not-found failures discard the affected pick immediately. Failure updates
+affect only existing durable picks, so a late failure cannot recreate a discarded row.
+
 The remote-posting republish API creates one durable pick for each requested feed publication. Each pick retains the
 remote source feed name, local destination feed name, publication time, and pinned, viewed, read, and satisfied flags,
 so retries and process restarts preserve the publication intent. After downloading or refreshing the posting, the
