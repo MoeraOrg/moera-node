@@ -21,8 +21,13 @@ public class Token {
     @Id
     private UUID id;
 
-    @Size(max = 45)
-    private String token;
+    @NotNull
+    @Size(min = 32, max = 32)
+    private byte[] tokenHash;
+
+    @NotNull
+    @Size(max = 4)
+    private String tokenPrefix;
 
     @NotNull
     private UUID nodeId;
@@ -56,12 +61,20 @@ public class Token {
         this.id = id;
     }
 
-    public String getToken() {
-        return token;
+    public byte[] getTokenHash() {
+        return tokenHash;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setTokenHash(byte[] tokenHash) {
+        this.tokenHash = tokenHash;
+    }
+
+    public String getTokenPrefix() {
+        return tokenPrefix;
+    }
+
+    public void setTokenPrefix(String tokenPrefix) {
+        this.tokenPrefix = tokenPrefix;
     }
 
     public UUID getNodeId() {

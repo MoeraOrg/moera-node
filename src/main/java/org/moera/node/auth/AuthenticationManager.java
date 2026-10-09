@@ -61,7 +61,7 @@ public class AuthenticationManager {
         if (ObjectUtils.isEmpty(tokenS)) {
             return null;
         }
-        Token token = tokenRepository.findByToken(nodeId, tokenS, Util.now()).orElse(null);
+        Token token = tokenRepository.findByTokenHash(nodeId, TokenHash.hash(tokenS), Util.now()).orElse(null);
         if (token == null) {
             log.info("Admin token provided is not found");
             throw new InvalidTokenException();

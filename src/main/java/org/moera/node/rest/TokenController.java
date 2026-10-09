@@ -21,6 +21,7 @@ import org.moera.lib.node.types.TokenInfo;
 import org.moera.lib.node.types.TokenUpdate;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.TokenHash;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.domain.Domains;
@@ -96,11 +97,13 @@ public class TokenController {
             throw new OperationFailure("credentials.login-incorrect");
         }
 
+        String tokenValue = CryptoUtil.token();
         Token token = new Token();
         token.setId(UUID.randomUUID());
         token.setNodeId(options.nodeId());
         token.setName(attributes.getName());
-        token.setToken(CryptoUtil.token());
+        token.setTokenHash(TokenHash.hash(tokenValue));
+        token.setTokenPrefix(tokenValue.substring(0, 4));
         token.setAuthScope(
             attributes.getPermissions() != null ? Scope.forValues(attributes.getPermissions()) : Scope.ALL.getMask()
         );
@@ -115,7 +118,9 @@ public class TokenController {
 
         requestContext.send(new TokenAddedLiberin(token));
 
-        return ResponseEntity.created(URI.create("/tokens/" + token.getId())).body(TokenInfoUtil.build(token, true));
+        TokenInfo tokenInfo = TokenInfoUtil.build(token);
+        tokenInfo.setToken(tokenValue);
+        return ResponseEntity.created(URI.create("/tokens/" + token.getId())).body(tokenInfo);
     }
 
     @PutMapping("/{id}")
@@ -139,7 +144,7 @@ public class TokenController {
 
         requestContext.send(new TokenUpdatedLiberin(token));
 
-        return TokenInfoUtil.build(token, false);
+        return TokenInfoUtil.build(token);
     }
 
     @DeleteMapping("/{id}")
@@ -167,7 +172,7 @@ public class TokenController {
         log.info("GET /tokens");
 
         List<Token> tokens = tokenRepository.findAllByNodeId(requestContext.nodeId(), Util.now());
-        return tokens.stream().map(td -> TokenInfoUtil.build(td, false)).collect(Collectors.toList());
+        return tokens.stream().map(TokenInfoUtil::build).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -181,7 +186,7 @@ public class TokenController {
         if (token == null) {
             throw new ObjectNotFoundFailure("not-found");
         }
-        return TokenInfoUtil.build(token, false);
+        return TokenInfoUtil.build(token);
     }
 
     @Scheduled(fixedDelayString = "PT1H")

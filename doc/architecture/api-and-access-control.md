@@ -20,6 +20,13 @@ tokens, cartes delegated to another node, or the deployment root secret used for
 controllers that accept signed objects verify those signatures and then authenticate the claimed node identity for the
 rest of that request.
 
+Local access tokens are stored as SHA-256 digests of the UTF-8 token strings. `AuthenticationManager` hashes each
+presented token and looks up its digest within the local node, checking expiration and any IP binding. The full secret
+is returned only when `TokenController` creates it; later API responses and events use a separately stored four-character
+prefix followed by an ellipsis. Token IDs, scopes, and usage metadata belong to the same record. The
+[token storage migration](../../src/main/resources/db/migration/V320__hash_tokens.sql) defines the persisted fields and
+unique digest index.
+
 Authentication produces scopes rather than a single logged-in flag. `RequestContext` records separate local admin and
 remote client scopes, the authenticated node name, ownership, friend groups, and whether the local node subscribes to
 the remote node.

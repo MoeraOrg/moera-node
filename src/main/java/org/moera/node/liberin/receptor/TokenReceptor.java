@@ -16,12 +16,12 @@ public class TokenReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void added(TokenAddedLiberin liberin) {
-        send(liberin, new TokenAddedEvent(TokenInfoUtil.build(liberin.getToken(), false)));
+        send(liberin, new TokenAddedEvent(TokenInfoUtil.build(liberin.getToken())));
     }
 
     @LiberinMapping
     public void updated(TokenUpdatedLiberin liberin) {
-        send(liberin, new TokenUpdatedEvent(TokenInfoUtil.build(liberin.getToken(), false)));
+        send(liberin, new TokenUpdatedEvent(TokenInfoUtil.build(liberin.getToken())));
     }
 
     @LiberinMapping

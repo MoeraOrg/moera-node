@@ -7,16 +7,12 @@ import org.moera.node.util.Util;
 
 public class TokenInfoUtil {
     
-    public static TokenInfo build(Token tokenData, boolean includeToken) {
+    public static TokenInfo build(Token tokenData) {
         TokenInfo tokenInfo = new TokenInfo();
         
         tokenInfo.setId(tokenData.getId().toString());
         
-        String token = tokenData.getToken();
-        if (!includeToken) {
-            token = token.substring(0, 4) + '\u2026';
-        }
-        tokenInfo.setToken(token);
+        tokenInfo.setToken(tokenData.getTokenPrefix() + '\u2026');
         
         tokenInfo.setName(tokenData.getName());
         tokenInfo.setPermissions(Scope.toValues(tokenData.getAuthScope()));
