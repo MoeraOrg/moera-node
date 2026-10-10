@@ -16,6 +16,8 @@ import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.Principal;
@@ -134,6 +136,10 @@ public class Story {
 
     @Size(max = 40)
     private String remoteParentMediaId;
+
+    @NotNull
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private String[] externalSourceUri = new String[0];
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Entry entry;
@@ -442,6 +448,14 @@ public class Story {
 
     public void setRemoteParentMediaId(String remoteParentMediaId) {
         this.remoteParentMediaId = remoteParentMediaId;
+    }
+
+    public String[] getExternalSourceUri() {
+        return externalSourceUri;
+    }
+
+    public void setExternalSourceUri(String[] externalSourceUri) {
+        this.externalSourceUri = externalSourceUri;
     }
 
     public Entry getEntry() {

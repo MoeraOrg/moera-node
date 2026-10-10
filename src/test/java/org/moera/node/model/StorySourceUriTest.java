@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Story;
@@ -26,7 +27,7 @@ class StorySourceUriTest {
         story.setRemoteFullName("Remote Owner");
         story.setRemoteSourceUri("https://source.example/remote-owner");
 
-        StoryInfo info = StoryInfoUtil.build(story, false, ignored -> null, null);
+        StoryInfo info = StoryInfoUtil.build(story, AccessCheckers.PUBLIC, ignored -> null, null);
 
         assertThat(info.getRemoteSourceUri()).isEqualTo("https://source.example/remote-owner");
         assertThat(info.getSummarySourceUri()).isEqualTo("https://source.example/remote-owner");

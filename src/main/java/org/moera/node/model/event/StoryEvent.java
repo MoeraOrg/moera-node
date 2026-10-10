@@ -4,17 +4,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
+import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntryType;
 import org.moera.node.data.Story;
+import org.moera.node.event.EventSubscriber;
 import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.util.Util;
 
@@ -43,6 +46,9 @@ public class StoryEvent extends Event {
     private String remoteSourceUri;
     private String remotePostingId;
     private String remoteCommentId;
+    private List<String> externalSourceUri;
+    @JsonIgnore
+    private List<String> originalExternalSourceUri;
     private Map<String, Principal> operations;
 
     protected StoryEvent(EventType type) {
@@ -55,7 +61,7 @@ public class StoryEvent extends Event {
             Scope.VIEW_FEEDS,
             isAdmin ? Principal.ADMIN : story.getViewPrincipalFilter().a().andNot(Principal.ADMIN)
         );
-        StoryInfo storyInfo = StoryInfoUtil.build(story, isAdmin, st -> null, directServe);
+        StoryInfo storyInfo = StoryInfoUtil.build(story, AccessCheckers.ADMIN, st -> null, directServe);
         id = story.getId().toString();
         storyType = story.getStoryType();
         feedName = story.getFeedName();
@@ -76,6 +82,7 @@ public class StoryEvent extends Event {
         remoteSourceUri = storyInfo.getRemoteSourceUri();
         remotePostingId = storyInfo.getRemotePostingId();
         remoteCommentId = storyInfo.getRemoteCommentId();
+        externalSourceUri = storyInfo.getExternalSourceUri();
         summaryNodeName = storyInfo.getSummaryNodeName();
         summaryFullName = storyInfo.getSummaryFullName();
         summarySourceUri = storyInfo.getSummarySourceUri();
@@ -263,12 +270,28 @@ public class StoryEvent extends Event {
         this.remoteCommentId = remoteCommentId;
     }
 
+    public List<String> getExternalSourceUri() {
+        return externalSourceUri;
+    }
+
+    public void setExternalSourceUri(List<String> externalSourceUri) {
+        this.externalSourceUri = externalSourceUri;
+    }
+
     public Map<String, Principal> getOperations() {
         return operations;
     }
 
     public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
+    }
+
+    @Override
+    public void protect(EventSubscriber eventSubscriber) {
+        if (originalExternalSourceUri == null) {
+            originalExternalSourceUri = externalSourceUri;
+        }
+        externalSourceUri = eventSubscriber.isAdmin(Scope.VIEW_CONTENT) ? originalExternalSourceUri : null;
     }
 
     @Override

@@ -1,19 +1,28 @@
 package org.moera.node.rest;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.hibernate.LazyInitializationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.Result;
+import org.moera.lib.node.types.StoryAttributes;
+import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.node.types.StoryType;
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryType;
@@ -24,6 +33,8 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
+import org.moera.node.model.StoryAttributesUtil;
+import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.util.Transaction;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -122,6 +133,46 @@ class StoryControllerTest {
         assertEquals("original", deleted.getReceiverName());
         assertEquals("remote-posting", deleted.getReceiverPostingId());
         assertTrue(deleted.getViewFilter().includes(false, null, false, new String[0]));
+    }
+
+    @ParameterizedTest
+    @MethodSource("externalSourceUpdates")
+    void putUpdatesExternalSourcesWithoutChangingMoment(List<String> sources, List<String> expected) {
+        UUID nodeId = UUID.randomUUID();
+        Story story = new Story(UUID.randomUUID(), nodeId, StoryType.SUBSCRIBER_ADDED);
+        story.setFeedName(Feed.INSTANT);
+        story.setMoment(42L);
+        StoryAttributes initial = new StoryAttributes();
+        initial.setExternalSourceUri(List.of("https://old.example/story"));
+        StoryAttributesUtil.toStory(initial, story);
+        when(requestContext.nodeId()).thenReturn(nodeId);
+        when(storyRepository.findByNodeIdAndId(nodeId, story.getId())).thenReturn(Optional.of(story));
+        StoryAttributes attributes = new StoryAttributes();
+        when(requestContext.isPrincipal(Principal.ADMIN, Scope.VIEW_FEEDS)).thenReturn(false);
+        when(requestContext.isPrincipal(Principal.ADMIN, Scope.VIEW_CONTENT)).thenReturn(true);
+        attributes.setExternalSourceUri(sources);
+        attributes.setViewed(true);
+
+        StoryInfo info = storyController.put(story.getId().toString(), attributes);
+
+        assertEquals(expected, info.getExternalSourceUri());
+        assertEquals(
+            expected,
+            StoryInfoUtil.build(story, AccessCheckers.ADMIN, ignored -> null, null).getExternalSourceUri()
+        );
+        assertEquals(42L, story.getMoment());
+        assertTrue(story.isViewed());
+    }
+
+    private static Stream<Arguments> externalSourceUpdates() {
+        return Stream.of(
+            Arguments.of(
+                List.of("https://one.example/story", "https://two.example/story"),
+                List.of("https://one.example/story", "https://two.example/story")
+            ),
+            Arguments.of(null, List.of("https://old.example/story")),
+            Arguments.of(List.of(), null)
+        );
     }
 
 }

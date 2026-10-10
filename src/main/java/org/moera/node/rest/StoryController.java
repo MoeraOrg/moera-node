@@ -82,7 +82,7 @@ public class StoryController {
 
         return StoryInfoUtil.build(
             story,
-            requestContext.isAdmin(Scope.VIEW_FEEDS),
+            requestContext,
             t -> PostingInfoUtil.build(
                 t.getEntry(),
                 entryOperations,
@@ -105,6 +105,8 @@ public class StoryController {
             LogUtil.format(storyAttributes.getViewed()),
             LogUtil.format(storyAttributes.getRead())
         );
+
+        StoryAttributesUtil.validate(storyAttributes);
 
         UUID storyId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
         StoryInfo storyInfo = tx.executeWrite(() -> {
@@ -139,7 +141,7 @@ public class StoryController {
             }
             return StoryInfoUtil.build(
                 story,
-                requestContext.isAdmin(Scope.VIEW_FEEDS),
+                requestContext,
                 t -> PostingInfoUtil.build(
                     t.getEntry(),
                     entryOperations,

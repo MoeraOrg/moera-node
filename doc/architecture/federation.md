@@ -58,9 +58,10 @@ a picker stops before processing its queue. Not-found failures discard the affec
 affect only existing durable picks, so a late failure cannot recreate a discarded row.
 
 The remote-posting republish API creates one durable pick for each requested feed publication. Each pick retains the
-remote source feed name, local destination feed name, publication time, and pinned, viewed, read, and satisfied flags,
-so retries and process restarts preserve the publication intent. After downloading or refreshing the posting, the
-picker adds the story unless the posting is already present in that feed. A publication without an explicit local feed
+remote source feed name, local destination feed name, publication time, external source references, and pinned, viewed,
+read, and satisfied flags, so retries, redirects, and process restarts preserve the publication intent. The external
+source references belong to the resulting story rather than to the downloaded posting. After downloading or refreshing
+the posting, the picker adds a new story for the requested publication. A publication without an explicit local feed
 name downloads the posting without adding a story.
 
 Remote attachments initially use `RemoteMediaFile` metadata and an optional lease. A later download may add a local

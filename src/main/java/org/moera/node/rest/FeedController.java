@@ -544,7 +544,7 @@ public class FeedController {
     private StoryInfo buildStoryInfo(Story story) {
         return StoryInfoUtil.build(
             story,
-            requestContext.isAdmin(Scope.VIEW_FEEDS),
+            requestContext,
             t -> PostingInfoUtil.build(
                 t.getEntry(),
                 t.getEntry().getStories(),

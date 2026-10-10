@@ -8,6 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.moera.lib.node.types.principal.Principal;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -29,6 +30,7 @@ class PickTest {
         pick.setViewed(true);
         pick.setRead(true);
         pick.setSatisfied(true);
+        pick.setExternalSourceUri(new String[]{"https://one.example/story", "https://two.example/story"});
         pick.setPostingViewPrincipal(Principal.PRIVATE);
         pick.setAllowMultiple(true);
         pick.setPublishAt(Timestamp.valueOf("2026-10-11 12:00:00"));
@@ -55,6 +57,10 @@ class PickTest {
         assertTrue(finalPick.isViewed());
         assertTrue(finalPick.isRead());
         assertTrue(finalPick.isSatisfied());
+        assertArrayEquals(
+            new String[]{"https://one.example/story", "https://two.example/story"},
+            finalPick.getExternalSourceUri()
+        );
         assertEquals(Principal.PRIVATE, finalPick.getPostingViewPrincipal());
         assertTrue(finalPick.isAllowMultiple());
         assertEquals(Timestamp.valueOf("2026-10-11 12:00:00"), finalPick.getPublishAt());

@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.SharingType;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.SharingInfo;
@@ -308,7 +309,12 @@ class EntrySharingIT {
             assertEquals(3, story.getSummaryData().getTotalSharings());
             assertEquals(2, story.getSummaryData().getSharings().size());
             assertEquals("Shared posting", story.getSummaryData().getPosting().getHeading());
-            StoryInfo info = StoryInfoUtil.build(story, true, ignored -> null, mock(DirectServeOperations.class));
+            StoryInfo info = StoryInfoUtil.build(
+                story,
+                AccessCheckers.ADMIN,
+                ignored -> null,
+                mock(DirectServeOperations.class)
+            );
             assertEquals(postingId.toString(), info.getPostingId());
             assertNotNull(info.getSummaryNodeName());
             instants.deleted(postingId, stories.findSubIdsBySharingId(nodeId, list.getFirst().getId()));
@@ -352,7 +358,10 @@ class EntrySharingIT {
                 .map(EntrySharing::getRemoteNodeName).sorted().toList());
             assertNotNull(group.getSharing());
             assertEquals("alice", group.getSharing().getRemoteNodeName());
-            assertEquals(12L, StoryInfoUtil.build(group, true, ignored -> null, null).getRemoteStoryMoment());
+            assertEquals(
+                12L,
+                StoryInfoUtil.build(group, AccessCheckers.ADMIN, ignored -> null, null).getRemoteStoryMoment()
+            );
             operations.unshared(unshared("alice", null, "timeline", "alice-story", 12L, "alice-copy"));
         });
         PostingSharingDeletedLiberin deleted = liberins.stream().filter(PostingSharingDeletedLiberin.class::isInstance)
@@ -372,7 +381,10 @@ class EntrySharingIT {
             assertEquals(1, group.getSummaryData().getTotalSharings());
             assertNotNull(group.getSharing());
             assertEquals("bob", group.getSharing().getRemoteNodeName());
-            assertEquals(13L, StoryInfoUtil.build(group, true, ignored -> null, null).getRemoteStoryMoment());
+            assertEquals(
+                13L,
+                StoryInfoUtil.build(group, AccessCheckers.ADMIN, ignored -> null, null).getRemoteStoryMoment()
+            );
             operations.unshared(unshared("bob", null, "timeline", "bob-story", 13L, "bob-copy"));
         });
         PostingSharingDeletedLiberin last = liberins.stream().filter(PostingSharingDeletedLiberin.class::isInstance)

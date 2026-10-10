@@ -78,8 +78,9 @@ class PickerTest {
         StoryOperations storyOperations = mock(StoryOperations.class);
         Picker picker = picker(posting, storyOperations);
         Timestamp publishAt = Timestamp.from(Instant.ofEpochSecond(1000));
+        String[] externalSourceUri = {"https://one.example/story", "https://two.example/story"};
 
-        savePosting(picker, postingInfo(), "news", true, false, true, true, true, publishAt);
+        savePosting(picker, postingInfo(), "news", true, false, true, true, true, publishAt, externalSourceUri);
 
         var publications = org.mockito.ArgumentCaptor.forClass(List.class);
         verify(storyOperations).publish(eq(posting), publications.capture(), eq(true));
@@ -90,6 +91,10 @@ class PickerTest {
         assertFalse(publication.getViewed());
         assertTrue(publication.getRead());
         assertTrue(publication.getSatisfied());
+        assertEquals(
+            List.of("https://one.example/story", "https://two.example/story"),
+            publication.getExternalSourceUri()
+        );
     }
 
     @Test
@@ -98,7 +103,7 @@ class PickerTest {
         StoryOperations storyOperations = mock(StoryOperations.class);
         Picker picker = picker(posting, storyOperations);
 
-        savePosting(picker, postingInfo(), null, false, false, false, false, false, null);
+        savePosting(picker, postingInfo(), null, false, false, false, false, false, null, new String[0]);
 
         var publications = org.mockito.ArgumentCaptor.forClass(List.class);
         verify(storyOperations).publish(eq(posting), publications.capture(), eq(false));
@@ -114,7 +119,7 @@ class PickerTest {
         StoryOperations storyOperations = mock(StoryOperations.class);
         Picker picker = picker(posting, storyOperations);
 
-        savePosting(picker, postingInfo, "news", false, false, false, false, false, null);
+        savePosting(picker, postingInfo, "news", false, false, false, false, false, null, new String[0]);
 
         verify(storyOperations).publish(eq(posting), any(), eq(false));
     }
@@ -131,7 +136,7 @@ class PickerTest {
         StoryOperations storyOperations = mock(StoryOperations.class);
         Picker picker = picker(posting, storyOperations);
 
-        savePosting(picker, postingInfo, "news", false, false, false, false, false, null);
+        savePosting(picker, postingInfo, "news", false, false, false, false, false, null, new String[0]);
 
         assertNull(posting.getDeletedAt());
         assertNull(posting.getCurrentRevision().getDeletedAt());
@@ -201,13 +206,40 @@ class PickerTest {
     }
 
     private static void savePosting(
-        Picker picker, PostingInfo postingInfo, String feedName, boolean pinned, boolean viewed, boolean read,
-        boolean satisfied, boolean allowMultiple, Timestamp publishAt
+        Picker picker,
+        PostingInfo postingInfo,
+        String feedName,
+        boolean pinned,
+        boolean viewed,
+        boolean read,
+        boolean satisfied,
+        boolean allowMultiple,
+        Timestamp publishAt,
+        String[] externalSourceUri
     ) {
         Object snapshot = ReflectionTestUtils.invokeMethod(picker, "snapshot", postingInfo, "posting");
         ReflectionTestUtils.invokeMethod(
-            picker, "savePosting", postingInfo, null, null, snapshot, List.of(), "posting", feedName,
-            null, null, null, false, pinned, viewed, read, satisfied, null, allowMultiple, publishAt,
+            picker,
+            "savePosting",
+            postingInfo,
+            null,
+            null,
+            snapshot,
+            List.of(),
+            "posting",
+            feedName,
+            null,
+            null,
+            null,
+            false,
+            pinned,
+            viewed,
+            read,
+            satisfied,
+            null,
+            allowMultiple,
+            publishAt,
+            externalSourceUri,
             new ArrayList<Pick>()
         );
     }

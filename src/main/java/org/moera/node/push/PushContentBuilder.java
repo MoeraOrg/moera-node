@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.moera.lib.node.types.FeedStatus;
 import org.moera.lib.node.types.PushContent;
 import org.moera.lib.node.types.PushContentType;
+import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Story;
@@ -18,14 +19,17 @@ public class PushContentBuilder {
     public static PushContent storyAdded(Story story, DirectServeOperations directServe) {
         PushContent packet = new PushContent();
         packet.setType(PushContentType.STORY_ADDED);
-        packet.setStory(StoryInfoUtil.build(
+        StoryInfo storyInfo = StoryInfoUtil.build(
             story,
-            true,
+            AccessCheckers.ADMIN,
             t -> PostingInfoUtil.build(
                 t.getEntry(), MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, null, directServe
             ),
             directServe
-        ));
+        );
+        // SSE push subscriptions use Scope.OTHER, independently of content permissions.
+        storyInfo.setExternalSourceUri(null);
+        packet.setStory(storyInfo);
         return packet;
     }
 

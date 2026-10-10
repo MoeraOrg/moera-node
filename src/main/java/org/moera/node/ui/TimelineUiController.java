@@ -15,6 +15,7 @@ import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.StoryInfo;
+import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.data.Comment;
@@ -114,7 +115,7 @@ public class TimelineUiController {
                 .filter(t -> t.getEntry().getViewCompound().isPublic())
                 .map(s -> StoryInfoUtil.build(
                     s,
-                    false,
+                    AccessCheckers.PUBLIC,
                     t -> PostingInfoUtil.buildForUi(
                         t.getEntry(), entryOperations, directServeOperations
                     ),

@@ -22,8 +22,8 @@ rest of that request.
 
 Local access tokens are stored as SHA-256 digests of the UTF-8 token strings. `AuthenticationManager` hashes each
 presented token and looks up its digest within the local node, checking expiration and any IP binding. The full secret
-is returned only when `TokenController` creates it; later API responses and events use a separately stored four-character
-prefix followed by an ellipsis. Token IDs, scopes, and usage metadata belong to the same record. The
+is returned only when `TokenController` creates it; later API responses and events use a separately stored
+four-character prefix followed by an ellipsis. Token IDs, scopes, and usage metadata belong to the same record. The
 [token storage migration](../../src/main/resources/db/migration/V320__hash_tokens.sql) defines the persisted fields and
 unique digest index.
 
@@ -46,6 +46,10 @@ Permission data is stored with entries, reactions, media owners, friends, grants
 conversion helpers apply protection before returning structures to a particular requester. Private media performs the
 same checks before revealing metadata or bytes; unauthorized private media is returned as missing so its existence is
 not disclosed.
+
+Story external sources are administrator-only metadata under `VIEW_CONTENT`, independently of feed flags protected
+by `VIEW_FEEDS`. Individual-story and feed conversion enforce this distinction; story events protect the sources for
+each subscriber before delivery.
 
 ## Failures and caching
 

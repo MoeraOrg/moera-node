@@ -63,9 +63,14 @@ Before delivery, the event checks its principal filter and removes fields the su
 daemon delivery thread sends queued events, while a scheduled task retries delivery and emits ping events once per
 minute. The queue is transient across process restarts.
 
+Queued story events retain their full external source metadata so protection for one subscriber does not erase it for
+later authorized deliveries. Only subscribers with administrative `VIEW_CONTENT` scope receive these sources.
+
 `PushController` also exposes an SSE stream backed by the push subsystem. Its bounded in-memory queue falls back to
 stored offline packets when a consumer cannot keep up. Mobile push delivery is handled separately through the FCM
 relay integration.
+
+SSE push subscriptions use administrative `OTHER` scope. Their story packets omit external source references.
 
 ## Scheduled maintenance
 

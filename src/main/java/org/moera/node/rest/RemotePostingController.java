@@ -31,6 +31,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AsyncOperationCreatedUtil;
+import org.moera.node.model.StoryAttributesUtil;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.FavorOperations;
 import org.moera.node.picker.PickerPool;
@@ -134,6 +135,9 @@ public class RemotePostingController {
     }
 
     private void update(String nodeName, String postingId, PostingSourceText postingText) {
+        if (postingText.getPublications() != null) {
+            postingText.getPublications().forEach(StoryAttributesUtil::validate);
+        }
         mediaOperations.validateAvatar(postingText.getOwnerAvatar());
         jobs.runAfterCommit(
             RemotePostingPostJob.class,
@@ -175,11 +179,12 @@ public class RemotePostingController {
             LogUtil.format(nodeName), LogUtil.format(id)
         );
 
-        attributes.validate();
         ValidationUtil.assertion(
-            attributes.getPublications().stream().noneMatch(Objects::isNull),
+            attributes.getPublications() == null || attributes.getPublications().stream().noneMatch(Objects::isNull),
             "posting.publications.missing"
         );
+        attributes.validate();
+        attributes.getPublications().forEach(StoryAttributesUtil::validate);
         if (
             !requestContext.isAdmin(Scope.ADD_POST)
             && (
@@ -207,6 +212,9 @@ public class RemotePostingController {
             pick.setViewed(Boolean.TRUE.equals(publication.getViewed()));
             pick.setRead(Boolean.TRUE.equals(publication.getRead()));
             pick.setSatisfied(Boolean.TRUE.equals(publication.getSatisfied()));
+            if (publication.getExternalSourceUri() != null) {
+                pick.setExternalSourceUri(publication.getExternalSourceUri().toArray(String[]::new));
+            }
             pick.setPostingViewPrincipal(attributes.getPostingView());
             pick.setAllowMultiple(true);
             pickerPool.pick(pick);

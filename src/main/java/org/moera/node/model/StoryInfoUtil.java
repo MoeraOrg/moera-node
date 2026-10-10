@@ -1,11 +1,14 @@
 package org.moera.node.model;
 
+import java.util.List;
 import java.util.function.Function;
 
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.node.types.StoryOperations;
 import org.moera.lib.node.types.StorySummaryData;
+import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Story;
@@ -13,7 +16,8 @@ import org.moera.node.util.Util;
 
 public class StoryInfoUtil {
 
-    private static void buildTo(StoryInfo info, Story story, boolean isAdmin) { // See also StoryEvent constructor
+    // See also StoryEvent constructor
+    private static void buildTo(StoryInfo info, Story story, AccessChecker accessChecker) {
         info.setId(story.getId().toString());
         info.setFeedName(story.getFeedName());
         info.setStoryType(story.getStoryType());
@@ -21,7 +25,7 @@ public class StoryInfoUtil {
         info.setPublishedAt(Util.toEpochSecond(story.getPublishedAt()));
         info.setPinned(story.isPinned());
         info.setMoment(story.getMoment());
-        if (isAdmin) {
+        if (accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_FEEDS)) {
             info.setViewed(story.isViewed());
             info.setRead(story.isRead());
             info.setSatisfied(story.isSatisfied());
@@ -33,6 +37,12 @@ public class StoryInfoUtil {
         } else {
             info.setSummary(story.getSummary());
         }
+        if (
+            accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_CONTENT)
+            && story.getExternalSourceUri().length > 0
+        ) {
+            info.setExternalSourceUri(List.of(story.getExternalSourceUri()));
+        }
         StoryOperations operations = new StoryOperations();
         operations.setEdit(Principal.ADMIN);
         operations.setDelete(Principal.ADMIN);
@@ -40,10 +50,13 @@ public class StoryInfoUtil {
     }
 
     public static StoryInfo build(
-        Story story, boolean isAdmin, Function<Story, PostingInfo> buildPostingInfo, DirectServeOperations directServe
+        Story story,
+        AccessChecker accessChecker,
+        Function<Story, PostingInfo> buildPostingInfo,
+        DirectServeOperations directServe
     ) {
         StoryInfo info = new StoryInfo();
-        buildTo(info, story, isAdmin);
+        buildTo(info, story, accessChecker);
 
         switch (story.getStoryType()) {
             case POSTING_ADDED:

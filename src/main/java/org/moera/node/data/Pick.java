@@ -10,6 +10,8 @@ import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.util.Util;
 
@@ -61,6 +63,10 @@ public class Pick {
     private boolean read;
 
     private boolean satisfied;
+
+    @NotNull
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private String[] externalSourceUri = new String[0];
 
     private Principal postingViewPrincipal;
 
@@ -204,6 +210,14 @@ public class Pick {
         this.satisfied = satisfied;
     }
 
+    public String[] getExternalSourceUri() {
+        return externalSourceUri;
+    }
+
+    public void setExternalSourceUri(String[] externalSourceUri) {
+        this.externalSourceUri = externalSourceUri;
+    }
+
     public Principal getPostingViewPrincipal() {
         return postingViewPrincipal;
     }
@@ -261,6 +275,7 @@ public class Pick {
         pick.viewed = viewed;
         pick.read = read;
         pick.satisfied = satisfied;
+        pick.externalSourceUri = externalSourceUri;
         pick.postingViewPrincipal = postingViewPrincipal;
         pick.allowMultiple = allowMultiple;
         pick.publishAt = publishAt;

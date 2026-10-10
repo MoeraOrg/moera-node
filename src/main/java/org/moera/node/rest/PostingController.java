@@ -291,11 +291,11 @@ public class PostingController {
     public Result republish(@PathVariable String id, @RequestBody PostingRepublishAttributes attributes) {
         log.info("POST /postings/{id}/republish (id = {})", LogUtil.format(id));
 
-        attributes.validate();
         ValidationUtil.assertion(
-            attributes.getPublications().stream().noneMatch(Objects::isNull),
+            attributes.getPublications() == null || attributes.getPublications().stream().noneMatch(Objects::isNull),
             "posting.publications.missing"
         );
+        attributes.validate();
         ValidationUtil.assertion(
             attributes.getPostingView() == null
             || attributes.getPostingView().isOneOf(

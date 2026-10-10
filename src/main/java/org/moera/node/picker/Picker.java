@@ -242,6 +242,7 @@ public class Picker extends Task {
                 pick.getPostingViewPrincipal(),
                 pick.isAllowMultiple(),
                 pick.getPublishAt(),
+                pick.getExternalSourceUri(),
                 picks
             );
             saveSources(p, pick);
@@ -301,6 +302,7 @@ public class Picker extends Task {
         Principal postingViewPrincipal,
         boolean allowMultiple,
         Timestamp publishAt,
+        String[] externalSourceUri,
         List<Pick> picks
     ) throws MoeraNodeException {
         boolean original = PostingInfoUtil.isOriginal(postingInfo);
@@ -400,6 +402,7 @@ public class Picker extends Task {
         publication.setRead(read);
         publication.setSatisfied(satisfied);
         publication.setPublishAt(Util.toEpochSecond(publishAt));
+        publication.setExternalSourceUri(List.of(externalSourceUri));
         storyOperations.publish(posting, List.of(publication), allowMultiple);
 
         var reactionTotals = reactionTotalRepository.findAllByEntryId(posting.getId());

@@ -69,6 +69,14 @@ The sharing and publication schema is defined in
 publication state, read/viewed state, and a serialized summary. It may link to a local entry or retain remote node,
 posting, comment, avatar, and parent-media snapshots.
 
+External source references belong to each story independently of its linked entry. Publication and story updates use
+the same attributes conversion: omitted references preserve their value, and an empty list clears them. Stories without
+external sources retain an empty array, which is omitted from API responses and story events. Durable picks retain the
+requested story sources through retries and redirects. See
+[`StoryAttributesUtil`](../../src/main/java/org/moera/node/model/StoryAttributesUtil.java),
+[`StoryInfoUtil`](../../src/main/java/org/moera/node/model/StoryInfoUtil.java), and
+[V321](../../src/main/resources/db/migration/V321__story_external_source_uri.sql).
+
 Liberin receptors create and update stories after primary state changes. Creation in `Feed.INSTANT` is initiated by
 liberin receptors and delegated to a focused component derived from `InstantsCreator`. This keeps instant creation on
 the same post-commit path as events and notifications.

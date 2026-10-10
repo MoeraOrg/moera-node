@@ -6,24 +6,30 @@ import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.RemotePostingRepublishAttributes;
+import org.moera.lib.node.types.PostingSourceText;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryAttributes;
+import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.validate.ValidationFailure;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.UserBlockedException;
 import org.moera.node.data.Pick;
 import org.moera.node.global.RequestContext;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.option.Options;
 import org.moera.node.picker.PickerPool;
+import org.moera.node.task.Jobs;
 
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -45,6 +51,12 @@ class RemotePostingControllerTest {
     @Mock
     private PickerPool pickerPool;
 
+    @Mock
+    private MediaOperations mediaOperations;
+
+    @Mock
+    private Jobs jobs;
+
     @InjectMocks
     private RemotePostingController remotePostingController;
 
@@ -54,6 +66,8 @@ class RemotePostingControllerTest {
         when(requestContext.isAdmin(Scope.UPDATE_FEEDS)).thenReturn(true);
         StoryAttributes timeline = publication("timeline", 1000L, true, true, false, true);
         StoryAttributes news = publication("news", 2000L, false, false, true, false);
+        timeline.setExternalSourceUri(List.of("https://one.example/story", "https://two.example/story"));
+        news.setExternalSourceUri(List.of("https://news.example/story"));
         RemotePostingRepublishAttributes attributes = attributes(List.of(timeline, news));
         attributes.setPostingView(Principal.PRIVATE);
 
@@ -63,6 +77,14 @@ class RemotePostingControllerTest {
         verify(pickerPool, times(2)).pick(captor.capture());
         assertPick(captor.getAllValues().get(0), "timeline", 1000L, true, true, false, true);
         assertPick(captor.getAllValues().get(1), "news", 2000L, false, false, true, false);
+        Assertions.assertArrayEquals(
+            new String[]{"https://one.example/story", "https://two.example/story"},
+            captor.getAllValues().get(0).getExternalSourceUri()
+        );
+        Assertions.assertArrayEquals(
+            new String[]{"https://news.example/story"},
+            captor.getAllValues().get(1).getExternalSourceUri()
+        );
     }
 
     @Test
@@ -172,6 +194,42 @@ class RemotePostingControllerTest {
 
         Assertions.assertEquals("posting.publications.missing", failure.getErrorCode());
         verifyNoInteractions(pickerPool);
+    }
+
+    @Test
+    void republishRejectsNullExternalSourceBeforeQueueingPicks() {
+        StoryAttributes publication = new StoryAttributes();
+        publication.setExternalSourceUri(Arrays.asList("https://valid.example/story", null));
+        RemotePostingRepublishAttributes attributes = attributes(List.of(publication));
+
+        ValidationFailure failure = Assertions.assertThrows(
+            ValidationFailure.class,
+            () -> remotePostingController.republish("remote", "posting", attributes)
+        );
+
+        Assertions.assertEquals("story.external-source-uri.missing", failure.getErrorCode());
+        verifyNoInteractions(pickerPool);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void remotePostingSubmissionRejectsNullExternalSourceBeforeSchedulingJobs(boolean updating) {
+        StoryAttributes publication = new StoryAttributes();
+        publication.setExternalSourceUri(Arrays.asList("https://valid.example/story", null));
+        PostingSourceText text = new PostingSourceText();
+        text.setBodySrc(new Body(Body.EMPTY));
+        text.setPublications(List.of(publication));
+
+        ValidationFailure failure = Assertions.assertThrows(ValidationFailure.class, () -> {
+            if (updating) {
+                remotePostingController.put("remote", "posting", text);
+            } else {
+                remotePostingController.post("remote", text);
+            }
+        });
+
+        Assertions.assertEquals("story.external-source-uri.missing", failure.getErrorCode());
+        verifyNoInteractions(jobs);
     }
 
     private static RemotePostingRepublishAttributes attributes(List<StoryAttributes> publications) {
