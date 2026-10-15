@@ -49,7 +49,7 @@ not disclosed.
 
 Story external sources are administrator-only metadata under `VIEW_CONTENT`, independently of feed flags protected
 by `VIEW_FEEDS`. Individual-story and feed conversion enforce this distinction; story events protect the sources for
-each subscriber before delivery.
+each subscriber before delivery. Searching stories by these sources also requires administrative `VIEW_CONTENT` scope.
 
 ## Failures and caching
 

@@ -24,6 +24,13 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     )
     Optional<Story> findByNodeIdAndId(UUID nodeId, UUID id);
 
+    @Query(
+        "select s from Story s"
+        + " left join fetch s.remoteAvatarMediaFile left join fetch s.remoteOwnerAvatarMediaFile"
+        + " where s.nodeId = ?1 and array_contains(s.externalSourceUri, ?2)"
+    )
+    List<Story> findByExternalSourceUri(UUID nodeId, String externalSourceUri);
+
     @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2")
     List<Story> findByFeed(UUID nodeId, String feedName, Pageable pageable);
 

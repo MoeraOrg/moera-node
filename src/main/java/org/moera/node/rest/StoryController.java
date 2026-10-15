@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.util.List;
 import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -37,6 +38,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/stories")
@@ -62,6 +64,29 @@ public class StoryController {
 
     @Inject
     private Transaction tx;
+
+    @GetMapping
+    @Admin(Scope.VIEW_CONTENT)
+    @Transactional
+    public List<StoryInfo> getByExternalSourceUri(@RequestParam String external) {
+        log.info("GET /stories (external = {})", LogUtil.format(external));
+
+        return storyRepository.findByExternalSourceUri(requestContext.nodeId(), external)
+            .stream()
+            .map(story -> StoryInfoUtil.build(
+                story,
+                requestContext,
+                t -> PostingInfoUtil.build(
+                    t.getEntry(),
+                    entryOperations,
+                    requestContext,
+                    requestContext.getOptions(),
+                    directServeOperations
+                ),
+                directServeOperations
+            ))
+            .toList();
+    }
 
     @GetMapping("/{id}")
     @Transactional
