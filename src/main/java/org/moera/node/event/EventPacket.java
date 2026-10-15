@@ -5,7 +5,7 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.node.model.event.Event;
 
-public class EventPacket {
+public class EventPacket implements Cloneable {
 
     @JsonIgnore
     private UUID nodeId;
@@ -62,6 +62,16 @@ public class EventPacket {
 
     public void setEvent(Event event) {
         this.event = event;
+    }
+
+    public EventPacket copy() {
+        try {
+            EventPacket copy = (EventPacket) super.clone();
+            copy.event = event.copy();
+            return copy;
+        } catch (CloneNotSupportedException e) {
+            throw new IllegalStateException("Cannot copy event packet", e);
+        }
     }
 
 }

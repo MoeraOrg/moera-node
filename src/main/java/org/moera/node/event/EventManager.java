@@ -328,8 +328,14 @@ public class EventManager {
                     continue;
                 }
                 log.debug("Sending event {}: {}", first + i, packet.getEvent().getType());
-                packet.getEvent().protect(subscriber);
-                messagingTemplate.convertAndSendToUser(subscriber.getSessionId(), EVENT_DESTINATION, packet, headers);
+                EventPacket deliveryPacket = packet.copy();
+                deliveryPacket.getEvent().protect(subscriber);
+                messagingTemplate.convertAndSendToUser(
+                    subscriber.getSessionId(),
+                    EVENT_DESTINATION,
+                    deliveryPacket,
+                    headers
+                );
                 subscriber.setLastEventSeen(first + i);
             }
         } catch (MessagingException e) {

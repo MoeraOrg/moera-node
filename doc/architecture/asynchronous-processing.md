@@ -59,12 +59,14 @@ active session, and updates for stories deleted before delivery are skipped.
 queue in memory, assigns monotonically increasing ordinals within the process, and lets reconnecting clients report the
 queue start and last seen ordinal. A changed queue start tells a client that its previous cursor is no longer usable.
 
-Before delivery, the event checks its principal filter and removes fields the subscriber is not allowed to see. A
-daemon delivery thread sends queued events, while a scheduled task retries delivery and emits ping events once per
-minute. The queue is transient across process restarts.
+Before delivery, the queued event checks its principal filter. `EventManager` then copies the packet and event,
+including nested payload objects, and removes fields the subscriber is not allowed to see from the copy. Permission
+state and packet metadata are preserved. Protection never modifies the queued payload or packets sent to other
+subscribers, so later deliveries and replays use the full original data. A daemon delivery thread sends queued events,
+while a scheduled task retries delivery and emits ping events once per minute. The queue is transient across process
+restarts.
 
-Queued story events retain their full external source metadata so protection for one subscriber does not erase it for
-later authorized deliveries. Only subscribers with administrative `VIEW_CONTENT` scope receive these sources.
+Only subscribers with administrative `VIEW_CONTENT` scope receive external source metadata in story events.
 
 `PushController` also exposes an SSE stream backed by the push subsystem. Its bounded in-memory queue falls back to
 stored offline packets when a consumer cannot keep up. Mobile push delivery is handled separately through the FCM

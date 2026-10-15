@@ -122,21 +122,23 @@ class StoryInfoUtilTest {
 
     @ParameterizedTest
     @EnumSource(value = EventType.class, names = {"STORY_ADDED", "STORY_UPDATED"})
-    void protectingEventForOneSubscriberPreservesSourcesForAuthorizedSubscribers(EventType eventType) {
+    void protectingEventCopiesPreservesSourcesForAuthorizedSubscribers(EventType eventType) {
         Story story = story(StoryType.POSTING_ADDED);
         story.setExternalSourceUri(new String[]{"https://one.example/story", "https://two.example/story"});
         StoryEvent event = eventType == EventType.STORY_ADDED
             ? new StoryAddedEvent(story, true, null)
             : new StoryUpdatedEvent(story, true, null);
 
-        event.protect(subscriber(Scope.VIEW_FEEDS.getMask()));
-        assertNull(event.getExternalSourceUri());
+        StoryEvent publicEvent = (StoryEvent) event.copy();
+        publicEvent.protect(subscriber(Scope.VIEW_FEEDS.getMask()));
+        assertNull(publicEvent.getExternalSourceUri());
 
-        event.protect(subscriber(Scope.VIEW_FEEDS.getMask() | Scope.VIEW_CONTENT.getMask()));
+        StoryEvent adminEvent = (StoryEvent) event.copy();
+        adminEvent.protect(subscriber(Scope.VIEW_FEEDS.getMask() | Scope.VIEW_CONTENT.getMask()));
+        assertEquals(List.of("https://one.example/story", "https://two.example/story"), adminEvent.getExternalSourceUri());
+
+        assertNull(publicEvent.getExternalSourceUri());
         assertEquals(List.of("https://one.example/story", "https://two.example/story"), event.getExternalSourceUri());
-
-        event.protect(subscriber(Scope.VIEW_FEEDS.getMask()));
-        assertNull(event.getExternalSourceUri());
     }
 
     private static Stream<Arguments> storyAccess() {

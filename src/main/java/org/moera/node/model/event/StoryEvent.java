@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.Scope;
@@ -47,8 +46,6 @@ public class StoryEvent extends Event {
     private String remotePostingId;
     private String remoteCommentId;
     private List<String> externalSourceUri;
-    @JsonIgnore
-    private List<String> originalExternalSourceUri;
     private Map<String, Principal> operations;
 
     protected StoryEvent(EventType type) {
@@ -288,10 +285,9 @@ public class StoryEvent extends Event {
 
     @Override
     public void protect(EventSubscriber eventSubscriber) {
-        if (originalExternalSourceUri == null) {
-            originalExternalSourceUri = externalSourceUri;
+        if (!eventSubscriber.isAdmin(Scope.VIEW_CONTENT)) {
+            externalSourceUri = null;
         }
-        externalSourceUri = eventSubscriber.isAdmin(Scope.VIEW_CONTENT) ? originalExternalSourceUri : null;
     }
 
     @Override
