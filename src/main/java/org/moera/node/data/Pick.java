@@ -54,7 +54,7 @@ public class Pick {
     @ManyToOne
     private Entry parentMediaEntry;
 
-    private boolean recommended;
+    private Boolean recommended;
 
     private boolean pinned;
 
@@ -170,11 +170,11 @@ public class Pick {
         this.parentMediaEntry = parentMediaEntry;
     }
 
-    public boolean isRecommended() {
+    public Boolean getRecommended() {
         return recommended;
     }
 
-    public void setRecommended(boolean recommended) {
+    public void setRecommended(Boolean recommended) {
         this.recommended = recommended;
     }
 

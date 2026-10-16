@@ -10,6 +10,12 @@ Remote writes are generally performed by jobs under `rest.task`. A job retains e
 multi-step exchange without keeping an HTTP request open. Remote verification tasks fetch signed objects again and
 record whether a posting, comment, or reaction still matches its claimed fingerprint.
 
+`SubscriptionTask` creates the subscriber record on the remote node. Its visibility follows the subscribing node's
+`subscriptions.view` setting: `public` and `signed` are preserved, while all other principals become `private`
+on the remote node so the subscribing node retains access. Changes to this setting propagate to existing remote feed
+subscriber records through `AllRemoteSubscribersUpdateJob` with the same principal mapping. The request structures are
+defined in the [Node API](https://moera.org/development/api/node/).
+
 ## Outgoing notifications
 
 Liberin receptors construct typed notification objects and send them through `NotificationSenderPool`. Directions can
@@ -43,9 +49,23 @@ the sender's full name; receivers can still verify older packet versions that di
 
 ## Picking remote content
 
+`RemoteFeedFetchJob` seeds a subscription's destination feed from a remote feed. Existing postings by the remote
+author in the destination feed count toward the fetch limit. Subscription creation clears their recommendation flag
+before scheduling the job. The job reads existing postings in a short read transaction, then requests the remote feed
+outside that transaction using the remaining limit. Candidates whose original node is the local node are skipped.
+Other candidates already published in the destination feed are skipped using their original node and posting ID,
+including reposts; cached remote postings without a publication in that feed remain eligible for picking. The job
+continues through older slices until enough distinct eligible postings are selected or the remote feed is exhausted,
+then submits picks from oldest to newest. Skipped stories and duplicate reposts do not consume the remaining limit.
+
 A `Pick` is durable work to fetch or refresh a remote posting and its related data. `PickerPool` restores pending picks
 at startup and runs one `Picker` for each `(local node ID, remote node name)` direction. This prevents concurrent
 fetches from the same peer from stepping on each other's posting state.
+
+A pick's nullable recommendation flag records whether to change the cached posting's recommendation status. A null
+value preserves the status; explicit true or false values apply even when the posting is already cached and its
+revision is unchanged. New cached postings are not recommended unless the pick explicitly requests it. Redirects,
+retries, and process restarts preserve this intent.
 
 A picker retries recoverable failures with an increasing delay from 30 seconds up to six hours. The final write
 transaction locks and reloads the local posting, revalidates the earlier snapshot, and commits the entry, revision,

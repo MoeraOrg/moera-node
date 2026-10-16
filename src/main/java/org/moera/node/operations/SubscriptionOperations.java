@@ -24,6 +24,7 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.rest.task.RemoteFeedFetchJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.Transaction;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
@@ -39,6 +40,10 @@ public class SubscriptionOperations {
 
     @Inject
     private PostingRepository postingRepository;
+
+    @Inject
+    @Lazy
+    private PostingOperations postingOperations;
 
     @Inject
     private StoryRepository storyRepository;
@@ -71,7 +76,7 @@ public class SubscriptionOperations {
                 if (userSubscription.getSubscriptionType() == SubscriptionType.FEED) {
                     contactOperations.updateFeedSubscriptionCount(userSubscription.getRemoteNodeName(), 1);
                     contact = contactOperations.updateViewPrincipal(userSubscription);
-                    resetRecommendedPostings(userSubscription);
+                    unsetRecommendedPostings(userSubscription);
                 } else {
                     contact = contactOperations.find(userSubscription.getRemoteNodeName());
                 }
@@ -108,14 +113,14 @@ public class SubscriptionOperations {
         return subscription;
     }
 
-    private void resetRecommendedPostings(UserSubscription userSubscription) {
-        postingRepository.resetRecommendedByOwnerNameAndFeed(
+    private void unsetRecommendedPostings(UserSubscription userSubscription) {
+        postingRepository.findByOwnerNameAndFeed(
             userSubscription.getNodeId(), userSubscription.getRemoteNodeName(), userSubscription.getFeedName()
-        );
+        ).forEach(postingOperations::unsetRecommended);
         if (!Feed.EXPLORE.equals(userSubscription.getFeedName())) {
-            postingRepository.resetRecommendedByOwnerNameAndFeed(
+            postingRepository.findByOwnerNameAndFeed(
                 userSubscription.getNodeId(), userSubscription.getRemoteNodeName(), Feed.EXPLORE
-            );
+            ).forEach(postingOperations::unsetRecommended);
         }
 
         List<Story> stories = storyRepository.findByFeedAndTypeAndOwnerName(

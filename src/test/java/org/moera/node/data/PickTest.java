@@ -3,9 +3,10 @@ package org.moera.node.data;
 import java.sql.Timestamp;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.moera.lib.node.types.principal.Principal;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -16,8 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PickTest {
 
-    @Test
-    void redirectPreservesPublicationAndOriginalSourceAcrossMultipleHops() {
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(booleans = {false, true})
+    void redirectPreservesPublicationAndOriginalSourceAcrossMultipleHops(Boolean recommended) {
         Pick pick = new Pick();
         pick.setId(UUID.randomUUID());
         pick.setNodeId(UUID.randomUUID());
@@ -25,7 +28,7 @@ class PickTest {
         pick.setRemotePostingId("original-posting");
         pick.setFeedName("news");
         pick.setRemoteFeedName("timeline");
-        pick.setRecommended(true);
+        pick.setRecommended(recommended);
         pick.setPinned(true);
         pick.setViewed(true);
         pick.setRead(true);
@@ -52,7 +55,7 @@ class PickTest {
         assertEquals("original-posting", finalPick.getSourcePostingId());
         assertEquals("news", finalPick.getFeedName());
         assertEquals("timeline", finalPick.getRemoteFeedName());
-        assertTrue(finalPick.isRecommended());
+        assertEquals(recommended, finalPick.getRecommended());
         assertTrue(finalPick.isPinned());
         assertTrue(finalPick.isViewed());
         assertTrue(finalPick.isRead());

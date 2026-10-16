@@ -137,7 +137,7 @@ public class MediaController {
         try {
             DigestingOutputStream out = transfer(in, tmp.outputStream(), contentLength, maxSize);
             MediaFile mediaFile = mediaOperations.putInPlace(
-                out.getHash(), toContentType(mediaType), tmp.path(), out.getDigest(), true
+                out.getHash(), toContentType(mediaType), tmp.path(), out.getDigest(), true, false
             );
             mediaFile = mediaFileRepository.save(mediaFile);
 

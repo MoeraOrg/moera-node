@@ -76,7 +76,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     );
 
     @Query(
-        "select p from Posting p left join p.stories s"
+        "select distinct p from Posting p left join p.stories s"
         + " where p.nodeId = ?1 and p.ownerName = ?2 and p.deletedAt is null and s.feedName = ?3"
     )
     List<Posting> findByOwnerNameAndFeed(UUID nodeId, String ownerName, String feedName);
@@ -107,13 +107,5 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
         + " where p.nodeId = ?1 and array_contains(p.externalSourceUri, ?2) and p.deletedAt is null"
     )
     List<Posting> findByExternalSourceUri(UUID nodeId, String externalSourceUri);
-
-    @Query(
-        "update Posting p set p.recommended = false"
-        + " where p.nodeId = ?1 and p.ownerName = ?2 and p.deletedAt is null and p.recommended = true"
-        + " and exists(select s from Story s where s.nodeId = ?1 and s.entry = p and s.feedName = ?3)"
-    )
-    @Modifying
-    void resetRecommendedByOwnerNameAndFeed(UUID nodeId, String ownerName, String feedName);
 
 }

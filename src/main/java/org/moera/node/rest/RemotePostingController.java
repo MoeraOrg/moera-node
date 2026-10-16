@@ -208,6 +208,7 @@ public class RemotePostingController {
             pick.setRemotePostingId(id);
             pick.setFeedName(publication.getFeedName());
             pick.setPublishAt(Util.toTimestamp(publication.getPublishAt()));
+            pick.setRecommended(false);
             pick.setPinned(Boolean.TRUE.equals(publication.getPinned()));
             pick.setViewed(Boolean.TRUE.equals(publication.getViewed()));
             pick.setRead(Boolean.TRUE.equals(publication.getRead()));

@@ -4,9 +4,10 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -232,7 +233,7 @@ public class ReactionOperations {
             entry.getCurrentRevision().addReaction(reaction);
 
             reactionTotalOperations.changeTotals(entry, reaction, 1);
-            if (reaction.getSignature() != null && reactionAdded != null) {
+            if (reactionAdded != null) {
                 reactionAdded.accept(reaction);
             }
         }
@@ -319,7 +320,8 @@ public class ReactionOperations {
         try (var ignored = requestCounter.allot()) {
             log.info("Purging expired unsigned reactions");
 
-            Set<Entry> changed = new HashSet<>();
+            Map<Entry, List<Reaction>> deletedReactions = new HashMap<>();
+            Map<Entry, List<Reaction>> addedReactions = new HashMap<>();
             tx.executeWrite(() ->
                 reactionRepository.findExpired(Util.now()).forEach(reaction -> {
                     log.debug(
@@ -346,30 +348,32 @@ public class ReactionOperations {
                                 LogUtil.format(next.getId()), LogUtil.format(next.getDeadline())
                             );
                             reactionTotalOperations.changeTotals(entry, next, 1);
+                            addedReactions.computeIfAbsent(entry, key -> new ArrayList<>()).add(next);
                         }
                         reactionTotalOperations.changeTotals(entry, reaction, -1);
-                        changed.add(entry);
+                        deletedReactions.computeIfAbsent(entry, key -> new ArrayList<>()).add(reaction);
                     }
                     reactionRepository.delete(reaction);
                 })
             );
-            for (Entry entry : changed) {
+            for (Entry entry : deletedReactions.keySet()) {
                 switch (entry.getEntryType()) {
                     case POSTING: {
                         Posting posting = (Posting) entry;
                         var totalsInfo = reactionTotalOperations.getInfo(posting);
-                        liberinManager.send(
-                            new PostingReactionTotalsUpdatedLiberin(posting, totalsInfo.getPublicInfo())
-                                .withNodeId(posting.getNodeId())
-                        );
+                        var liberin = new PostingReactionTotalsUpdatedLiberin(posting, totalsInfo.getPublicInfo());
+                        liberin.setDeletedReactions(deletedReactions.get(entry));
+                        liberin.setAddedReactions(addedReactions.getOrDefault(entry, List.of()));
+                        liberinManager.send(liberin.withNodeId(posting.getNodeId()));
                         break;
                     }
 
                     case COMMENT: {
                         Comment comment = (Comment) entry;
-                        liberinManager.send(
-                            new CommentReactionTotalsUpdatedLiberin(comment).withNodeId(comment.getNodeId())
-                        );
+                        var liberin = new CommentReactionTotalsUpdatedLiberin(comment);
+                        liberin.setDeletedReactions(deletedReactions.get(entry));
+                        liberin.setAddedReactions(addedReactions.getOrDefault(entry, List.of()));
+                        liberinManager.send(liberin.withNodeId(comment.getNodeId()));
                         break;
                     }
                 }

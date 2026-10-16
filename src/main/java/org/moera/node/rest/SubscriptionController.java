@@ -288,7 +288,7 @@ public class SubscriptionController {
     @OptionHook("subscriptions.view")
     public void subscriptionVisibilityChanged(OptionValueChange change) {
         Principal ourView = (Principal) change.getNewValue();
-        Principal theirView = ourView.isAdmin() ? Principal.PRIVATE : ourView;
+        Principal theirView = ourView.isPublic() || ourView.isSigned() ? ourView : Principal.PRIVATE;
 
         jobs.run(
             AllRemoteSubscribersUpdateJob.class,

@@ -31,6 +31,19 @@ dedicated endpoints.
 remote attachment has been downloaded locally. Its ordinal preserves attachment order, and `embedded` distinguishes
 inline use from a separate attachment.
 
+## Drafts
+
+`Draft` owns editable text and its draft attachments independently of published entries. Draft updates acquire a
+pessimistic write lock on the draft row, scoped to the hosted node, before validating media or changing text and
+attachments. The lock lasts until the update transaction completes, preventing concurrent deletion from removing the
+draft while new attachments are being saved. If deletion completes first, the update returns `draft.not-found`.
+Explicit draft deletion acquires the same row lock before cascading attachment removal, keeping the lock order
+consistent with updates.
+
+See [`DraftController`](../../src/main/java/org/moera/node/rest/DraftController.java),
+[`DraftRepository`](../../src/main/java/org/moera/node/data/DraftRepository.java), and the draft attachment foreign key
+in [V137](../../src/main/resources/db/migration/V137__drafts_entry_attachments.sql).
+
 ## Posting sharings
 
 `EntrySharing` records a sharing reported by another node. The original entry owns the list and its `totalSharings`

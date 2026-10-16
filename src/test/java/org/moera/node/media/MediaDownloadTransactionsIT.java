@@ -501,7 +501,7 @@ class MediaDownloadTransactionsIT {
             invocation.getArgument(5, ResponseConsumer.class).accept(response);
             return null;
         }).when(remote).getPrivateMedia(eq(mediaInfo.getId()), isNull(), isNull(), isNull(), isNull(), any());
-        when(mediaOperations.putInPlace(any(), any(), any(), any(), eq(false))).thenAnswer(invocation ->
+        when(mediaOperations.putInPlace(any(), any(), any(), any(), eq(false), eq(false))).thenAnswer(invocation ->
             tx.executeWrite(() -> {
                 MediaFile file = new MediaFile();
                 file.setId(invocation.getArgument(0));

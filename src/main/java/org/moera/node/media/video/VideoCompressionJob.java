@@ -13,7 +13,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
-import org.moera.lib.util.LogUtil;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -86,13 +85,6 @@ public class VideoCompressionJob extends Job<VideoCompressionJob.Parameters, Obj
             try (var input = mediaOperations.openContent(source)) {
                 compress(input.path(), output, videoInfo);
             }
-            VideoInfo compressedVideoInfo = VideoUtil.getVideoInfo(output.path(), "video/mp4");
-            if (compressedVideoInfo.uncompressed()) {
-                log.warn(
-                    "Video file {} was not compressed properly: {}",
-                    LogUtil.format(source.getId()), compressedVideoInfo
-                );
-            }
 
             DigestingOutputStream digests;
             try (InputStream in = Files.newInputStream(output.path())) {
@@ -100,7 +92,7 @@ public class VideoCompressionJob extends Job<VideoCompressionJob.Parameters, Obj
                 digests = mediaOperations.transfer(in, null, null, Integer.MAX_VALUE);
             }
             MediaFile compressed = mediaOperations.putInPlace(
-                digests.getHash(), "video/mp4", output.path(), digests.getDigest(), false
+                digests.getHash(), "video/mp4", output.path(), digests.getDigest(), false, true
             );
 
             tx.executeWriteWithExceptions(() -> publish(compressed.getId()));

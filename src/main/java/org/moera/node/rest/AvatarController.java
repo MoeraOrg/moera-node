@@ -125,7 +125,7 @@ public class AvatarController {
             }
 
             MediaFile avatarFile = mediaOperations.putInPlace(
-                out.getHash(), thumbnailFormat.mimeType(), tmp.path(), out.getDigest(), true
+                out.getHash(), thumbnailFormat.mimeType(), tmp.path(), out.getDigest(), true, false
             );
             avatarFile = mediaFileRepository.save(avatarFile);
 

@@ -27,6 +27,8 @@ public class RecommendationOperations {
     private static final int MIN_INTERVAL = 15;
     private static final int MAX_INTERVAL = 60;
     private static final int INTRODUCTION_INTERVAL = 6 * 60;
+    private static final int EXPLORE_INITIAL_RECOMMENDATIONS = 20;
+    private static final int EXPLORE_FULL_SIZE = 50;
 
     @Inject
     private RequestCounter requestCounter;
@@ -48,6 +50,10 @@ public class RecommendationOperations {
 
     @Scheduled(fixedDelayString = "PT15M")
     public void checkRecommendations() {
+        if (!jobs.isReady()) {
+            return;
+        }
+
         try (var ignored = requestCounter.allot()) {
             log.info("Checking if recommendations are needed");
 
@@ -136,7 +142,7 @@ public class RecommendationOperations {
         }
     }
 
-    @Scheduled(fixedDelayString = "PT2H")
+    @Scheduled(fixedDelayString = "PT1H")
     public void populateExplore() {
         if (!jobs.isReady()) {
             return;
@@ -146,9 +152,17 @@ public class RecommendationOperations {
             log.info("Fetching recommendations for 'explore' feed");
             for (String domainName : domains.getWarmDomainNames()) {
                 universalContext.associate(domains.getDomainNodeId(domainName));
+
+                int size = tx.executeRead(() ->
+                    storyRepository.countInFeed(universalContext.nodeId(), Feed.EXPLORE)
+                );
+                double remaining = 1.0 - Math.min(size, EXPLORE_FULL_SIZE) / (double) EXPLORE_FULL_SIZE;
+                int limit = 1 + (int) Math.round((EXPLORE_INITIAL_RECOMMENDATIONS - 1) * remaining * remaining);
+
+                log.info("Fetch up to {} recommendation(s)", limit);
                 jobs.run(
                     FetchRecommendationJob.class,
-                    new FetchRecommendationJob.Parameters(Feed.EXPLORE, 1),
+                    new FetchRecommendationJob.Parameters(Feed.EXPLORE, limit),
                     universalContext.nodeId()
                 );
             }

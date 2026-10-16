@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.SearchContentUpdateType;
+import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.lib.node.types.principal.PrincipalFilter;
@@ -26,6 +27,9 @@ import org.moera.node.liberin.model.PostingReactionDeletedLiberin;
 import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingReactionsDeletedAllLiberin;
 import org.moera.node.model.AvatarImageUtil;
+import org.moera.node.model.ReactionInfoUtil;
+import org.moera.node.model.event.PostingReactionAddedEvent;
+import org.moera.node.model.event.PostingReactionDeletedEvent;
 import org.moera.node.model.event.PostingReactionsChangedEvent;
 import org.moera.node.model.notification.PostingReactionAddedNotificationUtil;
 import org.moera.node.model.notification.PostingReactionDeletedAllNotificationUtil;
@@ -74,6 +78,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
         ReactionTotalsInfo reactionTotals
     ) {
         if (deletedReaction != null) {
+            sendDeletedEvent(liberin, posting, deletedReaction);
             AvatarImage ownerAvatar = AvatarImageUtil.build(
                 deletedReaction.getOwnerAvatarMediaFile(),
                 deletedReaction.getOwnerAvatarShape(),
@@ -144,6 +149,10 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                     )
                 );
             }
+        }
+
+        if (addedReaction != null) {
+            sendAddedEvent(liberin, posting, addedReaction);
         }
 
         if (addedReaction != null && addedReaction.getSignature() != null) {
@@ -250,7 +259,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
             }
         }
 
-        send(liberin, new PostingReactionsChangedEvent(posting));
+        send(liberin, new PostingReactionsChangedEvent(posting, posting.getViewE()));
         send(
             Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
             PostingReactionsUpdatedNotificationUtil.build(posting.getId(), reactionTotals)
@@ -261,7 +270,8 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
     public void deletedAll(PostingReactionsDeletedAllLiberin liberin) {
         Posting posting = liberin.getPosting();
 
-        send(liberin, new PostingReactionsChangedEvent(posting));
+        send(liberin, new PostingReactionDeletedEvent(posting, null, generalVisibilityFilter(posting)));
+        send(liberin, new PostingReactionsChangedEvent(posting, posting.getViewE()));
         var totalsInfo = reactionTotalOperations.getInfo(posting);
         send(
             Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
@@ -311,10 +321,38 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
     public void totalsUpdated(PostingReactionTotalsUpdatedLiberin liberin) {
         Posting posting = liberin.getPosting();
 
-        send(liberin, new PostingReactionsChangedEvent(posting));
+        for (Reaction reaction : liberin.getDeletedReactions()) {
+            sendDeletedEvent(liberin, posting, reaction);
+        }
+        for (Reaction reaction : liberin.getAddedReactions()) {
+            sendAddedEvent(liberin, posting, reaction);
+        }
+        send(liberin, new PostingReactionsChangedEvent(posting, posting.getViewE()));
         send(
             Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
             PostingReactionsUpdatedNotificationUtil.build(posting.getId(), liberin.getTotals())
+        );
+    }
+
+    private void sendAddedEvent(Liberin liberin, Posting posting, Reaction reaction) {
+        send(
+            liberin,
+            new PostingReactionAddedEvent(
+                posting,
+                ReactionInfoUtil.build(reaction, AccessCheckers.PUBLIC, directServeOperations),
+                visibilityFilter(posting, reaction)
+            )
+        );
+    }
+
+    private void sendDeletedEvent(Liberin liberin, Posting posting, Reaction reaction) {
+        send(
+            liberin,
+            new PostingReactionDeletedEvent(
+                posting,
+                ReactionInfoUtil.build(reaction, AccessCheckers.PUBLIC, directServeOperations),
+                visibilityFilter(posting, reaction)
+            )
         );
     }
 

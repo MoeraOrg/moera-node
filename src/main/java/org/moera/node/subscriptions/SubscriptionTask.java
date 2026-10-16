@@ -120,7 +120,7 @@ public class SubscriptionTask extends Task {
                 subscription.getRemoteFeedName(),
                 subscription.getRemoteEntryId(),
                 lastEditedAt,
-                UserSubscription.getViewAllPrincipal(getOptions()).isPublic()
+                UserSubscription.getViewAllPrincipal(getOptions())
             );
             SubscriberInfo subscriberInfo = nodeApi
                 .at(targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE))

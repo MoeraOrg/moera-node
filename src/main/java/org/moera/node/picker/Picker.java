@@ -45,6 +45,7 @@ import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.global.ServeContext;
 import org.moera.node.liberin.model.PostingAddedLiberin;
+import org.moera.node.liberin.model.PostingRecommendationUpdatedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.DirectServeOperations;
@@ -234,7 +235,7 @@ public class Picker extends Task {
                 pick.getMediaFileOwner(),
                 pick.getRemoteMediaFile(),
                 pick.getParentMediaEntry(),
-                pick.isRecommended(),
+                pick.getRecommended(),
                 pick.isPinned(),
                 pick.isViewed(),
                 pick.isRead(),
@@ -294,7 +295,7 @@ public class Picker extends Task {
         MediaFileOwner parentMedia,
         RemoteMediaFile parentRemoteMedia,
         Entry parentMediaEntry,
-        boolean recommended,
+        Boolean recommended,
         boolean pinned,
         boolean viewed,
         boolean read,
@@ -361,7 +362,7 @@ public class Picker extends Task {
             posting.setReceiverAvatarShape(receiverAvatarShape);
             posting.setReceiverGender(receiverGender);
             posting.setOwnerAvatarMediaFile(ownerAvatar);
-            posting.setRecommended(recommended);
+            posting.setRecommended(Boolean.TRUE.equals(recommended));
             posting = postingRepository.save(posting);
             PostingInfoUtil.toPickedPosting(postingInfo, posting, postingViewPrincipal);
             createRevision(posting, postingInfo);
@@ -391,6 +392,10 @@ public class Picker extends Task {
             if (postingViewPrincipal != null) {
                 posting.setViewPrincipal(postingViewPrincipal);
             }
+        }
+        if (recommended != null && posting.isRecommended() != recommended) {
+            posting.setRecommended(recommended);
+            universalContext.send(new PostingRecommendationUpdatedLiberin(posting.getId()));
         }
         posting = postingRepository.saveAndFlush(posting);
         mediaOperations.updatePermissions(posting);

@@ -44,6 +44,7 @@ import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
 import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
+import org.moera.node.liberin.model.PostingRecommendationUpdatedLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaOperations;
@@ -394,6 +395,13 @@ public class PostingOperations {
         universalContext.send(
             new PostingHeadingUpdatedLiberin(postingId, revision.getId(), heading, description)
         );
+    }
+
+    public void unsetRecommended(Posting posting) {
+        if (posting.isRecommended()) {
+            posting.setRecommended(false);
+            universalContext.send(new PostingRecommendationUpdatedLiberin(posting.getId()));
+        }
     }
 
     @Scheduled(fixedDelayString = "PT1H")

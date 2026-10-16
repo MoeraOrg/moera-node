@@ -512,7 +512,7 @@
   modifiers:
     format: size
     min: 65536
-    max: 157286400
+    max: 1073741824
 
 - name: media.preview-gain
   type: int

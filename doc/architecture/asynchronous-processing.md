@@ -53,6 +53,11 @@ consistent ordering point.
 receptor's transaction before building client events and push content. Lazy relationships therefore belong to the
 active session, and updates for stories deleted before delivery are skipped.
 
+`PostingOperations` clears a posting's recommendation flag and emits
+`PostingRecommendationUpdatedLiberin` with the posting ID.
+`PostingReceptor` reloads the posting and sends a visibility-filtered `posting-updated` client event. This local flag
+change does not initiate content-edit notifications to other nodes.
+
 ## Client events
 
 `EventManager` distributes protected events to authenticated WebSocket/STOMP sessions. It maintains a time-limited

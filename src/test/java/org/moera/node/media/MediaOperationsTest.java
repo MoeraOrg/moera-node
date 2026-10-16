@@ -41,7 +41,7 @@ public class MediaOperationsTest {
         Files.writeString(temporaryFile, "content");
 
         MediaFile mediaFile = operations.putInPlace(
-            "media-hash", "text/markdown", temporaryFile, new byte[] {1}, false
+            "media-hash", "text/markdown", temporaryFile, new byte[] {1}, false, false
         );
 
         Assertions.assertEquals("media-hash.md", mediaFile.getFileName());
@@ -64,7 +64,7 @@ public class MediaOperationsTest {
         Files.writeString(temporaryFile, "content");
 
         MediaFile mediaFile = operations.putInPlace(
-            "media-hash", "text/markdown", temporaryFile, new byte[] {1}, false
+            "media-hash", "text/markdown", temporaryFile, new byte[] {1}, false, false
         );
 
         Assertions.assertSame(existing, mediaFile);
@@ -88,7 +88,7 @@ public class MediaOperationsTest {
         Files.writeString(temporaryFile, "content");
 
         MediaFile mediaFile = operations.putInPlace(
-            "media-hash", "text/markdown", temporaryFile, new byte[] {1}, false
+            "media-hash", "text/markdown", temporaryFile, new byte[] {1}, false, false
         );
 
         Assertions.assertSame(existing, mediaFile);

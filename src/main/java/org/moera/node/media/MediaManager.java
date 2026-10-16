@@ -207,7 +207,7 @@ public class MediaManager {
                     log.warn("Public media {} has hash {}", id, tmpMedia.mediaFileId());
                     return null;
                 }
-                mediaFile = mediaOperations.putInPlace(id, tmpMedia.contentType(), tmp.path(), null, true);
+                mediaFile = mediaOperations.putInPlace(id, tmpMedia.contentType(), tmp.path(), null, true, false);
                 // the entity is detached after putInPlace() transaction closed
                 if (entityManager.isJoinedToTransaction()) {
                     mediaFile = entityManager.merge(mediaFile);
@@ -365,7 +365,7 @@ public class MediaManager {
                 remoteMediaCacheOperations.error(null, nodeName, id, RemoteMediaError.DIGEST_INCORRECT);
                 return null;
             }
-            mediaFile = mediaOperations.putInPlace(mediaFileId, tmpMedia.contentType(), tmp.path(), null, false);
+            mediaFile = mediaOperations.putInPlace(mediaFileId, tmpMedia.contentType(), tmp.path(), null, false, false);
             mediaFile.setRecognizedText(textContent);
         } catch (MoeraNodeException e) {
             remoteMediaCacheOperations.error(null, nodeName, id, RemoteMediaError.DOWNLOAD_FAILED);
@@ -858,7 +858,7 @@ public class MediaManager {
             }
 
             MediaFile mediaFile = mediaOperations.putInPlace(
-                out.getHash(), contentType, tmp.path(), out.getDigest(), false
+                out.getHash(), contentType, tmp.path(), out.getDigest(), false, false
             );
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
@@ -888,7 +888,7 @@ public class MediaManager {
             }
 
             MediaFile mediaFile = mediaOperations.putInPlace(
-                out.getHash(), contentType, path, out.getDigest(), false
+                out.getHash(), contentType, path, out.getDigest(), false, false
             );
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
@@ -919,7 +919,7 @@ public class MediaManager {
             }
 
             MediaFile mediaFile = mediaOperations.putInPlace(
-                out.getHash(), contentType, tmp.path(), out.getDigest(), false
+                out.getHash(), contentType, tmp.path(), out.getDigest(), false, false
             );
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);

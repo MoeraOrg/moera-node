@@ -13,7 +13,7 @@ public class SubscriberDescriptionUtil {
         String feedName,
         String postingId,
         Long lastUpdatedAt,
-        boolean visible
+        Principal viewPrincipal
     ) {
         SubscriberDescription description = new SubscriberDescription();
         description.setType(type);
@@ -21,7 +21,10 @@ public class SubscriberDescriptionUtil {
         description.setPostingId(postingId);
         description.setLastUpdatedAt(lastUpdatedAt);
         SubscriberOperations operations = new SubscriberOperations();
-        operations.setView(visible ? Principal.PUBLIC : Principal.PRIVATE, Principal.PUBLIC);
+        operations.setView(
+            viewPrincipal.isPublic() || viewPrincipal.isSigned() ? viewPrincipal : Principal.PRIVATE,
+            Principal.PUBLIC
+        );
         description.setOperations(operations);
         
         return description;

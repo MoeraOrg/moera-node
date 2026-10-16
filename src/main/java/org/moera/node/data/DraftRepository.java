@@ -5,9 +5,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import jakarta.persistence.LockModeType;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
@@ -61,6 +63,10 @@ public interface DraftRepository extends JpaRepository<Draft, UUID> {
         + " where d.nodeId = ?1 and d.id = ?2"
     )
     Optional<Draft> findById(UUID nodeId, UUID id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select d from Draft d where d.nodeId = ?1 and d.id = ?2")
+    Optional<Draft> findByIdForUpdate(UUID nodeId, UUID id);
 
     @Query(
         "select d from Draft d"

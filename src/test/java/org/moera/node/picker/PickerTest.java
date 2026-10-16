@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.moera.lib.node.MoeraNode;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.PostingInfo;
@@ -17,12 +19,14 @@ import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.node.types.body.Body;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.data.EntryRevision;
+import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
+import org.moera.node.liberin.model.PostingRecommendationUpdatedLiberin;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.operations.ReactionTotalOperations;
@@ -41,10 +45,83 @@ import static org.moera.node.util.MediaTransactionTestSupport.transaction;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class PickerTest {
+
+    @ParameterizedTest
+    @CsvSource({
+        "false, true, 1000",
+        "true, false, 1000",
+        "false, true, 2000",
+        "true, false, 2000"
+    })
+    void explicitRecommendationUpdatesDownloadedPosting(boolean initial, boolean recommended, long editedAt) {
+        Posting posting = posting(UUID.randomUUID());
+        posting.setRecommended(initial);
+        PostingInfo info = postingInfo();
+        info.setEditedAt(editedAt);
+        Picker picker = picker(posting, mock(StoryOperations.class));
+
+        savePosting(picker, info, recommended);
+
+        assertEquals(recommended, posting.isRecommended());
+        verify((UniversalContext) ReflectionTestUtils.getField(picker, "universalContext"))
+            .send(any(PostingRecommendationUpdatedLiberin.class));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"false, 1000", "true, 1000", "false, 2000", "true, 2000"})
+    void absentRecommendationPreservesDownloadedPosting(boolean initial, long editedAt) {
+        Posting posting = posting(UUID.randomUUID());
+        posting.setRecommended(initial);
+        PostingInfo info = postingInfo();
+        info.setEditedAt(editedAt);
+        Picker picker = picker(posting, mock(StoryOperations.class));
+
+        savePosting(picker, info, new Pick().getRecommended());
+
+        assertEquals(initial, posting.isRecommended());
+        verify((UniversalContext) ReflectionTestUtils.getField(picker, "universalContext"), never())
+            .send(any(PostingRecommendationUpdatedLiberin.class));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"false", "true"})
+    void sameRecommendationDoesNotEmitUpdate(boolean recommended) {
+        Posting posting = posting(UUID.randomUUID());
+        posting.setRecommended(recommended);
+        Picker picker = picker(posting, mock(StoryOperations.class));
+
+        savePosting(picker, postingInfo(), recommended);
+
+        assertEquals(recommended, posting.isRecommended());
+        verify((UniversalContext) ReflectionTestUtils.getField(picker, "universalContext"), never())
+            .send(any(PostingRecommendationUpdatedLiberin.class));
+    }
+
+    @ParameterizedTest
+    @CsvSource({", false", "false, false", "true, true"})
+    void newPostingAppliesRecommendation(Boolean recommended, boolean expected) {
+        Posting existing = posting(UUID.randomUUID());
+        Picker picker = picker(existing, mock(StoryOperations.class));
+        PostingRepository repository = (PostingRepository) ReflectionTestUtils.getField(picker, "postingRepository");
+        when(repository.findByReceiverId(existing.getNodeId(), "remote", "posting"))
+            .thenReturn(java.util.Optional.empty());
+        when(repository.findByReceiverIdForUpdate(existing.getNodeId(), "remote", "posting"))
+            .thenReturn(java.util.Optional.empty());
+        when(repository.save(any(Posting.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.saveAndFlush(any(Posting.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        EntryRevisionRepository revisions = mock(EntryRevisionRepository.class);
+        when(revisions.save(any(EntryRevision.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        ReflectionTestUtils.setField(picker, "entryRevisionRepository", revisions);
+
+        Posting posting = savePosting(picker, postingInfo(), recommended);
+
+        assertEquals(expected, posting.isRecommended());
+    }
 
     @Test
     void fetchingPostingDoesNotHoldTransactionOrConnection() throws Exception {
@@ -217,8 +294,40 @@ class PickerTest {
         Timestamp publishAt,
         String[] externalSourceUri
     ) {
+        savePosting(
+            picker,
+            postingInfo,
+            feedName,
+            null,
+            pinned,
+            viewed,
+            read,
+            satisfied,
+            allowMultiple,
+            publishAt,
+            externalSourceUri
+        );
+    }
+
+    private static Posting savePosting(Picker picker, PostingInfo postingInfo, Boolean recommended) {
+        return savePosting(picker, postingInfo, null, recommended, false, false, false, false, false, null, new String[0]);
+    }
+
+    private static Posting savePosting(
+        Picker picker,
+        PostingInfo postingInfo,
+        String feedName,
+        Boolean recommended,
+        boolean pinned,
+        boolean viewed,
+        boolean read,
+        boolean satisfied,
+        boolean allowMultiple,
+        Timestamp publishAt,
+        String[] externalSourceUri
+    ) {
         Object snapshot = ReflectionTestUtils.invokeMethod(picker, "snapshot", postingInfo, "posting");
-        ReflectionTestUtils.invokeMethod(
+        return ReflectionTestUtils.invokeMethod(
             picker,
             "savePosting",
             postingInfo,
@@ -231,7 +340,7 @@ class PickerTest {
             null,
             null,
             null,
-            false,
+            recommended,
             pinned,
             viewed,
             read,

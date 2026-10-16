@@ -337,7 +337,7 @@ public class MediaOperations {
 
     @Transactional(REQUIRES_NEW)
     public MediaFile putInPlace(
-        String id, String contentType, Path tmpPath, byte[] digest, boolean exposed
+        String id, String contentType, Path tmpPath, byte[] digest, boolean exposed, boolean videoAssumeCompressed
     ) throws IOException {
         mediaFileRepository.lockMediaFileId(id);
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
@@ -367,7 +367,7 @@ public class MediaOperations {
                 mediaFile.setDimension(videoInfo.dimension());
                 mediaFile.setDuration(videoInfo.duration());
                 mediaFile.setStreamInfo(videoInfo.streamInfo());
-                mediaFile.setUncompressed(videoInfo.uncompressed());
+                mediaFile.setUncompressed(!videoAssumeCompressed && videoInfo.uncompressed());
             }
             mediaFile.setFileSize(Files.size(mediaPath));
             mediaFile.setDigest(digest);
@@ -460,7 +460,7 @@ public class MediaOperations {
             }
 
             MediaFile cropped = putInPlace(
-                out.getHash(), previewFormat.mimeType(), tmp.path(), out.getDigest(), false
+                out.getHash(), previewFormat.mimeType(), tmp.path(), out.getDigest(), false, false
             );
             cropped = mediaFileRepository.save(cropped);
 
@@ -504,7 +504,7 @@ public class MediaOperations {
                         // otherwise original will be used in preview
                     } else {
                         previewFile = putInPlace(
-                            digests.getHash(), previewFormat.mimeType(), tmp.path(), digests.getDigest(), false
+                            digests.getHash(), previewFormat.mimeType(), tmp.path(), digests.getDigest(), false, false
                         );
                         previewFile = mediaFileRepository.save(previewFile);
                         source = new PreviewSource(previewFile, result.previewImage());

@@ -249,11 +249,11 @@ public class DraftController {
         );
 
         draftText.validate();
-        List<LocalRemoteMedia> media = validate(draftText);
 
         UUID draftId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
-        Draft draft = draftRepository.findById(requestContext.nodeId(), draftId)
+        Draft draft = draftRepository.findByIdForUpdate(requestContext.nodeId(), draftId)
             .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
+        List<LocalRemoteMedia> media = validate(draftText);
         DraftTextUtil.toDraft(draftText, draft, textConverter, media);
         updateDeadline(draft);
         updateAttachments(draft, media);
@@ -357,7 +357,7 @@ public class DraftController {
         log.info("DELETE /drafts/{id}, (id = {})", LogUtil.format(id));
 
         UUID draftId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
-        Draft draft = draftRepository.findById(requestContext.nodeId(), draftId)
+        Draft draft = draftRepository.findByIdForUpdate(requestContext.nodeId(), draftId)
             .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
         draftRepository.delete(draft);
 

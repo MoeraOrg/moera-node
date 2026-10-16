@@ -37,6 +37,7 @@ import org.moera.node.liberin.model.PostingCommentTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingHeadingUpdatedLiberin;
 import org.moera.node.liberin.model.PostingMediaTextUpdatedLiberin;
+import org.moera.node.liberin.model.PostingRecommendationUpdatedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.liberin.model.PostingViewedLiberin;
@@ -432,6 +433,12 @@ public class PostingReceptor extends LiberinReceptorBase {
                 )
             );
         }
+    }
+
+    @LiberinMapping
+    public void recommendationUpdated(PostingRecommendationUpdatedLiberin liberin) {
+        postingRepository.findByNodeIdAndId(liberin.getNodeId(), liberin.getPostingId())
+            .ifPresent(posting -> send(liberin, new PostingUpdatedEvent(posting, posting.getViewE())));
     }
 
     @Scheduled(fixedDelayString = "PT1M")
