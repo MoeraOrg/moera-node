@@ -45,7 +45,7 @@
         <jakarta.inject.version>2.0.1.MR</jakarta.inject.version>
         <jakarta.validation.version>3.1.1</jakarta.validation.version>
         <janino.version>3.1.12</janino.version>
-        <jsoup.version>1.23.1</jsoup.version>
+        <jsoup.version>1.23.2</jsoup.version>
         <languagetool.en.version>6.8</languagetool.en.version>
         <languagetool.ru.version>6.8</languagetool.ru.version>
         <languagetool.uk.version>6.8</languagetool.uk.version>
