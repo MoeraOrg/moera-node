@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.ArgumentCaptor;
 import org.moera.lib.node.MoeraNode;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.PostingInfo;
@@ -27,6 +28,7 @@ import org.moera.node.data.Posting;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingRecommendationUpdatedLiberin;
+import org.moera.node.liberin.model.PostingTotalSharingsUpdatedLiberin;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.operations.ReactionTotalOperations;
@@ -50,6 +52,42 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class PickerTest {
+
+    @ParameterizedTest
+    @CsvSource({"0, 3, 3", "5, 2, 2", "3, , 0"})
+    void sharingTotalIsUpdatedWithoutContentChange(int initial, Integer downloaded, int expected) {
+        Posting posting = posting(UUID.randomUUID());
+        posting.setTotalSharings(initial);
+        PostingInfo info = postingInfo();
+        info.setEditedAt(1000L);
+        info.setTotalSharings(downloaded);
+        Picker picker = picker(posting, mock(StoryOperations.class));
+
+        savePosting(picker, info, null);
+
+        assertEquals(expected, posting.getTotalSharings());
+        var captor = ArgumentCaptor.forClass(PostingTotalSharingsUpdatedLiberin.class);
+        verify((UniversalContext) ReflectionTestUtils.getField(picker, "universalContext")).send(captor.capture());
+        assertSame(posting, captor.getValue().getPosting());
+        assertEquals(expected, captor.getValue().getTotal());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"0, 0", "3, 3", "0, "})
+    void unchangedSharingTotalDoesNotEmitUpdate(int initial, Integer downloaded) {
+        Posting posting = posting(UUID.randomUUID());
+        posting.setTotalSharings(initial);
+        PostingInfo info = postingInfo();
+        info.setEditedAt(1000L);
+        info.setTotalSharings(downloaded);
+        Picker picker = picker(posting, mock(StoryOperations.class));
+
+        savePosting(picker, info, null);
+
+        assertEquals(initial, posting.getTotalSharings());
+        verify((UniversalContext) ReflectionTestUtils.getField(picker, "universalContext"), never())
+            .send(any(PostingTotalSharingsUpdatedLiberin.class));
+    }
 
     @ParameterizedTest
     @CsvSource({

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,7 @@ import org.moera.node.task.TaskAutowire;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.BeanUtils;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -44,6 +46,9 @@ class PickerPoolTest {
     @Mock
     private Domains domains;
 
+    @Mock
+    private PickRepository pickRepository;
+
     @InjectMocks
     private final PickerPool pool = new PickerPool();
 
@@ -52,7 +57,6 @@ class PickerPoolTest {
     @BeforeEach
     void setUp() throws Exception {
         mocks = MockitoAnnotations.openMocks(this);
-        PickRepository pickRepository = mock(PickRepository.class);
         when(pickRepository.findAll()).thenAnswer(invocation -> new ArrayList<>(stored.values()));
         when(pickRepository.findById(any(UUID.class))).thenAnswer(
             invocation -> Optional.ofNullable(stored.get(invocation.getArgument(0)))
@@ -183,6 +187,27 @@ class PickerPoolTest {
         assertTrue(stored.containsKey(pick.getId()));
         assertTrue(pick.isRunning());
         assertEquals(1, tasks.size());
+    }
+
+    @Test
+    void retryDoesNotDuplicatePickWhenSaveReturnsAnotherInstance() {
+        when(pickRepository.saveAndFlush(any(Pick.class))).thenAnswer(invocation -> {
+            Pick persistedPick = new Pick();
+            // JPA merge copies persistent fields into a new instance, leaving transient running unset.
+            BeanUtils.copyProperties(invocation.getArgument(0), persistedPick, "running");
+            stored.put(persistedPick.getId(), persistedPick);
+            return persistedPick;
+        });
+        Pick pick = pick();
+        pick.setAllowMultiple(true);
+
+        pool.pick(pick);
+        pool.retry();
+
+        assertEquals(1, tasks.size());
+        var queue = (BlockingQueue<?>) ReflectionTestUtils.getField(tasks.getFirst(), "queue");
+        assertEquals(1, queue.size());
+        assertTrue(stored.get(pick.getId()).isRunning());
     }
 
     @Test

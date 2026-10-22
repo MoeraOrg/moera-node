@@ -47,6 +47,7 @@ import org.moera.node.global.ServeContext;
 import org.moera.node.liberin.model.PostingAddedLiberin;
 import org.moera.node.liberin.model.PostingRecommendationUpdatedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
+import org.moera.node.liberin.model.PostingTotalSharingsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.media.MediaManager;
@@ -396,6 +397,11 @@ public class Picker extends Task {
         if (recommended != null && posting.isRecommended() != recommended) {
             posting.setRecommended(recommended);
             universalContext.send(new PostingRecommendationUpdatedLiberin(posting.getId()));
+        }
+        int totalSharings = postingInfo.getTotalSharings() != null ? postingInfo.getTotalSharings() : 0;
+        if (posting.getTotalSharings() != totalSharings) {
+            posting.setTotalSharings(totalSharings);
+            universalContext.send(new PostingTotalSharingsUpdatedLiberin(posting, totalSharings));
         }
         posting = postingRepository.saveAndFlush(posting);
         mediaOperations.updatePermissions(posting);

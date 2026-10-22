@@ -112,9 +112,12 @@ still exists, so a delayed added liberin cannot recreate an instant or announce 
 defined in `moeraorg.github.io/_data/events.yml`.
 
 Posting subscribers receive counter updates through `POSTING_SHARINGS_UPDATED` when their access permits it. The
-picked copy updates its counter and emits the total event; it does not own the original sharing list. Public list and
-permission fields are specified in the [Node API](https://moera.org/development/api/node/), and notification payloads
-are defined in `moeraorg.github.io/_data/notifications.yml`.
+initial state of a new posting subscription includes the current counter even when the content edit time matches.
+The subscription receptor reads this state under the posting lock and applies the posting and counter visibility
+rules. Picked copies also refresh the counter during downloads when the content edit time is unchanged. A counter-only
+refresh emits the total event. The picked copy does not own the original sharing list. Public list and permission
+fields are specified in the [Node API](https://moera.org/development/api/node/), and notification payloads are defined
+in `moeraorg.github.io/_data/notifications.yml`.
 
 ## Node source URI
 

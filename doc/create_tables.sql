@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict JO342jIFOYeDdXDzpCiK0sqLjKy4winmoo3gBbSCTv0oSPBHpnfg7Wj0fI0ruS0
+\restrict WLo0NWifcyN2c8ymEwKQ3SwkN7WvwpS1JQ7YoZ1q12E3usFUHhMcoBnT4T404b1
 
 -- Dumped from database version 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)
@@ -1216,7 +1216,16 @@ CREATE TABLE public.entries (
     view_count integer DEFAULT 0 NOT NULL,
     receiver_source_uri character varying(1024),
     owner_source_uri character varying(1024),
-    replied_to_source_uri character varying(1024)
+    replied_to_source_uri character varying(1024),
+    receiver_published_at timestamp without time zone,
+    view_external_source_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    parent_view_external_source_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    receiver_view_external_source_principal character varying(70),
+    total_sharings integer DEFAULT 0 NOT NULL,
+    view_sharings_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    receiver_view_sharings_principal character varying(70),
+    view_total_sharings_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    receiver_view_total_sharings_principal character varying(70)
 );
 
 
@@ -1301,6 +1310,34 @@ CREATE TABLE public.entry_revisions (
 
 
 ALTER TABLE public.entry_revisions OWNER TO moera;
+
+--
+-- Name: entry_sharings; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.entry_sharings (
+    id uuid NOT NULL,
+    sharing_type smallint NOT NULL,
+    remote_node_name character varying(135) NOT NULL,
+    remote_full_name character varying(96),
+    remote_source_uri character varying(1024),
+    remote_gender character varying(31),
+    remote_avatar_media_file_id character varying(40),
+    remote_avatar_shape character varying(8),
+    remote_feed_name character varying(63),
+    remote_story_id character varying(40),
+    remote_story_moment bigint,
+    remote_posting_id character varying(40),
+    entry_id uuid NOT NULL,
+    entry_revision_id uuid,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    moment bigint NOT NULL,
+    CONSTRAINT entry_sharings_check CHECK ((((remote_feed_name IS NULL) AND (remote_story_id IS NULL) AND (remote_story_moment IS NULL)) OR ((remote_feed_name IS NOT NULL) AND (remote_story_id IS NOT NULL) AND (remote_story_moment IS NOT NULL)))),
+    CONSTRAINT entry_sharings_check1 CHECK (((remote_posting_id IS NOT NULL) OR (remote_story_id IS NOT NULL)))
+);
+
+
+ALTER TABLE public.entry_sharings OWNER TO moera;
 
 --
 -- Name: entry_sources; Type: TABLE; Schema: public; Owner: moera
@@ -1708,7 +1745,8 @@ CREATE TABLE public.own_reactions (
     remote_avatar_media_file_id character varying(40),
     remote_avatar_shape character varying(8),
     posting_heading character varying(255) DEFAULT ''::character varying NOT NULL,
-    remote_source_uri character varying(1024)
+    remote_source_uri character varying(1024),
+    moment bigint
 );
 
 
@@ -1777,11 +1815,19 @@ CREATE TABLE public.picks (
     created_at timestamp without time zone NOT NULL,
     retry_at timestamp without time zone,
     media_file_owner_id uuid,
-    recommended boolean DEFAULT false NOT NULL,
+    recommended boolean,
     viewed boolean DEFAULT false NOT NULL,
     publish_at timestamp without time zone,
     parent_media_entry_id uuid,
-    remote_media_file_id uuid
+    remote_media_file_id uuid,
+    pinned boolean DEFAULT false NOT NULL,
+    read boolean DEFAULT false NOT NULL,
+    satisfied boolean DEFAULT false NOT NULL,
+    posting_view_principal character varying(70),
+    allow_multiple boolean DEFAULT false NOT NULL,
+    source_node_name character varying(135),
+    source_posting_id character varying(40),
+    external_source_uri character varying(1024)[] DEFAULT (ARRAY[]::character varying[])::character varying(1024)[] NOT NULL
 );
 
 
@@ -2237,7 +2283,9 @@ CREATE TABLE public.stories (
     satisfied boolean DEFAULT false NOT NULL,
     remote_source_uri character varying(1024),
     remote_posting_source_uri character varying(1024),
-    remote_owner_source_uri character varying(1024)
+    remote_owner_source_uri character varying(1024),
+    sharing_id uuid,
+    external_source_uri character varying(1024)[] DEFAULT (ARRAY[]::character varying[])::character varying(1024)[] NOT NULL
 );
 
 
@@ -2289,7 +2337,6 @@ ALTER TABLE public.subscriptions OWNER TO moera;
 --
 
 CREATE TABLE public.tokens (
-    token character varying(45) NOT NULL,
     name character varying(127),
     created_at timestamp without time zone NOT NULL,
     deadline timestamp without time zone,
@@ -2299,7 +2346,9 @@ CREATE TABLE public.tokens (
     ip inet,
     last_used_at timestamp without time zone,
     last_used_browser character varying(32),
-    last_used_ip inet
+    last_used_ip inet,
+    token_hash bytea NOT NULL,
+    token_prefix character varying(4) NOT NULL
 );
 
 
@@ -2473,6 +2522,14 @@ ALTER TABLE ONLY public.entry_revision_upgrades
 
 ALTER TABLE ONLY public.entry_revisions
     ADD CONSTRAINT entry_revisions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: entry_sharings entry_sharings_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_sharings
+    ADD CONSTRAINT entry_sharings_pkey PRIMARY KEY (id);
 
 
 --
@@ -3298,6 +3355,34 @@ CREATE INDEX entry_revisions_parent_id_idx ON public.entry_revisions USING btree
 
 
 --
+-- Name: entry_sharings_entry_id_moment_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX entry_sharings_entry_id_moment_idx ON public.entry_sharings USING btree (entry_id, moment);
+
+
+--
+-- Name: entry_sharings_entry_id_sharing_type_remote_node_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_sharings_entry_id_sharing_type_remote_node_name_idx ON public.entry_sharings USING btree (entry_id, sharing_type, remote_node_name);
+
+
+--
+-- Name: entry_sharings_entry_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_sharings_entry_revision_id_idx ON public.entry_sharings USING btree (entry_revision_id);
+
+
+--
+-- Name: entry_sharings_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_sharings_remote_avatar_media_file_id_idx ON public.entry_sharings USING btree (remote_avatar_media_file_id);
+
+
+--
 -- Name: entry_sources_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -4103,6 +4188,13 @@ CREATE INDEX stories_remote_posting_avatar_media_file_id_idx ON public.stories U
 
 
 --
+-- Name: stories_sharing_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX stories_sharing_id_idx ON public.stories USING btree (sharing_id);
+
+
+--
 -- Name: subscribers_contact_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -4159,10 +4251,10 @@ CREATE INDEX subscriptions_status_usage_count_idx ON public.subscriptions USING 
 
 
 --
--- Name: tokens_token_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: tokens_token_hash_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE UNIQUE INDEX tokens_token_idx ON public.tokens USING btree (token);
+CREATE UNIQUE INDEX tokens_token_hash_idx ON public.tokens USING btree (token_hash);
 
 
 --
@@ -4324,6 +4416,13 @@ CREATE TRIGGER update_receiver_avatar_media_file_id AFTER INSERT OR DELETE OR UP
 --
 
 CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.contacts FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+
+
+--
+-- Name: entry_sharings update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.entry_sharings FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
 
 
 --
@@ -4653,6 +4752,30 @@ ALTER TABLE ONLY public.entry_revisions
 
 
 --
+-- Name: entry_sharings entry_sharings_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_sharings
+    ADD CONSTRAINT entry_sharings_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: entry_sharings entry_sharings_entry_revision_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_sharings
+    ADD CONSTRAINT entry_sharings_entry_revision_id_fkey FOREIGN KEY (entry_revision_id) REFERENCES public.entry_revisions(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: entry_sharings entry_sharings_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_sharings
+    ADD CONSTRAINT entry_sharings_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
 -- Name: entry_sources entry_sources_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -4957,6 +5080,14 @@ ALTER TABLE ONLY public.stories
 
 
 --
+-- Name: stories stories_sharing_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.stories
+    ADD CONSTRAINT stories_sharing_id_fkey FOREIGN KEY (sharing_id) REFERENCES public.entry_sharings(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
 -- Name: subscribers subscribers_contact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -4984,5 +5115,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict JO342jIFOYeDdXDzpCiK0sqLjKy4winmoo3gBbSCTv0oSPBHpnfg7Wj0fI0ruS0
+\unrestrict WLo0NWifcyN2c8ymEwKQ3SwkN7WvwpS1JQ7YoZ1q12E3usFUHhMcoBnT4T404b1
 

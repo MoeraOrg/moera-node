@@ -153,6 +153,7 @@ public class PickerPool {
             detachedPick.setNodeId(universalContext.nodeId());
         }
         Pick pick = tx.executeWrite(() -> pickRepository.saveAndFlush(detachedPick));
+        pick.setRunning(true);
         pending.put(pick.getId(), pick);
         return pick;
     }

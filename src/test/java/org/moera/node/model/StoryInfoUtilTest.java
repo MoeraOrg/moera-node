@@ -27,6 +27,7 @@ import tools.jackson.databind.ObjectMapper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StoryInfoUtilTest {
 
@@ -40,6 +41,23 @@ class StoryInfoUtilTest {
         StoryInfo info = StoryInfoUtil.build(story, AccessCheckers.ADMIN, st -> null, null);
 
         assertEquals(123456789L, info.getRemoteStoryMoment());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = EventType.class, names = {"STORY_ADDED", "STORY_UPDATED"})
+    void sharedPostingEventsReturnRemoteStoryMoment(EventType eventType) {
+        Story story = story(StoryType.POSTING_SHARED);
+        EntrySharing sharing = new EntrySharing();
+        sharing.setRemoteStoryMoment(123456789L);
+        story.setSharing(sharing);
+        StoryEvent event = eventType == EventType.STORY_ADDED
+            ? new StoryAddedEvent(story, true, null)
+            : new StoryUpdatedEvent(story, true, null);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertTrue(objectMapper.valueToTree(event).has("remoteStoryMoment"));
+        assertEquals(123456789L, objectMapper.valueToTree(event).path("remoteStoryMoment").asLong());
+        assertEquals(123456789L, objectMapper.valueToTree(event.copy()).path("remoteStoryMoment").asLong());
     }
 
     @Test

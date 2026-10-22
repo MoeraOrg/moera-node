@@ -43,6 +43,7 @@ public class StoryEvent extends Event {
     private String remoteNodeName;
     private String remoteFullName;
     private String remoteSourceUri;
+    private Long remoteStoryMoment;
     private String remotePostingId;
     private String remoteCommentId;
     private List<String> externalSourceUri;
@@ -77,6 +78,7 @@ public class StoryEvent extends Event {
         remoteNodeName = storyInfo.getRemoteNodeName();
         remoteFullName = storyInfo.getRemoteFullName();
         remoteSourceUri = storyInfo.getRemoteSourceUri();
+        remoteStoryMoment = storyInfo.getRemoteStoryMoment();
         remotePostingId = storyInfo.getRemotePostingId();
         remoteCommentId = storyInfo.getRemoteCommentId();
         externalSourceUri = storyInfo.getExternalSourceUri();
@@ -251,6 +253,14 @@ public class StoryEvent extends Event {
         this.remoteSourceUri = remoteSourceUri;
     }
 
+    public Long getRemoteStoryMoment() {
+        return remoteStoryMoment;
+    }
+
+    public void setRemoteStoryMoment(Long remoteStoryMoment) {
+        this.remoteStoryMoment = remoteStoryMoment;
+    }
+
     public String getRemotePostingId() {
         return remotePostingId;
     }
@@ -305,6 +315,7 @@ public class StoryEvent extends Event {
         parameters.add(new LogParameter("summary", LogUtil.format(summary)));
         parameters.add(new LogParameter("remoteNodeName", LogUtil.format(remoteNodeName)));
         parameters.add(new LogParameter("remoteSourceUri", LogUtil.format(remoteSourceUri)));
+        parameters.add(new LogParameter("remoteStoryMoment", LogUtil.format(remoteStoryMoment)));
         parameters.add(new LogParameter("remotePostingId", LogUtil.format(remotePostingId)));
         parameters.add(new LogParameter("remoteCommentId", LogUtil.format(remoteCommentId)));
     }

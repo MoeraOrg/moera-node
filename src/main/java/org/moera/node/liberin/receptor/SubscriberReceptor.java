@@ -7,6 +7,8 @@ import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.lib.node.types.principal.PrincipalFilter;
+import org.moera.node.data.Posting;
+import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.instant.SubscriberInstants;
@@ -22,6 +24,7 @@ import org.moera.node.model.event.SubscriberAddedEvent;
 import org.moera.node.model.event.SubscriberDeletedEvent;
 import org.moera.node.model.event.SubscriberUpdatedEvent;
 import org.moera.node.model.event.SubscribersTotalChangedEvent;
+import org.moera.node.model.notification.PostingSharingsUpdatedNotificationUtil;
 import org.moera.node.model.notification.PostingUpdatedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.option.Options;
@@ -34,6 +37,9 @@ public class SubscriberReceptor extends LiberinReceptorBase {
     private SubscriberRepository subscriberRepository;
 
     @Inject
+    private PostingRepository postingRepository;
+
+    @Inject
     private SubscriberInstants subscriberInstants;
 
     @LiberinMapping
@@ -43,12 +49,9 @@ public class SubscriberReceptor extends LiberinReceptorBase {
         if (
             subscriber.getSubscriptionType() == SubscriptionType.POSTING
             && subscriber.getEntry() != null
-            && !Util.toEpochSecond(subscriber.getEntry().getEditedAt()).equals(liberin.getSubscriberLastUpdatedAt())
         ) {
-            var notification = PostingUpdatedNotificationUtil.build(subscriber.getEntry().getId());
-            notification.setSubscriberId(subscriber.getId().toString());
-            notification.setSubscriptionCreatedAt(Util.now());
-            send(Directions.single(liberin.getNodeId(), subscriber.getRemoteNodeName()), notification);
+            postingRepository.findByNodeIdAndIdForUpdate(liberin.getNodeId(), subscriber.getEntry().getId())
+                .ifPresent(posting -> sendPostingState(liberin, posting));
         }
 
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
@@ -80,6 +83,30 @@ public class SubscriberReceptor extends LiberinReceptorBase {
         }
 
         subscriberInstants.added(subscriber);
+    }
+
+    private void sendPostingState(SubscriberAddedLiberin liberin, Posting posting) {
+        Subscriber subscriber = liberin.getSubscriber();
+        var subscriptionCreatedAt = Util.now();
+        if (!Util.toEpochSecond(posting.getEditedAt()).equals(liberin.getSubscriberLastUpdatedAt())) {
+            var notification = PostingUpdatedNotificationUtil.build(posting.getId());
+            notification.setSubscriberId(subscriber.getId().toString());
+            notification.setSubscriptionCreatedAt(subscriptionCreatedAt);
+            send(Directions.single(liberin.getNodeId(), subscriber.getRemoteNodeName()), notification);
+        }
+
+        var notification = PostingSharingsUpdatedNotificationUtil.build(posting.getId(), posting.getTotalSharings());
+        notification.setSubscriberId(subscriber.getId().toString());
+        notification.setSubscriptionCreatedAt(subscriptionCreatedAt);
+        Principal viewTotalSharings = posting.isOriginal()
+            ? posting.getViewTotalSharingsE()
+            : posting.getReceiverViewTotalSharingsE();
+        send(
+            Directions.single(
+                liberin.getNodeId(), subscriber.getRemoteNodeName(), posting.getViewE().a().and(viewTotalSharings)
+            ),
+            notification
+        );
     }
 
     @LiberinMapping
