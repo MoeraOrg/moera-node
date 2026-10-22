@@ -14,11 +14,15 @@ import jakarta.persistence.EntityManager;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.flywaydb.core.Flyway;
+import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.moera.lib.node.types.DraftText;
 import org.moera.lib.node.types.DraftType;
 import org.moera.lib.node.types.Scope;
@@ -28,10 +32,16 @@ import org.moera.node.data.Draft;
 import org.moera.node.data.DraftRepository;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
+import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileOwner;
+import org.moera.node.data.Posting;
+import org.moera.node.data.PostingRepository;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.data.RemoteMediaFileRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.DraftDeletedLiberin;
+import org.moera.node.media.DirectServeOperations;
+import org.moera.node.media.DirectServeOperations.DirectServePath;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -89,7 +99,8 @@ class DraftControllerIT {
         factoryBean.setPackagesToScan("org.moera.node.data", "org.moera.node.model.principal");
         factoryBean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
         factoryBean.setJpaPropertyMap(Map.of(
-            "hibernate.physical_naming_strategy", "org.hibernate.boot.model.naming.PhysicalNamingStrategySnakeCaseImpl"
+            "hibernate.physical_naming_strategy", "org.hibernate.boot.model.naming.PhysicalNamingStrategySnakeCaseImpl",
+            "hibernate.generate_statistics", true
         ));
         factoryBean.afterPropertiesSet();
     }
@@ -126,12 +137,19 @@ class DraftControllerIT {
         draftController = new DraftController();
         ReflectionTestUtils.setField(draftController, "requestContext", requestContext);
         ReflectionTestUtils.setField(draftController, "draftRepository", draftRepository);
+        ReflectionTestUtils.setField(draftController, "postingRepository",
+            repositories.getRepository(PostingRepository.class));
         ReflectionTestUtils.setField(draftController, "entryAttachmentRepository",
             repositories.getRepository(EntryAttachmentRepository.class));
         ReflectionTestUtils.setField(draftController, "remoteMediaFileRepository",
             repositories.getRepository(RemoteMediaFileRepository.class));
         ReflectionTestUtils.setField(draftController, "mediaOperations", mediaOperations);
         ReflectionTestUtils.setField(draftController, "textConverter", textConverter);
+        var directServe = mock(DirectServeOperations.class);
+        when(directServe.directPath(any(), any())).thenReturn(DirectServePath.NONE);
+        when(directServe.directPath(any(), any(), any())).thenReturn(DirectServePath.NONE);
+        when(directServe.directDownloadPath(any(), any(), any())).thenReturn(DirectServePath.NONE);
+        ReflectionTestUtils.setField(draftController, "directServeOperations", directServe);
         transaction.executeWithoutResult(status -> {
             Draft draft = new Draft();
             draft.setId(draftId);
@@ -218,6 +236,76 @@ class DraftControllerIT {
         });
         // The lock is released after saving, so deletion can proceed normally.
         assertFalse(tryConcurrentDeletion());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void writeResponseUsesCurrentAttachmentsAndStandaloneChildIdsWithoutLoadingPostings(boolean create) {
+        var ownerId = UUID.randomUUID();
+        var remoteId = UUID.randomUUID();
+        var localPostingId = UUID.randomUUID();
+        var remotePostingId = UUID.randomUUID();
+        transaction.executeWithoutResult(status -> {
+            var file = new MediaFile();
+            file.setId(UUID.randomUUID().toString());
+            file.setMimeType("image/png");
+            file.setDigest(new byte[32]);
+            entityManager.persist(file);
+            var owner = new MediaFileOwner();
+            owner.setId(ownerId);
+            owner.setNodeId(nodeId);
+            owner.setMediaFile(file);
+            entityManager.persist(owner);
+            var remote = new RemoteMediaFile();
+            remote.setId(remoteId);
+            remote.setNodeId(nodeId);
+            remote.setNodeName("remote");
+            remote.setMediaId(UUID.randomUUID().toString());
+            remote.setDigest(new byte[32]);
+            remote.setInvalid(true);
+            entityManager.persist(remote);
+            var parent = new Posting();
+            parent.setId(UUID.randomUUID());
+            parent.setNodeId(nodeId);
+            entityManager.persist(parent);
+            for (boolean local : List.of(true, false)) {
+                for (boolean standalone : List.of(true, false)) {
+                    var posting = new Posting();
+                    posting.setId(standalone ? (local ? localPostingId : remotePostingId) : UUID.randomUUID());
+                    posting.setNodeId(nodeId);
+                    posting.setParentMediaEntry(standalone ? null : parent);
+                    posting.setParentMedia(local ? owner : null);
+                    posting.setParentRemoteMedia(local ? null : remote);
+                    entityManager.persist(posting);
+                }
+            }
+        });
+        when(textConverter.toHtml(any(SourceFormat.class), any(Body.class)))
+            .thenReturn(new Body("{\"text\":\"Saved draft\"}"));
+        transaction.executeWithoutResult(status -> {
+            var owner = entityManager.find(MediaFileOwner.class, ownerId);
+            owner.setTitle("Current local title");
+            var remote = entityManager.find(RemoteMediaFile.class, remoteId);
+            remote.setTitle("Current remote title");
+            when(mediaOperations.validateAttachments(any(), any(), anyBoolean(), anyBoolean()))
+                .thenReturn(List.of(new LocalRemoteMedia(owner, null), new LocalRemoteMedia(null, remote)));
+            var statistics = factoryBean.getObject().unwrap(SessionFactory.class).getStatistics();
+            statistics.clear();
+
+            var info = create
+                ? draftController.post(text()).getBody()
+                : draftController.put(draftId.toString(), text());
+
+            assertEquals("Saved draft", info.getBody().getText());
+            assertEquals(2, info.getMedia().size());
+            assertEquals(localPostingId.toString(), info.getMedia().get(0).getPostingId());
+            assertEquals("Current local title", info.getMedia().get(0).getMedia().getTitle());
+            assertEquals(remotePostingId.toString(), info.getMedia().get(1).getPostingId());
+            assertEquals("Current remote title", info.getMedia().get(1).getRemoteMedia().getTitle());
+            assertEquals(0, statistics.getEntityStatistics(Posting.class.getName()).getLoadCount());
+            assertFalse(Hibernate.isInitialized(owner.getPostings()));
+            assertFalse(Hibernate.isInitialized(remote.getPostings()));
+        });
     }
 
     private boolean tryConcurrentDeletion() throws SQLException {

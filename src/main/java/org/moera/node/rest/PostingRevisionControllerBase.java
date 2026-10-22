@@ -27,6 +27,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingRevisionInfoUtil;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
+import org.moera.node.operations.MediaPostingIds;
 import org.moera.node.operations.PostingOperations;
 import org.slf4j.Logger;
 import org.springframework.data.domain.PageRequest;
@@ -107,18 +108,20 @@ public abstract class PostingRevisionControllerBase {
         limit = limit != null && limit <= MAX_REVISIONS_PER_REQUEST ? limit : MAX_REVISIONS_PER_REQUEST;
         ValidationUtil.assertion(limit >= 0, "limit.invalid");
 
-        return entryRevisionRepository
+        var revisions = entryRevisionRepository
             .findAllByEntryId(
                 requestContext.nodeId(),
                 postingId,
                 PageRequest.of(0, limit, Sort.Direction.DESC, "createdAt")
             )
-            .get()
+            .getContent();
+        var mediaAttachments = entryOperations.prepareMediaAttachments(revisions);
+        return revisions.stream()
             .map(r ->
                 PostingRevisionInfoUtil.build(
                     posting,
                     r,
-                    entryOperations,
+                    mediaAttachments,
                     requestContext.getOptions(),
                     requestContext
                 )
@@ -165,14 +168,17 @@ public abstract class PostingRevisionControllerBase {
         List<LocalRemoteMedia> media = revision.getAttachments().stream()
                 .map(EntryAttachment::getLocalRemoteMedia)
                 .collect(Collectors.toList());
-        posting = postingOperations.createOrUpdatePosting(posting, revision, media, null, null, null, null);
+        var updatedPosting = postingOperations.createOrUpdatePosting(posting, revision, media, null, null, null, null);
+        posting = updatedPosting.entry();
 
         requestContext.send(getRestorationLiberin(posting, latest));
 
+        // The response describes the selected revision, whose remote media may differ from the new current revision.
+        var mediaPostingIds = MediaPostingIds.load(postingRepository, posting.getId(), revision.getAttachments());
         return PostingRevisionInfoUtil.build(
             posting,
             revision,
-            MediaAttachmentsProvider.relations(directServeOperations),
+            MediaAttachmentsProvider.relations(directServeOperations, mediaPostingIds),
             requestContext.getOptions(),
             requestContext
         );

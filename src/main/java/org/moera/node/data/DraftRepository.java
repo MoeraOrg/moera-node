@@ -17,9 +17,7 @@ public interface DraftRepository extends JpaRepository<Draft, UUID> {
 
     @Query(
         "select d from Draft d"
-        + " left join fetch d.attachments da left join fetch da.mediaFileOwner mfo"
-        + " left join fetch da.remoteMediaFile"
-        + " left join fetch mfo.mediaFile mf left join fetch mf.previews left join fetch d.ownerAvatarMediaFile"
+        + " left join fetch d.ownerAvatarMediaFile"
         + " where d.nodeId = ?1 and d.draftType = org.moera.lib.node.types.DraftType.NEW_POSTING"
         + " and d.receiverName = ?2"
     )
@@ -27,9 +25,7 @@ public interface DraftRepository extends JpaRepository<Draft, UUID> {
 
     @Query(
         "select d from Draft d"
-        + " left join fetch d.attachments da left join fetch da.mediaFileOwner mfo"
-        + " left join fetch da.remoteMediaFile"
-        + " left join fetch mfo.mediaFile mf left join fetch mf.previews left join fetch d.ownerAvatarMediaFile"
+        + " left join fetch d.ownerAvatarMediaFile"
         + " where d.nodeId = ?1 and d.draftType = org.moera.lib.node.types.DraftType.POSTING_UPDATE"
         + " and d.receiverName = ?2 and d.receiverPostingId = ?3"
     )
@@ -37,9 +33,7 @@ public interface DraftRepository extends JpaRepository<Draft, UUID> {
 
     @Query(
         "select d from Draft d"
-        + " left join fetch d.attachments da left join fetch da.mediaFileOwner mfo"
-        + " left join fetch da.remoteMediaFile"
-        + " left join fetch mfo.mediaFile mf left join fetch mf.previews left join fetch d.ownerAvatarMediaFile"
+        + " left join fetch d.ownerAvatarMediaFile"
         + " where d.nodeId = ?1 and d.draftType = org.moera.lib.node.types.DraftType.NEW_COMMENT"
         + " and d.receiverName = ?2 and d.receiverPostingId = ?3"
     )
@@ -47,9 +41,7 @@ public interface DraftRepository extends JpaRepository<Draft, UUID> {
 
     @Query(
         "select d from Draft d"
-        + " left join fetch d.attachments da left join fetch da.mediaFileOwner mfo"
-        + " left join fetch da.remoteMediaFile"
-        + " left join fetch mfo.mediaFile mf left join fetch mf.previews left join fetch d.ownerAvatarMediaFile"
+        + " left join fetch d.ownerAvatarMediaFile"
         + " where d.nodeId = ?1 and d.draftType = org.moera.lib.node.types.DraftType.COMMENT_UPDATE"
         + " and d.receiverName = ?2 and d.receiverPostingId = ?3 and d.receiverCommentId = ?4"
     )
@@ -57,9 +49,7 @@ public interface DraftRepository extends JpaRepository<Draft, UUID> {
 
     @Query(
         "select d from Draft d"
-        + " left join fetch d.attachments da left join fetch da.mediaFileOwner mfo"
-        + " left join fetch da.remoteMediaFile"
-        + " left join fetch mfo.mediaFile mf left join fetch mf.previews left join fetch d.ownerAvatarMediaFile"
+        + " left join fetch d.ownerAvatarMediaFile"
         + " where d.nodeId = ?1 and d.id = ?2"
     )
     Optional<Draft> findById(UUID nodeId, UUID id);

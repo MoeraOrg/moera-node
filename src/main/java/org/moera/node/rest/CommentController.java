@@ -85,6 +85,7 @@ import org.moera.node.operations.FavorOperations;
 import org.moera.node.data.FavorType;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
+import org.moera.node.operations.MediaPostingIds;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.text.TextConverter;
 import org.moera.node.userlist.SheriffUserListOperations;
@@ -235,7 +236,7 @@ public class CommentController {
 
         Comment comment = commentOperations.newComment(posting, commentText, repliedTo);
         commentOperations.premoderate(posting, comment);
-        comment = commentOperations.createOrUpdateComment(
+        var updatedComment = commentOperations.createOrUpdateComment(
             posting,
             comment,
             null,
@@ -247,6 +248,7 @@ public class CommentController {
                 ),
             entry -> CommentTextUtil.toEntry(commentText, entry)
         );
+        comment = updatedComment.entry();
 
         if (comment.getCurrentRevision().getSignature() != null) {
             if (comment.getOwnerName().equals(requestContext.nodeName())) {
@@ -263,7 +265,7 @@ public class CommentController {
             .body(CommentCreatedUtil.build(
                 comment,
                 posting.getTotalChildren(),
-                MediaAttachmentsProvider.relations(directServeOperations),
+                MediaAttachmentsProvider.relations(directServeOperations, updatedComment.mediaPostingIds()),
                 requestContext,
                 blockedOperations,
                 requestContext.getOptions(),
@@ -323,10 +325,11 @@ public class CommentController {
             requestContext.isAdmin(Scope.VIEW_CONTENT)
         );
 
+        MediaPostingIds mediaPostingIds;
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         if (requestContext.isPrincipal(comment.getEditE(), Scope.UPDATE_COMMENT)) {
             CommentTextUtil.toEntry(commentText, comment);
-            comment = commentOperations.createOrUpdateComment(
+            var updatedComment = commentOperations.createOrUpdateComment(
                 comment.getPosting(),
                 comment,
                 comment.getCurrentRevision(),
@@ -338,9 +341,14 @@ public class CommentController {
                     ),
                 entry -> CommentTextUtil.toEntry(commentText, entry)
             );
+            comment = updatedComment.entry();
+            mediaPostingIds = updatedComment.mediaPostingIds();
         } else {
             // senior, but not owner
             CommentTextUtil.toEntrySenior(commentText, comment);
+            mediaPostingIds = MediaPostingIds.load(
+                postingRepository, comment.getId(), comment.getCurrentRevision().getAttachments()
+            );
         }
 
         requestContext.send(new CommentUpdatedLiberin(comment, latest, latestView, latestPremoderating));
@@ -350,7 +358,7 @@ public class CommentController {
                 withClientReaction(
                     CommentInfoUtil.build(
                         comment,
-                        MediaAttachmentsProvider.relations(directServeOperations),
+                        MediaAttachmentsProvider.relations(directServeOperations, mediaPostingIds),
                         requestContext,
                         requestContext.getOptions(),
                         directServeOperations
@@ -739,7 +747,7 @@ public class CommentController {
     private void fillSlice(CommentsSliceInfo sliceInfo, Posting posting, int limit, boolean sheriff) {
         QComment comment = QComment.comment;
         QEntryRevision currentRevision = QEntryRevision.entryRevision;
-        List<CommentInfo> comments = new JPAQueryFactory(entityManager)
+        var foundComments = new JPAQueryFactory(entityManager)
             .selectFrom(comment)
             .leftJoin(comment.currentRevision, currentRevision).fetchJoin()
             .leftJoin(comment.ownerAvatarMediaFile).fetchJoin()
@@ -748,10 +756,13 @@ public class CommentController {
             .where(commentFilter(
                 requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore(), sheriff
             ))
-            .fetch()
-            .stream()
+            .fetch();
+        var mediaAttachments = entryOperations.prepareMediaAttachments(
+            foundComments.stream().map(Comment::getCurrentRevision).toList()
+        );
+        List<CommentInfo> comments = foundComments.stream()
             .map(c -> CommentInfoUtil.build(
-                c, entryOperations, requestContext, requestContext.getOptions(), directServeOperations
+                c, mediaAttachments, requestContext, requestContext.getOptions(), directServeOperations
             ))
             .sorted(Comparator.comparing(CommentInfo::getMoment))
             .collect(Collectors.toList());

@@ -41,6 +41,7 @@ import org.moera.node.auth.AuthenticationException;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedUser;
+import org.moera.node.data.Entry;
 import org.moera.node.data.Feed;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
@@ -64,6 +65,7 @@ import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.EntryOperations;
+import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.userlist.SheriffUserListOperations;
@@ -342,10 +344,17 @@ public class FeedController {
                 .fetch();
         }
 
+        var mediaAttachments = entryOperations.prepareMediaAttachments(
+            foundStories.stream()
+                .filter(s -> s.getStoryType() == StoryType.POSTING_ADDED && isStoryValid(s))
+                .map(Story::getEntry)
+                .map(Entry::getCurrentRevision)
+                .toList()
+        );
         List<StoryInfo> stories = foundStories
             .stream()
             .filter(this::isStoryValid)
-            .map(this::buildStoryInfo)
+            .map(s -> buildStoryInfo(s, mediaAttachments))
             // This should be unnecessary, but let it be for reliability
             .filter(this::isStoryVisible)
             .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
@@ -541,14 +550,14 @@ public class FeedController {
         return true;
     }
 
-    private StoryInfo buildStoryInfo(Story story) {
+    private StoryInfo buildStoryInfo(Story story, MediaAttachmentsProvider mediaAttachments) {
         return StoryInfoUtil.build(
             story,
             requestContext,
             t -> PostingInfoUtil.build(
                 t.getEntry(),
                 t.getEntry().getStories(),
-                entryOperations,
+                mediaAttachments,
                 requestContext,
                 requestContext.getOptions(),
                 directServeOperations

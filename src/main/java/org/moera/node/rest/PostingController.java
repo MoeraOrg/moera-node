@@ -191,7 +191,7 @@ public class PostingController {
         );
 
         Posting posting = postingOperations.newPosting(postingText);
-        posting = postingOperations.createOrUpdatePosting(
+        var updatedPosting = postingOperations.createOrUpdatePosting(
             posting,
             null,
             media,
@@ -200,6 +200,7 @@ public class PostingController {
             revision -> PostingTextUtil.toEntryRevision(postingText, revision, digest, textConverter, media),
             entry -> PostingTextUtil.toEntry(postingText, entry)
         );
+        posting = updatedPosting.entry();
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), posting.getId());
 
         requestContext.send(new PostingAddedLiberin(posting));
@@ -209,7 +210,7 @@ public class PostingController {
             .body(withBlockings(PostingInfoUtil.build(
                 posting,
                 stories,
-                MediaAttachmentsProvider.relations(directServeOperations),
+                MediaAttachmentsProvider.relations(directServeOperations, updatedPosting.mediaPostingIds()),
                 requestContext,
                 requestContext.getOptions(),
                 directServeOperations
@@ -256,7 +257,7 @@ public class PostingController {
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         boolean sameViewComments = PostingTextUtil.sameViewComments(postingText, posting);
         PostingTextUtil.toEntry(postingText, posting);
-        posting = postingOperations.createOrUpdatePosting(
+        var updatedPosting = postingOperations.createOrUpdatePosting(
             posting,
             posting.getCurrentRevision(),
             media,
@@ -265,6 +266,7 @@ public class PostingController {
             revision -> PostingTextUtil.toEntryRevision(postingText, revision, digest, textConverter, media),
             entry -> PostingTextUtil.toEntry(postingText, entry)
         );
+        posting = updatedPosting.entry();
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), posting.getId());
         if (!sameViewComments) {
             mediaFileOwnerRepository.updateUsageOfCommentAttachments(
@@ -277,7 +279,7 @@ public class PostingController {
             PostingInfoUtil.build(
                 posting,
                 stories,
-                MediaAttachmentsProvider.relations(directServeOperations),
+                MediaAttachmentsProvider.relations(directServeOperations, updatedPosting.mediaPostingIds()),
                 requestContext,
                 requestContext.getOptions(),
                 directServeOperations
@@ -461,15 +463,18 @@ public class PostingController {
     public List<PostingInfo> getByExternalSourceUri(@RequestParam String external) {
         log.info("GET /postings (external = {})", LogUtil.format(external));
 
-        return postingRepository.findByExternalSourceUri(requestContext.nodeId(), external)
-            .stream()
+        var postings = postingRepository.findByExternalSourceUri(requestContext.nodeId(), external);
+        var mediaAttachments = entryOperations.prepareMediaAttachments(
+            postings.stream().map(Posting::getCurrentRevision).toList()
+        );
+        return postings.stream()
             .map(posting -> {
                 List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), posting.getId());
                 return withSheriffUserListMarks(withBlockings(withClientReaction(
                     PostingInfoUtil.build(
                         posting,
                         stories,
-                        MediaAttachmentsProvider.relations(directServeOperations),
+                        mediaAttachments,
                         requestContext,
                         requestContext.getOptions(),
                         directServeOperations

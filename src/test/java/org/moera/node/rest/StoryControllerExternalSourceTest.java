@@ -15,6 +15,7 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestContext;
+import org.moera.node.operations.EntryOperations;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.Mockito.when;
@@ -30,6 +31,9 @@ class StoryControllerExternalSourceTest {
 
     @Mock
     private StoryRepository storyRepository;
+
+    @Mock
+    private EntryOperations entryOperations;
 
     @InjectMocks
     private StoryController storyController;

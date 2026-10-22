@@ -86,11 +86,14 @@ public class DeletedPostingController {
                 ? limit : PostingOperations.MAX_POSTINGS_PER_REQUEST;
         ValidationUtil.assertion(limit >= 0, "limit.invalid");
 
-        return postingRepository.findDeleted(requestContext.nodeId(),
-            PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "deletedAt")))
-            .stream()
+        var postings = postingRepository.findDeleted(requestContext.nodeId(),
+            PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "deletedAt")));
+        var mediaAttachments = entryOperations.prepareMediaAttachments(
+            postings.stream().map(Posting::getCurrentRevision).toList()
+        );
+        return postings.stream()
             .map(p -> PostingInfoUtil.build(
-                p, entryOperations, requestContext, requestContext.getOptions(), directServeOperations
+                p, mediaAttachments, requestContext, requestContext.getOptions(), directServeOperations
             ))
             .collect(Collectors.toList());
     }
@@ -126,9 +129,10 @@ public class DeletedPostingController {
         List<LocalRemoteMedia> media = posting.getCurrentRevision().getAttachments().stream()
             .map(EntryAttachment::getLocalRemoteMedia)
             .collect(Collectors.toList());
-        posting = postingOperations.createOrUpdatePosting(
+        var updatedPosting = postingOperations.createOrUpdatePosting(
             posting, posting.getCurrentRevision(), media, null, null, null, null
         );
+        posting = updatedPosting.entry();
 
         requestContext.send(new PostingRestoredLiberin(posting));
 
@@ -136,7 +140,7 @@ public class DeletedPostingController {
         return PostingInfoUtil.build(
             posting,
             stories,
-            MediaAttachmentsProvider.relations(directServeOperations),
+            MediaAttachmentsProvider.relations(directServeOperations, updatedPosting.mediaPostingIds()),
             requestContext,
             requestContext.getOptions(),
             directServeOperations

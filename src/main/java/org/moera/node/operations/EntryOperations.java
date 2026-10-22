@@ -3,17 +3,17 @@ package org.moera.node.operations;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.node.media.DirectServeOperations;
-import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
@@ -111,35 +111,75 @@ public class EntryOperations implements MediaAttachmentsProvider {
         }
     }
 
+    public MediaAttachmentsProvider prepareMediaAttachments(Collection<EntryRevision> revisions) {
+        var caches = new HashMap<UUID, MediaAttachmentsCache>();
+        var missing = new HashSet<UUID>();
+
+        for (var revision : revisions) {
+            if (caches.containsKey(revision.getId()) || missing.contains(revision.getId())) {
+                continue;
+            }
+            var cache = readAttachmentsCache(revision);
+            if (cache != null) {
+                caches.put(revision.getId(), cache);
+            } else {
+                missing.add(revision.getId());
+            }
+        }
+
+        var database = MediaAttachmentsProvider.database(entryAttachmentRepository, directServeOperations, missing);
+        var requested = new HashSet<UUID>();
+        return (revision, grantSupplier) -> {
+            var cache = caches.get(revision.getId());
+            if (cache != null) {
+                // Each response gets its own paths and grants, even when a revision appears more than once.
+                var response = objectMapper.convertValue(cache, MediaAttachmentsCache.class);
+                updateCachedPaths(revision.getId(), response, grantSupplier);
+                return response.getAttachments();
+            }
+            if (requested.add(revision.getId())) {
+                scheduleAttachmentsCache(revision.getId());
+            }
+            return database.getMediaAttachments(revision, grantSupplier);
+        };
+    }
+
     @Override
     public List<MediaAttachment> getMediaAttachments(EntryRevision revision, MediaGrantSupplier grantSupplier) {
+        var cache = readAttachmentsCache(revision);
+        if (cache != null) {
+            updateCachedPaths(revision.getId(), cache, grantSupplier);
+            return cache.getAttachments();
+        }
+
+        scheduleAttachmentsCache(revision.getId());
+
+        return MediaAttachmentsProvider.database(entryAttachmentRepository, directServeOperations)
+            .getMediaAttachments(revision, grantSupplier);
+    }
+
+    private MediaAttachmentsCache readAttachmentsCache(EntryRevision revision) {
         try {
             if (revision.getAttachmentsCache() != null) {
                 var cache = objectMapper.readValue(revision.getAttachmentsCache(), MediaAttachmentsCache.class);
                 if (
-                    cache.getAttachments() != null
+                    cache != null
+                    && cache.getAttachments() != null
                     && Objects.equals(cache.getDirectServeSource(), directServeOperations.source())
                 ) {
-                    // Media paths expire, so assuming that they always need to be updated
-                    updateCachedPaths(revision.getId(), cache, grantSupplier);
-                    return cache.getAttachments();
+                    return cache;
                 }
             }
         } catch (JacksonException e) {
             log.error("Error parsing media attachments cache", e);
-            // fetch from the database
         }
+        return null;
+    }
 
+    private void scheduleAttachmentsCache(UUID revisionId) {
         if (jobs.isReady()) {
-            jobs.runNoPersist(CacheMediaAttachmentsJob.class, new CacheMediaAttachmentsJob.Parameters(revision.getId()));
+            jobs.runNoPersist(CacheMediaAttachmentsJob.class, new CacheMediaAttachmentsJob.Parameters(revisionId));
         }
-
-        Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
-        return attachments.stream()
-            .filter(MediaAttachmentUtil::isVisible)
-            .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-            .map(ea -> MediaAttachmentUtil.build(ea, directServeOperations, grantSupplier))
-            .collect(Collectors.toList());
     }
 
     private void updateCachedPaths(UUID revisionId, MediaAttachmentsCache cache, MediaGrantSupplier grantSupplier) {

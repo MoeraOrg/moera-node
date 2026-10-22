@@ -1,6 +1,7 @@
 package org.moera.node.rest;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -13,6 +14,7 @@ import org.moera.lib.node.types.StoryType;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.media.DirectServeOperations;
+import org.moera.node.data.Entry;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
@@ -71,14 +73,23 @@ public class StoryController {
     public List<StoryInfo> getByExternalSourceUri(@RequestParam String external) {
         log.info("GET /stories (external = {})", LogUtil.format(external));
 
-        return storyRepository.findByExternalSourceUri(requestContext.nodeId(), external)
-            .stream()
+        var stories = storyRepository.findByExternalSourceUri(requestContext.nodeId(), external);
+        var mediaAttachments = entryOperations.prepareMediaAttachments(
+            stories.stream()
+                .filter(s -> s.getStoryType() == StoryType.POSTING_ADDED)
+                .map(Story::getEntry)
+                .filter(Objects::nonNull)
+                .map(Entry::getCurrentRevision)
+                .filter(Objects::nonNull)
+                .toList()
+        );
+        return stories.stream()
             .map(story -> StoryInfoUtil.build(
                 story,
                 requestContext,
                 t -> PostingInfoUtil.build(
                     t.getEntry(),
-                    entryOperations,
+                    mediaAttachments,
                     requestContext,
                     requestContext.getOptions(),
                     directServeOperations

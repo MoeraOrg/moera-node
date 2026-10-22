@@ -31,6 +31,7 @@ import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.data.PostingRepository;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.data.RemoteMediaFileRepository;
 import org.moera.node.domain.DomainsConfiguredEvent;
@@ -48,6 +49,8 @@ import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.DraftInfoUtil;
 import org.moera.node.model.DraftTextUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.operations.DraftAttachmentsProvider;
+import org.moera.node.operations.MediaPostingIds;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.TextConverter;
@@ -90,6 +93,9 @@ public class DraftController {
 
     @Inject
     private DraftRepository draftRepository;
+
+    @Inject
+    private PostingRepository postingRepository;
 
     @Inject
     private MediaFileRepository mediaFileRepository;
@@ -177,8 +183,13 @@ public class DraftController {
                 drafts = Collections.emptyList();
                 break;
         }
+        var mediaAttachments = DraftAttachmentsProvider.database(
+            entryAttachmentRepository, directServeOperations, drafts
+        );
         return drafts.stream()
-            .map(draft -> DraftInfoUtil.build(draft, directServeOperations, requestContext.getOptions()))
+            .map(draft -> DraftInfoUtil.build(
+                draft, mediaAttachments, directServeOperations, requestContext.getOptions()
+            ))
             .collect(Collectors.toList());
     }
 
@@ -233,7 +244,7 @@ public class DraftController {
 
         return ResponseEntity
             .created(URI.create("/drafts/" + draft.getId()))
-            .body(DraftInfoUtil.build(draft, directServeOperations, requestContext.getOptions()));
+            .body(buildUpdatedDraftInfo(draft));
     }
 
     @PutMapping("/{id}")
@@ -260,7 +271,17 @@ public class DraftController {
 
         requestContext.send(new DraftUpdatedLiberin(draft));
 
-        return DraftInfoUtil.build(draft, directServeOperations, requestContext.getOptions());
+        return buildUpdatedDraftInfo(draft);
+    }
+
+    private DraftInfo buildUpdatedDraftInfo(Draft draft) {
+        var postingIds = MediaPostingIds.load(postingRepository, null, draft.getAttachments());
+        return DraftInfoUtil.build(
+            draft,
+            DraftAttachmentsProvider.relations(directServeOperations, postingIds),
+            directServeOperations,
+            requestContext.getOptions()
+        );
     }
 
     private List<LocalRemoteMedia> validate(DraftText draftText) {
@@ -347,7 +368,10 @@ public class DraftController {
         Draft draft = draftRepository.findById(requestContext.nodeId(), draftId)
             .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
 
-        return DraftInfoUtil.build(draft, directServeOperations, requestContext.getOptions());
+        var mediaAttachments = DraftAttachmentsProvider.database(
+            entryAttachmentRepository, directServeOperations, List.of(draft)
+        );
+        return DraftInfoUtil.build(draft, mediaAttachments, directServeOperations, requestContext.getOptions());
     }
 
     @DeleteMapping("/{id}")

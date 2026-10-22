@@ -44,7 +44,7 @@ class FeedControllerFeedReferencesTest {
         when(requestContext.isPrincipal(Principal.ADMIN, Scope.VIEW_FEEDS)).thenReturn(true);
         when(entryOperations.getMediaAttachments(any(), any())).thenReturn(java.util.List.of());
 
-        StoryInfo storyInfo = ReflectionTestUtils.invokeMethod(feedController, "buildStoryInfo", timeline);
+        StoryInfo storyInfo = ReflectionTestUtils.invokeMethod(feedController, "buildStoryInfo", timeline, entryOperations);
 
         Assertions.assertNotNull(storyInfo);
         Assertions.assertEquals(
@@ -60,7 +60,7 @@ class FeedControllerFeedReferencesTest {
         Story timeline = postingWithStories();
         when(entryOperations.getMediaAttachments(any(), any())).thenReturn(java.util.List.of());
 
-        StoryInfo storyInfo = ReflectionTestUtils.invokeMethod(feedController, "buildStoryInfo", timeline);
+        StoryInfo storyInfo = ReflectionTestUtils.invokeMethod(feedController, "buildStoryInfo", timeline, entryOperations);
 
         Assertions.assertNotNull(storyInfo);
         Assertions.assertEquals(
@@ -83,7 +83,7 @@ class FeedControllerFeedReferencesTest {
             .forEach(story -> story.setPublishedAt(Timestamp.from(Instant.ofEpochSecond(500))));
         when(entryOperations.getMediaAttachments(any(), any())).thenReturn(java.util.List.of());
 
-        StoryInfo storyInfo = ReflectionTestUtils.invokeMethod(feedController, "buildStoryInfo", timeline);
+        StoryInfo storyInfo = ReflectionTestUtils.invokeMethod(feedController, "buildStoryInfo", timeline, entryOperations);
 
         Assertions.assertNotNull(storyInfo);
         Assertions.assertEquals(1000L, storyInfo.getPosting().getEarliestPublishedAt());
@@ -100,7 +100,7 @@ class FeedControllerFeedReferencesTest {
         timeline.getEntry().removeStory(timeline);
         when(entryOperations.getMediaAttachments(any(), any())).thenReturn(java.util.List.of());
 
-        StoryInfo storyInfo = ReflectionTestUtils.invokeMethod(feedController, "buildStoryInfo", news);
+        StoryInfo storyInfo = ReflectionTestUtils.invokeMethod(feedController, "buildStoryInfo", news, entryOperations);
 
         Assertions.assertNotNull(storyInfo);
         Assertions.assertNull(storyInfo.getPosting().getEarliestPublishedAt());

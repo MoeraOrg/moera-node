@@ -106,18 +106,23 @@ public class TimelineUiController {
         List<StoryInfo> stories = Collections.emptyList();
         PublicPage publicPage = publicPageRepository.findContaining(requestContext.nodeId(), before);
         if (publicPage != null) {
-            stories = storyRepository.findInRange(
+            var foundStories = storyRepository.findInRange(
                 requestContext.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment()
             )
                 .stream()
                 .filter(t -> t.getEntry() != null)
                 .filter(t -> t.getEntry().isMessage())
                 .filter(t -> t.getEntry().getViewCompound().isPublic())
+                .toList();
+            var mediaAttachments = entryOperations.prepareMediaAttachments(
+                foundStories.stream().map(Story::getEntry).map(Entry::getCurrentRevision).toList()
+            );
+            stories = foundStories.stream()
                 .map(s -> StoryInfoUtil.build(
                     s,
                     AccessCheckers.PUBLIC,
                     t -> PostingInfoUtil.buildForUi(
-                        t.getEntry(), entryOperations, directServeOperations
+                        t.getEntry(), mediaAttachments, directServeOperations
                     ),
                     directServeOperations
                 ))
@@ -207,14 +212,19 @@ public class TimelineUiController {
                     requestContext.nodeId(), postingId, before
                 );
                 if (publicPage != null && posting.getViewCommentsCompound().isPublic()) {
-                    comments = commentRepository.findInRange(
+                    var foundComments = commentRepository.findInRange(
                         requestContext.nodeId(), postingId, publicPage.getAfterMoment(), publicPage.getBeforeMoment()
                     )
                         .stream()
                         .filter(Comment::isMessage)
                         .filter(c -> c.getViewCompound().isPublic())
+                        .toList();
+                    var mediaAttachments = entryOperations.prepareMediaAttachments(
+                        foundComments.stream().map(Comment::getCurrentRevision).toList()
+                    );
+                    comments = foundComments.stream()
                         .map(c -> CommentInfoUtil.buildForUi(
-                            c, entryOperations, directServeOperations
+                            c, mediaAttachments, directServeOperations
                         ))
                         .sorted(Comparator.comparing(CommentInfo::getMoment))
                         .collect(Collectors.toList());

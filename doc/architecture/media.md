@@ -286,6 +286,36 @@ When media is attached to an entry, the node may create a child posting for medi
 stores both the media relation and the exact parent entry. The same owner may therefore have distinct child postings in
 different parent-entry contexts.
 
+Attachment reads and serialized attachment caches load media data separately from a batch of child posting IDs.
+The ID lookup matches each attachment to its revision's parent entry and uses the local-media relation when a local
+owner is present, including downloaded remote media. These reads leave the media's child-posting collections unloaded;
+see [`EntryAttachmentRepository`](../../src/main/java/org/moera/node/data/EntryAttachmentRepository.java).
+
+List read handlers prepare a provider for the selected revisions through
+[`EntryOperations`](../../src/main/java/org/moera/node/operations/EntryOperations.java). Revisions with usable caches
+are excluded from the database batch. Other revisions share an attachment query and a child-posting-ID query; repeated
+revisions reuse those reads. Each response receives separate attachment DTOs, with paths and grants filled for its
+caller. Single-revision reads and cache generation use the same database loader.
+
+Draft reads select the requested drafts before loading their attachments, allowing database pagination without a
+collection fetch join.
+[`DraftAttachmentsProvider`](../../src/main/java/org/moera/node/operations/DraftAttachmentsProvider.java)
+looks up media postings with no parent entry and preserves invalid remote attachments in draft responses. Write
+responses build attachment DTOs from the relations updated by their transaction, bypassing serialized caches.
+
+[`PostingOperations`](../../src/main/java/org/moera/node/operations/PostingOperations.java) and
+[`CommentOperations`](../../src/main/java/org/moera/node/operations/CommentOperations.java) return the IDs of media
+postings found or created during an update together with the updated entry. The response uses these IDs without
+traversing media child-posting collections again. IDs are scoped to the parent entry and keyed separately by local
+owner and remote-media identity, with local media taking precedence for downloaded attachments.
+
+When no new revision is created, and when saving a draft or returning a selected historical revision after restoration,
+[`MediaPostingIds`](../../src/main/java/org/moera/node/operations/MediaPostingIds.java) resolves child IDs through
+[`PostingRepository`](../../src/main/java/org/moera/node/data/PostingRepository.java). This projection queries media
+identities already present in memory; it does not reread attachments or require their pending inserts to be flushed.
+Restoration responses use the selected revision's identities, which can differ from the remote-media records reused
+in the new current revision. Permission propagation and media-child lifecycle operations still work with entities.
+
 Queries for current attached children join the parent entry's current revision and attachment to a child whose
 `parentMediaEntry` is that parent and whose media relation matches the attachment. Permission propagation uses the same
 direct relation. Removing an attachment from every revision of its parent causes normal posting deletion; an old

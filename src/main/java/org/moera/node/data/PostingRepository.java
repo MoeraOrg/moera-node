@@ -15,6 +15,16 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface PostingRepository extends JpaRepository<Posting, UUID> {
 
+    @Query(
+        "select new org.moera.node.data.MediaPostingId(p.id, p.parentMedia.id, p.parentRemoteMedia.id)"
+        + " from Posting p"
+        + " where (p.parentMediaEntry.id = ?1 or ?1 is null and p.parentMediaEntry is null)"
+        + " and (p.parentMedia.id in ?2 or p.parentRemoteMedia.id in ?3)"
+    )
+    List<MediaPostingId> findMediaPostingIds(
+        UUID parentEntryId, Collection<UUID> mediaFileOwnerIds, Collection<UUID> remoteMediaFileIds
+    );
+
     @Query("select p from Posting p where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null")
     Optional<Posting> findByNodeIdAndId(UUID nodeId, UUID id);
 

@@ -10,7 +10,6 @@ import jakarta.transaction.Transactional;
 import org.moera.lib.node.types.CommentRevisionInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.EntryRevision;
@@ -20,7 +19,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.CommentRevisionInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.operations.MediaAttachmentsProvider;
+import org.moera.node.operations.EntryOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,13 +37,13 @@ public class CommentRevisionController {
     protected RequestContext requestContext;
 
     @Inject
-    protected DirectServeOperations directServeOperations;
-
-    @Inject
     protected CommentRepository commentRepository;
 
     @Inject
     protected EntryRevisionRepository entryRevisionRepository;
+
+    @Inject
+    private EntryOperations entryOperations;
 
     @GetMapping
     @NoCache
@@ -72,11 +71,13 @@ public class CommentRevisionController {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
 
-        return comment.getRevisions().stream()
+        var revisions = comment.getRevisions();
+        var mediaAttachments = entryOperations.prepareMediaAttachments(revisions);
+        return revisions.stream()
             .map(r -> CommentRevisionInfoUtil.build(
                 comment,
                 r,
-                MediaAttachmentsProvider.relations(directServeOperations),
+                mediaAttachments,
                 requestContext.getOptions(),
                 requestContext
             ))
@@ -119,7 +120,7 @@ public class CommentRevisionController {
         return CommentRevisionInfoUtil.build(
             comment,
             revision,
-            MediaAttachmentsProvider.relations(directServeOperations),
+            entryOperations,
             requestContext.getOptions(),
             requestContext
         );

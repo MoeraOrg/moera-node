@@ -1,6 +1,7 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -14,10 +15,38 @@ public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment
     @Query(
         "select ea from EntryAttachment ea"
         + " left join fetch ea.mediaFileOwner mfo left join fetch mfo.mediaFile mf left join fetch mf.previews mfp"
-        + " left join fetch mfp.mediaFile left join fetch mfo.postings left join fetch ea.remoteMediaFile"
-        + " where ea.entryRevision.id = ?1"
+        + " left join fetch mfp.mediaFile left join fetch ea.remoteMediaFile"
+        + " where ea.entryRevision.id in ?1"
     )
-    Set<EntryAttachment> findByEntryRevision(UUID entryRevisionId);
+    Set<EntryAttachment> findByEntryRevisions(Collection<UUID> entryRevisionIds);
+
+    @Query(
+        "select new org.moera.node.data.EntryAttachmentPostingId(ea.id, p.id)"
+        + " from EntryAttachment ea join ea.entryRevision er"
+        + " join Posting p on p.parentMediaEntry = er.entry"
+        + " and (p.parentMedia = ea.mediaFileOwner"
+        + " or ea.mediaFileOwner is null and p.parentRemoteMedia = ea.remoteMediaFile)"
+        + " where er.id in ?1"
+    )
+    List<EntryAttachmentPostingId> findPostingIdsByEntryRevisions(Collection<UUID> entryRevisionIds);
+
+    @Query(
+        "select ea from EntryAttachment ea"
+        + " left join fetch ea.mediaFileOwner mfo left join fetch mfo.mediaFile mf left join fetch mf.previews mfp"
+        + " left join fetch mfp.mediaFile left join fetch ea.remoteMediaFile"
+        + " where ea.draft.id in ?1"
+    )
+    Set<EntryAttachment> findByDrafts(Collection<UUID> draftIds);
+
+    @Query(
+        "select new org.moera.node.data.EntryAttachmentPostingId(ea.id, p.id)"
+        + " from EntryAttachment ea"
+        + " join Posting p on p.parentMediaEntry is null"
+        + " and (p.parentMedia = ea.mediaFileOwner"
+        + " or ea.mediaFileOwner is null and p.parentRemoteMedia = ea.remoteMediaFile)"
+        + " where ea.draft.id in ?1"
+    )
+    List<EntryAttachmentPostingId> findPostingIdsByDrafts(Collection<UUID> draftIds);
 
     @Query(
         "select count(*) from EntryAttachment ea left join ea.entryRevision r"

@@ -1,5 +1,7 @@
 package org.moera.node.model;
 
+import java.util.UUID;
+
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.Posting;
@@ -17,9 +19,20 @@ public class MediaAttachmentUtil {
         DirectServeOperations directServe,
         MediaGrantSupplier grantSupplier
     ) {
+        Posting mediaPosting = attachment.getLocalRemoteMedia().postingByParentMediaEntry(
+            attachment.getEntryRevision() != null ? attachment.getEntryRevision().getEntry() : null
+        );
+        return build(attachment, mediaPosting != null ? mediaPosting.getId() : null, directServe, grantSupplier);
+    }
+
+    public static MediaAttachment build(
+        EntryAttachment attachment,
+        UUID postingId,
+        DirectServeOperations directServe,
+        MediaGrantSupplier grantSupplier
+    ) {
         MediaAttachment mediaAttachment = new MediaAttachment();
 
-        Posting mediaPosting = null;
         if (attachment.getMediaFileOwner() != null) {
             mediaAttachment.setMedia(
                 PrivateMediaFileInfoUtil.build(attachment.getMediaFileOwner(), directServe, grantSupplier)
@@ -27,16 +40,10 @@ public class MediaAttachmentUtil {
             if (attachment.getRemoteMediaFile() != null) {
                 mediaAttachment.setRemoteMedia(RemoteMediaInfoUtil.buildMinimal(attachment.getRemoteMediaFile()));
             }
-            mediaPosting = attachment.getMediaFileOwner().getPostingByParentMediaEntry(
-                attachment.getEntryRevision() != null ? attachment.getEntryRevision().getEntry() : null
-            );
         } else if (attachment.getRemoteMediaFile() != null) {
             mediaAttachment.setRemoteMedia(RemoteMediaInfoUtil.build(attachment.getRemoteMediaFile(), grantSupplier));
-            mediaPosting = attachment.getRemoteMediaFile().getPostingByParentMediaEntry(
-                attachment.getEntryRevision() != null ? attachment.getEntryRevision().getEntry() : null
-            );
         }
-        mediaAttachment.setPostingId(mediaPosting != null ? mediaPosting.getId().toString() : null);
+        mediaAttachment.setPostingId(postingId != null ? postingId.toString() : null);
         mediaAttachment.setEmbedded(attachment.isEmbedded());
         
         return mediaAttachment;

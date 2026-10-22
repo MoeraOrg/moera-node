@@ -1,20 +1,15 @@
 package org.moera.node.operations;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.media.DirectServeOperations;
-import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
-import org.moera.node.model.MediaAttachmentUtil;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,12 +73,9 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
                 cache = new MediaAttachmentsCache();
             }
 
-            Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
-            List<MediaAttachment> mediaAttachments = attachments.stream()
-                .filter(MediaAttachmentUtil::isVisible)
-                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> MediaAttachmentUtil.build(ea, directServeOperations, null))
-                .collect(Collectors.toList());
+            List<MediaAttachment> mediaAttachments =
+                MediaAttachmentsProvider.database(entryAttachmentRepository, directServeOperations)
+                    .getMediaAttachments(revision, null);
             cache.setAttachments(mediaAttachments);
             cache.setDirectServeSource(directServeOperations.source());
 

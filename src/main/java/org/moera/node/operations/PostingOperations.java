@@ -153,7 +153,7 @@ public class PostingOperations {
         return posting;
     }
 
-    public Posting createOrUpdatePosting(
+    public EntryUpdateResult<Posting> createOrUpdatePosting(
         Posting posting,
         EntryRevision revision,
         List<LocalRemoteMedia> media,
@@ -165,7 +165,14 @@ public class PostingOperations {
         if (!posting.isOriginal()) {
             posting = postingRepository.saveAndFlush(posting);
             updateRelatedObjects(posting, Collections.emptyList());
-            return posting;
+            return new EntryUpdateResult<>(
+                posting,
+                MediaPostingIds.load(
+                    postingRepository,
+                    posting.getId(),
+                    posting.getCurrentRevision().getAttachments()
+                )
+            );
         }
 
         List<MediaFileOwner> affectedMedia = media.stream()
@@ -177,7 +184,14 @@ public class PostingOperations {
             if (isNothingChanged != null && isNothingChanged.test(latest)) {
                 posting = postingRepository.saveAndFlush(posting);
                 updateRelatedObjects(posting, Collections.emptyList());
-                return posting;
+                return new EntryUpdateResult<>(
+                    posting,
+                    MediaPostingIds.load(
+                        postingRepository,
+                        posting.getId(),
+                        latest.getAttachments()
+                    )
+                );
             }
             if (latest.getSignature() == null) {
                 latest.getAttachments().stream()
@@ -195,6 +209,7 @@ public class PostingOperations {
             revisionUpdater.accept(current);
         }
 
+        var mediaPostingIds = new MediaPostingIds(posting.getId());
         if (!media.isEmpty()) {
             Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(current.getBody()));
             List<RemoteMediaFile> remoteMedia = latest != null
@@ -225,13 +240,17 @@ public class PostingOperations {
                 attachment = entryAttachmentRepository.save(attachment);
                 current.addAttachment(attachment);
 
-                Posting mediaPosting = lrm.postingByParentMediaEntry(posting);
+                var savedLrm = new LocalRemoteMedia(
+                    attachment.getMediaFileOwner(), attachment.getRemoteMediaFile(), lrm.mediaLease()
+                );
+                Posting mediaPosting = savedLrm.postingByParentMediaEntry(posting);
                 if (mediaPosting == null) {
-                    mediaPosting = newPosting(lrm, posting);
+                    mediaPosting = newPosting(savedLrm, posting);
                 }
                 if (mediaEntryUpdater != null) {
                     mediaEntryUpdater.accept(mediaPosting);
                 }
+                mediaPostingIds.add(mediaPosting);
             }
         }
 
@@ -243,7 +262,7 @@ public class PostingOperations {
 
         updateRelatedObjects(posting, affectedMedia);
 
-        return posting;
+        return new EntryUpdateResult<>(posting, mediaPostingIds);
     }
 
     private void signIfOwned(Posting posting) {

@@ -35,6 +35,7 @@ import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
+import org.moera.node.data.PostingRepository;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.data.RemoteMediaFileRepository;
 import org.moera.node.fingerprint.CommentFingerprintBuilder;
@@ -78,6 +79,9 @@ public class CommentOperations {
 
     @Inject
     private CommentRepository commentRepository;
+
+    @Inject
+    private PostingRepository postingRepository;
 
     @Inject
     private EntryRevisionRepository entryRevisionRepository;
@@ -204,7 +208,7 @@ public class CommentOperations {
         }
     }
 
-    public Comment createOrUpdateComment(
+    public EntryUpdateResult<Comment> createOrUpdateComment(
         Entry posting,
         Comment comment,
         EntryRevision revision,
@@ -222,7 +226,14 @@ public class CommentOperations {
             if (isNothingChanged != null && isNothingChanged.test(latest)) {
                 comment = commentRepository.saveAndFlush(comment);
                 updateRelatedObjects(comment, Collections.emptyList());
-                return comment;
+                return new EntryUpdateResult<>(
+                    comment,
+                    MediaPostingIds.load(
+                        postingRepository,
+                        comment.getId(),
+                        latest.getAttachments()
+                    )
+                );
             }
             if (latest.getSignature() == null) {
                 latest.getAttachments().stream()
@@ -242,6 +253,7 @@ public class CommentOperations {
         }
         comment = commentRepository.saveAndFlush(comment);
 
+        var mediaPostingIds = new MediaPostingIds(comment.getId());
         if (!media.isEmpty()) {
             Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(current.getBody()));
             List<RemoteMediaFile> remoteMedia = latest != null
@@ -282,6 +294,7 @@ public class CommentOperations {
                 if (mediaEntryUpdater != null) {
                     mediaEntryUpdater.accept(mediaPosting);
                 }
+                mediaPostingIds.add(mediaPosting);
             }
         }
 
@@ -291,7 +304,7 @@ public class CommentOperations {
         updateRelatedObjects(comment, affectedMedia);
         startDownloadingRemoteMedia(comment, media);
 
-        return comment;
+        return new EntryUpdateResult<>(comment, mediaPostingIds);
     }
 
     private EntryRevision newCommentRevision(Comment comment, EntryRevision template) {

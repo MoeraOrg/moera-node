@@ -1,8 +1,5 @@
 package org.moera.node.model;
 
-import java.util.Comparator;
-import java.util.stream.Collectors;
-
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.CommentOperations;
 import org.moera.lib.node.types.DraftInfo;
@@ -10,9 +7,9 @@ import org.moera.lib.node.types.PostingOperations;
 import org.moera.lib.node.types.body.Body;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Draft;
-import org.moera.node.data.EntryAttachment;
 import org.moera.node.media.grant.MediaGrantGenerator;
 import org.moera.node.option.Options;
+import org.moera.node.operations.DraftAttachmentsProvider;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +21,9 @@ public class DraftInfoUtil {
 
     private static final Logger log = LoggerFactory.getLogger(DraftInfoUtil.class);
 
-    public static DraftInfo build(Draft draft, DirectServeOperations directServe, Options options) {
+    public static DraftInfo build(
+        Draft draft, DraftAttachmentsProvider attachmentsProvider, DirectServeOperations directServe, Options options
+    ) {
         DraftInfo draftInfo = new DraftInfo();
         
         draftInfo.setId(draft.getId().toString());
@@ -61,12 +60,7 @@ public class DraftInfoUtil {
         draftInfo.setBodyFormat(BodyFormat.forValue(draft.getBodyFormat()));
 
         var grantSupplier = options != null ? new MediaGrantGenerator(options) : null;
-        draftInfo.setMedia(
-            draft.getAttachments().stream()
-                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> MediaAttachmentUtil.build(ea, directServe, grantSupplier))
-                .collect(Collectors.toList())
-        );
+        draftInfo.setMedia(attachmentsProvider.getMediaAttachments(draft, grantSupplier));
 
         if (draft.getMediaCaptions() != null) {
             try {
