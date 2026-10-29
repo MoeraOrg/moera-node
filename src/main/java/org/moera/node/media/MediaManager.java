@@ -497,10 +497,28 @@ public class MediaManager {
             return null;
         }
         MediaFileOwner owner = findAttachedMedia(prepared.mediaFileId(), entryId);
-        if (owner != null) {
-            return owner;
-        }
 
+        return owner != null ? owner : createOwnerForPreparedMedia(prepared);
+    }
+
+    /**
+     * Reuses an owner for this remote attachment in any retained revision of the entry. A new remote identity
+     * receives a separate owner even when its content is already present locally.
+     */
+    public MediaFileOwner ownPreparedPrivateMedia(
+        PreparedPrivateMedia prepared, UUID entryId, String remoteNodeName, String remoteMediaId
+    ) throws MoeraNodeException {
+        if (prepared == null) {
+            return null;
+        }
+        MediaFileOwner owner = mediaFileOwnerRepository.findByEntryAndRemoteMedia(
+            universalContext.nodeId(), entryId, remoteNodeName, remoteMediaId, prepared.mediaFileId()
+        ).stream().findFirst().orElse(null);
+
+        return owner != null ? owner : createOwnerForPreparedMedia(prepared);
+    }
+
+    private MediaFileOwner createOwnerForPreparedMedia(PreparedPrivateMedia prepared) throws MoeraNodeException {
         MediaFile file = entityManager.find(MediaFile.class, prepared.mediaFileId());
         if (file == null) {
             throw new MoeraNodeConcurrencyException(

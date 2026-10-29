@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPairGenerator;
 import java.security.Security;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,6 +35,7 @@ import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.body.Body;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.data.EntryAttachmentRepository;
+import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntrySourceRepository;
 import org.moera.node.data.MediaFile;
@@ -48,10 +50,10 @@ import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.data.RemoteMediaCacheRepository;
 import org.moera.node.data.RemoteMediaError;
 import org.moera.node.data.RemoteMediaFileRepository;
-import org.moera.node.data.StoryRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.media.DirectServeOperations.DirectServePath;
 import org.moera.node.operations.ReactionTotalOperations;
+import org.moera.node.operations.StoryOperations;
 import org.moera.node.option.Options;
 import org.moera.node.picker.Picker;
 import org.moera.node.picker.PickerPool;
@@ -112,6 +114,7 @@ class MediaDownloadTransactionsIT {
     private MoeraNode remote;
     private Picker picker;
     private PickerPool pool;
+    private List<Pick> mediaPicks;
     private PostingInfo postingInfo;
     private Pick pick;
     private PrivateMediaFileInfo mediaInfo;
@@ -180,6 +183,12 @@ class MediaDownloadTransactionsIT {
             entityManager.persist(owner);
             return owner;
         });
+        EntryAttachmentRepository attachments = repositories.getRepository(EntryAttachmentRepository.class);
+        when(mediaOperations.isAttached(any(MediaFileOwner.class), any(UUID.class))).thenAnswer(invocation ->
+            attachments.countByEntryIdAndMedia(
+                invocation.getArgument(1), invocation.getArgument(0, MediaFileOwner.class).getId()
+            ) > 0
+        );
         NodeApi nodeApi = mock(NodeApi.class);
         remote = mock(MoeraNode.class);
         when(nodeApi.at(eq("remote"), any())).thenReturn(remote);
@@ -203,6 +212,12 @@ class MediaDownloadTransactionsIT {
         when(directServe.directPath(any(), any(), any())).thenReturn(DirectServePath.NONE);
         when(directServe.directDownloadPath(any(), any(), any())).thenReturn(DirectServePath.NONE);
         pool = mock(PickerPool.class);
+        mediaPicks = new ArrayList<>();
+        doAnswer(invocation -> {
+            assertOutsideTransaction();
+            mediaPicks.add(invocation.getArgument(0));
+            return null;
+        }).when(pool).pick(any(Pick.class));
         picker = new Picker(pool, "remote") {
             @Override
             protected String generateCarte(String targetNodeName, Scope clientScope) {
@@ -221,40 +236,45 @@ class MediaDownloadTransactionsIT {
         ReflectionTestUtils.setField(picker, "postingRepository", postings);
         ReflectionTestUtils.setField(picker, "entryRevisionRepository",
             repositories.getRepository(EntryRevisionRepository.class));
-        ReflectionTestUtils.setField(picker, "entryAttachmentRepository",
-            repositories.getRepository(EntryAttachmentRepository.class));
+        ReflectionTestUtils.setField(picker, "entryAttachmentRepository", attachments);
         ReflectionTestUtils.setField(picker, "entrySourceRepository", repositories.getRepository(EntrySourceRepository.class));
-        ReflectionTestUtils.setField(picker, "storyRepository", repositories.getRepository(StoryRepository.class));
+        ReflectionTestUtils.setField(picker, "storyOperations", mock(StoryOperations.class));
         ReflectionTestUtils.setField(picker, "reactionTotalRepository",
             repositories.getRepository(ReactionTotalRepository.class));
         ReactionTotalOperations reactionTotals = mock(ReactionTotalOperations.class);
         when(reactionTotals.isSame(any(), any())).thenReturn(true);
         ReflectionTestUtils.setField(picker, "reactionTotalOperations", reactionTotals);
 
-        postingInfo = new PostingInfo();
-        postingInfo.setId(UUID.randomUUID().toString());
-        postingInfo.setRevisionId(UUID.randomUUID().toString());
-        postingInfo.setOwnerName("remote");
-        postingInfo.setTotalComments(0);
-        postingInfo.setCreatedAt(100L);
-        postingInfo.setEditedAt(100L);
-        postingInfo.setRevisionCreatedAt(100L);
-        postingInfo.setBody(new Body("{\"text\":\"body\"}"));
-        postingInfo.setBodyPreview(new Body("{\"text\":\"preview\"}"));
-        postingInfo.setBodyFormat(BodyFormat.MESSAGE);
-        postingInfo.setBodySrcFormat(SourceFormat.PLAIN_TEXT);
-        postingInfo.setBodySrcHash(new byte[32]);
-        postingInfo.setHeading("Heading");
-        postingInfo.setDescription("");
-        postingInfo.setMedia(List.of());
+        postingInfo = newPostingInfo();
         when(remote.getPosting(postingInfo.getId(), false)).thenAnswer(invocation -> {
             assertOutsideTransaction();
             return postingInfo;
         });
         pick = new Pick();
+        pick.setRemoteNodeName("remote");
         pick.setRemotePostingId(postingInfo.getId());
         pick.setRemoteFeedName("timeline");
         mediaInfo = cachedMedia();
+    }
+
+    private PostingInfo newPostingInfo() {
+        PostingInfo info = new PostingInfo();
+        info.setId(UUID.randomUUID().toString());
+        info.setRevisionId(UUID.randomUUID().toString());
+        info.setOwnerName("remote");
+        info.setTotalComments(0);
+        info.setCreatedAt(100L);
+        info.setEditedAt(100L);
+        info.setRevisionCreatedAt(100L);
+        info.setBody(new Body("{\"text\":\"body\"}"));
+        info.setBodyPreview(new Body("{\"text\":\"preview\"}"));
+        info.setBodyFormat(BodyFormat.MESSAGE);
+        info.setBodySrcFormat(SourceFormat.PLAIN_TEXT);
+        info.setBodySrcHash(new byte[32]);
+        info.setHeading("Heading");
+        info.setDescription("");
+        info.setMedia(List.of());
+        return info;
     }
 
     private PrivateMediaFileInfo cachedMedia() {
@@ -264,6 +284,10 @@ class MediaDownloadTransactionsIT {
         file.setDigest(new byte[32]);
         file.setFileSize(4);
         tx.executeWrite(() -> entityManager.persist(file));
+        return cachedMedia(file);
+    }
+
+    private PrivateMediaFileInfo cachedMedia(MediaFile file) {
         PrivateMediaFileInfo info = new PrivateMediaFileInfo();
         info.setId(UUID.randomUUID().toString());
         info.setHash(file.getId());
@@ -281,7 +305,22 @@ class MediaDownloadTransactionsIT {
         return attachment;
     }
 
+    private MediaAttachment attachmentWithPosting(PrivateMediaFileInfo info) throws Exception {
+        PostingInfo child = newPostingInfo();
+        when(remote.getPosting(child.getId(), false)).thenAnswer(invocation -> {
+            assertOutsideTransaction();
+            return child;
+        });
+        MediaAttachment attachment = attachment(info);
+        attachment.setPostingId(child.getId());
+        return attachment;
+    }
+
     private void downloadPick() {
+        downloadPick(pick);
+    }
+
+    private void downloadPick(Pick pick) {
         ReflectionTestUtils.invokeMethod(picker, "download", pick);
         assertOutsideTransaction();
     }
@@ -316,6 +355,84 @@ class MediaDownloadTransactionsIT {
     }
 
     @Test
+    void changedRemoteMediaIdWithSameContentKeepsSeparateOwnersAndChildPostings() throws Exception {
+        postingInfo.setMedia(List.of(attachmentWithPosting(mediaInfo)));
+        downloadPick();
+        Pick first = mediaPicks.getFirst();
+        downloadPick(first);
+        UUID oldRevision = tx.executeRead(() -> posting().getCurrentRevision().getId());
+        PrivateMediaFileInfo secondInfo = cachedMedia(
+            tx.executeRead(() -> entityManager.find(MediaFile.class, mediaInfo.getHash()))
+        );
+        postingInfo.setEditedAt(200L);
+        postingInfo.setRevisionId(UUID.randomUUID().toString());
+        postingInfo.setMedia(List.of(attachmentWithPosting(secondInfo)));
+
+        downloadPick();
+        Pick second = mediaPicks.get(1);
+        downloadPick(second);
+
+        tx.executeRead(() -> {
+            Posting firstChild = postings.findByReceiverId(nodeId, "remote", first.getRemotePostingId()).orElseThrow();
+            Posting secondChild = postings.findByReceiverId(nodeId, "remote", second.getRemotePostingId()).orElseThrow();
+            assertNotEquals(firstChild.getParentMedia().getId(), secondChild.getParentMedia().getId());
+            assertEquals(posting().getId(), firstChild.getParentMediaEntry().getId());
+            assertEquals(posting().getId(), secondChild.getParentMediaEntry().getId());
+            assertEquals(mediaInfo.getHash(), firstChild.getParentMedia().getMediaFile().getId());
+            assertEquals(mediaInfo.getHash(), secondChild.getParentMedia().getMediaFile().getId());
+            assertEquals(2, owners.findByFile(nodeId, mediaInfo.getHash()).size());
+            var oldAttachment = entityManager.find(EntryRevision.class, oldRevision).getAttachments().iterator().next();
+            assertEquals(first.getMediaFileOwner().getId(), oldAttachment.getMediaFileOwner().getId());
+            assertEquals(first.getRemoteMediaFile().getId(), firstChild.getParentRemoteMedia().getId());
+            assertNull(firstChild.getDeletedAt());
+        });
+    }
+
+    @Test
+    void returningRemoteMediaReusesOwnerFromHistoricalRevision() {
+        postingInfo.setMedia(List.of(attachment(mediaInfo)));
+        downloadPick();
+        UUID ownerId = tx.executeRead(() -> posting().getCurrentRevision().getAttachments().iterator().next()
+            .getMediaFileOwner().getId());
+        postingInfo.setEditedAt(200L);
+        postingInfo.setRevisionId(UUID.randomUUID().toString());
+        postingInfo.setMedia(List.of());
+        downloadPick();
+        postingInfo.setEditedAt(300L);
+        postingInfo.setRevisionId(UUID.randomUUID().toString());
+        postingInfo.setMedia(List.of(attachment(mediaInfo)));
+
+        downloadPick();
+
+        tx.executeRead(() -> {
+            assertEquals(ownerId, posting().getCurrentRevision().getAttachments().iterator().next()
+                .getMediaFileOwner().getId());
+            assertEquals(1, owners.findByFile(nodeId, mediaInfo.getHash()).size());
+            assertEquals(3, posting().getTotalRevisions());
+        });
+    }
+
+    @Test
+    void newPostingSeparatesRemoteIdentitiesAndReusesRepeatedIdentityInSameRevision() throws Exception {
+        PrivateMediaFileInfo secondInfo = cachedMedia(
+            tx.executeRead(() -> entityManager.find(MediaFile.class, mediaInfo.getHash()))
+        );
+        MediaAttachment firstAttachment = attachmentWithPosting(mediaInfo);
+        postingInfo.setMedia(List.of(firstAttachment, attachmentWithPosting(secondInfo), firstAttachment));
+
+        downloadPick();
+
+        assertEquals(3, mediaPicks.size());
+        assertNotEquals(mediaPicks.get(0).getMediaFileOwner().getId(), mediaPicks.get(1).getMediaFileOwner().getId());
+        assertEquals(mediaPicks.get(0).getMediaFileOwner().getId(), mediaPicks.get(2).getMediaFileOwner().getId());
+        mediaPicks.forEach(this::downloadPick);
+        tx.executeRead(() -> {
+            assertEquals(2, owners.findByFile(nodeId, mediaInfo.getHash()).size());
+            assertEquals(3, posting().getCurrentRevision().getAttachments().size());
+        });
+    }
+
+    @Test
     void finalFailureRollsBackPostingRevisionAttachmentsAndOwner() {
         postingInfo.setMedia(List.of(attachment(mediaInfo)));
         doAnswer(invocation -> {
@@ -329,7 +446,7 @@ class MediaDownloadTransactionsIT {
             assertTrue(postings.findByReceiverId(nodeId, "remote", postingInfo.getId()).isEmpty());
             assertTrue(owners.findByFile(nodeId, mediaInfo.getHash()).isEmpty());
         });
-        verify(context, never()).send(any());
+        verify(context).rollbackLiberins();
         verifyNoInteractions(pool);
     }
 

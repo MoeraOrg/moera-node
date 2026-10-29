@@ -2,6 +2,7 @@ package org.moera.node.data;
 
 import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -22,6 +23,17 @@ public interface MediaFileOwnerRepository extends JpaRepository<MediaFileOwner, 
 
     @Query("select mo from MediaFileOwner mo where mo.nodeId = ?1 and mo.mediaFile.id = ?2")
     Collection<MediaFileOwner> findByFile(UUID nodeId, String mediaFileId);
+
+    @Query(
+        "select distinct mo from EntryAttachment ea"
+        + " join ea.entryRevision er join ea.mediaFileOwner mo join ea.remoteMediaFile rmf"
+        + " where mo.nodeId = ?1 and er.entry.id = ?2"
+        + " and rmf.nodeName = ?3 and rmf.mediaId = ?4 and mo.mediaFile.id = ?5"
+        + " order by mo.createdAt, mo.id"
+    )
+    List<MediaFileOwner> findByEntryAndRemoteMedia(
+        UUID nodeId, UUID entryId, String remoteNodeName, String remoteMediaId, String mediaFileId
+    );
 
     @Query("select count(*) from MediaFileOwner mo where mo.nodeId = ?1 and mo.mediaFile.id = ?2")
     int countByAnyFile(UUID nodeId, String mediaFileId);

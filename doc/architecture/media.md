@@ -273,6 +273,13 @@ the posting, rejects a stale snapshot, rereads attachments that other jobs may h
 revision, owners, attachments, permissions, reaction totals, and sources together. Missing supplied parents also cause
 a retry. Liberins and child picks are dispatched after commit.
 
+For downloaded attachments, Picker reuses an owner by local parent entry, remote node name, and remote media ID.
+The lookup includes all retained revisions and checks that the owner still refers to the prepared content. A new
+remote identity receives a separate owner even when its hash matches another attachment; the owners share the same
+`MediaFile` bytes. Repeated occurrences of one identity, including reintroduction after removal from the current
+revision, reuse its owner. The query is defined in
+[`MediaFileOwnerRepository`](../../src/main/java/org/moera/node/data/MediaFileOwnerRepository.java).
+
 `RemoteMediaDownloadJob` creates or reuses the owner and builds its `PrivateMediaFileInfo` inside the same final
 transaction so lazy preview relations are available. A failed final transaction may leave verified content in the
 remote cache, but it cannot leave a partially updated posting or a new attached owner.

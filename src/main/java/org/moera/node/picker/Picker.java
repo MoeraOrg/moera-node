@@ -367,7 +367,7 @@ public class Picker extends Task {
             posting = postingRepository.save(posting);
             PostingInfoUtil.toPickedPosting(postingInfo, posting, postingViewPrincipal);
             createRevision(posting, postingInfo);
-            attachMedia(attachments, null, posting.getCurrentRevision(), null, picks);
+            attachMedia(attachments, posting.getId(), posting.getCurrentRevision(), null, picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
             universalContext.subscriptionsUpdated();
             universalContext.send(new PostingAddedLiberin(posting));
@@ -556,7 +556,9 @@ public class Picker extends Task {
             if (prepared.info() == null) {
                 throw new MoeraNodeConcurrencyException("Attachment changed while downloading media, retry the pick");
             }
-            media = mediaManager.ownPreparedPrivateMedia(prepared.media(), entryId);
+            media = mediaManager.ownPreparedPrivateMedia(
+                prepared.media(), entryId, prepared.key().nodeName(), prepared.key().mediaId()
+            );
             remoteMedia = remoteMediaOperations.store(prepared.key().nodeName(), prepared.info(), prepared.leaseId());
         } else {
             media = existing.getMediaFileOwner();
