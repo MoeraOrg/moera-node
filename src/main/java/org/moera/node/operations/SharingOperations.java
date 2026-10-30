@@ -5,6 +5,7 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.SharingType;
+import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.SharingsSliceInfo;
 import org.moera.lib.node.types.notifications.PostingSharedNotification;
@@ -159,7 +160,12 @@ public class SharingOperations {
         return sharing;
     }
 
-    public void completeShared(UUID postingId, UUID sharingId, AvatarImage senderAvatar) {
+    public void completeShared(
+        UUID postingId,
+        UUID sharingId,
+        AvatarImage senderAvatar,
+        StorySummaryEntry remotePosting
+    ) {
         postingRepository
             .findByNodeIdAndIdForUpdate(universalContext.nodeId(), postingId)
             .ifPresent(posting ->
@@ -170,7 +176,7 @@ public class SharingOperations {
                             sharing.setRemoteAvatarMediaFile(AvatarImageUtil.getMediaFile(senderAvatar));
                             sharing.setRemoteAvatarShape(senderAvatar.getShape());
                         }
-                        universalContext.send(new PostingSharingAddedLiberin(posting, sharing));
+                        universalContext.send(new PostingSharingAddedLiberin(posting, sharing, remotePosting));
                     })
             );
     }

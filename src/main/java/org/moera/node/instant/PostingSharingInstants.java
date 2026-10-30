@@ -10,7 +10,9 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.PostingInfo;
+import org.moera.lib.node.types.SharingType;
 import org.moera.lib.node.types.StorySummaryData;
+import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.EntrySharing;
@@ -37,16 +39,17 @@ public class PostingSharingInstants extends InstantsCreator {
     @Inject
     private DirectServeOperations directServeOperations;
 
-    public void added(Posting posting, EntrySharing sharing) {
+    public void added(Posting posting, EntrySharing sharing, StorySummaryEntry remotePosting) {
+        StoryType storyType = storyType(sharing.getSharingType());
         if (
             Objects.equals(sharing.getRemoteNodeName(), nodeName())
-            || isBlocked(StoryType.POSTING_SHARED, posting.getId(), null, null, sharing.getRemoteNodeName())
+            || isBlocked(storyType, posting.getId(), null, null, sharing.getRemoteNodeName())
         ) {
             return;
         }
 
         List<Story> groups = storyRepository.findFullByFeedAndTypeAndEntryId(
-            nodeId(), Feed.INSTANT, StoryType.POSTING_SHARED, posting.getId()
+            nodeId(), Feed.INSTANT, storyType, posting.getId()
         );
         if (
             groups.stream()
@@ -62,13 +65,13 @@ public class PostingSharingInstants extends InstantsCreator {
         boolean isNew = story == null
             || story.isViewed() && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now());
         if (isNew) {
-            story = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_SHARED);
+            story = new Story(UUID.randomUUID(), nodeId(), storyType);
             story.setFeedName(Feed.INSTANT);
             story.setEntry(posting);
             story.setMoment(0L);
             story = storyRepository.save(story);
         }
-        Story substory = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_SHARED);
+        Story substory = new Story(UUID.randomUUID(), nodeId(), storyType);
         substory.setEntry(posting);
         substory.setSharing(sharing);
         substory.setRemoteOwnerName(sharing.getRemoteNodeName());
@@ -76,14 +79,14 @@ public class PostingSharingInstants extends InstantsCreator {
         substory.setRemoteOwnerSourceUri(sharing.getRemoteSourceUri());
         substory.setRemoteOwnerAvatarMediaFile(sharing.getRemoteAvatarMediaFile());
         substory.setRemoteOwnerAvatarShape(sharing.getRemoteAvatarShape());
-        substory.setSummaryData(buildAddedSummary(sharing));
+        substory.setSummaryData(buildAddedSummary(sharing, remotePosting));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
         story.addSubstory(substory);
         updated(story, isNew, true);
     }
 
-    private static StorySummaryData buildAddedSummary(EntrySharing sharing) {
+    private static StorySummaryData buildAddedSummary(EntrySharing sharing, StorySummaryEntry remotePosting) {
         StorySummaryData summary = new StorySummaryData();
         summary.setNode(
             StorySummaryNodeUtil.build(
@@ -93,15 +96,16 @@ public class PostingSharingInstants extends InstantsCreator {
                 sharing.getRemoteGender()
             )
         );
+        summary.setPosting(remotePosting);
         return summary;
     }
 
-    public void deleted(UUID postingId, Collection<UUID> substoryIds) {
+    public void deleted(UUID postingId, SharingType sharingType, Collection<UUID> substoryIds) {
         if (substoryIds.isEmpty()) {
             return;
         }
         List<Story> groups = storyRepository.findFullByFeedAndTypeAndEntryId(
-            nodeId(), Feed.INSTANT, StoryType.POSTING_SHARED, postingId
+            nodeId(), Feed.INSTANT, storyType(sharingType), postingId
         );
         for (Story story : groups) {
             List<Story> removed = story.getSubstories().stream()
@@ -115,6 +119,13 @@ public class PostingSharingInstants extends InstantsCreator {
                 updated(story, false, false);
             }
         }
+    }
+
+    private static StoryType storyType(SharingType sharingType) {
+        return switch (sharingType) {
+            case REFER -> StoryType.POSTING_REFERRED;
+            case REPUBLISH -> StoryType.POSTING_SHARED;
+        };
     }
 
     private void updated(Story story, boolean isNew, boolean isAdded) {
@@ -131,6 +142,15 @@ public class PostingSharingInstants extends InstantsCreator {
             substories.stream().limit(2).map(Story::getSummaryData).map(StorySummaryData::getNode).toList()
         );
         summary.setTotalSharings(substories.size());
+        if (story.getStoryType() == StoryType.POSTING_REFERRED) {
+            summary.setReferences(
+                substories.stream()
+                    .limit(2)
+                    .map(Story::getSummaryData)
+                    .map(StorySummaryData::getPosting)
+                    .filter(Objects::nonNull).toList()
+            );
+        }
         PostingInfo posting = PostingInfoUtil.build(
             story.getEntry(),
             story.getEntry().getStories(),

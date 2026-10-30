@@ -2,11 +2,14 @@ package org.moera.node.rest.notification;
 
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.SharingType;
+import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.lib.node.types.notifications.NotificationType;
 import org.moera.lib.node.types.notifications.PostingSharedNotification;
 import org.moera.lib.node.types.notifications.PostingUnsharedNotification;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.data.EntrySharing;
+import org.moera.node.model.StorySummaryEntryUtil;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
 import org.moera.node.operations.SharingOperations;
@@ -42,11 +45,26 @@ public class PostingSharingProcessor {
         tx.executeWrite(() -> {
             EntrySharing sharing = sharingOperations.shared(notification);
             if (sharing != null) {
+                StorySummaryEntry remotePosting = null;
+                if (notification.getSharingType() == SharingType.REFER) {
+                    remotePosting = StorySummaryEntryUtil.build(
+                        notification.getRemotePostingOwnerName(),
+                        notification.getRemotePostingOwnerFullName(),
+                        notification.getRemotePostingOwnerSourceUri(),
+                        notification.getRemotePostingOwnerGender(),
+                        notification.getRemotePostingHeading(),
+                        notification.getRemotePostingSheriffs(),
+                        notification.getRemotePostingSheriffMarks()
+                    );
+                }
                 jobs.runAfterCommit(
                     PostingSharedJob.class,
                     new PostingSharedJob.Parameters(
-                        notification.getSenderNodeName(), notification.getSenderAvatar(),
-                        sharing.getEntry().getId(), sharing.getId()
+                        notification.getSenderNodeName(),
+                        notification.getSenderAvatar(),
+                        sharing.getEntry().getId(),
+                        sharing.getId(),
+                        remotePosting
                     ),
                     universalContext.nodeId()
                 );

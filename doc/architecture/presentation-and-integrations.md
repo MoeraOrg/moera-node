@@ -50,6 +50,12 @@ active hosted-node options and context.
 media handling before it is returned or embedded. Public and private media URLs are resolved through the same direct
 serving abstraction as other server-rendered media, so filesystem-relative and absolute S3 URLs work consistently.
 
+The React client's editor recognizes Universal Moera posting URLs on its recognized client domains. It builds these
+previews from a cached posting or fetches the posting from its node, using the heading and owner metadata. The preview
+is embedded in `Body` and covered by the entry signature. Its avatar therefore retains stable media references and
+omits volatile direct paths and their expiration timestamps. The wire fields are defined by
+[`LinkPreview`](../../../moeraorg.github.io/_data/node_api.yml) in the public API specification.
+
 ## OCR.Space
 
 `OcrSpace` is the current OCR service adapter. `OcrJob` invokes it asynchronously with either an absolute direct media

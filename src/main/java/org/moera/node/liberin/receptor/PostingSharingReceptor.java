@@ -4,6 +4,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalFilter;
+import org.moera.node.data.EntrySharing;
 import org.moera.node.data.EntrySharingRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -35,20 +36,32 @@ public class PostingSharingReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void added(PostingSharingAddedLiberin liberin) {
-        postingRepository.findByNodeIdAndIdForUpdate(liberin.getNodeId(), liberin.getPosting().getId())
-            .ifPresent(posting -> entrySharingRepository.findByEntryIdAndId(posting.getId(), liberin.getSharing().getId())
-                .ifPresent(sharing -> {
-                    postingSharingInstants.added(posting, sharing);
-                    send(liberin, new PostingSharingAddedEvent(
-                        posting.getId(), SharingInfoUtil.build(sharing, directServeOperations),
-                        posting.getViewE().a().and(posting.getViewSharingsE())
-                    ));
-                }));
+        Posting posting = postingRepository.findByNodeIdAndIdForUpdate(liberin.getNodeId(), liberin.getPosting().getId())
+            .orElse(null);
+        if (posting == null) {
+            return;
+        }
+        EntrySharing sharing = entrySharingRepository.findByEntryIdAndId(posting.getId(), liberin.getSharing().getId())
+            .orElse(null);
+        if (sharing == null) {
+            return;
+        }
+        postingSharingInstants.added(posting, sharing, liberin.getRemotePosting());
+        send(
+            liberin,
+            new PostingSharingAddedEvent(
+                posting.getId(),
+                SharingInfoUtil.build(sharing, directServeOperations),
+                posting.getViewE().a().and(posting.getViewSharingsE())
+            )
+        );
     }
 
     @LiberinMapping
     public void deleted(PostingSharingDeletedLiberin liberin) {
-        postingSharingInstants.deleted(liberin.getPosting().getId(), liberin.getSubstoryIds());
+        postingSharingInstants.deleted(
+            liberin.getPosting().getId(), liberin.getSharing().getSharingType(), liberin.getSubstoryIds()
+        );
         Posting posting = liberin.getPosting();
         send(liberin, new PostingSharingDeletedEvent(
             posting.getId(), liberin.getSharing().getId(), posting.getViewE().a().and(posting.getViewSharingsE())

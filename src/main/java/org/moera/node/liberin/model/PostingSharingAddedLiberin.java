@@ -1,5 +1,6 @@
 package org.moera.node.liberin.model;
 
+import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.node.data.EntrySharing;
 import org.moera.node.data.Posting;
 import org.moera.node.liberin.Liberin;
@@ -8,10 +9,12 @@ public class PostingSharingAddedLiberin extends Liberin {
 
     private Posting posting;
     private EntrySharing sharing;
+    private StorySummaryEntry remotePosting;
 
-    public PostingSharingAddedLiberin(Posting posting, EntrySharing sharing) {
+    public PostingSharingAddedLiberin(Posting posting, EntrySharing sharing, StorySummaryEntry remotePosting) {
         this.posting = posting;
         this.sharing = sharing;
+        this.remotePosting = remotePosting;
     }
 
     public Posting getPosting() {
@@ -28,6 +31,14 @@ public class PostingSharingAddedLiberin extends Liberin {
 
     public void setSharing(EntrySharing sharing) {
         this.sharing = sharing;
+    }
+
+    public StorySummaryEntry getRemotePosting() {
+        return remotePosting;
+    }
+
+    public void setRemotePosting(StorySummaryEntry remotePosting) {
+        this.remotePosting = remotePosting;
     }
 
 }

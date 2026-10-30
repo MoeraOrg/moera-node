@@ -19,7 +19,10 @@ public enum FavorType {
     VISITED(10f, 10 * 24),
 
     PUBLICATION(20f, 14 * 24),
-    UNPUBLICATION(-20f, 14 * 24);
+    UNPUBLICATION(-20f, 14 * 24),
+
+    REFERENCE(10f, 7 * 24),
+    UNREFERENCE(-10f, 7 * 24);
 
     private final float value;
     private final int decayHours;

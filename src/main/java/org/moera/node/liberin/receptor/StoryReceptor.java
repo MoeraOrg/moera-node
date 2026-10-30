@@ -78,8 +78,7 @@ public class StoryReceptor extends LiberinReceptorBase {
                     Directions.single(
                         liberin.getNodeId(), story.getEntry().getOwnerName(), story.getViewPrincipalFilter()
                     ),
-                    PostingSharedNotificationUtil.build(
-                        SharingType.REPUBLISH,
+                    PostingSharedNotificationUtil.buildRepublish(
                         story.getEntry().getReceiverEntryId(),
                         null,
                         story.getFeedName(),

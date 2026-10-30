@@ -38,7 +38,7 @@ class PostingSharingEventsTest {
         when(fixture.entrySharingRepository.findByEntryIdAndId(fixture.posting.getId(), fixture.sharing.getId()))
             .thenReturn(Optional.of(fixture.sharing));
 
-        fixture.receptor.added(new PostingSharingAddedLiberin(fixture.posting, fixture.sharing));
+        fixture.receptor.added(new PostingSharingAddedLiberin(fixture.posting, fixture.sharing, null));
 
         assertEquals(1, fixture.receptor.events.size());
         Event event = fixture.receptor.events.getFirst();
@@ -53,7 +53,7 @@ class PostingSharingEventsTest {
         assertEquals(3, json.size());
         assertFalse(json.has("posting"));
         assertViewingPermissions(event);
-        verify(fixture.instants).added(fixture.posting, fixture.sharing);
+        verify(fixture.instants).added(fixture.posting, fixture.sharing, null);
     }
 
     @Test
@@ -71,7 +71,7 @@ class PostingSharingEventsTest {
         assertEquals(fixture.sharing.getId().toString(), json.get("sharingId").asString());
         assertEquals(3, json.size());
         assertViewingPermissions(event);
-        verify(fixture.instants).deleted(fixture.posting.getId(), substoryIds);
+        verify(fixture.instants).deleted(fixture.posting.getId(), SharingType.REPUBLISH, substoryIds);
     }
 
     @Test
@@ -82,7 +82,7 @@ class PostingSharingEventsTest {
         when(fixture.entrySharingRepository.findByEntryIdAndId(fixture.posting.getId(), fixture.sharing.getId()))
             .thenReturn(Optional.empty());
 
-        fixture.receptor.added(new PostingSharingAddedLiberin(fixture.posting, fixture.sharing));
+        fixture.receptor.added(new PostingSharingAddedLiberin(fixture.posting, fixture.sharing, null));
 
         assertTrue(fixture.receptor.events.isEmpty());
     }

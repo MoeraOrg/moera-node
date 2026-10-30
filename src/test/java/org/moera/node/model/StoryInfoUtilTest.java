@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryInfo;
+import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.EntrySharing;
 import org.moera.node.data.Posting;
@@ -30,6 +31,69 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StoryInfoUtilTest {
+
+    @ParameterizedTest
+    @EnumSource(value = StoryType.class, names = {"POSTING_REFERRED", "POSTING_SHARED"})
+    void structuredSharingSummaryIsPreservedWithoutLegacyTextInApiAndEvents(StoryType storyType) {
+        Story story = story(storyType);
+        StorySummaryData summary = new StorySummaryData();
+        summary.setSharings(List.of(StorySummaryNodeUtil.build("alice_0", "Alice", null, "female")));
+        summary.setTotalSharings(1);
+        summary.setPosting(StorySummaryEntryUtil.build("author_0", "Author", null, null, "Referenced example"));
+        if (storyType == StoryType.POSTING_REFERRED) {
+            summary.setReferences(List.of(
+                StorySummaryEntryUtil.build("alice_0", "Alice", null, "female", "Source example")
+            ));
+        }
+        story.setSummaryData(summary);
+
+        StoryInfo info = StoryInfoUtil.build(story, AccessCheckers.ADMIN, ignored -> null, null);
+
+        assertNull(info.getSummary());
+        ObjectMapper objectMapper = new ObjectMapper();
+        var expectedSummary = objectMapper.valueToTree(summary);
+        var apiJson = objectMapper.valueToTree(info);
+        assertFalse(apiJson.hasNonNull("summary"));
+        assertEquals(expectedSummary, apiJson.path("summaryData"));
+        for (StoryEvent event : List.of(
+            new StoryAddedEvent(story, true, null), new StoryUpdatedEvent(story, true, null)
+        )) {
+            for (StoryEvent version : List.of(event, (StoryEvent) event.copy())) {
+                var eventJson = objectMapper.valueToTree(version);
+                assertFalse(eventJson.hasNonNull("summary"));
+                assertEquals(expectedSummary, eventJson.path("summaryData"));
+            }
+        }
+    }
+
+    @Test
+    void referredPostingReturnsTheReferringPostingAndActorInApiAndEvents() {
+        Story story = story(StoryType.POSTING_REFERRED);
+        story.setRemoteOwnerName("alice_0");
+        story.setRemoteOwnerFullName("Alice");
+        EntrySharing sharing = new EntrySharing();
+        sharing.setRemoteNodeName("alice_0");
+        sharing.setRemotePostingId("referring-post");
+        story.setSharing(sharing);
+
+        StoryInfo info = StoryInfoUtil.build(story, AccessCheckers.ADMIN, ignored -> null, null);
+
+        assertEquals(story.getEntry().getId().toString(), info.getPostingId());
+        assertEquals("alice_0", info.getSummaryNodeName());
+        assertEquals("Alice", info.getSummaryFullName());
+        assertEquals("alice_0", info.getRemoteNodeName());
+        assertEquals("referring-post", info.getRemotePostingId());
+        assertNull(info.getRemoteStoryMoment());
+        ObjectMapper objectMapper = new ObjectMapper();
+        for (StoryEvent event : List.of(
+            new StoryAddedEvent(story, true, null), new StoryUpdatedEvent(story, true, null)
+        )) {
+            var json = objectMapper.valueToTree(event.copy());
+            assertEquals("posting-referred", json.path("storyType").asString());
+            assertEquals("referring-post", json.path("remotePostingId").asString());
+            assertEquals("alice_0", json.path("summaryNodeName").asString());
+        }
+    }
 
     @Test
     void sharedPostingReturnsRemoteStoryMoment() {

@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
+import org.moera.lib.naming.NodeName;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.SearchContentUpdateType;
@@ -21,6 +22,7 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.data.EntryRevision;
+import org.moera.node.data.FavorType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -62,8 +64,11 @@ import org.moera.node.model.notification.PostingUpdatedNotificationUtil;
 import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.model.notification.StoryAddedNotificationUtil;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.operations.FavorOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.text.MentionsExtractor;
+import org.moera.node.text.PostingReferencesExtractor;
+import org.moera.node.text.PostingReferencesExtractor.Reference;
 import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.ExtendedDuration;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -92,6 +97,9 @@ public class PostingReceptor extends LiberinReceptorBase {
     private SheriffUserListOperations sheriffUserListOperations;
 
     @Inject
+    private FavorOperations favorOperations;
+
+    @Inject
     private RequestCounter requestCounter;
 
     @LiberinMapping
@@ -106,6 +114,13 @@ public class PostingReceptor extends LiberinReceptorBase {
                 null,
                 Principal.PUBLIC,
                 posting.getOwnerName()
+            );
+            notifyReferences(
+                posting,
+                posting.getCurrentRevision(),
+                posting.getViewE(),
+                null,
+                Principal.PUBLIC
             );
         }
         send(liberin, new PostingAddedEvent(posting, posting.getViewE()));
@@ -125,6 +140,13 @@ public class PostingReceptor extends LiberinReceptorBase {
                 liberin.getLatestViewPrincipal(),
                 posting.getOwnerName()
             );
+            notifyReferences(
+                posting,
+                posting.getCurrentRevision(),
+                posting.getViewE(),
+                liberin.getLatestRevision(),
+                liberin.getLatestViewPrincipal()
+            );
         } else {
             var timelineStories = stories.stream()
                 .filter(t -> Feed.TIMELINE.equals(t.getFeedName()) && t.getStoryType().equals(StoryType.POSTING_ADDED))
@@ -136,8 +158,7 @@ public class PostingReceptor extends LiberinReceptorBase {
                         posting.getOwnerName(),
                         posting.getViewE().a().andNot(liberin.getLatestViewPrincipal())
                     ),
-                    PostingSharedNotificationUtil.build(
-                        SharingType.REPUBLISH,
+                    PostingSharedNotificationUtil.buildRepublish(
                         posting.getReceiverEntryId(),
                         null,
                         story.getFeedName(),
@@ -257,6 +278,13 @@ public class PostingReceptor extends LiberinReceptorBase {
                 posting.getViewE(),
                 posting.getOwnerName()
             );
+            notifyReferences(
+                posting,
+                null,
+                Principal.PUBLIC,
+                liberin.getLatestRevision(),
+                posting.getViewE()
+            );
         } else {
             var timelineStories = stories.stream()
                 .filter(t -> Feed.TIMELINE.equals(t.getFeedName()) && t.getStoryType().equals(StoryType.POSTING_ADDED))
@@ -302,6 +330,13 @@ public class PostingReceptor extends LiberinReceptorBase {
                 null,
                 Principal.PUBLIC,
                 posting.getOwnerName()
+            );
+            notifyReferences(
+                posting,
+                posting.getCurrentRevision(),
+                posting.getViewE(),
+                null,
+                Principal.PUBLIC
             );
         }
         send(liberin, new PostingRestoredEvent(posting, posting.getViewE()));
@@ -365,6 +400,95 @@ public class PostingReceptor extends LiberinReceptorBase {
             .filter(m ->
                 view.includes(false, m, () -> subscribedCache.isSubscribed(m), () -> friendCache.getClientGroupIds(m))
             )
+            .collect(Collectors.toSet());
+    }
+
+    private void notifyReferences(
+        Posting posting,
+        EntryRevision current,
+        Principal currentView,
+        EntryRevision latest,
+        Principal latestView
+    ) {
+        Set<Reference> currentReferences = references(current, posting.getOwnerName());
+        Set<Reference> latestReferences = latest != null && latest.getSignature() != null
+            ? references(latest, posting.getOwnerName()) : Set.of();
+
+        currentReferences.stream()
+            .filter(reference -> !latestReferences.contains(reference))
+            .forEach(reference ->
+                favorOperations.addFavor(posting.getNodeId(), reference.nodeName(), FavorType.REFERENCE)
+            );
+        latestReferences.stream()
+            .filter(reference -> !currentReferences.contains(reference))
+            .forEach(reference ->
+                favorOperations.addFavor(posting.getNodeId(), reference.nodeName(), FavorType.UNREFERENCE)
+            );
+
+        Set<Reference> currentVisible = visible(currentReferences, currentView);
+        Set<Reference> latestVisible = visible(latestReferences, latestView);
+        List<Reference> addedReferences = currentVisible.stream()
+            .filter(reference -> !latestVisible.contains(reference))
+            .toList();
+        if (!addedReferences.isEmpty()) {
+            PostingInfo postingInfo = PostingInfoUtil.build(
+                posting,
+                posting.getStories(),
+                MediaAttachmentsProvider.NONE,
+                AccessCheckers.ADMIN,
+                universalContext.getOptions(),
+                directServeOperations
+            );
+            sheriffUserListOperations.fillSheriffListMarks(postingInfo);
+            addedReferences.forEach(reference -> send(
+                Directions.single(posting.getNodeId(), reference.nodeName()),
+                PostingSharedNotificationUtil.buildReference(
+                    reference.postingId(),
+                    posting.getId(),
+                    posting.getOwnerName(),
+                    posting.getOwnerFullName(),
+                    posting.getOwnerSourceUri(),
+                    posting.getOwnerGender(),
+                    current.getHeading(),
+                    postingInfo.getSheriffs(),
+                    postingInfo.getSheriffMarks()
+                )
+            ));
+        }
+        latestVisible.stream()
+            .filter(reference -> !currentVisible.contains(reference))
+            .forEach(reference -> send(
+                Directions.single(posting.getNodeId(), reference.nodeName()),
+                PostingUnsharedNotificationUtil.build(
+                    SharingType.REFER,
+                    reference.postingId(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    posting.getId()
+                )
+            ));
+    }
+
+    private static Set<Reference> references(EntryRevision revision, String ownerName) {
+        if (revision == null) {
+            return Set.of();
+        }
+        String owner = NodeName.expand(ownerName);
+        return PostingReferencesExtractor.extract(new Body(revision.getBody())).stream()
+            .filter(reference -> !Objects.equals(owner, reference.nodeName()))
+            .collect(Collectors.toSet());
+    }
+
+    private Set<Reference> visible(Set<Reference> references, Principal view) {
+        return references.stream()
+            .filter(reference -> view.includes(
+                false,
+                reference.nodeName(),
+                () -> subscribedCache.isSubscribed(reference.nodeName()),
+                () -> friendCache.getClientGroupIds(reference.nodeName())
+            ))
             .collect(Collectors.toSet());
     }
 

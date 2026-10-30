@@ -16,11 +16,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.SharingType;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.SharingInfo;
 import org.moera.lib.node.types.StoryInfo;
+import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.notifications.PostingSharedNotification;
 import org.moera.lib.node.types.notifications.PostingUnsharedNotification;
@@ -36,6 +39,7 @@ import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.StoryInfoUtil;
+import org.moera.node.model.StorySummaryEntryUtil;
 import org.moera.node.operations.SharingOperations;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.notification.PostingSharingProcessor;
@@ -288,22 +292,24 @@ class EntrySharingIT {
         });
     }
 
-    @Test
-    void groupedInstantsRemoveOnlyTheirSharingAndDeleteAnEmptyGroup() {
+    @ParameterizedTest
+    @EnumSource(SharingType.class)
+    void groupedInstantsRemoveOnlyTheirSharingAndDeleteAnEmptyGroup(SharingType sharingType) {
+        StoryType storyType = sharingType == SharingType.REFER ? StoryType.POSTING_REFERRED : StoryType.POSTING_SHARED;
         TestInstants instants = new TestInstants();
         ReflectionTestUtils.setField(instants, "universalContext", context);
         ReflectionTestUtils.setField(instants, "storyRepository", stories);
         ReflectionTestUtils.setField(instants, "directServeOperations", mock(DirectServeOperations.class));
-        add(shared("alice", null, null, null, null, "copy1"));
-        add(shared("alice", null, null, null, null, "copy2"));
-        add(shared("bob", null, null, null, null, "copy3"));
+        add(shared(sharingType, "alice", null, null, null, null, "copy1"));
+        add(shared(sharingType, "alice", null, null, null, null, "copy2"));
+        add(shared(sharingType, "bob", null, null, null, null, "copy3"));
         transaction.executeWithoutResult(status -> {
             Posting posting = postings.findByNodeIdAndId(nodeId, postingId).orElseThrow();
             List<EntrySharing> list = sharings.findByEntryId(postingId);
-            list.forEach(sharing -> instants.added(posting, sharing));
-            instants.added(posting, list.getFirst());
+            list.forEach(sharing -> instants.added(posting, sharing, null));
+            instants.added(posting, list.getFirst(), null);
             Story story = stories.findFullByFeedAndTypeAndEntryId(
-                nodeId, Feed.INSTANT, StoryType.POSTING_SHARED, postingId
+                nodeId, Feed.INSTANT, storyType, postingId
             ).getFirst();
             assertEquals(3, story.getSubstories().size());
             assertEquals(3, story.getSummaryData().getTotalSharings());
@@ -317,12 +323,12 @@ class EntrySharingIT {
             );
             assertEquals(postingId.toString(), info.getPostingId());
             assertNotNull(info.getSummaryNodeName());
-            instants.deleted(postingId, stories.findSubIdsBySharingId(nodeId, list.getFirst().getId()));
+            instants.deleted(postingId, sharingType, stories.findSubIdsBySharingId(nodeId, list.getFirst().getId()));
             assertEquals(2, story.getSubstories().size());
-            instants.deleted(postingId, stories.findSubIdsBySharingId(nodeId, list.get(1).getId()));
-            instants.deleted(postingId, stories.findSubIdsBySharingId(nodeId, list.get(2).getId()));
+            instants.deleted(postingId, sharingType, stories.findSubIdsBySharingId(nodeId, list.get(1).getId()));
+            instants.deleted(postingId, sharingType, stories.findSubIdsBySharingId(nodeId, list.get(2).getId()));
             assertTrue(stories.findFullByFeedAndTypeAndEntryId(
-                nodeId, Feed.INSTANT, StoryType.POSTING_SHARED, postingId
+                nodeId, Feed.INSTANT, storyType, postingId
             ).isEmpty());
             assertFalse(instants.deleted.isEmpty());
         });
@@ -341,14 +347,14 @@ class EntrySharingIT {
             List<EntrySharing> list = sharings.findByEntryId(postingId);
             EntrySharing bob = list.stream().filter(sharing -> sharing.getRemoteNodeName().equals("bob"))
                 .findFirst().orElseThrow();
-            instants.added(posting, bob);
+            instants.added(posting, bob, null);
             Story group = stories.findFullByFeedAndTypeAndEntryId(
                 nodeId, Feed.INSTANT, StoryType.POSTING_SHARED, postingId
             ).getFirst();
             group.getSubstories().iterator().next().setCreatedAt(Timestamp.from(Instant.ofEpochSecond(10)));
             EntrySharing alice = list.stream().filter(sharing -> sharing.getRemoteNodeName().equals("alice"))
                 .findFirst().orElseThrow();
-            instants.added(posting, alice);
+            instants.added(posting, alice, null);
         });
         transaction.executeWithoutResult(status -> {
             Story group = stories.findFullByFeedAndTypeAndEntryId(
@@ -433,7 +439,7 @@ class EntrySharingIT {
         EntrySharing sharing = transaction.execute(status -> operations.shared(notification));
         assertTrue(liberins.stream().noneMatch(PostingSharingAddedLiberin.class::isInstance));
 
-        transaction.executeWithoutResult(status -> operations.completeShared(postingId, sharing.getId(), null));
+        transaction.executeWithoutResult(status -> operations.completeShared(postingId, sharing.getId(), null, null));
 
         transaction.executeWithoutResult(status -> {
             EntrySharing stored = sharings.findByEntryIdAndId(postingId, sharing.getId()).orElseThrow();
@@ -462,7 +468,7 @@ class EntrySharingIT {
             mediaFile.setExposed(true);
             entityManager.persist(mediaFile);
             AvatarImageUtil.setMediaFile(avatar, mediaFile);
-            operations.completeShared(postingId, sharing.getId(), avatar);
+            operations.completeShared(postingId, sharing.getId(), avatar, null);
         });
 
         transaction.executeWithoutResult(status -> {
@@ -529,6 +535,68 @@ class EntrySharingIT {
         return instants;
     }
 
+    @Test
+    void referenceGroupsAreSeparateAndUnsharingRemovesOnlyTheReferenceGroup() {
+        List<Liberin> liberins = new ArrayList<>();
+        captureLiberins(liberins);
+        TestInstants instants = sharingInstants();
+        TestSharingReceptor receptor = sharingReceptor(instants);
+        PostingSharedNotification reference = shared("alice", null, null, null, null, "source-post");
+        reference.setSharingType(SharingType.REFER);
+        add(reference);
+        add(reference);
+        add(shared("alice", null, null, null, null, "source-post"));
+        transaction.executeWithoutResult(status -> {
+            assertEquals(2, sharings.countByEntryId(postingId));
+            liberins.stream().filter(PostingSharingAddedLiberin.class::isInstance)
+                .map(PostingSharingAddedLiberin.class::cast).toList().forEach(receptor::added);
+            Posting posting = postings.findByNodeIdAndId(nodeId, postingId).orElseThrow();
+            EntrySharing sharing = sharings.findByEntryId(postingId).stream()
+                .filter(item -> item.getSharingType() == SharingType.REFER).findFirst().orElseThrow();
+            instants.added(posting, sharing, null);
+            for (StoryType type : List.of(StoryType.POSTING_REFERRED, StoryType.POSTING_SHARED)) {
+                List<Story> groups = stories.findFullByFeedAndTypeAndEntryId(nodeId, Feed.INSTANT, type, postingId);
+                assertEquals(1, groups.size());
+                assertEquals(1, groups.getFirst().getSubstories().size());
+                assertEquals(1, groups.getFirst().getSummaryData().getTotalSharings());
+            }
+        });
+        transaction.executeWithoutResult(status -> {
+            PostingUnsharedNotification unshared = unshared("alice", null, null, null, null, "source-post");
+            unshared.setSharingType(SharingType.REFER);
+            operations.unshared(unshared);
+        });
+        transaction.executeWithoutResult(status -> {
+            liberins.stream().filter(PostingSharingDeletedLiberin.class::isInstance)
+                .map(PostingSharingDeletedLiberin.class::cast).toList().forEach(receptor::deleted);
+            assertTrue(stories.findFullByFeedAndTypeAndEntryId(
+                nodeId, Feed.INSTANT, StoryType.POSTING_REFERRED, postingId
+            ).isEmpty());
+            assertEquals(1, stories.findFullByFeedAndTypeAndEntryId(
+                nodeId, Feed.INSTANT, StoryType.POSTING_SHARED, postingId
+            ).size());
+            assertEquals(1, postings.findByNodeIdAndId(nodeId, postingId).orElseThrow().getTotalSharings());
+        });
+    }
+
+    @ParameterizedTest
+    @EnumSource(SharingType.class)
+    void blockedSharingUsesItsOwnInstantType(SharingType type) {
+        TestInstants instants = sharingInstants();
+        instants.blocked = true;
+        PostingSharedNotification notification = shared("alice", null, null, null, null, "source-post");
+        notification.setSharingType(type);
+        add(notification);
+
+        transaction.executeWithoutResult(status -> {
+            Posting posting = postings.findByNodeIdAndId(nodeId, postingId).orElseThrow();
+            instants.added(posting, sharings.findByEntryId(postingId).getFirst(), null);
+            StoryType storyType = type == SharingType.REFER ? StoryType.POSTING_REFERRED : StoryType.POSTING_SHARED;
+            assertEquals(storyType, instants.blockedType);
+            assertTrue(stories.findFullByFeedAndTypeAndEntryId(nodeId, Feed.INSTANT, storyType, postingId).isEmpty());
+        });
+    }
+
     private TestSharingReceptor sharingReceptor(TestInstants instants) {
         TestSharingReceptor receptor = new TestSharingReceptor();
         ReflectionTestUtils.setField(receptor, "postingSharingInstants", instants);
@@ -537,29 +605,31 @@ class EntrySharingIT {
         return receptor;
     }
 
-    @Test
-    void viewedOldGroupsExpireWhileUnreadGroupsKeepCollecting() {
+    @ParameterizedTest
+    @EnumSource(SharingType.class)
+    void viewedOldGroupsExpireWhileUnreadGroupsKeepCollecting(SharingType sharingType) {
+        StoryType storyType = sharingType == SharingType.REFER ? StoryType.POSTING_REFERRED : StoryType.POSTING_SHARED;
         TestInstants instants = new TestInstants();
         ReflectionTestUtils.setField(instants, "universalContext", context);
         ReflectionTestUtils.setField(instants, "storyRepository", stories);
         ReflectionTestUtils.setField(instants, "directServeOperations", mock(DirectServeOperations.class));
-        add(shared("alice", null, null, null, null, "first"));
+        add(shared(sharingType, "alice", null, null, null, null, "first"));
         transaction.executeWithoutResult(status -> {
             Posting posting = postings.findByNodeIdAndId(nodeId, postingId).orElseThrow();
-            instants.added(posting, sharings.findByEntryId(postingId).getFirst());
+            instants.added(posting, sharings.findByEntryId(postingId).getFirst(), null);
             Story group = stories.findFullByFeedAndTypeAndEntryId(
-                nodeId, Feed.INSTANT, StoryType.POSTING_SHARED, postingId
+                nodeId, Feed.INSTANT, storyType, postingId
             ).getFirst();
             group.setCreatedAt(Timestamp.from(Instant.now().minusSeconds(7 * 3600)));
             group.setRead(true);
             group.setViewed(true);
         });
-        add(shared("bob", null, null, null, null, "second"));
+        add(shared(sharingType, "bob", null, null, null, null, "second"));
         transaction.executeWithoutResult(status -> {
             Posting posting = postings.findByNodeIdAndId(nodeId, postingId).orElseThrow();
-            instants.added(posting, sharings.findByEntryId(postingId).getLast());
+            instants.added(posting, sharings.findByEntryId(postingId).getLast(), null);
             List<Story> groups = stories.findFullByFeedAndTypeAndEntryId(
-                nodeId, Feed.INSTANT, StoryType.POSTING_SHARED, postingId
+                nodeId, Feed.INSTANT, storyType, postingId
             );
             assertEquals(2, groups.size());
             assertFalse(groups.getFirst().isRead());
@@ -567,12 +637,12 @@ class EntrySharingIT {
             assertTrue(groups.getLast().isViewed());
             groups.getFirst().setCreatedAt(Timestamp.from(Instant.now().minusSeconds(7 * 3600)));
         });
-        add(shared("charlie", null, null, null, null, "third"));
+        add(shared(sharingType, "charlie", null, null, null, null, "third"));
         transaction.executeWithoutResult(status -> {
             Posting posting = postings.findByNodeIdAndId(nodeId, postingId).orElseThrow();
-            instants.added(posting, sharings.findByEntryId(postingId).getLast());
+            instants.added(posting, sharings.findByEntryId(postingId).getLast(), null);
             List<Story> groups = stories.findFullByFeedAndTypeAndEntryId(
-                nodeId, Feed.INSTANT, StoryType.POSTING_SHARED, postingId
+                nodeId, Feed.INSTANT, storyType, postingId
             );
             assertEquals(2, groups.size());
             assertEquals(2, groups.getFirst().getSummaryData().getTotalSharings());
@@ -583,9 +653,100 @@ class EntrySharingIT {
         transaction.executeWithoutResult(status -> {
             EntrySharing sharing = operations.shared(notification);
             if (sharing != null) {
-                operations.completeShared(postingId, sharing.getId(), notification.getSenderAvatar());
+                operations.completeShared(
+                    postingId,
+                    sharing.getId(),
+                    notification.getSenderAvatar(),
+                    notification.getSharingType() == SharingType.REFER ? StorySummaryEntryUtil.build(
+                        notification.getRemotePostingOwnerName(),
+                        notification.getRemotePostingOwnerFullName(),
+                        notification.getRemotePostingOwnerSourceUri(),
+                        notification.getRemotePostingOwnerGender(),
+                        notification.getRemotePostingHeading(),
+                        notification.getRemotePostingSheriffs(),
+                        notification.getRemotePostingSheriffMarks()
+                    ) : null
+                );
             }
         });
+    }
+
+    @Test
+    void referenceHeadingsSurvivePersistenceAndFollowTheRemainingSourceAfterUnsharing() {
+        List<Liberin> liberins = new ArrayList<>();
+        captureLiberins(liberins);
+        TestSharingReceptor receptor = sharingReceptor(sharingInstants());
+        PostingSharedNotification alice = shared(SharingType.REFER, "alice", null, null, null, null, "alice-post");
+        alice.setRemotePostingOwnerName("alice");
+        alice.setRemotePostingOwnerFullName("Alice");
+        alice.setRemotePostingOwnerGender("female");
+        alice.setRemotePostingHeading("Alice source");
+        alice.setRemotePostingSheriffs(List.of("sheriff"));
+        alice.setRemotePostingSheriffMarks(List.of());
+        add(alice);
+        transaction.executeWithoutResult(status -> {
+            PostingSharingAddedLiberin added = liberins.stream().filter(PostingSharingAddedLiberin.class::isInstance)
+                .map(PostingSharingAddedLiberin.class::cast).findFirst().orElseThrow();
+            receptor.added(added);
+            Story group = stories.findFullByFeedAndTypeAndEntryId(
+                nodeId, Feed.INSTANT, StoryType.POSTING_REFERRED, postingId
+            ).getFirst();
+            group.getSubstories().iterator().next().setCreatedAt(Timestamp.from(Instant.ofEpochSecond(10)));
+        });
+
+        PostingSharedNotification bob = shared(SharingType.REFER, "bob", null, null, null, null, "bob-post");
+        bob.setRemotePostingOwnerName("bob");
+        bob.setRemotePostingOwnerFullName("Bob");
+        bob.setRemotePostingOwnerGender("male");
+        bob.setRemotePostingHeading("Bob source");
+        bob.setRemotePostingSheriffs(List.of("sheriff"));
+        bob.setRemotePostingSheriffMarks(List.of());
+        add(bob);
+        transaction.executeWithoutResult(status -> {
+            PostingSharingAddedLiberin added = liberins.stream().filter(PostingSharingAddedLiberin.class::isInstance)
+                .map(PostingSharingAddedLiberin.class::cast).toList().getLast();
+            receptor.added(added);
+        });
+        transaction.executeWithoutResult(status -> {
+            Story group = stories.findFullByFeedAndTypeAndEntryId(
+                nodeId, Feed.INSTANT, StoryType.POSTING_REFERRED, postingId
+            ).getFirst();
+            assertEquals(List.of("Bob source", "Alice source"), group.getSummaryData().getReferences().stream()
+                .map(StorySummaryEntry::getHeading).toList());
+            assertEquals("Shared posting", group.getSummaryData().getPosting().getHeading());
+            assertEquals(List.of("sheriff"), group.getSummaryData().getReferences().getFirst().getSheriffs());
+            StoryInfo info = StoryInfoUtil.build(group, AccessCheckers.ADMIN, ignored -> null, null);
+            assertEquals("bob-post", info.getRemotePostingId());
+            assertEquals("Bob source", info.getSummaryData().getReferences().getFirst().getHeading());
+            PostingUnsharedNotification unshared = unshared("bob", null, null, null, null, "bob-post");
+            unshared.setSharingType(SharingType.REFER);
+            operations.unshared(unshared);
+        });
+        transaction.executeWithoutResult(status -> {
+            PostingSharingDeletedLiberin deleted = liberins.stream()
+                .filter(PostingSharingDeletedLiberin.class::isInstance)
+                .map(PostingSharingDeletedLiberin.class::cast).findFirst().orElseThrow();
+            receptor.deleted(deleted);
+        });
+        transaction.executeWithoutResult(status -> {
+            Story group = stories.findFullByFeedAndTypeAndEntryId(
+                nodeId, Feed.INSTANT, StoryType.POSTING_REFERRED, postingId
+            ).getFirst();
+            assertEquals(1, group.getSummaryData().getTotalSharings());
+            assertEquals(List.of("Alice source"), group.getSummaryData().getReferences().stream()
+                .map(StorySummaryEntry::getHeading).toList());
+            StoryInfo info = StoryInfoUtil.build(group, AccessCheckers.ADMIN, ignored -> null, null);
+            assertEquals("alice-post", info.getRemotePostingId());
+            assertEquals("Alice source", info.getSummaryData().getReferences().getFirst().getHeading());
+        });
+    }
+
+    private PostingSharedNotification shared(
+        SharingType type, String sender, String revision, String feed, String story, Long moment, String posting
+    ) {
+        PostingSharedNotification notification = shared(sender, revision, feed, story, moment, posting);
+        notification.setSharingType(type);
+        return notification;
     }
 
     private PostingSharedNotification shared(
@@ -630,10 +791,13 @@ class EntrySharingIT {
 
         private final List<Story> deleted = new ArrayList<>();
         private long moment;
+        private boolean blocked;
+        private StoryType blockedType;
 
         @Override
         protected boolean isBlocked(StoryType type, UUID entry, String node, String posting, String owner) {
-            return false;
+            blockedType = type;
+            return blocked;
         }
 
         @Override

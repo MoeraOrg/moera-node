@@ -64,7 +64,25 @@ class PostingSharingProcessorTest {
             parameters.set(invocation.getArgument(1));
             return UUID.randomUUID();
         }).when(jobs).runAfterCommit(any(), any(), eq(nodeId));
-        PostingSharedNotification notification = notification();
+        PostingSharedNotification notification = new ObjectMapper().readValue("""
+            {
+                "sharingType": "refer",
+                "postingId": "posting",
+                "remotePostingId": "source",
+                "remotePostingOwnerName": "remote-owner",
+                "remotePostingOwnerFullName": "Remote Owner",
+                "remotePostingOwnerSourceUri": "https://owner.example/",
+                "remotePostingOwnerGender": "female",
+                "remotePostingHeading": "Source heading",
+                "remotePostingSheriffs": ["sheriff"],
+                "remotePostingSheriffMarks": [{"sheriffName": "sheriff"}]
+            }
+            """, PostingSharedNotification.class);
+        // Sender metadata comes from the notification packet, outside the notification JSON.
+        notification.setSenderNodeName("remote");
+        AvatarImage avatar = new AvatarImage();
+        avatar.setMediaId("avatar");
+        notification.setSenderAvatar(avatar);
         Posting posting = new Posting();
         posting.setId(UUID.randomUUID());
         EntrySharing sharing = new EntrySharing();
@@ -83,6 +101,14 @@ class PostingSharingProcessorTest {
         assertEquals(posting.getId().toString(), json.get("postingId").asString());
         assertEquals(sharing.getId().toString(), json.get("sharingId").asString());
         assertEquals("avatar", json.get("senderAvatar").get("mediaId").asString());
+        var remotePosting = json.path("remotePosting");
+        assertEquals("remote-owner", remotePosting.path("ownerName").asString());
+        assertEquals("Remote Owner", remotePosting.path("ownerFullName").asString());
+        assertEquals("https://owner.example/", remotePosting.path("ownerSourceUri").asString());
+        assertEquals("female", remotePosting.path("ownerGender").asString());
+        assertEquals("Source heading", remotePosting.path("heading").asString());
+        assertEquals("sheriff", remotePosting.path("sheriffs").path(0).asString());
+        assertEquals("sheriff", remotePosting.path("sheriffMarks").path(0).path("sheriffName").asString());
         verifyNoInteractions(mediaManager);
     }
 
@@ -110,6 +136,7 @@ class PostingSharingProcessorTest {
         PostingSharedJob.Parameters scheduled = (PostingSharedJob.Parameters) parameters.get();
         assertEquals(sharing.getId(), scheduled.sharingId());
         assertNull(scheduled.senderAvatar());
+        assertNull(scheduled.remotePosting());
     }
 
     @Test

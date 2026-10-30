@@ -7,10 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.Contact;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImageUtil;
+import org.moera.node.model.StorySummaryEntryUtil;
 import org.moera.node.operations.SharingOperations;
 import org.moera.node.operations.ContactOperations;
 import org.mockito.InjectMocks;
@@ -74,9 +76,12 @@ class PostingSharedJobTest {
             assertInsideTransaction();
             assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), invocation.getArgument(0));
             assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000002"), invocation.getArgument(1));
+            StorySummaryEntry remotePosting = invocation.getArgument(3);
+            assertEquals("Source heading", remotePosting.getHeading());
+            assertEquals("remote", remotePosting.getOwnerName());
             written.set(invocation.getArgument(2));
             return null;
-        }).when(sharingOperations).completeShared(any(), any(), any());
+        }).when(sharingOperations).completeShared(any(), any(), any(), any());
         PostingSharedJob job = restoredJob(mediaManager, sharingOperations);
 
         job.execute();
@@ -97,7 +102,7 @@ class PostingSharedJobTest {
         org.mockito.Mockito.lenient().doAnswer(invocation -> {
             written.set(invocation.getArgument(2));
             return null;
-        }).when(sharingOperations).completeShared(any(), any(), any());
+        }).when(sharingOperations).completeShared(any(), any(), any(), any());
         PostingSharedJob job = restoredJob(mediaManager, sharingOperations);
 
         assertSame(failure, assertThrows(MoeraNodeException.class, job::execute));
@@ -110,8 +115,11 @@ class PostingSharedJobTest {
         avatar.setMediaId("avatar");
         avatar.setShape("circle");
         PostingSharedJob.Parameters parameters = new PostingSharedJob.Parameters(
-            "remote", avatar, UUID.fromString("00000000-0000-0000-0000-000000000001"),
-            UUID.fromString("00000000-0000-0000-0000-000000000002")
+            "remote",
+            avatar,
+            UUID.fromString("00000000-0000-0000-0000-000000000001"),
+            UUID.fromString("00000000-0000-0000-0000-000000000002"),
+            StorySummaryEntryUtil.build("remote", "Remote", null, null, "Source heading")
         );
         ObjectMapper mapper = new ObjectMapper();
         job.setParameters(mapper.writeValueAsString(parameters), mapper);

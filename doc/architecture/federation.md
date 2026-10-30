@@ -98,18 +98,41 @@ posting as a whole and omits the revision ID. A remote story is identified by it
 descriptive metadata and do not participate in deduplication or unsharing matches. Notifications carry the current
 story moment.
 
+Original posting creation, editing, deletion, and restoration also compare universal links in the posting's final
+HTML body. Like `MentionsExtractor`, `PostingReferencesExtractor` parses the body with Jsoup and traverses its elements.
+It reads anchor `href` attributes, with HTML entities decoded by the parser, and accepts named HTTP(S) universal URLs
+on `moera.page` and `web.moera.org` whose target is `/post/{id}`; comment and media targets are excluded. Plain text,
+subjects, and other attributes do not create references. Node names are expanded and duplicate node/posting pairs
+are collapsed across URL spellings.
+`PostingReceptor` compares the current references with the previous signed revision, excludes the posting author's
+own node, and applies each revision's visibility to the referenced node. Newly visible references send
+`POSTING_SHARED` with `SharingType.REFER`; removed or newly inaccessible references send `POSTING_UNSHARED` with the
+same type. Both identify the source posting, without a revision or feed/story reference. Reference additions also
+carry the source posting's author, heading, and moderation metadata in dedicated notification fields.
+
 The receiver validates the sharing type, posting ID, optional revision, and complete remote reference. Sharing
 mutations lock the tenant's original posting, deduplicate or remove exact matching sharings, and update the counter.
+For references, the receiver builds the source posting's instant summary from the notification fields.
 For every new sharing, the processor persists a `PostingSharedJob` in the same transaction through
-`Jobs.runAfterCommit`, with the local node ID, sharing identity, and optional avatar snapshot. The job resolves any
-matching avatar from the contact before downloading it, then locks the posting and completes the sharing only if it
-still exists. The job cannot recreate a sharing removed by a subsequent unshared notification. It initiates the added
-liberin after completion, including when the notification has no avatar. Before deletion, sharing mutations capture
-the IDs of related instant substories for cleanup after commit. Committed liberins initiate instant creation or cleanup
+`Jobs.runAfterCommit`, with the local node ID, sharing identity, optional avatar snapshot, and source posting summary.
+The job resolves any matching avatar from the contact before downloading it, then locks the posting and completes the
+sharing only if it still exists. The job cannot recreate a sharing removed by a subsequent unshared notification.
+It initiates the added liberin after completion, including when the notification has no avatar. Before deletion,
+sharing mutations capture the IDs of related instant substories for cleanup after commit. Committed liberins initiate
+instant creation or cleanup
 and send sharing-added or sharing-deleted events, independently of total events. List and total events use their own
 viewing permission and posting visibility. The creation receptor locks the posting and verifies that the sharing
 still exists, so a delayed added liberin cannot recreate an instant or announce a deleted sharing. Event payloads are
 defined in `moeraorg.github.io/_data/events.yml`.
+
+References use the same receiving processor and durable avatar job as republishing. `PostingSharingInstants` selects
+`posting-referred` for references and `posting-shared` for republishing, with separate groups and blocking by type.
+The reference instant identifies the original local posting and the latest referring remote posting; its client and
+push target opens the latter. Each reference substory stores its source posting summary. Group rebuilds select the
+two latest source summaries in the same order as the authors, while the latest source supplies the navigation target.
+Removing a reference rebuilds these summaries and the target from the remaining substories. A single-reference instant
+displays both the original and source posting headings. Grouped instants list the authors and only the original posting
+heading. Moderation metadata is checked for the postings whose headings are displayed.
 
 Posting subscribers receive counter updates through `POSTING_SHARINGS_UPDATED` when their access permits it. The
 initial state of a new posting subscription includes the current counter even when the content edit time matches.

@@ -9,6 +9,7 @@ public class StoryTypeUtil {
               case POSTING_ADDED,
                    REACTION_ADDED_POSITIVE,
                    POSTING_SHARED,
+                   POSTING_REFERRED,
                    REACTION_ADDED_NEGATIVE,
                    COMMENT_REACTION_ADDED_POSITIVE,
                    COMMENT_REACTION_ADDED_NEGATIVE,

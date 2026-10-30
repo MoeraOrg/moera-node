@@ -4,6 +4,7 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.node.data.Contact;
 import org.moera.node.media.MediaManager;
 import org.moera.node.operations.SharingOperations;
@@ -17,7 +18,8 @@ public class PostingSharedJob extends Job<PostingSharedJob.Parameters, Object> {
         String senderNodeName,
         AvatarImage senderAvatar,
         UUID postingId,
-        UUID sharingId
+        UUID sharingId,
+        StorySummaryEntry remotePosting
     ) {
     }
 
@@ -51,7 +53,10 @@ public class PostingSharedJob extends Job<PostingSharedJob.Parameters, Object> {
         );
 
         tx.executeWrite(() -> sharingOperations.completeShared(
-            parameters.postingId, parameters.sharingId, parameters.senderAvatar
+            parameters.postingId,
+            parameters.sharingId,
+            parameters.senderAvatar,
+            parameters.remotePosting
         ));
     }
 

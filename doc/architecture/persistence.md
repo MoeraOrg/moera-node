@@ -50,7 +50,9 @@ in [V137](../../src/main/resources/db/migration/V137__drafts_entry_attachments.s
 counter; picked entries retain the counter received from the original. An optional revision link identifies the shared
 content revision and prevents revision cleanup while the sharing remains. The sharing keeps its remote identity
 snapshot and either a complete feed/story/moment reference, a remote posting reference, or both.
-Timeline republishing does not select a revision, so its revision link is null.
+Timeline republishing and references from another posting do not select a revision, so their revision links are null.
+References use `SharingType.REFER` and identify the referring remote posting. The sharing type participates in identity,
+so a reference and a republishing from the same node can coexist.
 
 Each sharing has a local pagination moment, unique within its entry and independent of the remote story moment.
 The API reads bounded slices in descending moment order. The inclusive upper bound and exclusive lower bound let
@@ -62,7 +64,8 @@ shared notifications are idempotent. Unsharing matches every identity dimension 
 values, and removes all matching rows. A remote story is identified solely by its ID. Feed name, story moment, and
 display metadata do not participate in identity matching.
 
-Sharing instants group substories by posting using the reaction instant grouping window. Each substory has an optional
+Sharing instants group substories by posting and instant type using the reaction instant grouping window.
+`posting-referred` groups references, and `posting-shared` groups republishing. Each substory has an optional
 relationship to its `EntrySharing`. The group refers to the sharing of its latest substory and updates this relationship
 when its substories change. The foreign key becomes null when the sharing is deleted; the deletion liberin retains the
 affected substory IDs and removes them after commit. Removing the last substory removes its group.
@@ -126,6 +129,12 @@ Publishing a posting in the local timeline records a `PUBLICATION` favor for its
 records an `UNPUBLICATION` favor. Each timeline story contributes separately, including stories removed with the
 posting itself. These local signals are independent of the author's access to the posting and of federation
 notification delivery. `StoryReceptor` records them through `FavorOperations` in the liberin delivery transaction.
+
+Adding or removing a distinct outgoing posting reference records a `REFERENCE` or `UNREFERENCE` favor for the linked
+node. These signals have the same weight and decay as `COMMENT` and `UNCOMMENT`. `PostingReceptor` compares node/posting
+pairs, so repeated URLs do not multiply favors and changes of visibility alone do not add or remove them. Deleting
+or restoring the source posting removes or restores its references. Existing persisted favor ordinals remain stable;
+the reference types follow the publication types in [FavorType](../../src/main/java/org/moera/node/data/FavorType.java).
 
 The admin-only `/moera/api/people/visited` API records and searches node visits. Every POST adds a separate `VISITED`
 favor with value `10` and a ten-day decay period, and increments the contact's visit count. DELETE removes all visited
