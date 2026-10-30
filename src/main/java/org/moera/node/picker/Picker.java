@@ -45,6 +45,7 @@ import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.global.ServeContext;
 import org.moera.node.liberin.model.PostingAddedLiberin;
+import org.moera.node.liberin.model.PostingPublishedAtUpdatedLiberin;
 import org.moera.node.liberin.model.PostingRecommendationUpdatedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingTotalSharingsUpdatedLiberin;
@@ -390,6 +391,15 @@ public class Picker extends Task {
                 restorePosting(posting);
                 universalContext.send(new PostingRestoredLiberin(posting));
             }
+
+            Timestamp receiverPublishedAt = Util.toTimestamp(
+                original ? postingInfo.getEarliestPublishedAt() : postingInfo.getReceiverPublishedAt()
+            );
+            if (!Objects.equals(posting.getReceiverPublishedAt(), receiverPublishedAt)) {
+                posting.setReceiverPublishedAt(receiverPublishedAt);
+                universalContext.send(new PostingPublishedAtUpdatedLiberin(posting.getId()));
+            }
+
             if (postingViewPrincipal != null) {
                 posting.setViewPrincipal(postingViewPrincipal);
             }

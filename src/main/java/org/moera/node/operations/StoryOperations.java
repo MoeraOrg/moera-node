@@ -4,14 +4,20 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceContext;
 
 import org.moera.lib.node.types.FeedStatus;
 import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Entry;
+import org.moera.node.data.EntryType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.Story;
@@ -21,8 +27,10 @@ import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
+import org.moera.node.liberin.model.PostingPublishedAtUpdatedLiberin;
 import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
+import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.FeedStatusUtil;
 import org.moera.node.model.StoryAttributesUtil;
 import org.moera.node.userlist.SheriffUserListOperations;
@@ -35,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class StoryOperations {
@@ -68,7 +77,23 @@ public class StoryOperations {
     @Inject
     private Transaction tx;
 
+    @Inject
+    @PersistenceContext
+    private EntityManager entityManager;
+
     private final MomentFinder momentFinder = new MomentFinder();
+
+    public static Long findEarliestPublishedAt(Collection<Story> stories) {
+        if (ObjectUtils.isEmpty(stories)) {
+            return null;
+        }
+        return stories.stream()
+            .filter(story -> Feed.TIMELINE.equals(story.getFeedName()))
+            .map(Story::getPublishedAt)
+            .map(Util::toEpochSecond)
+            .min(Long::compareTo)
+            .orElse(null);
+    }
 
     public void updateMoment(Story story, UUID nodeId) {
         story.setMoment(momentFinder.find(
@@ -86,9 +111,16 @@ public class StoryOperations {
     }
 
     public void publish(Entry entry, List<StoryAttributes> publications) {
-        if (publications == null) {
+        if (ObjectUtils.isEmpty(publications)) {
             return;
         }
+
+        boolean publishingInTimeline = entry.getEntryType() == EntryType.POSTING
+            && publications.stream().anyMatch(p -> p.getFeedName() == null || Feed.TIMELINE.equals(p.getFeedName()));
+        List<Story> postingStories = publishingInTimeline
+            ? findPostingPublications(universalContext.nodeId(), entry)
+            : List.of();
+        Long earliestPublishedAt = findEarliestPublishedAt(postingStories);
 
         for (StoryAttributes publication : publications) {
             Story story = new Story(UUID.randomUUID(), universalContext.nodeId(), StoryType.POSTING_ADDED);
@@ -98,11 +130,16 @@ public class StoryOperations {
             updateMoment(story, universalContext.nodeId());
             story = storyRepository.saveAndFlush(story);
             entry.addStory(story);
+            if (publishingInTimeline) {
+                postingStories.add(story);
+            }
 
             sheriffUserListOperations.sheriffListReference(story);
 
             universalContext.send(new StoryAddedLiberin(story));
         }
+
+        notifyPostingPublishedAtChanged(entry, earliestPublishedAt, postingStories);
     }
 
     public void publish(Entry entry, List<StoryAttributes> publications, boolean allowMultiple) {
@@ -119,6 +156,17 @@ public class StoryOperations {
         if (!newPublications.isEmpty()) {
             publish(entry, newPublications);
         }
+    }
+
+    public void update(Story story, StoryAttributes attributes) {
+        List<Story> publications = attributes.getPublishAt() != null ? findPostingPublications(story) : List.of();
+        Long earliestPublishedAt = findEarliestPublishedAt(publications);
+        StoryAttributesUtil.toStory(attributes, story);
+        if (attributes.getPublishAt() != null || attributes.getPinned() != null) {
+            updateMoment(story, story.getNodeId());
+        }
+        notifyPostingPublishedAtChanged(story.getEntry(), earliestPublishedAt, publications);
+        universalContext.send(new StoryUpdatedLiberin(story.getId()));
     }
 
     public FeedStatus getFeedStatus(String feedName, boolean isAdmin) {
@@ -151,6 +199,42 @@ public class StoryOperations {
             .filter(story -> story.getFeedName() != null)
             .peek(story -> universalContext.send(new StoryDeletedLiberin(story, true)))
             .forEach(storyRepository::delete);
+    }
+
+    public void delete(Story story) {
+        List<Story> publications = findPostingPublications(story);
+        Long earliestPublishedAt = findEarliestPublishedAt(publications);
+        storyRepository.delete(story);
+        List<Story> remaining = publications.stream()
+            .filter(publication -> !publication.getId().equals(story.getId()))
+            .toList();
+        notifyPostingPublishedAtChanged(story.getEntry(), earliestPublishedAt, remaining);
+    }
+
+    private List<Story> findPostingPublications(Story story) {
+        if (
+            Feed.TIMELINE.equals(story.getFeedName())
+            && story.getEntry() != null && story.getEntry().getEntryType() == EntryType.POSTING
+            && story.getParent() == null
+        ) {
+            return findPostingPublications(story.getNodeId(), story.getEntry());
+        }
+        return List.of();
+    }
+
+    private List<Story> findPostingPublications(UUID nodeId, Entry entry) {
+        entityManager.lock(entry, LockModeType.PESSIMISTIC_WRITE);
+        List<Story> stories = new ArrayList<>(storyRepository.findByEntryId(nodeId, entry.getId()));
+        stories.forEach(entityManager::refresh);
+        return stories;
+    }
+
+    private void notifyPostingPublishedAtChanged(
+        Entry posting, Long previousPublishedAt, Collection<Story> publications
+    ) {
+        if (!Objects.equals(previousPublishedAt, findEarliestPublishedAt(publications))) {
+            universalContext.send(new PostingPublishedAtUpdatedLiberin(posting.getId()));
+        }
     }
 
     @Scheduled(fixedDelayString = "P1D")

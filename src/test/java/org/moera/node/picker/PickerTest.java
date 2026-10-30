@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -26,14 +27,16 @@ import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.liberin.model.PostingRestoredLiberin;
+import org.moera.node.liberin.model.PostingPublishedAtUpdatedLiberin;
 import org.moera.node.liberin.model.PostingRecommendationUpdatedLiberin;
+import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingTotalSharingsUpdatedLiberin;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.option.Options;
+import org.moera.node.util.Util;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,10 +51,36 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class PickerTest {
+
+    @ParameterizedTest
+    @CsvSource({"1000, 900", "1000, 1100", "1000, ", ", 1000", "1000, 1000", ", "})
+    void publicationDateIsRefreshedWithoutContentChange(Long initial, Long downloaded) {
+        Posting posting = posting(UUID.randomUUID());
+        posting.setReceiverPublishedAt(Util.toTimestamp(initial));
+        EntryRevision revision = posting.getCurrentRevision();
+        PostingInfo info = postingInfo();
+        info.setEditedAt(1000L);
+        info.setEarliestPublishedAt(downloaded);
+        Picker picker = picker(posting, mock(StoryOperations.class));
+
+        savePosting(picker, info, null);
+
+        assertEquals(downloaded, Util.toEpochSecond(posting.getReceiverPublishedAt()));
+        assertEquals(1000L, Util.toEpochSecond(posting.getEditedAt()));
+        assertSame(revision, posting.getCurrentRevision());
+        var captor = ArgumentCaptor.forClass(PostingPublishedAtUpdatedLiberin.class);
+        boolean changed = !Objects.equals(initial, downloaded);
+        verify((UniversalContext) ReflectionTestUtils.getField(picker, "universalContext"), times(changed ? 1 : 0))
+            .send(captor.capture());
+        if (changed) {
+            assertEquals(posting.getId(), captor.getValue().getPostingId());
+        }
+    }
 
     @ParameterizedTest
     @CsvSource({"0, 3, 3", "5, 2, 2", "3, , 0"})
@@ -239,15 +268,18 @@ class PickerTest {
         verify(storyOperations).publish(eq(posting), any(), eq(false));
     }
 
-    @Test
-    void unchangedDeletedPostingIsRestoredBeforePublication() {
+    @ParameterizedTest
+    @CsvSource({"1000, 900", "1000, 1100", "1000, ", ", 1000", "1000, 1000", ", "})
+    void unchangedDeletedPostingIsRestoredBeforePublication(Long initialPublishedAt, Long downloadedPublishedAt) {
         UUID nodeId = UUID.randomUUID();
         Posting posting = posting(nodeId);
+        posting.setReceiverPublishedAt(Util.toTimestamp(initialPublishedAt));
         Timestamp deletedAt = Timestamp.from(Instant.ofEpochSecond(1100));
         posting.setDeletedAt(deletedAt);
         posting.getCurrentRevision().setDeletedAt(deletedAt);
         PostingInfo postingInfo = postingInfo();
         postingInfo.setEditedAt(1000L);
+        postingInfo.setEarliestPublishedAt(downloadedPublishedAt);
         StoryOperations storyOperations = mock(StoryOperations.class);
         Picker picker = picker(posting, storyOperations);
 
@@ -255,8 +287,15 @@ class PickerTest {
 
         assertNull(posting.getDeletedAt());
         assertNull(posting.getCurrentRevision().getDeletedAt());
-        verify((UniversalContext) ReflectionTestUtils.getField(picker, "universalContext"))
-            .send(any(PostingRestoredLiberin.class));
+        assertEquals(downloadedPublishedAt, Util.toEpochSecond(posting.getReceiverPublishedAt()));
+        UniversalContext universalContext = (UniversalContext) ReflectionTestUtils.getField(picker, "universalContext");
+        verify(universalContext).send(any(PostingRestoredLiberin.class));
+        var captor = ArgumentCaptor.forClass(PostingPublishedAtUpdatedLiberin.class);
+        boolean publishedAtChanged = !Objects.equals(initialPublishedAt, downloadedPublishedAt);
+        verify(universalContext, times(publishedAtChanged ? 1 : 0)).send(captor.capture());
+        if (publishedAtChanged) {
+            assertEquals(posting.getId(), captor.getValue().getPostingId());
+        }
         verify(storyOperations).publish(eq(posting), any(), eq(false));
     }
 

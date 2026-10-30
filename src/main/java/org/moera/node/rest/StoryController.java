@@ -11,6 +11,7 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.node.types.StoryType;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.media.DirectServeOperations;
@@ -21,9 +22,7 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
-import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.StoryAttributesUtil;
@@ -145,7 +144,8 @@ public class StoryController {
         StoryAttributesUtil.validate(storyAttributes);
 
         UUID storyId = Util.uuid(id).orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
-        StoryInfo storyInfo = tx.executeWrite(() -> {
+
+        return tx.executeWrite(() -> {
             Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), storyId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
             if (
@@ -154,27 +154,14 @@ public class StoryController {
             ) {
                 throw new ObjectNotFoundFailure("story.not-found");
             }
-            boolean wasShared = story.getStoryType() == StoryType.POSTING_ADDED
-                && Feed.TIMELINE.equals(story.getFeedName()) && story.getEntry() != null
-                && !story.getEntry().isOriginal();
-            StoryDeletedLiberin previous = wasShared ? new StoryDeletedLiberin(story) : null;
-            StoryAttributesUtil.toStory(storyAttributes, story);
-            if (
-                storyAttributes.getFeedName() != null
-                || storyAttributes.getPublishAt() != null
-                || storyAttributes.getPinned() != null
-            ) {
-                storyOperations.updateMoment(story, requestContext.nodeId());
-            }
+            ValidationUtil.assertion(
+                storyAttributes.getFeedName() == null
+                    || Objects.equals(storyAttributes.getFeedName(), story.getFeedName()),
+                "story.feed-name.cannot-modify"
+            );
 
-            boolean isShared = story.getStoryType() == StoryType.POSTING_ADDED
-                && Feed.TIMELINE.equals(story.getFeedName()) && story.getEntry() != null
-                && !story.getEntry().isOriginal();
-            if (wasShared && !isShared) {
-                requestContext.send(previous);
-            } else if (!wasShared && isShared) {
-                requestContext.send(new StoryAddedLiberin(story));
-            }
+            storyOperations.update(story, storyAttributes);
+
             return StoryInfoUtil.build(
                 story,
                 requestContext,
@@ -188,10 +175,6 @@ public class StoryController {
                 directServeOperations
             );
         });
-
-        requestContext.send(new StoryUpdatedLiberin(storyId));
-
-        return storyInfo;
     }
 
     @DeleteMapping("/{id}")
@@ -203,7 +186,7 @@ public class StoryController {
         var liberin = tx.executeWrite(() -> {
             Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), storyId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
-            storyRepository.delete(story);
+            storyOperations.delete(story);
 
             return new StoryDeletedLiberin(story);
         });

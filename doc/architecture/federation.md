@@ -67,6 +67,23 @@ value preserves the status; explicit true or false values apply even when the po
 revision is unchanged. New cached postings are not recommended unless the pick explicitly requests it. Redirects,
 retries, and process restarts preserve this intent.
 
+The earliest timeline publication is derived from a posting's stories. A story's feed is fixed at creation;
+updating a story rejects a different feed name. `StoryOperations` applies story attributes, updates ordering, and
+emits story and publication-date liberins. The controller validates requests before its write transaction, which
+contains lookup, access checks, updates, and response construction. Adding or deleting publications and editing dates
+use shared methods to
+lock the posting and compare the earliest date before and after the change in the same transaction. Existing
+publication dates are refreshed under the lock to account for concurrent changes. Single-story deletion and feed
+clearing use the same deletion operation. A changed minimum, including removal of the last timeline publication,
+emits a dedicated liberin after commit; its receptor sends a posting-updated client event and notifies posting
+subscribers using the posting's current visibility. Adding several publications together emits one date update.
+Changes that preserve the earliest date do not send this posting notification. Publication-date changes do not
+repeat important content-update notifications.
+
+Picked postings retain the original publication date in `receiverPublishedAt`. A refresh synchronizes this value,
+including its absence, even when the content edit time is unchanged. A date-only refresh emits the same dedicated
+liberin without creating a content revision. Restoring a deleted copy also emits this liberin if the date changed.
+
 A picker retries recoverable failures with an increasing delay from 30 seconds up to six hours. The final write
 transaction locks and reloads the local posting, revalidates the earlier snapshot, and commits the entry, revision,
 attachments, permissions, reaction totals, and sources together. Liberins and child picks follow the successful
@@ -91,7 +108,7 @@ while the local owner supplies bytes and local access control.
 ## Sharing notifications
 
 Publishing a picked posting in `timeline` sends `POSTING_SHARED` to the original owner's node. Removing that
-publication, including moving it to another feed, sends `POSTING_UNSHARED`. Both notifications are delivered only if
+publication sends `POSTING_UNSHARED`. Both notifications are delivered only if
 the owner's node can view the entry referenced by the story. Deletion uses the visibility filter captured in the
 deletion liberin. Owner name and original node name are assumed to coincide. Timeline republishing refers to the
 posting as a whole and omits the revision ID. A remote story is identified by its ID; feed name and moment are

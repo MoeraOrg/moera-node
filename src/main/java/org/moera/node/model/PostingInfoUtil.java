@@ -32,6 +32,7 @@ import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.grant.MediaGrantGenerator;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
+import org.moera.node.operations.StoryOperations;
 import org.moera.node.option.Options;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.util.SheriffUtil;
@@ -214,13 +215,7 @@ public class PostingInfoUtil {
                 .toList();
             if (!ObjectUtils.isEmpty(feedReferences)) {
                 info.setFeedReferences(feedReferences);
-                info.setEarliestPublishedAt(
-                    feedReferences.stream()
-                        .filter(reference -> Feed.TIMELINE.equals(reference.getFeedName()))
-                        .map(FeedReference::getPublishedAt)
-                        .min(Long::compareTo)
-                        .orElse(null)
-                );
+                info.setEarliestPublishedAt(StoryOperations.findEarliestPublishedAt(stories));
             }
         }
 

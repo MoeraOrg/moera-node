@@ -602,7 +602,7 @@ public class FeedController {
                 break;
             }
             for (Story story : stories) {
-                storyRepository.delete(story);
+                storyOperations.delete(story);
                 requestContext.send(new StoryDeletedLiberin(story));
             }
         }
