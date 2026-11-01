@@ -16,6 +16,7 @@ public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment
         "select ea from EntryAttachment ea"
         + " left join fetch ea.mediaFileOwner mfo left join fetch mfo.mediaFile mf left join fetch mf.previews mfp"
         + " left join fetch mfp.mediaFile left join fetch ea.remoteMediaFile"
+        + " left join fetch mfo.compressedOwner co left join fetch co.mediaFile"
         + " where ea.entryRevision.id in ?1"
     )
     Set<EntryAttachment> findByEntryRevisions(Collection<UUID> entryRevisionIds);

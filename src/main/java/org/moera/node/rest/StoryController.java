@@ -28,6 +28,7 @@ import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.StoryAttributesUtil;
 import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.operations.EntryOperations;
+import org.moera.node.operations.PostingInfoOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -47,6 +48,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class StoryController {
 
     private static final Logger log = LoggerFactory.getLogger(StoryController.class);
+
+    @Inject
+    private PostingInfoOperations postingInfoOperations;
 
     @Inject
     private DirectServeOperations directServeOperations;
@@ -82,7 +86,7 @@ public class StoryController {
                 .filter(Objects::nonNull)
                 .toList()
         );
-        return stories.stream()
+        var infos = stories.stream()
             .map(story -> StoryInfoUtil.build(
                 story,
                 requestContext,
@@ -96,6 +100,9 @@ public class StoryController {
                 directServeOperations
             ))
             .toList();
+        postingInfoOperations.fillLinkedPostings(infos.stream()
+            .map(StoryInfo::getPosting).filter(Objects::nonNull).toList());
+        return infos;
     }
 
     @GetMapping("/{id}")
@@ -118,13 +125,13 @@ public class StoryController {
         return StoryInfoUtil.build(
             story,
             requestContext,
-            t -> PostingInfoUtil.build(
+            t -> postingInfoOperations.withLinkedPostings(PostingInfoUtil.build(
                 t.getEntry(),
                 entryOperations,
                 requestContext,
                 requestContext.getOptions(),
                 directServeOperations
-            ),
+            )),
             directServeOperations
         );
     }
@@ -165,13 +172,13 @@ public class StoryController {
             return StoryInfoUtil.build(
                 story,
                 requestContext,
-                t -> PostingInfoUtil.build(
+                t -> postingInfoOperations.withLinkedPostings(PostingInfoUtil.build(
                     t.getEntry(),
                     entryOperations,
                     requestContext,
                     requestContext.getOptions(),
                     directServeOperations
-                ),
+                )),
                 directServeOperations
             );
         });

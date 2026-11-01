@@ -56,6 +56,7 @@ import org.moera.node.media.MediaManager.PreparedPrivateMedia;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.RemoteMediaOperations;
 import org.moera.node.model.PostingInfoUtil;
+import org.moera.node.operations.LinkedEntryOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.task.Task;
@@ -109,6 +110,9 @@ public class Picker extends Task {
 
     @Inject
     private StoryOperations storyOperations;
+
+    @Inject
+    private LinkedEntryOperations linkedEntryOperations;
 
     @Inject
     private ReactionTotalOperations reactionTotalOperations;
@@ -249,6 +253,7 @@ public class Picker extends Task {
                 picks
             );
             saveSources(p, pick);
+            linkedEntryOperations.picked(pick, p);
             return p;
         });
         picks.forEach(pool::pick);
@@ -370,6 +375,7 @@ public class Picker extends Task {
             createRevision(posting, postingInfo);
             attachMedia(attachments, posting.getId(), posting.getCurrentRevision(), null, picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
+            linkedEntryOperations.create(posting.getCurrentRevision());
             universalContext.subscriptionsUpdated();
             universalContext.send(new PostingAddedLiberin(posting));
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
@@ -377,9 +383,12 @@ public class Picker extends Task {
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             PostingInfoUtil.toPickedPosting(postingInfo, posting, postingViewPrincipal);
             EntryRevision latest = posting.getCurrentRevision();
-            createRevision(posting, postingInfo);
+            boolean newRevision = createRevision(posting, postingInfo);
             attachMedia(attachments, posting.getId(), posting.getCurrentRevision(), latest, picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
+            if (newRevision) {
+                linkedEntryOperations.create(posting.getCurrentRevision());
+            }
             if (posting.getDeletedAt() == null) {
                 universalContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
             } else {
@@ -444,9 +453,9 @@ public class Picker extends Task {
         return entity;
     }
 
-    private void createRevision(Posting posting, PostingInfo postingInfo) {
+    private boolean createRevision(Posting posting, PostingInfo postingInfo) {
         if (postingInfo.getRevisionId().equals(posting.getCurrentReceiverRevisionId())) {
-            return;
+            return false;
         }
 
         EntryRevision revision = new EntryRevision();
@@ -463,7 +472,8 @@ public class Picker extends Task {
             }
         }
         posting.setCurrentRevision(revision);
-        posting.setCurrentReceiverRevisionId(revision.getReceiverRevisionId());
+        posting.setCurrentReceiverRevisionId(postingInfo.getRevisionId());
+        return true;
     }
 
     private void updateRevision(Posting posting, PostingInfo postingInfo, EntryRevision revision) {
@@ -679,6 +689,18 @@ public class Picker extends Task {
     }
 
     private void redirected(Pick pick, Pick redirectedPick) {
+        if (
+            pick.getLinkedEntry() != null
+            && tx.executeWrite(() -> linkedEntryOperations.resolveLocal(redirectedPick))
+        ) {
+            log.info(
+                "Redirected to local node {}, postingId = {}, and resolved successfully",
+                LogUtil.format(redirectedPick.getRemoteNodeName()), LogUtil.format(redirectedPick.getRemotePostingId())
+            );
+            pool.pickSucceeded(pick);
+            return;
+        }
+
         log.info(
             "Download will continue from node {}, postingId = {}",
             LogUtil.format(redirectedPick.getRemoteNodeName()), LogUtil.format(redirectedPick.getRemotePostingId())

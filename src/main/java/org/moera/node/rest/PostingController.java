@@ -36,12 +36,8 @@ import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwnerRepository;
-import org.moera.node.data.OwnReaction;
-import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
-import org.moera.node.data.Reaction;
-import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
@@ -55,20 +51,18 @@ import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.LocalRemoteMedia;
 import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.PostingTextUtil;
-import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.PostingOperations;
+import org.moera.node.operations.PostingInfoOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.text.TextConverter;
-import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,12 +99,6 @@ public class PostingController {
     private PostingRepository postingRepository;
 
     @Inject
-    private ReactionRepository reactionRepository;
-
-    @Inject
-    private OwnReactionRepository ownReactionRepository;
-
-    @Inject
     private EntryAttachmentRepository entryAttachmentRepository;
 
     @Inject
@@ -119,6 +107,9 @@ public class PostingController {
     @Inject
     @PersistenceContext
     private EntityManager entityManager;
+
+    @Inject
+    private PostingInfoOperations postingInfoOperations;
 
     @Inject
     private PostingOperations postingOperations;
@@ -136,13 +127,7 @@ public class PostingController {
     private BlockedUserOperations blockedUserOperations;
 
     @Inject
-    private BlockedByUserOperations blockedByUserOperations;
-
-    @Inject
     private FeedOperations feedOperations;
-
-    @Inject
-    private SheriffUserListOperations sheriffUserListOperations;
 
     @Inject
     private MediaManager mediaManager;
@@ -205,16 +190,18 @@ public class PostingController {
 
         requestContext.send(new PostingAddedLiberin(posting));
 
+        PostingInfo info = PostingInfoUtil.build(
+            posting,
+            stories,
+            MediaAttachmentsProvider.relations(directServeOperations, updatedPosting.mediaPostingIds()),
+            requestContext,
+            requestContext.getOptions(),
+            directServeOperations
+        );
+        postingInfoOperations.withBlockings(info);
         return ResponseEntity
             .created(URI.create("/postings/" + posting.getId()))
-            .body(withBlockings(PostingInfoUtil.build(
-                posting,
-                stories,
-                MediaAttachmentsProvider.relations(directServeOperations, updatedPosting.mediaPostingIds()),
-                requestContext,
-                requestContext.getOptions(),
-                directServeOperations
-            )));
+            .body(postingInfoOperations.withLinkedPostings(info));
     }
 
     @PutMapping("/{id}")
@@ -275,16 +262,17 @@ public class PostingController {
         }
         requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
 
-        return withBlockings(withClientReaction(
-            PostingInfoUtil.build(
-                posting,
-                stories,
-                MediaAttachmentsProvider.relations(directServeOperations, updatedPosting.mediaPostingIds()),
-                requestContext,
-                requestContext.getOptions(),
-                directServeOperations
-            )
-        ));
+        PostingInfo info = PostingInfoUtil.build(
+            posting,
+            stories,
+            MediaAttachmentsProvider.relations(directServeOperations, updatedPosting.mediaPostingIds()),
+            requestContext,
+            requestContext.getOptions(),
+            directServeOperations
+        );
+        postingInfoOperations.withClientReaction(info);
+        postingInfoOperations.withBlockings(info);
+        return postingInfoOperations.withLinkedPostings(info);
     }
 
     @PostMapping("/{id}/republish")
@@ -467,10 +455,10 @@ public class PostingController {
         var mediaAttachments = entryOperations.prepareMediaAttachments(
             postings.stream().map(Posting::getCurrentRevision).toList()
         );
-        return postings.stream()
+        var infos = postings.stream()
             .map(posting -> {
                 List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), posting.getId());
-                return withSheriffUserListMarks(withBlockings(withClientReaction(
+                return postingInfoOperations.withClientInfo(
                     PostingInfoUtil.build(
                         posting,
                         stories,
@@ -479,9 +467,11 @@ public class PostingController {
                         requestContext.getOptions(),
                         directServeOperations
                     )
-                )));
+                );
             })
             .collect(Collectors.toList());
+        postingInfoOperations.fillLinkedPostings(infos);
+        return infos;
     }
 
     @GetMapping("/{id}")
@@ -502,7 +492,7 @@ public class PostingController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
-        return withSheriffUserListMarks(withBlockings(withClientReaction(
+        return postingInfoOperations.withLinkedPostings(postingInfoOperations.withClientInfo(
             PostingInfoUtil.build(
                 posting,
                 stories,
@@ -512,7 +502,7 @@ public class PostingController {
                 requestContext.getOptions(),
                 directServeOperations
             )
-        )));
+        ));
     }
 
     @DeleteMapping("/{id}")
@@ -563,61 +553,12 @@ public class PostingController {
             requestContext.nodeId(), posting.getCurrentRevision().getId()
         );
         return attached.stream()
-            .map(p -> withBlockings(withClientReaction(
+            .map(p -> postingInfoOperations.withBlockings(postingInfoOperations.withClientReaction(
                 PostingInfoUtil.build(
                     p, false, requestContext, requestContext.getOptions(), directServeOperations
                 )
             )))
             .collect(Collectors.toList());
-    }
-
-    private PostingInfo withClientReaction(PostingInfo postingInfo) {
-        String clientName = !requestContext.isOwner()
-            ? requestContext.getClientName(Scope.IDENTIFY)
-            : requestContext.nodeName();
-        boolean viewContent = !requestContext.isOwner()
-            ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
-            : requestContext.isAdmin(Scope.VIEW_CONTENT);
-        if (ObjectUtils.isEmpty(clientName)) {
-            return postingInfo;
-        }
-        if (PostingInfoUtil.isOriginal(postingInfo)) {
-            Reaction reaction = reactionRepository.findByEntryIdAndOwner(
-                UUID.fromString(postingInfo.getId()), clientName
-            );
-            if (reaction != null && (reaction.getViewE().isPublic() || viewContent)) {
-                postingInfo.setClientReaction(ClientReactionInfoUtil.build(reaction));
-            }
-        } else if (requestContext.isAdmin(Scope.VIEW_CONTENT)) {
-            // TODO to see public reactions, we need to store the reaction's view principal in OwnReaction
-            OwnReaction ownReaction = ownReactionRepository.findByRemotePostingId(
-                requestContext.nodeId(), postingInfo.getReceiverName(), postingInfo.getReceiverPostingId()
-            ).orElse(null);
-            postingInfo.setClientReaction(ownReaction != null ? ClientReactionInfoUtil.build(ownReaction) : null);
-        }
-        return postingInfo;
-    }
-
-    private PostingInfo withBlockings(PostingInfo postingInfo) {
-        if (PostingInfoUtil.isOriginal(postingInfo)) {
-            PostingInfoUtil.putBlockedOperations(
-                postingInfo,
-                blockedUserOperations.findBlockedOperations(UUID.fromString(postingInfo.getId()))
-            );
-        } else if (requestContext.isOwner() && requestContext.isAdmin(Scope.VIEW_PEOPLE)) {
-            PostingInfoUtil.putBlockedOperations(
-                postingInfo,
-                blockedByUserOperations.findBlockedOperations(
-                    postingInfo.getReceiverName(), postingInfo.getReceiverPostingId()
-                )
-            );
-        }
-        return postingInfo;
-    }
-
-    private PostingInfo withSheriffUserListMarks(PostingInfo postingInfo) {
-        sheriffUserListOperations.fillSheriffListMarks(postingInfo);
-        return postingInfo;
     }
 
 }

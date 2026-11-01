@@ -9,7 +9,10 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface OwnReactionRepository extends JpaRepository<OwnReaction, UUID> {
 
-    @Query("select r from OwnReaction r where r.nodeId = ?1 and r.remotePostingId in (?2)")
+    @Query(
+        "select r from OwnReaction r left join fetch r.remoteAvatarMediaFile"
+        + " where r.nodeId = ?1 and r.remotePostingId in (?2)"
+    )
     List<OwnReaction> findAllByRemotePostingIds(UUID nodeId, List<String> remotePostingIds);
 
     @Query("select r from OwnReaction r where r.nodeId = ?1 and r.remoteNodeName = ?2 and r.remotePostingId = ?3")

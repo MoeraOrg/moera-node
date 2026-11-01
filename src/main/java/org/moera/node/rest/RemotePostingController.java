@@ -218,7 +218,7 @@ public class RemotePostingController {
             }
             pick.setPostingViewPrincipal(attributes.getPostingView());
             pick.setAllowMultiple(true);
-            pickerPool.pick(pick);
+            pickerPool.pickAfterCommit(pick);
         }
 
         return Result.OK;

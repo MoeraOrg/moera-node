@@ -67,6 +67,7 @@ import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.PostingOperations;
+import org.moera.node.operations.PostingInfoOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.SafeInteger;
@@ -92,6 +93,9 @@ public class FeedController {
     private static final Logger log = LoggerFactory.getLogger(FeedController.class);
 
     private static final int DELETE_BATCH_SIZE = 500;
+
+    @Inject
+    private PostingInfoOperations postingInfoOperations;
 
     @Inject
     private DirectServeOperations directServeOperations;
@@ -359,6 +363,9 @@ public class FeedController {
             .filter(this::isStoryVisible)
             .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
             .toList();
+
+        postingInfoOperations.fillLinkedPostings(stories.stream()
+            .map(StoryInfo::getPosting).filter(Objects::nonNull).toList());
 
         Map<String, PostingInfo> postingMap = stories.stream()
             .map(StoryInfo::getPosting)

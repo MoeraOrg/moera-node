@@ -1,7 +1,9 @@
 package org.moera.node.liberin.receptor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +19,8 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Favor;
 import org.moera.node.data.FavorRepository;
+import org.moera.node.data.LinkedEntry;
+import org.moera.node.data.LinkedEntryRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.UniversalContext;
@@ -34,6 +38,7 @@ import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.notification.send.Direction;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.FavorOperations;
+import org.moera.node.text.PostingReferencesExtractor;
 import org.springframework.test.util.ReflectionTestUtils;
 import tools.jackson.databind.ObjectMapper;
 
@@ -52,6 +57,7 @@ class PostingReferencesReceptorTest {
     private final TestReceptor receptor = new TestReceptor();
     private final Posting posting = new Posting();
     private final List<Favor> favors = new ArrayList<>();
+    private final Map<UUID, List<LinkedEntry>> references = new HashMap<>();
     private final SubscribedCache subscribedCache = mock(SubscribedCache.class);
     private final SheriffUserListOperations sheriffUserListOperations = mock(SheriffUserListOperations.class);
 
@@ -75,6 +81,11 @@ class PostingReferencesReceptorTest {
         when(options.getDuration("posting.revealed.notification.age")).thenReturn(ExtendedDuration.NEVER);
         ReflectionTestUtils.setField(receptor, "universalContext", context);
         ReflectionTestUtils.setField(receptor, "storyRepository", mock(StoryRepository.class));
+        LinkedEntryRepository linkedEntryRepository = mock(LinkedEntryRepository.class);
+        when(linkedEntryRepository.findByRevisionId(any(), any())).thenAnswer(invocation ->
+            references.getOrDefault(invocation.getArgument(1), List.of())
+        );
+        ReflectionTestUtils.setField(receptor, "linkedEntryRepository", linkedEntryRepository);
         posting.setId(UUID.randomUUID());
         posting.setNodeId(UUID.randomUUID());
         posting.setOwnerName("author_0");
@@ -253,7 +264,19 @@ class PostingReferencesReceptorTest {
         }
     }
 
-    private static EntryRevision revision(String text) {
+    @Test
+    void notificationsUseSavedReferencesWithoutExtractingTheBodyAgain() {
+        posting.getCurrentRevision().setBody(Body.EMPTY);
+
+        receptor.added(new PostingAddedLiberin(posting));
+
+        assertEquals(1, receptor.notifications.size());
+        var notification = assertInstanceOf(PostingSharedNotification.class, receptor.notifications.getFirst());
+        assertEquals("target", notification.getPostingId());
+        assertFavors("REFERENCE");
+    }
+
+    private EntryRevision revision(String text) {
         Body body = new Body();
         body.setText(text);
         EntryRevision revision = new EntryRevision();
@@ -261,6 +284,14 @@ class PostingReferencesReceptorTest {
         revision.setBody(body.getEncoded());
         revision.setBodyPreview(body.getEncoded());
         revision.setSignature(new byte[]{1});
+        for (var reference : PostingReferencesExtractor.extract(body)) {
+            LinkedEntry link = new LinkedEntry();
+            link.setId(UUID.randomUUID());
+            link.setReceiverNodeName(reference.nodeName());
+            link.setReceiverEntryId(reference.postingId());
+            revision.addLinkedEntry(link);
+        }
+        references.put(revision.getId(), List.copyOf(revision.getLinkedEntries()));
         return revision;
     }
 

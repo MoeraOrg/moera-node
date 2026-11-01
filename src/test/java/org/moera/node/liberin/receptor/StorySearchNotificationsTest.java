@@ -185,6 +185,9 @@ class StorySearchNotificationsTest {
         TestPostingReceptor postingReceptor = new TestPostingReceptor(receptor);
         ReflectionTestUtils.setField(postingReceptor, "universalContext", universalContext);
         ReflectionTestUtils.setField(postingReceptor, "storyRepository", storyRepository);
+        ReflectionTestUtils.setField(
+            postingReceptor, "linkedEntryRepository", mock(org.moera.node.data.LinkedEntryRepository.class)
+        );
         for (Liberin liberin : captor.getAllValues()) {
             liberin.setNodeId(story.getNodeId());
             if (liberin instanceof StoryDeletedLiberin deletion) {

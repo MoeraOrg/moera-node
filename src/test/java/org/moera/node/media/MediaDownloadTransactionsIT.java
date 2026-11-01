@@ -239,6 +239,9 @@ class MediaDownloadTransactionsIT {
         ReflectionTestUtils.setField(picker, "entryAttachmentRepository", attachments);
         ReflectionTestUtils.setField(picker, "entrySourceRepository", repositories.getRepository(EntrySourceRepository.class));
         ReflectionTestUtils.setField(picker, "storyOperations", mock(StoryOperations.class));
+        ReflectionTestUtils.setField(
+            picker, "linkedEntryOperations", mock(org.moera.node.operations.LinkedEntryOperations.class)
+        );
         ReflectionTestUtils.setField(picker, "reactionTotalRepository",
             repositories.getRepository(ReactionTotalRepository.class));
         ReactionTotalOperations reactionTotals = mock(ReactionTotalOperations.class);

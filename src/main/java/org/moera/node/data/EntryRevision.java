@@ -96,6 +96,9 @@ public class EntryRevision {
     private Set<EntryAttachment> attachments = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entryRevision")
+    private Set<LinkedEntry> linkedEntries = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entryRevision")
     private Set<Reaction> reactions = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "entryRevision")
@@ -323,6 +326,19 @@ public class EntryRevision {
     public void removeAttachment(EntryAttachment attachment) {
         attachments.removeIf(r -> r.getId().equals(attachment.getId()));
         attachment.setEntryRevision(null);
+    }
+
+    public Set<LinkedEntry> getLinkedEntries() {
+        return linkedEntries;
+    }
+
+    public void setLinkedEntries(Set<LinkedEntry> linkedEntries) {
+        this.linkedEntries = linkedEntries;
+    }
+
+    public void addLinkedEntry(LinkedEntry linkedEntry) {
+        linkedEntries.add(linkedEntry);
+        linkedEntry.setEntryRevision(this);
     }
 
     public Set<Reaction> getReactions() {

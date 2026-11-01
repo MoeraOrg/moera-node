@@ -6,8 +6,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -167,6 +169,38 @@ public class SheriffUserListOperations {
                 .filter(pi -> markedNames.contains(pi.getOwnerName()))
                 .forEach(pi -> SheriffUtil.addSheriffMark(pi, sheriff));
         }
+    }
+
+    public void fillSheriffListMarks(Collection<PostingInfo> postings) {
+        Map<String, List<PostingInfo>> bySheriff = new HashMap<>();
+        for (PostingInfo posting : postings) {
+            if (
+                !PostingInfoUtil.isSheriffUserListReferred(posting)
+                || ObjectUtils.isEmpty(posting.getSheriffs())
+                || posting.getOwnerName().equals(universalContext.nodeName())
+            ) {
+                continue;
+            }
+            posting.getSheriffs().stream().distinct().forEach(sheriff ->
+                bySheriff.computeIfAbsent(sheriff, name -> new ArrayList<>()).add(posting)
+            );
+        }
+        bySheriff.forEach((sheriff, referred) -> {
+            Set<String> ownerNames = referred.stream().map(PostingInfo::getOwnerName).collect(Collectors.toSet());
+            Set<String> markedNames;
+            if (sheriff.equals(universalContext.nodeName())) {
+                markedNames = userListItemRepository.findByListAndNodeNames(
+                    universalContext.nodeId(), UserList.SHERIFF_HIDE, ownerNames
+                ).stream().map(UserListItem::getNodeName).collect(Collectors.toSet());
+            } else {
+                markedNames = remoteUserListItemRepository.findByListAndNodeNames(
+                    universalContext.nodeId(), sheriff, UserList.SHERIFF_HIDE, ownerNames
+                ).stream().filter(item -> !item.isAbsent()).map(RemoteUserListItem::getNodeName)
+                    .collect(Collectors.toSet());
+            }
+            referred.stream().filter(posting -> markedNames.contains(posting.getOwnerName()))
+                .forEach(posting -> SheriffUtil.addSheriffMark(posting, sheriff));
+        });
     }
 
     public void fillSheriffListMarks(PostingInfo postingInfo) {

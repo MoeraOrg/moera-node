@@ -104,7 +104,7 @@ public class PostingProcessor {
             pick.setRemoteFeedName(userSubscription.getRemoteFeedName());
             pick.setRemotePostingId(notification.getPostingId());
             pick.setFeedName(userSubscription.getFeedName());
-            pickerPool.pick(pick);
+            pickerPool.pickAfterCommit(pick);
         }
     }
 
@@ -135,7 +135,7 @@ public class PostingProcessor {
             Pick pick = new Pick();
             pick.setRemoteNodeName(subscription.getRemoteNodeName());
             pick.setRemotePostingId(notification.getPostingId());
-            pickerPool.pick(pick);
+            pickerPool.pickAfterCommit(pick);
         });
     }
 

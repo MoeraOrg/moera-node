@@ -30,7 +30,12 @@ import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.option.Options;
 import org.moera.node.picker.PickerPool;
 import org.moera.node.task.Jobs;
+import org.moera.node.util.Transaction;
 
+import static org.moera.node.util.MediaTransactionTestSupport.transaction;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -60,8 +65,9 @@ class RemotePostingControllerTest {
     @InjectMocks
     private RemotePostingController remotePostingController;
 
-    @Test
-    void republishDownloadsPostingForEveryPublication() {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void republishDownloadsPostingForEveryPublicationOnlyAfterCommit(boolean commit) throws Exception {
         when(requestContext.isAdmin(Scope.ADD_POST)).thenReturn(true);
         when(requestContext.isAdmin(Scope.UPDATE_FEEDS)).thenReturn(true);
         StoryAttributes timeline = publication("timeline", 1000L, true, true, false, true);
@@ -71,7 +77,22 @@ class RemotePostingControllerTest {
         RemotePostingRepublishAttributes attributes = attributes(List.of(timeline, news));
         attributes.setPostingView(Principal.PRIVATE);
 
-        remotePostingController.republish("remote", "posting", attributes);
+        doCallRealMethod().when(pickerPool).pickAfterCommit(any(Pick.class));
+        Transaction tx = transaction();
+        Runnable republish = () -> {
+            remotePostingController.republish("remote", "posting", attributes);
+            verify(pickerPool, never()).pick(any(Pick.class));
+            if (!commit) {
+                throw new IllegalStateException("rollback");
+            }
+        };
+        if (commit) {
+            tx.executeWrite(republish);
+        } else {
+            Assertions.assertThrows(IllegalStateException.class, () -> tx.executeWrite(republish));
+            verify(pickerPool, never()).pick(any(Pick.class));
+            return;
+        }
 
         ArgumentCaptor<Pick> captor = ArgumentCaptor.forClass(Pick.class);
         verify(pickerPool, times(2)).pick(captor.capture());

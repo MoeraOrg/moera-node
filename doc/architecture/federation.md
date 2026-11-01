@@ -62,6 +62,10 @@ A `Pick` is durable work to fetch or refresh a remote posting and its related da
 at startup and runs one `Picker` for each `(local node ID, remote node name)` direction. This prevents concurrent
 fetches from the same peer from stepping on each other's posting state.
 
+`PostingProcessor` uses `PickerPool.pickAfterCommit()` for `STORY_ADDED` and `POSTING_UPDATED`; the remote-posting
+republish API uses it for publication picks. These picks are persisted and queued only after the caller's transaction
+commits, so rolled-back notification processing and republish requests do not start downloads.
+
 A pick's nullable recommendation flag records whether to change the cached posting's recommendation status. A null
 value preserves the status; explicit true or false values apply even when the posting is already cached and its
 revision is unchanged. New cached postings are not recommended unless the pick explicitly requests it. Redirects,
@@ -101,6 +105,17 @@ source references belong to the resulting story rather than to the downloaded po
 the posting, the picker adds a new story for the requested publication. A publication without an explicit local feed
 name downloads the posting without adding a story.
 
+Creating a local or picked posting revision stores its outgoing references through `LinkedEntryOperations` after the
+body is finalized. Existing live copies are reused. `LinkedEntryOperations` submits unresolved remote references through
+`PickerPool.pickAfterCommit()`, which starts picks after commit, without a feed publication.
+Rolled-back revisions do not start downloads. Outside a transaction, `pickAfterCommit()` starts a pick immediately.
+`PostingReceptor` reads the stored references only to send notifications.
+The durable pick retains its linked entry through redirects, and the download transaction associates that reference
+with the resulting local posting.
+Redirects to the current node resolve to its existing original.
+Media child revisions do not schedule linked-posting downloads. The reference and pick relationships are defined in
+[V325](../../src/main/resources/db/migration/V325__linked_entries.sql).
+
 Remote attachments initially use `RemoteMediaFile` metadata and an optional lease. A later download may add a local
 `MediaFileOwner` to the same attachment. The remote record retains origin identity and metadata needed for federation,
 while the local owner supplies bytes and local access control.
@@ -115,13 +130,14 @@ posting as a whole and omits the revision ID. A remote story is identified by it
 descriptive metadata and do not participate in deduplication or unsharing matches. Notifications carry the current
 story moment.
 
-Original posting creation, editing, deletion, and restoration also compare universal links in the posting's final
-HTML body. Like `MentionsExtractor`, `PostingReferencesExtractor` parses the body with Jsoup and traverses its elements.
+Posting revision creation extracts universal links from the final HTML body into `linked_entries`.
+Like `MentionsExtractor`, `PostingReferencesExtractor` parses the body with Jsoup and traverses its elements.
 It reads anchor `href` attributes, with HTML entities decoded by the parser, and accepts named HTTP(S) universal URLs
 on `moera.page` and `web.moera.org` whose target is `/post/{id}`; comment and media targets are excluded. Plain text,
 subjects, and other attributes do not create references. Node names are expanded and duplicate node/posting pairs
 are collapsed across URL spellings.
-`PostingReceptor` compares the current references with the previous signed revision, excludes the posting author's
+On creation, editing, deletion, and restoration of an original posting, `PostingReceptor` reads these stored references
+without parsing the body again. It compares them with the previous signed revision, excludes the posting author's
 own node, and applies each revision's visibility to the referenced node. Newly visible references send
 `POSTING_SHARED` with `SharingType.REFER`; removed or newly inaccessible references send `POSTING_UNSHARED` with the
 same type. Both identify the source posting, without a revision or feed/story reference. Reference additions also

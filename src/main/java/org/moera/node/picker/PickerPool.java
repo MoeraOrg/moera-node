@@ -25,6 +25,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 public class PickerPool {
@@ -110,6 +112,24 @@ public class PickerPool {
                 long runDuration = storedTime.until(finishedTime, ChronoUnit.MILLIS);
                 log.warn("Slow adding picker: {}ms ({}ms..{}ms)", fullDuration, storeDuration, runDuration);
             }
+        }
+    }
+
+    public void pickAfterCommit(Pick pick) {
+        if (
+            TransactionSynchronizationManager.isActualTransactionActive()
+            && TransactionSynchronizationManager.isSynchronizationActive()
+        ) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+
+                @Override
+                public void afterCommit() {
+                    pick(pick);
+                }
+
+            });
+        } else {
+            pick(pick);
         }
     }
 

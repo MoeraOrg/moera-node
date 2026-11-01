@@ -47,6 +47,7 @@ import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.StoryAttributesUtil;
 import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.operations.EntryOperations;
+import org.moera.node.operations.PostingInfoOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -62,6 +63,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -82,6 +84,9 @@ class StoryControllerTest {
     private EntryOperations entryOperations;
 
     @Mock
+    private PostingInfoOperations postingInfoOperations;
+
+    @Mock
     private EntityManager entityManager;
 
     @Mock
@@ -99,6 +104,7 @@ class StoryControllerTest {
 
     @BeforeEach
     void setUp() {
+        lenient().when(postingInfoOperations.withLinkedPostings(any())).thenAnswer(invocation -> invocation.getArgument(0));
         useRealStoryOperations();
         ReflectionTestUtils.setField(storyController, "tx", tx);
         ReflectionTestUtils.setField(tx, "txManager", platformTransactionManager);

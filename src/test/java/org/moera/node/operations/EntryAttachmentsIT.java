@@ -829,6 +829,7 @@ class EntryAttachmentsIT {
             new JpaRepositoryFactory(entityManager).getRepository(RemoteMediaFileRepository.class));
         ReflectionTestUtils.setField(operations, "mediaOperations", mock(MediaOperations.class));
         ReflectionTestUtils.setField(operations, "storyOperations", mock(StoryOperations.class));
+        ReflectionTestUtils.setField(operations, "linkedEntryOperations", mock(LinkedEntryOperations.class));
         ReflectionTestUtils.setField(operations, "jobs", mock(Jobs.class));
         return operations;
     }

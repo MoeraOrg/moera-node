@@ -97,6 +97,9 @@ public class PostingOperations {
     private StoryOperations storyOperations;
 
     @Inject
+    private LinkedEntryOperations linkedEntryOperations;
+
+    @Inject
     private Jobs jobs;
 
     @Inject
@@ -208,6 +211,7 @@ public class PostingOperations {
         if (revisionUpdater != null) {
             revisionUpdater.accept(current);
         }
+        linkedEntryOperations.create(current);
 
         var mediaPostingIds = new MediaPostingIds(posting.getId());
         if (!media.isEmpty()) {

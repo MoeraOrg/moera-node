@@ -17,13 +17,13 @@ import org.moera.lib.node.types.SearchContentUpdateType;
 import org.moera.lib.node.types.SharingType;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.body.Body;
-import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.FavorType;
 import org.moera.node.data.Feed;
+import org.moera.node.data.LinkedEntryRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
@@ -66,9 +66,7 @@ import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.model.notification.StoryAddedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.FavorOperations;
-import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.text.MentionsExtractor;
-import org.moera.node.text.PostingReferencesExtractor;
 import org.moera.node.text.PostingReferencesExtractor.Reference;
 import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.ExtendedDuration;
@@ -87,6 +85,9 @@ public class PostingReceptor extends LiberinReceptorBase {
 
     @Inject
     private StoryRepository storyRepository;
+
+    @Inject
+    private LinkedEntryRepository linkedEntryRepository;
 
     @Inject
     private FriendCache friendCache;
@@ -362,11 +363,8 @@ public class PostingReceptor extends LiberinReceptorBase {
             ? filterMentions(MentionsExtractor.extract(new Body(latest.getBody())), ownerName, latestView)
             : Collections.emptySet();
         if (!currentMentions.isEmpty()) {
-            PostingInfo postingInfo = PostingInfoUtil.build(
+            PostingInfo postingInfo = PostingInfoUtil.buildForNotification(
                 posting,
-                posting.getStories(),
-                MediaAttachmentsProvider.NONE,
-                AccessCheckers.ADMIN,
                 universalContext.getOptions(),
                 directServeOperations
             );
@@ -411,9 +409,10 @@ public class PostingReceptor extends LiberinReceptorBase {
         EntryRevision latest,
         Principal latestView
     ) {
-        Set<Reference> currentReferences = references(current, posting.getOwnerName());
+        Set<Reference> currentReferences = references(posting.getNodeId(), current, posting.getOwnerName());
         Set<Reference> latestReferences = latest != null && latest.getSignature() != null
-            ? references(latest, posting.getOwnerName()) : Set.of();
+            ? references(posting.getNodeId(), latest, posting.getOwnerName())
+            : Set.of();
 
         currentReferences.stream()
             .filter(reference -> !latestReferences.contains(reference))
@@ -432,11 +431,8 @@ public class PostingReceptor extends LiberinReceptorBase {
             .filter(reference -> !latestVisible.contains(reference))
             .toList();
         if (!addedReferences.isEmpty()) {
-            PostingInfo postingInfo = PostingInfoUtil.build(
+            PostingInfo postingInfo = PostingInfoUtil.buildForNotification(
                 posting,
-                posting.getStories(),
-                MediaAttachmentsProvider.NONE,
-                AccessCheckers.ADMIN,
                 universalContext.getOptions(),
                 directServeOperations
             );
@@ -472,12 +468,13 @@ public class PostingReceptor extends LiberinReceptorBase {
             ));
     }
 
-    private static Set<Reference> references(EntryRevision revision, String ownerName) {
+    private Set<Reference> references(UUID nodeId, EntryRevision revision, String ownerName) {
         if (revision == null) {
             return Set.of();
         }
         String owner = NodeName.expand(ownerName);
-        return PostingReferencesExtractor.extract(new Body(revision.getBody())).stream()
+        return linkedEntryRepository.findByRevisionId(nodeId, revision.getId()).stream()
+            .map(link -> new Reference(link.getReceiverNodeName(), link.getReceiverEntryId()))
             .filter(reference -> !Objects.equals(owner, reference.nodeName()))
             .collect(Collectors.toSet());
     }

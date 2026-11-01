@@ -139,6 +139,22 @@ public class PostingInfoUtil {
         return info;
     }
 
+    public static PostingInfo buildForNotification(Entry posting, Options options, DirectServeOperations directServe) {
+        PostingInfo info = new PostingInfo();
+        buildTo(
+            info,
+            posting,
+            posting.getCurrentRevision(),
+            posting.getStories(),
+            MediaAttachmentsProvider.NONE,
+            false,
+            AccessCheckers.ADMIN,
+            options,
+            directServe
+        );
+        return info;
+    }
+
     private static void buildTo(
         PostingInfo info,
         Entry posting,

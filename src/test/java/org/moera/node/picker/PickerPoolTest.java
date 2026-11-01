@@ -177,11 +177,11 @@ class PickerPoolTest {
     }
 
     @Test
-    void newPickUsesCurrentLocalNode() {
+    void pickAfterCommitWithoutTransactionUsesCurrentLocalNode() {
         Pick pick = pick();
         pick.setNodeId(null);
 
-        pool.pick(pick);
+        pool.pickAfterCommit(pick);
 
         assertEquals(nodeId, pick.getNodeId());
         assertTrue(stored.containsKey(pick.getId()));

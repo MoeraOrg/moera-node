@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,8 @@ import org.moera.lib.node.types.body.Body;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
+import org.moera.node.data.LinkedEntry;
+import org.moera.node.data.LinkedEntryRepository;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.data.Pick;
@@ -34,6 +37,7 @@ import org.moera.node.liberin.model.PostingTotalSharingsUpdatedLiberin;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.operations.ReactionTotalOperations;
+import org.moera.node.operations.LinkedEntryOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
@@ -217,6 +221,75 @@ class PickerTest {
     }
 
     @Test
+    void downloadedRevisionStoresReferencesOnceAfterItsBodyIsReady() {
+        Posting posting = posting(UUID.randomUUID());
+        Picker picker = picker(posting, mock(StoryOperations.class));
+        PostingInfo info = postingInfo();
+        info.setRevisionId("new-revision");
+        info.setBody(new Body("{\"text\":\"<a href='https://moera.page/@linked/~/post/target'>post</a>\"}"));
+        EntryRevisionRepository revisions = mock(EntryRevisionRepository.class);
+        when(revisions.save(any(EntryRevision.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        ReflectionTestUtils.setField(picker, "entryRevisionRepository", revisions);
+        LinkedEntryOperations linkedEntryOperations = new LinkedEntryOperations();
+        LinkedEntryRepository links = mock(LinkedEntryRepository.class);
+        when(links.save(any(LinkedEntry.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        UniversalContext context = (UniversalContext) ReflectionTestUtils.getField(picker, "universalContext");
+        when(context.nodeName()).thenReturn("local_0");
+        when(context.nodeId()).thenReturn(posting.getNodeId());
+        ReflectionTestUtils.setField(linkedEntryOperations, "universalContext", context);
+        ReflectionTestUtils.setField(linkedEntryOperations, "linkedEntryRepository", links);
+        ReflectionTestUtils.setField(linkedEntryOperations, "postingRepository", mock(PostingRepository.class));
+        ReflectionTestUtils.setField(linkedEntryOperations, "pickerPool", mock(PickerPool.class));
+        ReflectionTestUtils.setField(picker, "linkedEntryOperations", linkedEntryOperations);
+
+        savePosting(picker, info, null);
+        EntryRevision revision = posting.getCurrentRevision();
+        info.setEditedAt(3000L);
+        savePosting(picker, info, null);
+
+        assertSame(revision, posting.getCurrentRevision());
+        assertEquals(1, revision.getLinkedEntries().size());
+        LinkedEntry link = revision.getLinkedEntries().iterator().next();
+        assertEquals("linked_0", link.getReceiverNodeName());
+        assertEquals("target", link.getReceiverEntryId());
+        verify(links).save(link);
+    }
+
+    @Test
+    void linkedPickRedirectingHomeUsesTheExistingOriginal() throws Exception {
+        UUID nodeId = UUID.randomUUID();
+        Posting original = posting(nodeId);
+        original.setReceiverName(null);
+        LinkedEntry link = new LinkedEntry();
+        link.setId(UUID.randomUUID());
+        Pick pick = new Pick();
+        pick.setLinkedEntry(link);
+        pick.setRemoteNodeName("relay_0");
+        pick.setRemotePostingId("copy");
+        Pick redirected = pick.redirectTo("local_0", original.getId().toString());
+        LinkedEntryRepository links = mock(LinkedEntryRepository.class);
+        when(links.findByNodeIdAndId(nodeId, link.getId())).thenReturn(Optional.of(link));
+        PostingRepository postings = mock(PostingRepository.class);
+        when(postings.findByNodeIdAndId(nodeId, original.getId())).thenReturn(Optional.of(original));
+        UniversalContext context = mock(UniversalContext.class);
+        when(context.nodeName()).thenReturn("local_0");
+        when(context.nodeId()).thenReturn(nodeId);
+        LinkedEntryOperations operations = new LinkedEntryOperations();
+        ReflectionTestUtils.setField(operations, "universalContext", context);
+        ReflectionTestUtils.setField(operations, "linkedEntryRepository", links);
+        ReflectionTestUtils.setField(operations, "postingRepository", postings);
+        PickerPool pool = mock(PickerPool.class);
+        Picker picker = new Picker(pool, "relay_0");
+        ReflectionTestUtils.setField(picker, "linkedEntryOperations", operations);
+        ReflectionTestUtils.setField(picker, "tx", transaction());
+
+        ReflectionTestUtils.invokeMethod(picker, "redirected", pick, redirected);
+
+        assertSame(original, link.getLinkedEntry());
+        verify(pool, never()).pick(any());
+    }
+
+    @Test
     void requestedPublicationKeepsAllStoryAttributes() {
         Posting posting = posting(UUID.randomUUID());
         StoryOperations storyOperations = mock(StoryOperations.class);
@@ -356,6 +429,7 @@ class PickerTest {
         when(universalContext.getOptions()).thenReturn(mock(Options.class));
         ReflectionTestUtils.setField(picker, "universalContext", universalContext);
         ReflectionTestUtils.setField(picker, "storyOperations", storyOperations);
+        ReflectionTestUtils.setField(picker, "linkedEntryOperations", mock(LinkedEntryOperations.class));
         return picker;
     }
 

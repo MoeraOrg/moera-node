@@ -31,6 +31,33 @@ dedicated endpoints.
 remote attachment has been downloaded locally. Its ordinal preserves attachment order, and `embedded` distinguishes
 inline use from a separate attachment.
 
+## Linked postings
+
+`LinkedEntry` belongs to a posting revision and records a distinct destination node/posting pair extracted from its
+final body. Local targets resolve within the same hosted node; remote targets resolve to cached postings. A reference
+may remain unresolved when its target is unavailable. Media child postings do not own these references.
+
+The revision owns the reference's lifetime: deleting a revision cascades to its linked entries and their pending picks.
+Deleting a target posting clears the resolution while preserving the destination identity. Any resolved reference,
+including one from a historical revision, keeps its target out of unused-posting cleanup. This does not prevent
+deletion of the target when its original is deleted. The foreign keys and indexes are defined in
+[V325](../../src/main/resources/db/migration/V325__linked_entries.sql).
+
+`PostingInfo` includes the current revision's resolved, live targets that the requesting client can view under
+`VIEW_CONTENT`. Each target uses its own content and metadata permissions. Linked postings are expanded at every level;
+a posting already present in the current ancestor chain is omitted. Self-references and cycles therefore produce
+finite trees, while a shared target remains available in independent branches. The wire field is defined in the
+[public API schema](../../../moeraorg.github.io/_data/node_api.yml).
+
+`PostingInfoUtil` converts a supplied posting without traversing its outgoing references. REST responses load linked
+targets through `PostingInfoOperations`, using the source revision IDs. References and previously unseen targets are
+loaded breadth-first in batches shared across the slice. Inaccessible targets are not traversed. Top-level stories,
+media attachments, reactions, and blockings are prepared in bulk for all distinct visible targets, with the same client
+permissions as the single-posting response. Sheriff user-list lookups are grouped by sheriff and applied according to
+each target's own sheriffs. Each target is converted once; response occurrences copy its prepared metadata and build
+separate linked-posting lists according to their ancestor paths. An explicit traversal stack avoids recursive Java
+calls when assembling deep trees. Media children and notification metadata do not expand linked postings.
+
 ## Drafts
 
 `Draft` owns editable text and its draft attachments independently of published entries. Draft updates acquire a

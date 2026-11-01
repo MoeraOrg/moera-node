@@ -30,6 +30,7 @@ import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.PostingOperations;
+import org.moera.node.operations.PostingInfoOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class DeletedPostingController {
 
     private static final Logger log = LoggerFactory.getLogger(DeletedPostingController.class);
+
+    @Inject
+    private PostingInfoOperations postingInfoOperations;
 
     @Inject
     private DirectServeOperations directServeOperations;
@@ -91,11 +95,13 @@ public class DeletedPostingController {
         var mediaAttachments = entryOperations.prepareMediaAttachments(
             postings.stream().map(Posting::getCurrentRevision).toList()
         );
-        return postings.stream()
+        var infos = postings.stream()
             .map(p -> PostingInfoUtil.build(
                 p, mediaAttachments, requestContext, requestContext.getOptions(), directServeOperations
             ))
             .collect(Collectors.toList());
+        postingInfoOperations.fillLinkedPostings(infos);
+        return infos;
     }
 
     @GetMapping("/{id}")
@@ -108,9 +114,9 @@ public class DeletedPostingController {
         Posting posting = postingRepository.findDeletedById(requestContext.nodeId(), postingId)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
-        return PostingInfoUtil.build(
+        return postingInfoOperations.withLinkedPostings(PostingInfoUtil.build(
             posting, entryOperations, requestContext, requestContext.getOptions(), directServeOperations
-        );
+        ));
     }
 
     @PostMapping("/{id}/restore")
@@ -137,14 +143,14 @@ public class DeletedPostingController {
         requestContext.send(new PostingRestoredLiberin(posting));
 
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), postingId);
-        return PostingInfoUtil.build(
+        return postingInfoOperations.withLinkedPostings(PostingInfoUtil.build(
             posting,
             stories,
             MediaAttachmentsProvider.relations(directServeOperations, updatedPosting.mediaPostingIds()),
             requestContext,
             requestContext.getOptions(),
             directServeOperations
-        );
+        ));
     }
 
     @Scheduled(fixedDelayString = "P1D")

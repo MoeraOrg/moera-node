@@ -54,6 +54,9 @@ public class Pick {
     @ManyToOne
     private Entry parentMediaEntry;
 
+    @ManyToOne
+    private LinkedEntry linkedEntry;
+
     private Boolean recommended;
 
     private boolean pinned;
@@ -266,8 +269,17 @@ public class Pick {
         this.running = running;
     }
 
+    public LinkedEntry getLinkedEntry() {
+        return linkedEntry;
+    }
+
+    public void setLinkedEntry(LinkedEntry linkedEntry) {
+        this.linkedEntry = linkedEntry;
+    }
+
     public Pick redirectTo(String remoteNodeName, String remotePostingId) {
         Pick pick = new Pick();
+        pick.linkedEntry = linkedEntry;
         pick.feedName = feedName;
         pick.remoteFeedName = remoteFeedName;
         pick.recommended = recommended;

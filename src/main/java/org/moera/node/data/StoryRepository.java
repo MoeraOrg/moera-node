@@ -78,6 +78,15 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     @Query("select s from Story s where s.nodeId = ?1 and s.entry.id = ?2 and s.parent is null order by s.moment desc")
     List<Story> findByEntryId(UUID nodeId, UUID entryId);
 
+    @Query(
+        "select s from Story s"
+        + " left join fetch s.remoteAvatarMediaFile"
+        + " left join fetch s.remotePostingAvatarMediaFile"
+        + " left join fetch s.remoteOwnerAvatarMediaFile"
+        + " where s.nodeId = ?1 and s.entry.id in ?2 and s.parent is null order by s.moment desc"
+    )
+    List<Story> findByEntryIds(UUID nodeId, Collection<UUID> entryIds);
+
     @Modifying
     @Query("delete from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.entry.id = ?4")
     void deleteByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);

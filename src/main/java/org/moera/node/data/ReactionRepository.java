@@ -24,6 +24,7 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
     @Query(
         "select r from Reaction r"
         + " left join fetch r.ownerAvatarMediaFile"
+        + " left join fetch r.entryRevision"
         + " where r.entryRevision.entry.id in (?1) and r.ownerName = ?2 and r.deletedAt is null"
     )
     List<Reaction> findByEntryIdsAndOwner(Collection<UUID> entryIds, String ownerName);

@@ -43,6 +43,19 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     )
     Optional<Posting> findFullByNodeIdAndId(UUID nodeId, UUID id);
 
+    @Query(
+        "select distinct p from Posting p"
+        + " left join fetch p.currentRevision left join fetch p.reactionTotals left join fetch p.sources s"
+        + " left join fetch s.remoteAvatarMediaFile"
+        + " left join fetch p.ownerAvatarMediaFile left join fetch p.receiverAvatarMediaFile"
+        + " left join fetch p.parentMediaEntry me left join fetch me.currentRevision"
+        + " left join fetch me.ownerAvatarMediaFile left join fetch me.receiverAvatarMediaFile"
+        + " left join fetch p.parentRemoteMedia"
+        + " left join fetch p.blockedInstants"
+        + " where p.nodeId = ?1 and p.id in ?2 and p.deletedAt is null"
+    )
+    List<Posting> findFullByNodeIdAndIds(UUID nodeId, Collection<UUID> ids);
+
     @Query("select p from Posting p join fetch p.currentRevision cr where p.nodeId = ?1 and p.deletedAt is not null")
     List<Posting> findDeleted(UUID nodeId, Pageable pageable);
 
@@ -101,6 +114,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
         "select p from Posting p"
         + " where p.nodeId = ?1 and p.deletedAt is null and p.parentMediaEntry is null"
         + " and not exists(select s from Story s where s.entry.id = p.id)"
+        + " and not exists(select le from LinkedEntry le where le.linkedEntry.id = p.id)"
     )
     List<Posting> findUnlinked(UUID nodeId);
 
