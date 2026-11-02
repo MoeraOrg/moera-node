@@ -68,6 +68,10 @@ Public uploads accept supported images and set `exposed`. Private uploads create
 body, a completed staged upload, or a source URL. `downsize` keeps image resizing synchronous and requests asynchronous
 compression for a video that does not meet the node's compressed-video profile.
 
+SVG files are private document attachments. They retain their `image/svg+xml` MIME type and original bytes, without
+image metadata extraction, resizing, previews, or OCR. Image processing eligibility is defined in
+[`MimeUtil`](../../src/main/java/org/moera/node/media/MimeUtil.java).
+
 ## Resumable uploads
 
 The admin-only API under `/moera/api/media/upload` stages a private source file without creating `MediaFile` or

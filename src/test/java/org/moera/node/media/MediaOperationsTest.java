@@ -14,6 +14,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.moera.node.config.Config;
 import org.moera.node.config.DirectServeSource;
 import org.moera.node.data.MediaFile;
@@ -48,6 +51,41 @@ public class MediaOperationsTest {
         Assertions.assertTrue(locked.get());
         Assertions.assertTrue(Files.exists(mediaPath.resolve("media-hash.md")));
         Assertions.assertFalse(Files.exists(temporaryFile));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"image/svg+xml", "application/octet-stream"})
+    void svgPrivateMediaIsStoredWithoutImageProcessing(String contentType) throws Exception {
+        MediaOperations operations = mediaOperations(mediaFileRepository(null, new AtomicBoolean(), new AtomicBoolean()));
+        Path temporaryFile = mediaPath.resolve("drawing.SVG");
+        String svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle r=\"20\"/></svg>";
+        Files.writeString(temporaryFile, svg);
+
+        MediaFile mediaFile = operations.putInPlace(
+            "media-hash", contentType, temporaryFile, new byte[] {1}, false, false
+        );
+
+        Assertions.assertEquals("image/svg+xml", mediaFile.getMimeType());
+        Assertions.assertEquals("media-hash.svg", mediaFile.getFileName());
+        Assertions.assertEquals(svg, Files.readString(mediaPath.resolve(mediaFile.getFileName())));
+        Assertions.assertNull(mediaFile.getSizeX());
+        Assertions.assertNull(mediaFile.getSizeY());
+        Assertions.assertFalse(mediaFile.isExposed());
+        Assertions.assertFalse(Files.exists(temporaryFile));
+    }
+
+    @Test
+    void downsizeLeavesSvgUnchanged() throws Exception {
+        MediaOperations operations = new MediaOperations();
+        Path temporaryFile = mediaPath.resolve("drawing.svg");
+        String svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle r=\"20\"/></svg>";
+        Files.writeString(temporaryFile, svg);
+
+        String contentType = operations.downsizeImage(temporaryFile, "image/svg+xml", 1);
+
+        Assertions.assertEquals("image/svg+xml", contentType);
+        Assertions.assertEquals(svg, Files.readString(temporaryFile));
     }
 
     @Test

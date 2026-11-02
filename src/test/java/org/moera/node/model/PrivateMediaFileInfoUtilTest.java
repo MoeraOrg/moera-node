@@ -11,6 +11,18 @@ import org.moera.node.media.MediaOperations;
 public class PrivateMediaFileInfoUtilTest {
 
     @Test
+    void svgIsReturnedAsAttachment() {
+        MediaFileOwner owner = owner(false, false);
+        owner.getMediaFile().setMimeType("image/svg+xml");
+
+        var info = PrivateMediaFileInfoUtil.build(owner, null, null);
+
+        Assertions.assertEquals(true, info.getAttachment());
+        Assertions.assertEquals("image/svg+xml", info.getMimeType());
+        Assertions.assertTrue(info.getPreviews().isEmpty());
+    }
+
+    @Test
     void compressedMediaIdIsExposedWhenCompressionIsComplete() {
         MediaFileOwner owner = owner(true, true);
         MediaFileOwner compressedOwner = owner(false, true);

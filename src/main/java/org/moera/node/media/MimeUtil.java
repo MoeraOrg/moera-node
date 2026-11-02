@@ -59,7 +59,6 @@ public class MimeUtil {
         THUMBNAIL_FORMATS.put("image/pjpeg", LOSSY);
         THUMBNAIL_FORMATS.put("image/png", LOSSLESS);
         THUMBNAIL_FORMATS.put("image/x-png", LOSSLESS);
-        THUMBNAIL_FORMATS.put("image/svg+xml", LOSSLESS);
         THUMBNAIL_FORMATS.put("image/tiff", LOSSLESS);
         THUMBNAIL_FORMATS.put("image/vnd.microsoft.icon", LOSSLESS);
         THUMBNAIL_FORMATS.put("image/vnd.wap.wbmp", LOSSLESS);
