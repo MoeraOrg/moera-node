@@ -582,7 +582,7 @@ public class PostingInfoUtil {
         if (viewPrincipal != null) {
             posting.setViewPrincipal(viewPrincipal);
         } else {
-            posting.setViewPrincipal(principal.isFriends() || principal.isSubscribed() ? Principal.PRIVATE : principal);
+            posting.setViewPrincipal(principal.isFriends() || principal.isSubscribed() ? Principal.ADMIN : principal);
         }
         posting.setReceiverViewPrincipal(principal);
         // TODO visibility to a particular group of friends should be converted to something here
@@ -593,12 +593,12 @@ public class PostingInfoUtil {
         posting.setReceiverDeletePrincipal(principal);
         principal = PostingOperations.getViewExternalSource(info.getOperations(), Principal.PUBLIC);
         posting.setViewExternalSourcePrincipal(
-            principal.isFriends() || principal.isSubscribed() ? Principal.PRIVATE : principal
+            principal.isFriends() || principal.isSubscribed() ? Principal.ADMIN : principal
         );
         posting.setReceiverViewExternalSourcePrincipal(principal);
         principal = PostingOperations.getViewSharings(info.getOperations(), Principal.PUBLIC);
         posting.setViewSharingsPrincipal(
-            principal.isFriends() || principal.isSubscribed() ? Principal.PRIVATE : principal
+            principal.isFriends() || principal.isSubscribed() ? Principal.ADMIN : principal
         );
         posting.setReceiverViewSharingsPrincipal(principal);
         principal = PostingOperations.getViewTotalSharings(info.getOperations(), Principal.PUBLIC);

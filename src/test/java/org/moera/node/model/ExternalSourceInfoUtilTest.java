@@ -76,7 +76,7 @@ class ExternalSourceInfoUtilTest {
         PostingInfoUtil.toPickedPosting(info, posting, null);
 
         assertEquals(EXTERNAL_SOURCE_URIS, List.of(posting.getExternalSourceUri()));
-        assertEquals(Principal.PRIVATE, posting.getViewExternalSourcePrincipal());
+        assertEquals(Principal.ADMIN, posting.getViewExternalSourcePrincipal());
         assertEquals(Principal.SUBSCRIBED, posting.getReceiverViewExternalSourcePrincipal());
     }
 
