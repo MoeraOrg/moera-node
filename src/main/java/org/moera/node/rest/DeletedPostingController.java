@@ -17,7 +17,6 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
@@ -34,7 +33,6 @@ import org.moera.node.operations.PostingInfoOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -154,7 +152,6 @@ public class DeletedPostingController {
     }
 
     @Scheduled(fixedDelayString = "P1D")
-    @EventListener(DomainsConfiguredEvent.class)
     @Transactional
     public void purgeExpired() {
         try (var ignored = requestCounter.allot()) {
