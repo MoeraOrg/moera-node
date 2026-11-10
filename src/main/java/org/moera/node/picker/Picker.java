@@ -246,7 +246,7 @@ public class Picker extends Task {
                 pick.isViewed(),
                 pick.isRead(),
                 pick.isSatisfied(),
-                pick.getPostingViewPrincipal(),
+                pick.getStoryViewPrincipal(),
                 pick.isAllowMultiple(),
                 pick.getPublishAt(),
                 pick.getExternalSourceUri(),
@@ -307,7 +307,7 @@ public class Picker extends Task {
         boolean viewed,
         boolean read,
         boolean satisfied,
-        Principal postingViewPrincipal,
+        Principal storyViewPrincipal,
         boolean allowMultiple,
         Timestamp publishAt,
         String[] externalSourceUri,
@@ -371,7 +371,7 @@ public class Picker extends Task {
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             posting.setRecommended(Boolean.TRUE.equals(recommended));
             posting = postingRepository.save(posting);
-            PostingInfoUtil.toPickedPosting(postingInfo, posting, postingViewPrincipal);
+            PostingInfoUtil.toPickedPosting(postingInfo, posting);
             createRevision(posting, postingInfo);
             attachMedia(attachments, posting.getId(), posting.getCurrentRevision(), null, picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
@@ -381,7 +381,7 @@ public class Picker extends Task {
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
             Principal latestView = posting.getViewE();
             posting.setOwnerAvatarMediaFile(ownerAvatar);
-            PostingInfoUtil.toPickedPosting(postingInfo, posting, postingViewPrincipal);
+            PostingInfoUtil.toPickedPosting(postingInfo, posting);
             EntryRevision latest = posting.getCurrentRevision();
             boolean newRevision = createRevision(posting, postingInfo);
             attachMedia(attachments, posting.getId(), posting.getCurrentRevision(), latest, picks);
@@ -408,10 +408,6 @@ public class Picker extends Task {
                 posting.setReceiverPublishedAt(receiverPublishedAt);
                 universalContext.send(new PostingPublishedAtUpdatedLiberin(posting.getId()));
             }
-
-            if (postingViewPrincipal != null) {
-                posting.setViewPrincipal(postingViewPrincipal);
-            }
         }
         if (recommended != null && posting.isRecommended() != recommended) {
             posting.setRecommended(recommended);
@@ -433,6 +429,9 @@ public class Picker extends Task {
         publication.setSatisfied(satisfied);
         publication.setPublishAt(Util.toEpochSecond(publishAt));
         publication.setExternalSourceUri(List.of(externalSourceUri));
+        var operations = new org.moera.lib.node.types.StoryOperations();
+        operations.setView(storyViewPrincipal);
+        publication.setOperations(operations);
         storyOperations.publish(posting, List.of(publication), allowMultiple);
 
         var reactionTotals = reactionTotalRepository.findAllByEntryId(posting.getId());

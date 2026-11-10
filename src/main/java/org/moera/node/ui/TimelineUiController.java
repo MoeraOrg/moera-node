@@ -15,6 +15,7 @@ import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.StoryInfo;
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
@@ -112,6 +113,7 @@ public class TimelineUiController {
                 .stream()
                 .filter(t -> t.getEntry() != null)
                 .filter(t -> t.getEntry().isMessage())
+                .filter(t -> AccessCheckers.PUBLIC.isPrincipal(t.viewPrincipalFilter(), Scope.VIEW_CONTENT))
                 .filter(t -> t.getEntry().getViewCompound().isPublic())
                 .toList();
             var mediaAttachments = entryOperations.prepareMediaAttachments(

@@ -218,6 +218,30 @@ class StorySearchNotificationsTest {
         );
     }
 
+    @Test
+    void revealingPostingDoesNotRevealStoryWithIndependentVisibility() {
+        TestReceptor receptor = receptor();
+        Story story = story(true);
+        story.setViewPrincipal(Principal.ADMIN);
+        Posting posting = (Posting) story.getEntry();
+        posting.setNodeId(story.getNodeId());
+        posting.setCurrentRevision(new EntryRevision());
+        UniversalContext context = mock(UniversalContext.class);
+        when(context.nodeName()).thenReturn("local");
+        Options options = mock(Options.class);
+        when(options.getDuration("posting.revealed.notification.age")).thenReturn(ExtendedDuration.ALWAYS);
+        when(context.getOptions()).thenReturn(options);
+        StoryRepository repository = mock(StoryRepository.class);
+        when(repository.findByEntryId(posting.getNodeId(), posting.getId())).thenReturn(List.of(story));
+        TestPostingReceptor postingReceptor = new TestPostingReceptor(receptor);
+        ReflectionTestUtils.setField(postingReceptor, "universalContext", context);
+        ReflectionTestUtils.setField(postingReceptor, "storyRepository", repository);
+
+        postingReceptor.updated(new PostingUpdatedLiberin(posting, null, Principal.ADMIN));
+
+        assertTrue(receptor.notifications.isEmpty());
+    }
+
     private static Story story(boolean picked) {
         Posting posting = new Posting();
         posting.setId(UUID.randomUUID());

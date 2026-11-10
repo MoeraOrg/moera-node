@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict WLo0NWifcyN2c8ymEwKQ3SwkN7WvwpS1JQ7YoZ1q12E3usFUHhMcoBnT4T404b1
+\restrict 5DpGCMff7mKdiNR0AQ0ZMohcv2nJtPlqF3cQbGgSfHXoGtcLwnP3aYIv7MOXyeJ
 
 -- Dumped from database version 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)
@@ -1490,6 +1490,21 @@ CREATE TABLE public.initial_recommendations (
 ALTER TABLE public.initial_recommendations OWNER TO moera;
 
 --
+-- Name: linked_entries; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.linked_entries (
+    id uuid NOT NULL,
+    entry_revision_id uuid NOT NULL,
+    receiver_node_name character varying(135) NOT NULL,
+    receiver_entry_id character varying(40) NOT NULL,
+    linked_entry_id uuid
+);
+
+
+ALTER TABLE public.linked_entries OWNER TO moera;
+
+--
 -- Name: media_file_owners; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -1823,11 +1838,12 @@ CREATE TABLE public.picks (
     pinned boolean DEFAULT false NOT NULL,
     read boolean DEFAULT false NOT NULL,
     satisfied boolean DEFAULT false NOT NULL,
-    posting_view_principal character varying(70),
     allow_multiple boolean DEFAULT false NOT NULL,
     source_node_name character varying(135),
     source_posting_id character varying(40),
-    external_source_uri character varying(1024)[] DEFAULT (ARRAY[]::character varying[])::character varying(1024)[] NOT NULL
+    external_source_uri character varying(1024)[] DEFAULT (ARRAY[]::character varying[])::character varying(1024)[] NOT NULL,
+    linked_entry_id uuid,
+    story_view_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL
 );
 
 
@@ -2285,7 +2301,8 @@ CREATE TABLE public.stories (
     remote_posting_source_uri character varying(1024),
     remote_owner_source_uri character varying(1024),
     sharing_id uuid,
-    external_source_uri character varying(1024)[] DEFAULT (ARRAY[]::character varying[])::character varying(1024)[] NOT NULL
+    external_source_uri character varying(1024)[] DEFAULT (ARRAY[]::character varying[])::character varying(1024)[] NOT NULL,
+    view_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL
 );
 
 
@@ -2602,6 +2619,14 @@ ALTER TABLE ONLY public.grants
 
 ALTER TABLE ONLY public.initial_recommendations
     ADD CONSTRAINT initial_recommendations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: linked_entries linked_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.linked_entries
+    ADD CONSTRAINT linked_entries_pkey PRIMARY KEY (id);
 
 
 --
@@ -3530,6 +3555,20 @@ CREATE UNIQUE INDEX initial_recommendations_name_posting_idx ON public.initial_r
 
 
 --
+-- Name: linked_entries_linked_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX linked_entries_linked_entry_id_idx ON public.linked_entries USING btree (linked_entry_id);
+
+
+--
+-- Name: linked_entries_revision_receiver_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX linked_entries_revision_receiver_idx ON public.linked_entries USING btree (entry_revision_id, receiver_node_name, receiver_entry_id);
+
+
+--
 -- Name: media_file_owners_compressed_owner_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -3779,6 +3818,13 @@ CREATE INDEX pending_notifications_created_at_idx ON public.pending_notification
 --
 
 CREATE INDEX pending_notifications_node_id_idx ON public.pending_notifications USING btree (node_id);
+
+
+--
+-- Name: picks_linked_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX picks_linked_entry_id_idx ON public.picks USING btree (linked_entry_id);
 
 
 --
@@ -4824,6 +4870,22 @@ ALTER TABLE ONLY public.friends
 
 
 --
+-- Name: linked_entries linked_entries_entry_revision_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.linked_entries
+    ADD CONSTRAINT linked_entries_entry_revision_id_fkey FOREIGN KEY (entry_revision_id) REFERENCES public.entry_revisions(id) ON DELETE CASCADE;
+
+
+--
+-- Name: linked_entries linked_entries_linked_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.linked_entries
+    ADD CONSTRAINT linked_entries_linked_entry_id_fkey FOREIGN KEY (linked_entry_id) REFERENCES public.entries(id) ON DELETE SET NULL;
+
+
+--
 -- Name: media_file_owners media_file_owners_compressed_owner_fk; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -4925,6 +4987,14 @@ ALTER TABLE ONLY public.own_postings
 
 ALTER TABLE ONLY public.own_reactions
     ADD CONSTRAINT own_reactions_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: picks picks_linked_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.picks
+    ADD CONSTRAINT picks_linked_entry_id_fkey FOREIGN KEY (linked_entry_id) REFERENCES public.linked_entries(id) ON DELETE CASCADE;
 
 
 --
@@ -5115,5 +5185,5 @@ ALTER TABLE ONLY public.user_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict WLo0NWifcyN2c8ymEwKQ3SwkN7WvwpS1JQ7YoZ1q12E3usFUHhMcoBnT4T404b1
+\unrestrict 5DpGCMff7mKdiNR0AQ0ZMohcv2nJtPlqF3cQbGgSfHXoGtcLwnP3aYIv7MOXyeJ
 

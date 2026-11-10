@@ -112,6 +112,24 @@ The sharing and publication schema is defined in
 publication state, read/viewed state, and a serialized summary. It may link to a local entry or retain remote node,
 posting, comment, avatar, and parent-media snapshots.
 
+Each story owns an optional viewing permission. `unset` derives visibility from the linked entry; an explicit
+principal controls the story independently. A private story belongs to the local node and is visible only to its admin.
+Reading a visible story does not grant access to its posting: API responses omit an unreadable posting while retaining
+the story's other metadata. Feed queries and direct story reads enforce the same principal; events and notifications
+use the story's effective visibility. Public timeline and RSS output also respect story visibility.
+Changing a story's permission sends added, updated, or deleted events to newly permitted, continuing, or excluded
+readers respectively, and updates feed, search, and sharing notifications. Posting permission changes affect the
+visibility of a story only when its permission is `unset`. Posting feed references omit stories the reader cannot view.
+
+`posting-added` stories for cached remote postings retain the receiver node and posting identity independently of the
+embedded posting. Publication initializes these snapshots for every feed, so API consumers can resolve a visible story
+even when its posting is omitted. Durable picks store the requested story permission and preserve it through retries
+and redirects. Remote republishing sets this permission through publication attributes; downloaded posting permissions
+derive from the remote posting independently of the story's visibility. The public fields are defined in the
+[API schema](../../../moeraorg.github.io/_data/node_api.yml); persistence is defined in
+[V326](../../src/main/resources/db/migration/V326__story_view_principal.sql) and
+[V328](../../src/main/resources/db/migration/V328__pick_story_view_principal.sql).
+
 External source references belong to each story independently of its linked entry. Publication and story updates use
 the same attributes conversion: omitted references preserve their value, and an empty list clears them. Stories without
 external sources retain an empty array, which is omitted from API responses and story events. Durable picks retain the

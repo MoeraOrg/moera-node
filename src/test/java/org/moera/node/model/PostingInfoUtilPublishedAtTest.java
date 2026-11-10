@@ -17,7 +17,7 @@ class PostingInfoUtilPublishedAtTest {
         info.setEarliestPublishedAt(900L);
         Posting posting = new Posting();
 
-        PostingInfoUtil.toPickedPosting(info, posting, null);
+        PostingInfoUtil.toPickedPosting(info, posting);
 
         assertEquals(Timestamp.from(Instant.ofEpochSecond(900)), posting.getReceiverPublishedAt());
     }
@@ -33,7 +33,7 @@ class PostingInfoUtilPublishedAtTest {
         info.setReceiverPublishedAt(900L);
         Posting posting = new Posting();
 
-        PostingInfoUtil.toPickedPosting(info, posting, null);
+        PostingInfoUtil.toPickedPosting(info, posting);
 
         assertEquals(Timestamp.from(Instant.ofEpochSecond(900)), posting.getReceiverPublishedAt());
     }

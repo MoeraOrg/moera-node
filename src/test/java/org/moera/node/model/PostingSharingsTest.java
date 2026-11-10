@@ -27,7 +27,7 @@ class PostingSharingsTest {
         Posting posting = new Posting();
         posting.setTotalSharings(10);
 
-        PostingInfoUtil.toPickedPosting(info, posting, null);
+        PostingInfoUtil.toPickedPosting(info, posting);
 
         assertEquals(0, posting.getTotalSharings());
         assertEquals(Principal.PUBLIC, posting.getReceiverViewTotalSharingsPrincipal());

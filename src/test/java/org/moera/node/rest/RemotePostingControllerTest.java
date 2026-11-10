@@ -18,6 +18,7 @@ import org.moera.lib.node.types.PostingSourceText;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryAttributes;
+import org.moera.lib.node.types.StoryOperations;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.validate.ValidationFailure;
@@ -74,8 +75,10 @@ class RemotePostingControllerTest {
         StoryAttributes news = publication("news", 2000L, false, false, true, false);
         timeline.setExternalSourceUri(List.of("https://one.example/story", "https://two.example/story"));
         news.setExternalSourceUri(List.of("https://news.example/story"));
+        StoryOperations storyOperations = new StoryOperations();
+        storyOperations.setView(Principal.SIGNED);
+        timeline.setOperations(storyOperations);
         RemotePostingRepublishAttributes attributes = attributes(List.of(timeline, news));
-        attributes.setPostingView(Principal.PRIVATE);
 
         doCallRealMethod().when(pickerPool).pickAfterCommit(any(Pick.class));
         Transaction tx = transaction();
@@ -98,6 +101,11 @@ class RemotePostingControllerTest {
         verify(pickerPool, times(2)).pick(captor.capture());
         assertPick(captor.getAllValues().get(0), "timeline", 1000L, true, true, false, true);
         assertPick(captor.getAllValues().get(1), "news", 2000L, false, false, true, false);
+        Assertions.assertEquals(
+            Principal.SIGNED,
+            captor.getAllValues().get(0).getStoryViewPrincipal()
+        );
+        Assertions.assertEquals(Principal.UNSET, captor.getAllValues().get(1).getStoryViewPrincipal());
         Assertions.assertArrayEquals(
             new String[]{"https://one.example/story", "https://two.example/story"},
             captor.getAllValues().get(0).getExternalSourceUri()
@@ -296,7 +304,6 @@ class RemotePostingControllerTest {
         Assertions.assertEquals(viewed, pick.isViewed());
         Assertions.assertEquals(read, pick.isRead());
         Assertions.assertEquals(satisfied, pick.isSatisfied());
-        Assertions.assertEquals(Principal.PRIVATE, pick.getPostingViewPrincipal());
         Assertions.assertTrue(pick.isAllowMultiple());
     }
 

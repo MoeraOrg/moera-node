@@ -57,7 +57,7 @@ public class StoryEvent extends Event {
         super(
             type,
             Scope.VIEW_FEEDS,
-            isAdmin ? Principal.ADMIN : story.getViewPrincipalFilter().a().andNot(Principal.ADMIN)
+            isAdmin ? Principal.ADMIN : story.viewPrincipalFilter().a().andNot(Principal.ADMIN)
         );
         StoryInfo storyInfo = StoryInfoUtil.build(story, AccessCheckers.ADMIN, st -> null, directServe);
         id = story.getId().toString();
@@ -89,6 +89,7 @@ public class StoryEvent extends Event {
         summaryData = storyInfo.getSummaryData();
         summary = storyInfo.getSummary();
         operations = new HashMap<>();
+        operations.put("view", story.getViewPrincipal());
         operations.put("edit", Principal.ADMIN);
         operations.put("delete", Principal.ADMIN);
     }

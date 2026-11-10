@@ -16,6 +16,8 @@ import jakarta.persistence.PersistenceContext;
 import org.moera.lib.node.types.FeedStatus;
 import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.node.types.StoryType;
+import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryType;
 import org.moera.node.data.Feed;
@@ -125,6 +127,10 @@ public class StoryOperations {
         for (StoryAttributes publication : publications) {
             Story story = new Story(UUID.randomUUID(), universalContext.nodeId(), StoryType.POSTING_ADDED);
             story.setEntry(entry);
+            if (entry.getEntryType() == EntryType.POSTING && !entry.isOriginal()) {
+                story.setRemoteNodeName(entry.getReceiverName());
+                story.setRemotePostingId(entry.getReceiverEntryId());
+            }
             story.setFeedName(Feed.TIMELINE);
             StoryAttributesUtil.toStory(publication, story);
             updateMoment(story, universalContext.nodeId());
@@ -161,12 +167,16 @@ public class StoryOperations {
     public void update(Story story, StoryAttributes attributes) {
         List<Story> publications = attributes.getPublishAt() != null ? findPostingPublications(story) : List.of();
         Long earliestPublishedAt = findEarliestPublishedAt(publications);
+        Principal viewPrincipal = story.getViewPrincipal();
+        PrincipalFilter previousViewFilter = story.viewPrincipalFilter();
         StoryAttributesUtil.toStory(attributes, story);
         if (attributes.getPublishAt() != null || attributes.getPinned() != null) {
             updateMoment(story, story.getNodeId());
         }
         notifyPostingPublishedAtChanged(story.getEntry(), earliestPublishedAt, publications);
-        universalContext.send(new StoryUpdatedLiberin(story.getId()));
+        universalContext.send(new StoryUpdatedLiberin(
+            story.getId(), !viewPrincipal.equals(story.getViewPrincipal()) ? previousViewFilter : null
+        ));
     }
 
     public FeedStatus getFeedStatus(String feedName, boolean isAdmin) {

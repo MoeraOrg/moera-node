@@ -9,12 +9,30 @@ import org.moera.lib.node.types.PostingOperations;
 import org.moera.lib.node.types.ProfileOperations;
 import org.moera.lib.node.types.ReactionOperations;
 import org.moera.lib.node.types.SubscriberOperations;
+import org.moera.lib.node.types.StoryOperations;
 import org.moera.lib.node.types.SubscriptionOperations;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalFlag;
 import org.moera.lib.node.types.validate.ValidationUtil;
 
 public class OperationsValidator {
+
+    public static void validateOperations(StoryOperations operations, boolean includeUnset, String errorCode) {
+        if (operations == null) {
+            return;
+        }
+
+        BiConsumer<Principal, Integer> v = (principal, flags) ->
+            validatePrincipal(principal, flags, includeUnset, errorCode);
+
+        v.accept(
+            operations.getView(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+                | PrincipalFlag.PRIVATE | PrincipalFlag.ADMIN | PrincipalFlag.UNSET
+        );
+        v.accept(operations.getEdit(), PrincipalFlag.ADMIN);
+        v.accept(operations.getDelete(), PrincipalFlag.ADMIN);
+    }
 
     public static void validateOperations(ProfileOperations operations, boolean includeUnset, String errorCode) {
         if (operations == null) {

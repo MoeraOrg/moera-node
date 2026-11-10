@@ -5,12 +5,14 @@ import java.util.Objects;
 import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.node.data.Story;
+import org.moera.node.operations.OperationsValidator;
 import org.moera.node.util.Util;
 
 public class StoryAttributesUtil {
 
     public static void validate(StoryAttributes attributes) {
         attributes.validate();
+        OperationsValidator.validateOperations(attributes.getOperations(), false, "story.operations.wrong-principal");
         ValidationUtil.assertion(
             attributes.getExternalSourceUri() == null
             || attributes.getExternalSourceUri().stream().noneMatch(Objects::isNull),
@@ -40,6 +42,9 @@ public class StoryAttributesUtil {
         }
         if (attributes.getExternalSourceUri() != null) {
             story.setExternalSourceUri(attributes.getExternalSourceUri().toArray(String[]::new));
+        }
+        if (attributes.getOperations() != null && attributes.getOperations().getView() != null) {
+            story.setViewPrincipal(attributes.getOperations().getView());
         }
     }
 

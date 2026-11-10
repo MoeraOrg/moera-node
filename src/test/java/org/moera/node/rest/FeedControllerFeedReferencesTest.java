@@ -90,6 +90,23 @@ class FeedControllerFeedReferencesTest {
     }
 
     @Test
+    void privateStoryIsAbsentFromPublicPostingReferencesAndPublicationTime() {
+        Story timeline = postingWithStories();
+        timeline.setPublishedAt(Timestamp.from(Instant.ofEpochSecond(3000)));
+        Story hidden = story(Feed.TIMELINE, 3L);
+        hidden.setPublishedAt(Timestamp.from(Instant.ofEpochSecond(1000)));
+        hidden.setViewPrincipal(Principal.ADMIN);
+        timeline.getEntry().addStory(hidden);
+        when(entryOperations.getMediaAttachments(any(), any())).thenReturn(java.util.List.of());
+
+        StoryInfo info = ReflectionTestUtils.invokeMethod(feedController, "buildStoryInfo", timeline, entryOperations);
+
+        Assertions.assertEquals(1, info.getPosting().getFeedReferences().size());
+        Assertions.assertEquals(timeline.getId().toString(), info.getPosting().getFeedReferences().getFirst().getStoryId());
+        Assertions.assertEquals(3000L, info.getPosting().getEarliestPublishedAt());
+    }
+
+    @Test
     void postingWithoutTimelineReferenceHasNoEarliestPublication() {
         Story timeline = postingWithStories();
         Story news = timeline.getEntry().getStories().stream()

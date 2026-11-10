@@ -17,6 +17,7 @@ public class FeedReferenceUtil {
         feedReference.setStoryId(story.getId().toString());
 
         StoryOperations operations = new StoryOperations();
+        operations.setView(story.getViewPrincipal());
         operations.setEdit(Principal.ADMIN);
         operations.setDelete(Principal.ADMIN);
         feedReference.setOperations(operations);

@@ -44,6 +44,7 @@ public class StoryInfoUtil {
             info.setExternalSourceUri(List.of(story.getExternalSourceUri()));
         }
         StoryOperations operations = new StoryOperations();
+        operations.setView(story.getViewPrincipal());
         operations.setEdit(Principal.ADMIN);
         operations.setDelete(Principal.ADMIN);
         info.setOperations(operations);
@@ -60,7 +61,14 @@ public class StoryInfoUtil {
 
         switch (story.getStoryType()) {
             case POSTING_ADDED:
-                info.setPosting(buildPostingInfo.apply(story));
+                info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemotePostingId(story.getRemotePostingId());
+                if (
+                    story.getViewPrincipal().isUnset()
+                    || accessChecker.isPrincipal(story.entryViewPrincipalFilter(), Scope.VIEW_CONTENT)
+                ) {
+                    info.setPosting(buildPostingInfo.apply(story));
+                }
                 break;
 
             case POSTING_SHARED:

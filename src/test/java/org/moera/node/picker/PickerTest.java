@@ -19,6 +19,7 @@ import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.StoryAttributes;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.body.Body;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.data.EntryRevision;
@@ -308,6 +309,7 @@ class PickerTest {
         assertFalse(publication.getViewed());
         assertTrue(publication.getRead());
         assertTrue(publication.getSatisfied());
+        assertEquals(Principal.SIGNED, publication.getOperations().getView());
         assertEquals(
             List.of("https://one.example/story", "https://two.example/story"),
             publication.getExternalSourceUri()
@@ -496,7 +498,7 @@ class PickerTest {
             viewed,
             read,
             satisfied,
-            null,
+            Principal.SIGNED,
             allowMultiple,
             publishAt,
             externalSourceUri,

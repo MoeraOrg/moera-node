@@ -19,7 +19,7 @@ class PickedPostingPermissionsTest {
     void remoteGroupPermissionsAllowLocalAdmin(Principal principal) {
         Posting posting = new Posting();
 
-        PostingInfoUtil.toPickedPosting(postingInfo(principal), posting, null);
+        PostingInfoUtil.toPickedPosting(postingInfo(principal), posting);
 
         assertEquals(Principal.ADMIN, posting.getViewPrincipal());
         assertEquals(Principal.ADMIN, posting.getViewExternalSourcePrincipal());
@@ -41,7 +41,7 @@ class PickedPostingPermissionsTest {
     void otherPermissionsArePreserved(Principal principal) {
         Posting posting = new Posting();
 
-        PostingInfoUtil.toPickedPosting(postingInfo(principal), posting, null);
+        PostingInfoUtil.toPickedPosting(postingInfo(principal), posting);
 
         assertEquals(principal, posting.getViewPrincipal());
         assertEquals(principal, posting.getViewExternalSourcePrincipal());
@@ -53,12 +53,13 @@ class PickedPostingPermissionsTest {
     }
 
     @Test
-    void explicitViewPermissionIsPreserved() {
+    void downloadedPermissionsReplaceCachedPostingPermissions() {
         Posting posting = new Posting();
 
-        PostingInfoUtil.toPickedPosting(postingInfo(Principal.ofFriendGroup("friends")), posting, Principal.SECRET);
+        posting.setViewPrincipal(Principal.SECRET);
+        PostingInfoUtil.toPickedPosting(postingInfo(Principal.ofFriendGroup("friends")), posting);
 
-        assertEquals(Principal.SECRET, posting.getViewPrincipal());
+        assertEquals(Principal.ADMIN, posting.getViewPrincipal());
         assertEquals(Principal.ofFriendGroup("friends"), posting.getReceiverViewPrincipal());
     }
 

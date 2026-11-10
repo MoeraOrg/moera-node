@@ -15,6 +15,8 @@ import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.feed.synd.SyndFeedImpl;
 import com.rometools.rome.feed.synd.SyndImage;
 import com.rometools.rome.feed.synd.SyndImageImpl;
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.config.Config;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.data.Entry;
@@ -61,7 +63,9 @@ public class RssController {
         if (publicPage != null) {
             stories = storyRepository.findInRange(
                     rcp.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment()).stream()
-                    .filter(t -> t.getEntry().isMessage())
+                    .filter(t -> t.getEntry() != null && t.getEntry().isMessage())
+                    .filter(t -> AccessCheckers.PUBLIC.isPrincipal(t.viewPrincipalFilter(), Scope.VIEW_CONTENT))
+                    .filter(t -> AccessCheckers.PUBLIC.isPrincipal(t.entryViewPrincipalFilter(), Scope.VIEW_CONTENT))
                     .sorted(Collections.reverseOrder(Comparator.comparingLong(Story::getMoment)))
                     .toList();
         }

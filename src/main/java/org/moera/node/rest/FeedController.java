@@ -21,6 +21,8 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.SimpleExpression;
+import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.FeedInfo;
@@ -311,6 +313,7 @@ public class FeedController {
         return new JPAQueryFactory(entityManager)
             .select(story.moment)
             .from(story)
+            .leftJoin(story.entry, QEntry.entry)
             .where(storyFilter(nodeId, feedName, afterMoment, beforeMoment))
             .orderBy(new OrderSpecifier<>(direction.isAscending() ? Order.ASC : Order.DESC, story.moment))
             .limit(limit + 1)
@@ -337,6 +340,7 @@ public class FeedController {
 
         Set<UUID> postingIds = foundStories.stream()
             .filter(s -> s.getStoryType() == StoryType.POSTING_ADDED && isStoryValid(s))
+            .filter(this::isStoryVisible)
             .map(s -> s.getEntry().getId())
             .collect(Collectors.toSet());
         if (!postingIds.isEmpty()) {
@@ -351,6 +355,7 @@ public class FeedController {
         var mediaAttachments = entryOperations.prepareMediaAttachments(
             foundStories.stream()
                 .filter(s -> s.getStoryType() == StoryType.POSTING_ADDED && isStoryValid(s))
+                .filter(this::isStoryVisible)
                 .map(Story::getEntry)
                 .map(Entry::getCurrentRevision)
                 .toList()
@@ -358,6 +363,8 @@ public class FeedController {
         List<StoryInfo> stories = foundStories
             .stream()
             .filter(this::isStoryValid)
+            .filter(s -> s.getViewPrincipal().isUnset()
+                || requestContext.isPrincipal(s.viewPrincipalFilter(), Scope.VIEW_CONTENT))
             .map(s -> buildStoryInfo(s, mediaAttachments))
             // This should be unnecessary, but let it be for reliability
             .filter(this::isStoryVisible)
@@ -415,29 +422,39 @@ public class FeedController {
             .and(story.moment.gt(afterMoment))
             .and(story.moment.loe(beforeMoment));
         if (!requestContext.isAdmin(Scope.VIEW_CONTENT)) {
-            var viewPrincipal = story.entry.viewPrincipal;
-            BooleanBuilder visibility = new BooleanBuilder();
-            visibility.or(viewPrincipal.eq(Principal.PUBLIC));
-            String clientName = requestContext.getClientName(Scope.VIEW_CONTENT);
-            if (!ObjectUtils.isEmpty(clientName)) {
-                visibility.or(viewPrincipal.eq(Principal.SIGNED));
-                BooleanBuilder priv = new BooleanBuilder();
-                priv.and(viewPrincipal.eq(Principal.PRIVATE));
-                priv.and(story.entry.ownerName.eq(clientName));
-                visibility.or(priv);
-            }
-            if (requestContext.isSubscribedToClient(Scope.VIEW_CONTENT)) {
-                visibility.or(viewPrincipal.eq(Principal.SUBSCRIBED));
-            }
-            String[] friendGroups = requestContext.getFriendGroups(Scope.VIEW_CONTENT);
-            if (friendGroups != null) {
-                for (String friendGroupName : friendGroups) {
-                    visibility.or(viewPrincipal.eq(Principal.ofFriendGroup(friendGroupName)));
-                }
-            }
-            where.and(visibility);
+            QEntry entry = QEntry.entry;
+            where.and(
+                story.viewPrincipal.eq(Principal.UNSET).and(viewFilter(entry.viewPrincipal, entry.ownerName))
+                    .or(story.viewPrincipal.ne(Principal.UNSET).and(viewFilter(story.viewPrincipal, null)))
+            );
         }
         return where;
+    }
+
+    private Predicate viewFilter(SimpleExpression<Principal> viewPrincipal, StringExpression ownerName) {
+        BooleanBuilder visibility = new BooleanBuilder(viewPrincipal.eq(Principal.PUBLIC));
+        String clientName = requestContext.getClientName(Scope.VIEW_CONTENT);
+        if (!ObjectUtils.isEmpty(clientName)) {
+            visibility.or(viewPrincipal.eq(Principal.SIGNED));
+            if (ownerName != null) {
+                visibility.or(viewPrincipal.eq(Principal.PRIVATE).and(ownerName.eq(clientName)));
+            }
+        }
+        if (requestContext.isSubscribedToClient(Scope.VIEW_CONTENT)) {
+            visibility.or(viewPrincipal.eq(Principal.SUBSCRIBED));
+        }
+        String[] friendGroups = requestContext.getFriendGroups(Scope.VIEW_CONTENT);
+        if (friendGroups != null) {
+            for (String friendGroupName : friendGroups) {
+                visibility.or(viewPrincipal.eq(Principal.ofFriendGroup(friendGroupName)));
+            }
+        }
+        return visibility;
+    }
+
+    private boolean isStoryVisible(Story story) {
+        return story.getViewPrincipal().isUnset()
+            || requestContext.isPrincipal(story.entryViewPrincipalFilter(), Scope.VIEW_CONTENT);
     }
 
     private void calcSliceTotals(FeedSliceInfo sliceInfo, String feedName) {

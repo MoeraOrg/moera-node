@@ -73,7 +73,7 @@ class ExternalSourceInfoUtilTest {
         info.setOperations(operations);
         Posting posting = new Posting();
 
-        PostingInfoUtil.toPickedPosting(info, posting, null);
+        PostingInfoUtil.toPickedPosting(info, posting);
 
         assertEquals(EXTERNAL_SOURCE_URIS, List.of(posting.getExternalSourceUri()));
         assertEquals(Principal.ADMIN, posting.getViewExternalSourcePrincipal());
@@ -81,18 +81,19 @@ class ExternalSourceInfoUtilTest {
     }
 
     @Test
-    void pickedPostingViewOverrideDoesNotAffectExternalSources() {
+    void pickedPostingViewDoesNotAffectPublicExternalSources() {
         PostingInfo info = new PostingInfo();
         info.setId("remote-posting");
         info.setCreatedAt(1000L);
         info.setEditedAt(2000L);
         info.setTotalComments(0);
         PostingOperations operations = new PostingOperations();
+        operations.setView(Principal.SECRET);
         operations.setViewExternalSource(Principal.PUBLIC);
         info.setOperations(operations);
         Posting posting = new Posting();
 
-        PostingInfoUtil.toPickedPosting(info, posting, Principal.SECRET);
+        PostingInfoUtil.toPickedPosting(info, posting);
 
         assertEquals(Principal.PUBLIC, posting.getViewExternalSourcePrincipal());
         assertEquals(Principal.PUBLIC, posting.getReceiverViewExternalSourcePrincipal());

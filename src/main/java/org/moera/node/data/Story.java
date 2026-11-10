@@ -72,6 +72,9 @@ public class Story {
     private boolean satisfied;
 
     @NotNull
+    private Principal viewPrincipal = Principal.UNSET;
+
+    @NotNull
     private String summary = "";
 
     @Size(max = 135)
@@ -474,8 +477,19 @@ public class Story {
         this.sharing = sharing;
     }
 
-    @Transient
-    public PrincipalFilter getViewPrincipalFilter() {
+    public Principal getViewPrincipal() {
+        return viewPrincipal;
+    }
+
+    public void setViewPrincipal(Principal viewPrincipal) {
+        this.viewPrincipal = viewPrincipal;
+    }
+
+    public PrincipalFilter viewPrincipalFilter() {
+        return viewPrincipal.isUnset() ? entryViewPrincipalFilter() : viewPrincipal.withOwner(null);
+    }
+
+    public PrincipalFilter entryViewPrincipalFilter() {
         if (getEntry() == null) {
             return Principal.PUBLIC;
         }

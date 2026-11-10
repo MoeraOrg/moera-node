@@ -116,8 +116,8 @@ public class StoryController {
             throw new ObjectNotFoundFailure("story.not-found");
         }
         if (
-            story.getEntry() != null
-            && !requestContext.isPrincipal(story.getViewPrincipalFilter(), Scope.VIEW_CONTENT)
+            (story.getEntry() != null || !story.getViewPrincipal().isUnset())
+            && !requestContext.isPrincipal(story.viewPrincipalFilter(), Scope.VIEW_CONTENT)
         ) {
             throw new ObjectNotFoundFailure("story.not-found");
         }
@@ -156,8 +156,8 @@ public class StoryController {
             Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), storyId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
             if (
-                story.getEntry() != null
-                && !requestContext.isPrincipal(story.getViewPrincipalFilter(), Scope.VIEW_CONTENT)
+                (story.getEntry() != null || !story.getViewPrincipal().isUnset())
+                && !requestContext.isPrincipal(story.viewPrincipalFilter(), Scope.VIEW_CONTENT)
             ) {
                 throw new ObjectNotFoundFailure("story.not-found");
             }

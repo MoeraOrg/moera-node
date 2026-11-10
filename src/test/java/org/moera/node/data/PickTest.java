@@ -34,7 +34,7 @@ class PickTest {
         pick.setRead(true);
         pick.setSatisfied(true);
         pick.setExternalSourceUri(new String[]{"https://one.example/story", "https://two.example/story"});
-        pick.setPostingViewPrincipal(Principal.PRIVATE);
+        pick.setStoryViewPrincipal(Principal.SIGNED);
         pick.setAllowMultiple(true);
         pick.setPublishAt(Timestamp.valueOf("2026-10-11 12:00:00"));
 
@@ -64,7 +64,7 @@ class PickTest {
             new String[]{"https://one.example/story", "https://two.example/story"},
             finalPick.getExternalSourceUri()
         );
-        assertEquals(Principal.PRIVATE, finalPick.getPostingViewPrincipal());
+        assertEquals(Principal.SIGNED, finalPick.getStoryViewPrincipal());
         assertTrue(finalPick.isAllowMultiple());
         assertEquals(Timestamp.valueOf("2026-10-11 12:00:00"), finalPick.getPublishAt());
         assertNull(finalPick.getId());

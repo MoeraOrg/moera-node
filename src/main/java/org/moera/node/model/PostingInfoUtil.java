@@ -223,15 +223,19 @@ public class PostingInfoUtil {
         info.setSignatureVersion(revision.getSignatureVersion());
 
         if (!ObjectUtils.isEmpty(stories)) {
-            var feedReferences = stories.stream()
+            var visibleStories = stories.stream()
                 .filter(s ->
                     Feed.isReadable(s.getFeedName(), accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_FEEDS))
                 )
+                .filter(s -> s.getViewPrincipal().isUnset()
+                    || accessChecker.isPrincipal(s.viewPrincipalFilter(), Scope.VIEW_CONTENT))
+                .toList();
+            var feedReferences = visibleStories.stream()
                 .map(FeedReferenceUtil::build)
                 .toList();
             if (!ObjectUtils.isEmpty(feedReferences)) {
                 info.setFeedReferences(feedReferences);
-                info.setEarliestPublishedAt(StoryOperations.findEarliestPublishedAt(stories));
+                info.setEarliestPublishedAt(StoryOperations.findEarliestPublishedAt(visibleStories));
             }
         }
 
@@ -543,7 +547,7 @@ public class PostingInfoUtil {
         }
     }
 
-    public static void toPickedPosting(PostingInfo info, Entry posting, Principal viewPrincipal) {
+    public static void toPickedPosting(PostingInfo info, Entry posting) {
         posting.setEditedAt(Util.toTimestamp(info.getEditedAt()));
         posting.setReceiverEntryId(isOriginal(info) ? info.getId() : info.getReceiverPostingId());
         posting.setOwnerName(info.getOwnerName());
@@ -579,11 +583,7 @@ public class PostingInfoUtil {
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207
         Principal principal = PostingOperations.getView(info.getOperations(), Principal.PUBLIC);
-        if (viewPrincipal != null) {
-            posting.setViewPrincipal(viewPrincipal);
-        } else {
-            posting.setViewPrincipal(principal.isFriends() || principal.isSubscribed() ? Principal.ADMIN : principal);
-        }
+        posting.setViewPrincipal(principal.isFriends() || principal.isSubscribed() ? Principal.ADMIN : principal);
         posting.setReceiverViewPrincipal(principal);
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207

@@ -10,10 +10,14 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.moera.lib.node.types.principal.AccessCheckers;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
+import org.moera.lib.node.types.StoryAttributes;
+import org.moera.lib.node.types.StoryOperations;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.EntrySharing;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
@@ -28,9 +32,93 @@ import tools.jackson.databind.ObjectMapper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StoryInfoUtilTest {
+
+    @Test
+    void visibleStoryOmitsUnreadablePostingAndPreservesRemoteIdentity() {
+        Story story = story(StoryType.POSTING_ADDED);
+        story.getEntry().setOwnerName("author_0");
+        story.getEntry().setViewPrincipal(Principal.PRIVATE);
+        story.setRemoteNodeName("remote_0");
+        story.setRemotePostingId("remote-posting");
+        StoryAttributes attributes = new StoryAttributes();
+        StoryOperations operations = new StoryOperations();
+        operations.setView(Principal.PUBLIC);
+        attributes.setOperations(operations);
+        StoryAttributesUtil.toStory(attributes, story);
+
+        StoryInfo info = StoryInfoUtil.build(story, AccessCheckers.PUBLIC, ignored -> {
+            throw new AssertionError("Unreadable posting must not be converted");
+        }, null);
+
+        assertNull(info.getPosting());
+        assertEquals("remote_0", info.getRemoteNodeName());
+        assertEquals("remote-posting", info.getRemotePostingId());
+        assertEquals(Principal.PUBLIC, info.getOperations().getView());
+        assertEquals(story.getMoment(), info.getMoment());
+    }
+
+    @Test
+    void postingAddedReturnsRemoteIdentityAndViewInApiAndEvents() {
+        Story story = story(StoryType.POSTING_ADDED);
+        story.setRemoteNodeName("remote_0");
+        story.setRemotePostingId("remote-posting");
+
+        StoryInfo info = StoryInfoUtil.build(story, AccessCheckers.ADMIN, ignored -> null, null);
+
+        assertEquals("remote_0", info.getRemoteNodeName());
+        assertEquals("remote-posting", info.getRemotePostingId());
+        assertEquals(Principal.UNSET, info.getOperations().getView());
+        for (StoryEvent event : List.of(
+            new StoryAddedEvent(story, true, null), new StoryUpdatedEvent(story, true, null)
+        )) {
+            assertEquals("remote_0", event.getRemoteNodeName());
+            assertEquals("remote-posting", event.getRemotePostingId());
+            assertEquals(Principal.UNSET, event.getOperations().get("view"));
+        }
+    }
+
+    @Test
+    void explicitStoryPermissionsAlsoControlPublicEvents() {
+        Story story = story(StoryType.POSTING_ADDED);
+        story.getEntry().setViewPrincipal(Principal.ADMIN);
+        story.setViewPrincipal(Principal.PUBLIC);
+
+        for (StoryEvent event : List.of(
+            new StoryAddedEvent(story, false, null), new StoryUpdatedEvent(story, false, null)
+        )) {
+            assertTrue(AccessCheckers.PUBLIC.isPrincipal(event.getFilter(), Scope.VIEW_FEEDS));
+        }
+
+        story.setViewPrincipal(Principal.UNSET);
+        assertFalse(AccessCheckers.PUBLIC.isPrincipal(
+            new StoryAddedEvent(story, false, null).getFilter(), Scope.VIEW_FEEDS
+        ));
+        story.getEntry().setViewPrincipal(Principal.PUBLIC);
+        story.setViewPrincipal(Principal.ADMIN);
+        assertFalse(AccessCheckers.PUBLIC.isPrincipal(
+            new StoryUpdatedEvent(story, false, null).getFilter(), Scope.VIEW_FEEDS
+        ));
+    }
+
+    @Test
+    void unsetPreservesPostingConversionAndExplicitViewIncludesReadablePosting() {
+        Story story = story(StoryType.POSTING_ADDED);
+        PostingInfo postingInfo = new PostingInfo();
+        story.getEntry().setViewPrincipal(Principal.ADMIN);
+        assertSame(
+            postingInfo, StoryInfoUtil.build(story, AccessCheckers.PUBLIC, ignored -> postingInfo, null).getPosting()
+        );
+
+        story.setViewPrincipal(Principal.PUBLIC);
+        story.getEntry().setViewPrincipal(Principal.PUBLIC);
+        assertSame(
+            postingInfo, StoryInfoUtil.build(story, AccessCheckers.PUBLIC, ignored -> postingInfo, null).getPosting()
+        );
+    }
 
     @ParameterizedTest
     @EnumSource(value = StoryType.class, names = {"POSTING_REFERRED", "POSTING_SHARED"})

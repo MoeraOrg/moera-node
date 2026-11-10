@@ -152,6 +152,7 @@ public class PostingReceptor extends LiberinReceptorBase {
         } else {
             var timelineStories = stories.stream()
                 .filter(t -> Feed.TIMELINE.equals(t.getFeedName()) && t.getStoryType().equals(StoryType.POSTING_ADDED))
+                .filter(t -> t.getViewPrincipal().isUnset())
                 .toList();
             for (var story : timelineStories) {
                 send(
@@ -193,7 +194,7 @@ public class PostingReceptor extends LiberinReceptorBase {
         send(liberin, new PostingAddedEvent(posting, addedFilter));
         boolean isNotify = isNotifyWhenRevealed(posting);
         for (Story story : stories) {
-            if (!Feed.isAdmin(story.getFeedName())) {
+            if (!Feed.isAdmin(story.getFeedName()) && story.getViewPrincipal().isUnset()) {
                 if (isNotify) {
                     send(
                         Directions.feedSubscribers(posting.getNodeId(), story.getFeedName(), addedFilter),
@@ -293,7 +294,7 @@ public class PostingReceptor extends LiberinReceptorBase {
                 .toList();
             for (var story : timelineStories) {
                 send(
-                    Directions.single(liberin.getNodeId(), posting.getOwnerName(), posting.getViewE()),
+                    Directions.single(liberin.getNodeId(), posting.getOwnerName(), story.viewPrincipalFilter()),
                     PostingUnsharedNotificationUtil.build(
                         SharingType.REPUBLISH,
                         posting.getReceiverEntryId(),

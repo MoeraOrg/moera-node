@@ -44,7 +44,7 @@ public class StoryDeletedLiberin extends Liberin {
             receiverPostingId = story.getEntry().getReceiverEntryId();
             postingOwnerName = story.getEntry().getOwnerName();
         }
-        viewFilter = story.getViewPrincipalFilter();
+        viewFilter = story.viewPrincipalFilter();
         this.postingDeleted = postingDeleted;
     }
 

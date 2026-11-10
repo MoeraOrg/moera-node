@@ -12,6 +12,8 @@ import org.moera.lib.node.types.RemotePostingRepublishAttributes;
 import org.moera.lib.node.types.PostingSourceText;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.StoryOperations;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
@@ -216,7 +218,9 @@ public class RemotePostingController {
             if (publication.getExternalSourceUri() != null) {
                 pick.setExternalSourceUri(publication.getExternalSourceUri().toArray(String[]::new));
             }
-            pick.setPostingViewPrincipal(attributes.getPostingView());
+            pick.setStoryViewPrincipal(
+                StoryOperations.getView(publication.getOperations(), Principal.UNSET)
+            );
             pick.setAllowMultiple(true);
             pickerPool.pickAfterCommit(pick);
         }

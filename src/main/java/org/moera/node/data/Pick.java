@@ -71,7 +71,8 @@ public class Pick {
     @JdbcTypeCode(SqlTypes.ARRAY)
     private String[] externalSourceUri = new String[0];
 
-    private Principal postingViewPrincipal;
+    @NotNull
+    private Principal storyViewPrincipal = Principal.UNSET;
 
     private boolean allowMultiple;
 
@@ -221,12 +222,12 @@ public class Pick {
         this.externalSourceUri = externalSourceUri;
     }
 
-    public Principal getPostingViewPrincipal() {
-        return postingViewPrincipal;
+    public Principal getStoryViewPrincipal() {
+        return storyViewPrincipal;
     }
 
-    public void setPostingViewPrincipal(Principal postingViewPrincipal) {
-        this.postingViewPrincipal = postingViewPrincipal;
+    public void setStoryViewPrincipal(Principal storyViewPrincipal) {
+        this.storyViewPrincipal = storyViewPrincipal;
     }
 
     public boolean isAllowMultiple() {
@@ -288,7 +289,7 @@ public class Pick {
         pick.read = read;
         pick.satisfied = satisfied;
         pick.externalSourceUri = externalSourceUri;
-        pick.postingViewPrincipal = postingViewPrincipal;
+        pick.storyViewPrincipal = storyViewPrincipal;
         pick.allowMultiple = allowMultiple;
         pick.publishAt = publishAt;
         pick.sourceNodeName = sourceNodeName != null ? sourceNodeName : this.remoteNodeName;

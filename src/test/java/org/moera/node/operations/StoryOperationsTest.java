@@ -39,6 +39,20 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class StoryOperationsTest {
 
+    @ParameterizedTest
+    @CsvSource({"timeline", "news", "explore"})
+    void copiedPostingPublicationStoresRemoteIdentityInEveryFeed(String feedName) {
+        Posting posting = posting();
+        posting.setReceiverName("remote_0");
+        posting.setReceiverEntryId("remote-posting");
+
+        storyOperations.publish(posting, List.of(publication(feedName, 1000L)));
+
+        Story story = posting.getStories().iterator().next();
+        assertEquals("remote_0", story.getRemoteNodeName());
+        assertEquals("remote-posting", story.getRemotePostingId());
+    }
+
     @Mock
     private UniversalContext universalContext;
 
