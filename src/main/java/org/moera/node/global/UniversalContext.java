@@ -158,8 +158,15 @@ public class UniversalContext {
     }
 
     public boolean isPrincipal(PrincipalFilter principal, Scope scope) {
+        return isPrincipal(principal, scope, scope);
+    }
+
+    public boolean isPrincipal(PrincipalFilter principal, Scope clientScope, Scope adminScope) {
         return principal.includes(
-            isAdmin(scope), getClientName(scope), isSubscribedToClient(scope), getFriendGroups(scope)
+            isAdmin(adminScope),
+            getClientName(clientScope),
+            isSubscribedToClient(clientScope),
+            getFriendGroups(clientScope)
         );
     }
 

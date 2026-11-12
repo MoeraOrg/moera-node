@@ -31,6 +31,12 @@ Authentication produces scopes rather than a single logged-in flag. `RequestCont
 remote client scopes, the authenticated node name, ownership, friend groups, and whether the local node subscribes to
 the remote node.
 
+A carte signed by the hosted node's owner applies its declared admin scope without requiring a grant to itself.
+The owner's client scope also contributes its view-only permissions to the effective admin scope. For other carte
+owners, the effective admin scope is the intersection of the carte's declared admin scope and the permissions granted
+by the hosted node. See
+[`AuthenticationInterceptor`](../../src/main/java/org/moera/node/auth/AuthenticationInterceptor.java).
+
 Incoming notification packets have their own authentication path. `NotificationController` resolves the sender's
 public signing key through naming, verifies the versioned packet fingerprint, and then marks the request as signed by
 that node before routing the notification.
@@ -41,6 +47,18 @@ Controller annotations such as `@Admin`, `@RootAdmin`, and related access annota
 Domain objects use generated `Principal` and `PrincipalFilter` values to express visibility or mutation rights for the
 public, administrators, named nodes, subscribers, and friend groups. Scope checks constrain which authenticated rights
 may be used for a particular operation.
+
+Principal checks in `RequestContext` and `UniversalContext` can use separate client and admin scopes, in that order;
+the single-scope form applies the same scope to both. Deleting a posting, comment, or reaction checks the client's
+authorship under `DELETE_OWN_CONTENT`. A client deleting another author's comment or reaction through rights on the
+parent posting or comment needs `DELETE_OTHERS_CONTENT`. Administrative deletion uses `DELETE_OWN_CONTENT` for content
+owned by the hosted node and `DELETE_OTHERS_CONTENT` for other authors' content, including when administrative rights
+are delegated to another node. Both roles remain subject to the object's effective delete principal. See
+[`PostingController`](../../src/main/java/org/moera/node/rest/PostingController.java),
+[`CommentController`](../../src/main/java/org/moera/node/rest/CommentController.java),
+[`ReactionOperations`](../../src/main/java/org/moera/node/operations/ReactionOperations.java),
+[`RequestContextImpl`](../../src/main/java/org/moera/node/global/RequestContextImpl.java), and
+[`UniversalContext`](../../src/main/java/org/moera/node/global/UniversalContext.java).
 
 Permission data is stored with entries, reactions, media owners, friends, grants, and other protected records. API
 conversion helpers apply protection before returning structures to a particular requester. Private media performs the

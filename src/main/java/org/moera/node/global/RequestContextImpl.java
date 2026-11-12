@@ -330,8 +330,16 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public boolean isPrincipal(PrincipalFilter principal, Scope scope) {
+        return isPrincipal(principal, scope, scope);
+    }
+
+    @Override
+    public boolean isPrincipal(PrincipalFilter principal, Scope clientScope, Scope adminScope) {
         return principal.includes(
-            isAdmin(scope), getClientName(scope), isSubscribedToClient(scope), getFriendGroups(scope)
+            isAdmin(adminScope),
+            getClientName(clientScope),
+            isSubscribedToClient(clientScope),
+            getFriendGroups(clientScope)
         );
     }
 

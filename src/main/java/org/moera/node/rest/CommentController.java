@@ -910,16 +910,13 @@ public class CommentController {
         if (!comment.getPosting().getId().equals(postingUuid)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        if (
-            requestContext.isClient(comment.getOwnerName(), Scope.IDENTIFY)
-            && !requestContext.isPrincipal(comment.getDeleteE(), Scope.DELETE_OWN_CONTENT)
-        ) {
-            throw new AuthenticationException();
-        }
-        if (
-            !requestContext.isClient(comment.getOwnerName(), Scope.IDENTIFY)
-            && !requestContext.isPrincipal(comment.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)
-        ) {
+        Scope clientScope = requestContext.isClient(comment.getOwnerName(), Scope.IDENTIFY)
+            ? Scope.DELETE_OWN_CONTENT
+            : Scope.DELETE_OTHERS_CONTENT;
+        Scope adminScope = Objects.equals(comment.getOwnerName(), requestContext.nodeName())
+            ? Scope.DELETE_OWN_CONTENT
+            : Scope.DELETE_OTHERS_CONTENT;
+        if (!requestContext.isPrincipal(comment.getDeleteE(), clientScope, adminScope)) {
             throw new AuthenticationException();
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingUuid)) {

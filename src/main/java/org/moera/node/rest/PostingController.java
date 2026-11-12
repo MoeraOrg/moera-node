@@ -514,16 +514,13 @@ public class PostingController {
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         EntryRevision latest = posting.getCurrentRevision();
-        if (
-            requestContext.isClient(posting.getOwnerName(), Scope.IDENTIFY)
-            && !requestContext.isPrincipal(posting.getDeleteE(), Scope.DELETE_OWN_CONTENT)
-        ) {
-            throw new AuthenticationException();
-        }
-        if (
-            !requestContext.isClient(posting.getOwnerName(), Scope.IDENTIFY)
-            && !requestContext.isPrincipal(posting.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)
-        ) {
+        Scope clientScope = requestContext.isClient(posting.getOwnerName(), Scope.IDENTIFY)
+            ? Scope.DELETE_OWN_CONTENT
+            : Scope.DELETE_OTHERS_CONTENT;
+        Scope adminScope = Objects.equals(posting.getOwnerName(), requestContext.nodeName())
+            ? Scope.DELETE_OWN_CONTENT
+            : Scope.DELETE_OTHERS_CONTENT;
+        if (!requestContext.isPrincipal(posting.getDeleteE(), clientScope, adminScope)) {
             throw new AuthenticationException();
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {

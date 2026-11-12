@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -288,16 +289,13 @@ public class ReactionOperations {
     public void delete(String ownerName, Entry entry, Consumer<Reaction> reactionDeleted) {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(entry.getId(), ownerName);
         if (reaction != null) {
-            if (
-                requestContext.isClient(reaction.getOwnerName(), Scope.IDENTIFY)
-                && !requestContext.isPrincipal(reaction.getDeleteE(), Scope.DELETE_OWN_CONTENT)
-            ) {
-                throw new AuthenticationException();
-            }
-            if (
-                !requestContext.isClient(reaction.getOwnerName(), Scope.IDENTIFY)
-                && !requestContext.isPrincipal(reaction.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)
-            ) {
+            Scope clientScope = requestContext.isClient(reaction.getOwnerName(), Scope.IDENTIFY)
+                ? Scope.DELETE_OWN_CONTENT
+                : Scope.DELETE_OTHERS_CONTENT;
+            Scope adminScope = Objects.equals(reaction.getOwnerName(), requestContext.nodeName())
+                ? Scope.DELETE_OWN_CONTENT
+                : Scope.DELETE_OTHERS_CONTENT;
+            if (!requestContext.isPrincipal(reaction.getDeleteE(), clientScope, adminScope)) {
                 throw new AuthenticationException();
             }
 

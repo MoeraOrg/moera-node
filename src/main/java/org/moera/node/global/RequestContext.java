@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.AccessChecker;
+import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.data.Avatar;
 import org.moera.node.friends.FriendCacheInvalidation;
 import org.moera.node.friends.FriendCachePart;
@@ -115,6 +116,8 @@ public interface RequestContext extends AccessChecker {
     UUID avatarId();
 
     Avatar getAvatar();
+
+    boolean isPrincipal(PrincipalFilter principal, Scope clientScope, Scope adminScope);
 
     void send(Liberin liberin);
 
