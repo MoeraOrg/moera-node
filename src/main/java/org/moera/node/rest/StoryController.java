@@ -34,6 +34,7 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -184,6 +185,48 @@ public class StoryController {
         });
     }
 
+    @DeleteMapping
+    @Admin(Scope.UPDATE_FEEDS)
+    @Transactional
+    public Result deleteStories(
+        @RequestParam(required = false) StoryType type,
+        @RequestParam(required = false) String receiver,
+        @RequestParam(required = false) String receiverid,
+        @RequestParam(required = false) String postingid,
+        @RequestParam(required = false) Boolean recommended,
+        @RequestParam(defaultValue = "false") boolean unrestricted
+    ) {
+        log.info(
+            "DELETE /stories"
+                + " (type = {}, receiver = {}, receiverid = {}, postingid = {}, recommended = {}, unrestricted = {})",
+            LogUtil.format(Objects.toString(type, null)),
+            LogUtil.format(receiver),
+            LogUtil.format(receiverid),
+            LogUtil.format(postingid),
+            LogUtil.format(recommended),
+            LogUtil.format(unrestricted)
+        );
+
+        UUID postingId = Util.uuid(postingid).orElse(null);
+        if (!ObjectUtils.isEmpty(postingid) && postingId == null) {
+            return Result.OK;
+        }
+
+        ValidationUtil.assertion(
+            unrestricted
+                || !ObjectUtils.isEmpty(receiver)
+                || !ObjectUtils.isEmpty(receiverid)
+                || postingId != null
+                || type != null && type != StoryType.POSTING_ADDED
+                || Boolean.TRUE.equals(recommended),
+            "story.delete-unrestricted"
+        );
+
+        storyOperations.deleteMultiple(null, type, receiver, receiverid, postingId, recommended);
+
+        return Result.OK;
+    }
+
     @DeleteMapping("/{id}")
     @Admin(Scope.UPDATE_FEEDS)
     public Result delete(@PathVariable String id) {
@@ -193,7 +236,7 @@ public class StoryController {
         var liberin = tx.executeWrite(() -> {
             Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), storyId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
-            storyOperations.delete(story);
+            storyOperations.deleteSingle(story);
 
             return new StoryDeletedLiberin(story);
         });

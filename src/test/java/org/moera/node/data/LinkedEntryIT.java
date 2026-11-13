@@ -1,5 +1,6 @@
 package org.moera.node.data;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,10 +16,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.function.Executable;
 import org.mockito.ArgumentCaptor;
 import org.moera.lib.node.types.FeedSliceInfo;
 import org.moera.lib.node.types.PostingInfo;
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
@@ -26,7 +31,12 @@ import org.moera.lib.node.types.notifications.Notification;
 import org.moera.lib.node.types.notifications.PostingUnsharedNotification;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.RequestContextImpl;
+import org.moera.node.auth.AuthenticationException;
 import org.moera.node.config.DirectServeSource;
+import org.moera.node.liberin.Liberin;
+import org.moera.node.liberin.model.PostingDeletedLiberin;
+import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.liberin.receptor.PostingReceptor;
 import org.moera.node.media.DirectServeOperations;
 import org.moera.node.media.DirectServeOperations.DirectServePath;
@@ -42,10 +52,14 @@ import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.PostingInfoOperations;
 import org.moera.node.operations.StoryOperations;
+import org.moera.node.option.Options;
 import org.moera.node.picker.PickerPool;
 import org.moera.node.rest.FeedController;
+import org.moera.node.rest.StoryController;
 import org.moera.node.task.Jobs;
 import org.moera.node.userlist.SheriffUserListOperations;
+import org.moera.node.util.ExtendedDuration;
+import org.moera.node.util.Transaction;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -59,19 +73,23 @@ import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @EnabledIfSystemProperty(named = "moera.test.database", matches = ".+")
@@ -199,6 +217,699 @@ class LinkedEntryIT {
             assertNull(entityManager.find(Pick.class, ids[3]));
             assertEquals(ids[1], postingRepository.findUnlinked(nodeId).getFirst().getId());
         });
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "false, NONE, true",
+        "true, NONE, true",
+        "false, NO_STORIES, true",
+        "true, NO_STORIES, true",
+        "false, STORY, false",
+        "true, STORY, false",
+        "false, UNPUBLISHED_STORY, false",
+        "true, UNPUBLISHED_STORY, false",
+        "false, LINK, false",
+        "true, LINK, false",
+        "false, HISTORICAL_LINK, false",
+        "true, HISTORICAL_LINK, false",
+        "false, MEDIA_PARENT, false",
+        "true, MEDIA_PARENT, false"
+    })
+    void deletingFeedStoriesDeletesOnlyTheIdentifiedUnreferencedPosting(
+        boolean byReceiver, String reference, boolean deleted
+    ) {
+        UUID[] ids = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            target.setReceiverName("remote_0");
+            target.setReceiverEntryId("target");
+            if (!reference.equals("NO_STORIES")) {
+                story(target, Feed.NEWS, 1);
+                story(target, Feed.NEWS, 2);
+            }
+            switch (reference) {
+                case "STORY" -> story(target, Feed.TIMELINE, 3);
+                case "UNPUBLISHED_STORY" -> story(target, null, 3);
+                case "LINK" -> link(posting(nodeId), target);
+                case "HISTORICAL_LINK" -> {
+                    Posting source = posting(nodeId);
+                    link(source, target);
+                    EntryRevision current = new EntryRevision();
+                    current.setId(UUID.randomUUID());
+                    current.setEntry(source);
+                    entityManager.persist(current);
+                    source.setCurrentRevision(current);
+                }
+                case "MEDIA_PARENT" -> {
+                    target.setParentMediaEntry(posting(nodeId));
+                    target.setParentMedia(mediaOwner());
+                }
+                default -> { }
+            }
+            Posting unrelated = posting(nodeId);
+            unrelated.setReceiverName("remote_0");
+            unrelated.setReceiverEntryId("unrelated");
+            Posting otherNode = posting(UUID.randomUUID());
+            otherNode.setReceiverName("remote_0");
+            otherNode.setReceiverEntryId("target");
+            return new UUID[]{target.getId(), target.getCurrentRevision().getId(), unrelated.getId(), otherNode.getId()};
+        });
+        UniversalContext context = mock(UniversalContext.class);
+        MediaOperations mediaOperations = mock(MediaOperations.class);
+        FeedController controller = deletionController(context, mediaOperations);
+
+        transaction.executeWithoutResult(status -> controller.deleteStories(
+            Feed.NEWS,
+            null,
+            byReceiver ? "remote_0" : null,
+            byReceiver ? "target" : null,
+            byReceiver ? null : ids[0].toString(),
+            null,
+            false
+        ));
+
+        transaction.executeWithoutResult(status -> {
+            Posting target = postingRepository.findById(ids[0]).orElseThrow();
+            assertEquals(deleted, target.getDeletedAt() != null);
+            if (deleted) {
+                assertNotNull(target.getCurrentRevision().getDeletedAt());
+                assertNotNull(target.getDeadline());
+            }
+            var stories = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class)
+                .findByEntryId(nodeId, ids[0]);
+            assertTrue(stories.stream().noneMatch(story -> Feed.NEWS.equals(story.getFeedName())));
+            assertNull(postingRepository.findById(ids[2]).orElseThrow().getDeletedAt());
+            assertNull(postingRepository.findById(ids[3]).orElseThrow().getDeletedAt());
+        });
+        verify(requestContext, times(reference.equals("NO_STORIES") ? 0 : 2)).send(any(StoryDeletedLiberin.class));
+        var captor = ArgumentCaptor.forClass(PostingDeletedLiberin.class);
+        verify(context, times(deleted ? 1 : 0)).send(captor.capture());
+        if (deleted) {
+            assertEquals(ids[0], captor.getValue().getPosting().getId());
+            assertEquals(ids[1], captor.getValue().getLatestRevision().getId());
+            verify(mediaOperations).updatePermissions(captor.getValue().getPosting());
+            verify(mediaOperations).obsoleteMediaPostings(captor.getValue().getPosting());
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+        "null, null, false",
+        "remote_0, null, false",
+        "null, target, false",
+        "remote_0, '', false",
+        "'', target, false",
+        "different_0, target, true",
+        "remote_0, different, true"
+    }, nullValues = "null")
+    void deletingFeedStoriesPreservesPostingsWithoutMatchingExplicitIdentity(
+        String receiver, String receiverid, boolean withPostingId
+    ) {
+        UUID targetId = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            target.setReceiverName("remote_0");
+            target.setReceiverEntryId("target");
+            if (!withPostingId) {
+                story(target, Feed.NEWS, 1);
+            }
+            return target.getId();
+        });
+        UniversalContext context = mock(UniversalContext.class);
+        FeedController controller = deletionController(context, mock(MediaOperations.class));
+
+        transaction.executeWithoutResult(status -> controller.deleteStories(
+            Feed.NEWS, null, receiver, receiverid, withPostingId ? targetId.toString() : null, null, true
+        ));
+
+        transaction.executeWithoutResult(status ->
+            assertNull(postingRepository.findById(targetId).orElseThrow().getDeletedAt())
+        );
+        verify(context, never()).send(any(PostingDeletedLiberin.class));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+        "ID, true, alice_0, null, NONE, NONE, false",
+        "ID, true, bob_0, null, NONE, NONE, false",
+        "ID, true, alice_0, null, NONE, DELETE_OWN_CONTENT, true",
+        "ID, true, alice_0, null, NONE, DELETE_OTHERS_CONTENT, false",
+        "ID, true, bob_0, null, NONE, DELETE_OWN_CONTENT, false",
+        "ID, true, bob_0, null, NONE, DELETE_OTHERS_CONTENT, true",
+        "ID, true, carol_0, null, NONE, DELETE_OTHERS_CONTENT, true",
+        "ID, true, alice_0, bob_0, NONE, DELETE_OWN_CONTENT, true",
+        "ID, true, alice_0, bob_0, NONE, DELETE_OTHERS_CONTENT, false",
+        "ID, true, bob_0, bob_0, DELETE_OWN_CONTENT, NONE, true",
+        "ID, true, bob_0, bob_0, DELETE_OTHERS_CONTENT, NONE, false",
+        "ID, false, bob_0, bob_0, DELETE_OWN_CONTENT, NONE, false",
+        "RECEIVER, false, alice_0, null, NONE, NONE, false",
+        "RECEIVER, false, alice_0, null, NONE, DELETE_OWN_CONTENT, true",
+        "RECEIVER, false, alice_0, null, NONE, DELETE_OTHERS_CONTENT, false",
+        "RECEIVER, false, bob_0, null, NONE, DELETE_OWN_CONTENT, false",
+        "RECEIVER, false, bob_0, null, NONE, DELETE_OTHERS_CONTENT, true",
+        "ALL, true, alice_0, null, NONE, NONE, false",
+        "ALL, true, bob_0, null, NONE, DELETE_OWN_CONTENT, false",
+        "ALL, true, bob_0, null, NONE, DELETE_OTHERS_CONTENT, true",
+        "ALL, true, alice_0, bob_0, NONE, DELETE_OWN_CONTENT, true",
+        "ALL, false, bob_0, bob_0, DELETE_OWN_CONTENT, NONE, false",
+        "ALL, false, bob_0, null, NONE, DELETE_OTHERS_CONTENT, true"
+    }, nullValues = "null")
+    void deletingLastStoriesRequiresPermissionToDeleteThePosting(
+        String selector,
+        boolean original,
+        String owner,
+        String client,
+        Scope clientScope,
+        Scope adminScope,
+        boolean allowed
+    ) {
+        UUID targetId = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            target.setOwnerName(owner);
+            if (!original) {
+                target.setReceiverName("remote_0");
+                target.setReceiverEntryId("target");
+            }
+            story(target, Feed.NEWS, 1);
+            story(target, Feed.NEWS, 2);
+            // An unrelated unlinked posting must not affect authorization for this deletion.
+            posting(nodeId);
+            return target.getId();
+        });
+        RequestContextImpl context = deletionRequestContext(client, clientScope, adminScope);
+        UniversalContext universalContext = mock(UniversalContext.class);
+        MediaOperations mediaOperations = mock(MediaOperations.class);
+        FeedController controller = deletionController(universalContext, mediaOperations, context);
+        Executable deletion = () -> transaction.executeWithoutResult(status -> controller.deleteStories(
+            Feed.NEWS,
+            null,
+            selector.equals("RECEIVER") ? "remote_0" : null,
+            selector.equals("RECEIVER") ? "target" : null,
+            selector.equals("ID") ? targetId.toString() : null,
+            null,
+            true
+        ));
+
+        if (allowed) {
+            assertDoesNotThrow(deletion);
+        } else {
+            assertThrows(AuthenticationException.class, deletion);
+        }
+
+        boolean deleted = allowed && !selector.equals("ALL");
+        transaction.executeWithoutResult(status -> {
+            Posting target = postingRepository.findById(targetId).orElseThrow();
+            assertEquals(deleted, target.getDeletedAt() != null);
+            assertEquals(deleted, target.getCurrentRevision().getDeletedAt() != null);
+            StoryRepository stories = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class);
+            assertEquals(allowed ? 0 : 2, stories.findByEntryId(nodeId, targetId).size());
+            if (!allowed) {
+                assertTrue(postingRepository.findUnlinked(nodeId).stream().noneMatch(p -> p.getId().equals(targetId)));
+            }
+        });
+        verify(universalContext, times(deleted ? 1 : 0)).send(any(PostingDeletedLiberin.class));
+        if (!deleted) {
+            verifyNoInteractions(mediaOperations);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void deletingAlreadyUnlinkedPostingStillRequiresDeletionPermission(boolean byReceiver) {
+        UUID targetId = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            target.setReceiverName("remote_0");
+            target.setReceiverEntryId("target");
+            return target.getId();
+        });
+        UniversalContext universalContext = mock(UniversalContext.class);
+        MediaOperations mediaOperations = mock(MediaOperations.class);
+        FeedController controller = deletionController(
+            universalContext, mediaOperations, deletionRequestContext(null, Scope.NONE, Scope.NONE)
+        );
+
+        assertThrows(AuthenticationException.class, () -> transaction.executeWithoutResult(status ->
+            controller.deleteStories(
+                Feed.NEWS,
+                null,
+                byReceiver ? "remote_0" : null,
+                byReceiver ? "target" : null,
+                byReceiver ? null : targetId.toString(),
+                null,
+                false
+            )
+        ));
+
+        transaction.executeWithoutResult(status ->
+            assertNull(postingRepository.findById(targetId).orElseThrow().getDeletedAt())
+        );
+        verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
+        verifyNoInteractions(mediaOperations);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"false, STORY", "true, STORY", "false, LINK", "true, LINK", "false, MEDIA", "true, MEDIA"})
+    void updateFeedsIsEnoughWhenOtherReferencesKeepThePostingAlive(boolean broad, String reference) {
+        UUID targetId = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            story(target, Feed.NEWS, 1);
+            switch (reference) {
+                case "STORY" -> story(target, Feed.TIMELINE, 2);
+                case "LINK" -> link(posting(nodeId), target);
+                case "MEDIA" -> {
+                    target.setParentMediaEntry(posting(nodeId));
+                    target.setParentMedia(mediaOwner());
+                }
+                default -> throw new IllegalArgumentException(reference);
+            }
+            return target.getId();
+        });
+        UniversalContext universalContext = mock(UniversalContext.class);
+        MediaOperations mediaOperations = mock(MediaOperations.class);
+        FeedController controller = deletionController(
+            universalContext, mediaOperations, deletionRequestContext(null, Scope.NONE, Scope.NONE)
+        );
+
+        assertDoesNotThrow(() -> transaction.executeWithoutResult(status ->
+            controller.deleteStories(Feed.NEWS, null, null, null, broad ? null : targetId.toString(), null, broad)
+        ));
+
+        transaction.executeWithoutResult(status -> {
+            assertNull(postingRepository.findById(targetId).orElseThrow().getDeletedAt());
+            StoryRepository stories = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class);
+            assertTrue(stories.findByEntryId(nodeId, targetId).stream().noneMatch(s -> Feed.NEWS.equals(s.getFeedName())));
+            assertTrue(postingRepository.findUnlinked(nodeId).stream().noneMatch(p -> p.getId().equals(targetId)));
+        });
+        verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
+        verifyNoInteractions(mediaOperations);
+    }
+
+    @Test
+    void forbiddenPostingRollsBackTheWholeFeedDeletion() {
+        List<UUID> ids = transaction.execute(status -> {
+            Posting allowed = posting(nodeId);
+            allowed.setOwnerName("alice_0");
+            story(allowed, Feed.NEWS, 1);
+            Posting forbidden = posting(nodeId);
+            forbidden.setOwnerName("bob_0");
+            story(forbidden, Feed.NEWS, 2);
+            return List.of(allowed.getId(), forbidden.getId());
+        });
+        FeedController controller = deletionController(
+            mock(UniversalContext.class),
+            mock(MediaOperations.class),
+            deletionRequestContext(null, Scope.NONE, Scope.DELETE_OWN_CONTENT)
+        );
+
+        assertThrows(AuthenticationException.class, () -> transaction.executeWithoutResult(status ->
+            controller.deleteStories(Feed.NEWS, null, null, null, null, null, true)
+        ));
+
+        transaction.executeWithoutResult(status -> {
+            StoryRepository stories = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class);
+            for (UUID id : ids) {
+                assertNull(postingRepository.findById(id).orElseThrow().getDeletedAt());
+                assertEquals(1, stories.findByEntryId(nodeId, id).size());
+            }
+        });
+    }
+
+    @Test
+    void postingDeletePrincipalAlsoRestrictsFeedDeletion() {
+        UUID targetId = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            target.setParentDeletePrincipal(Principal.NONE);
+            story(target, Feed.NEWS, 1);
+            return target.getId();
+        });
+        FeedController controller = deletionController(
+            mock(UniversalContext.class),
+            mock(MediaOperations.class),
+            deletionRequestContext(null, Scope.NONE, Scope.ALL)
+        );
+
+        assertThrows(AuthenticationException.class, () -> transaction.executeWithoutResult(status ->
+            controller.deleteStories(Feed.NEWS, null, null, null, targetId.toString(), null, false)
+        ));
+
+        transaction.executeWithoutResult(status -> {
+            assertNull(postingRepository.findById(targetId).orElseThrow().getDeletedAt());
+            StoryRepository stories = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class);
+            assertEquals(1, stories.findByEntryId(nodeId, targetId).size());
+        });
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "alice_0, NONE, false",
+        "alice_0, DELETE_OWN_CONTENT, true",
+        "alice_0, DELETE_OTHERS_CONTENT, false",
+        "bob_0, DELETE_OWN_CONTENT, false",
+        "bob_0, DELETE_OTHERS_CONTENT, true",
+        "carol_0, DELETE_OTHERS_CONTENT, true"
+    })
+    void deletingStoriesAcrossFeedsChecksPostingPermissionsAndRollsBackTogether(
+        String owner, Scope adminScope, boolean allowed
+    ) {
+        UUID targetId = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            target.setOwnerName(owner);
+            story(target, Feed.NEWS, 1);
+            story(target, Feed.TIMELINE, 2);
+            Story parent = story(target, Feed.INSTANT, 3);
+            parent.addSubstory(story(target, null, 4));
+            return target.getId();
+        });
+        UniversalContext universalContext = mock(UniversalContext.class);
+        MediaOperations mediaOperations = mock(MediaOperations.class);
+        StoryController controller = storyDeletionController(
+            universalContext, mediaOperations, deletionRequestContext(null, Scope.NONE, adminScope)
+        );
+        Executable deletion = () -> transaction.executeWithoutResult(status ->
+            controller.deleteStories(null, null, null, targetId.toString(), null, false)
+        );
+
+        if (allowed) {
+            assertDoesNotThrow(deletion);
+        } else {
+            assertThrows(AuthenticationException.class, deletion);
+            verifyNoInteractions(mediaOperations);
+        }
+
+        transaction.executeWithoutResult(status -> {
+            Posting target = postingRepository.findById(targetId).orElseThrow();
+            assertEquals(allowed, target.getDeletedAt() != null);
+            assertEquals(allowed, target.getCurrentRevision().getDeletedAt() != null);
+            List<Story> stories = entityManager.createQuery(
+                "select s from Story s where s.nodeId = :nodeId and s.entry.id = :entryId", Story.class
+            ).setParameter("nodeId", nodeId).setParameter("entryId", targetId).getResultList();
+            assertEquals(allowed ? 0 : 4, stories.size());
+        });
+        verify(universalContext, times(allowed ? 1 : 0)).send(any(PostingDeletedLiberin.class));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+        "POSTING_ADDED, null, null, false, null, 2, 2, 2",
+        "null, remote_0, null, false, null, 0, 0, 4",
+        "null, null, first, false, null, 0, 4, 0",
+        "null, null, null, true, null, 0, 4, 4",
+        "null, remote_0, first, false, null, 0, 4, 4",
+        "null, null, null, false, true, 0, 4, 0",
+        "null, null, null, false, false, 4, 0, 4",
+        "POSTING_ADDED, remote_0, first, true, true, 2, 4, 4"
+    }, nullValues = "null")
+    void deletingStoriesAcrossFeedsHonorsEveryFilterAndNodeBoundary(
+        StoryType type,
+        String receiver,
+        String receiverId,
+        boolean withPostingId,
+        Boolean recommended,
+        int remainingFirst,
+        int remainingSecond,
+        int remainingThird
+    ) {
+        UUID foreignNodeId = UUID.randomUUID();
+        List<UUID> ids = transaction.execute(status -> {
+            List<UUID> result = new ArrayList<>();
+            for (int i = 0; i < 4; i++) {
+                UUID tenant = i == 3 ? foreignNodeId : nodeId;
+                Posting target = posting(tenant);
+                target.setReceiverName(i == 2 ? "other_0" : "remote_0");
+                target.setReceiverEntryId(i == 1 ? "second" : "first");
+                target.setRecommended(i != 1);
+                story(target, Feed.NEWS, 1).setNodeId(tenant);
+                story(target, Feed.TIMELINE, 2).setNodeId(tenant);
+                Story instant = story(target, Feed.INSTANT, 3);
+                instant.setNodeId(tenant);
+                instant.setStoryType(StoryType.REACTION_ADDED_POSITIVE);
+                Story unpublished = story(target, null, 4);
+                unpublished.setNodeId(tenant);
+                unpublished.setStoryType(StoryType.REACTION_ADDED_POSITIVE);
+                result.add(target.getId());
+            }
+            return result;
+        });
+        StoryController controller = storyDeletionController(
+            mock(UniversalContext.class),
+            mock(MediaOperations.class),
+            deletionRequestContext(null, Scope.NONE, Scope.ALL)
+        );
+
+        transaction.executeWithoutResult(status -> controller.deleteStories(
+            type, receiver, receiverId, withPostingId ? ids.getFirst().toString() : null, recommended, true
+        ));
+
+        transaction.executeWithoutResult(status -> {
+            StoryRepository stories = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class);
+            assertEquals(remainingFirst, stories.findByEntryId(nodeId, ids.get(0)).size());
+            assertEquals(remainingSecond, stories.findByEntryId(nodeId, ids.get(1)).size());
+            assertEquals(remainingThird, stories.findByEntryId(nodeId, ids.get(2)).size());
+            assertEquals(4, stories.findByEntryId(foreignNodeId, ids.get(3)).size());
+            assertNull(postingRepository.findById(ids.get(3)).orElseThrow().getDeletedAt());
+        });
+    }
+
+    @Test
+    void deletingStoriesAcrossFeedsProcessesMoreThanOneBatch() {
+        UUID targetId = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            for (int i = 0; i < 501; i++) {
+                story(target, i % 2 == 0 ? Feed.NEWS : Feed.INSTANT, i);
+            }
+            return target.getId();
+        });
+        StoryController controller = storyDeletionController(
+            mock(UniversalContext.class),
+            mock(MediaOperations.class),
+            deletionRequestContext(null, Scope.NONE, Scope.ALL)
+        );
+
+        transaction.executeWithoutResult(status ->
+            controller.deleteStories(null, null, null, targetId.toString(), null, false)
+        );
+
+        transaction.executeWithoutResult(status -> {
+            StoryRepository stories = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class);
+            assertTrue(stories.findByEntryId(nodeId, targetId).isEmpty());
+            assertNotNull(postingRepository.findById(targetId).orElseThrow().getDeletedAt());
+        });
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+        "alice_0, null, NONE, NONE, false",
+        "alice_0, null, NONE, DELETE_OWN_CONTENT, true",
+        "alice_0, null, NONE, DELETE_OTHERS_CONTENT, false",
+        "bob_0, null, NONE, DELETE_OWN_CONTENT, false",
+        "bob_0, null, NONE, DELETE_OTHERS_CONTENT, true",
+        "carol_0, null, NONE, DELETE_OTHERS_CONTENT, true",
+        "alice_0, bob_0, NONE, DELETE_OWN_CONTENT, true",
+        "alice_0, bob_0, NONE, DELETE_OTHERS_CONTENT, false",
+        "bob_0, bob_0, DELETE_OWN_CONTENT, NONE, true",
+        "bob_0, bob_0, DELETE_OTHERS_CONTENT, NONE, false"
+    }, nullValues = "null")
+    void deletingSingleStoryChecksPostingPermissionsAndDeletesTheLastReferencedPosting(
+        String owner, String client, Scope clientScope, Scope adminScope, boolean allowed
+    ) {
+        UUID[] ids = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            target.setOwnerName(owner);
+            Story story = story(target, Feed.NEWS, 1);
+            posting(nodeId);
+            return new UUID[]{target.getId(), story.getId()};
+        });
+        RequestContextImpl context = deletionRequestContext(client, clientScope, adminScope);
+        UniversalContext universalContext = mock(UniversalContext.class);
+        MediaOperations mediaOperations = mock(MediaOperations.class);
+        StoryController controller = storyDeletionController(universalContext, mediaOperations, context);
+
+        if (allowed) {
+            assertDoesNotThrow(() -> controller.delete(ids[1].toString()));
+        } else {
+            assertThrows(AuthenticationException.class, () -> controller.delete(ids[1].toString()));
+            verifyNoInteractions(mediaOperations);
+        }
+
+        transaction.executeWithoutResult(status -> {
+            Posting target = postingRepository.findById(ids[0]).orElseThrow();
+            assertEquals(allowed, target.getDeletedAt() != null);
+            assertEquals(allowed, target.getCurrentRevision().getDeletedAt() != null);
+            assertEquals(allowed, target.getDeadline() != null);
+            assertEquals(!allowed, entityManager.find(Story.class, ids[1]) != null);
+            assertEquals(1, postingRepository.findUnlinked(nodeId).size());
+        });
+        assertEquals(allowed ? 1 : 0, context.getAfterCommitLiberins().stream()
+            .filter(StoryDeletedLiberin.class::isInstance).count());
+        verify(universalContext, times(allowed ? 1 : 0)).send(any(PostingDeletedLiberin.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"STORY", "UNPUBLISHED_STORY", "LINK", "HISTORICAL_LINK", "MEDIA"})
+    void deletingSingleStoryWithoutDeleteScopePreservesAReferencedPosting(String reference) {
+        UUID[] ids = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            Story story = story(target, Feed.NEWS, 1);
+            switch (reference) {
+                case "STORY" -> story(target, Feed.TIMELINE, 2);
+                case "UNPUBLISHED_STORY" -> story(target, null, 2);
+                case "LINK", "HISTORICAL_LINK" -> {
+                    Posting source = posting(nodeId);
+                    link(source, target);
+                    if (reference.equals("HISTORICAL_LINK")) {
+                        EntryRevision revision = new EntryRevision();
+                        revision.setId(UUID.randomUUID());
+                        revision.setEntry(source);
+                        entityManager.persist(revision);
+                        source.setCurrentRevision(revision);
+                    }
+                }
+                case "MEDIA" -> {
+                    target.setParentMediaEntry(posting(nodeId));
+                    target.setParentMedia(mediaOwner());
+                }
+                default -> throw new IllegalArgumentException(reference);
+            }
+            return new UUID[]{target.getId(), story.getId()};
+        });
+        UniversalContext universalContext = mock(UniversalContext.class);
+        MediaOperations mediaOperations = mock(MediaOperations.class);
+        StoryController controller = storyDeletionController(
+            universalContext, mediaOperations, deletionRequestContext(null, Scope.NONE, Scope.NONE)
+        );
+
+        assertDoesNotThrow(() -> controller.delete(ids[1].toString()));
+
+        transaction.executeWithoutResult(status -> {
+            assertNull(entityManager.find(Story.class, ids[1]));
+            assertNull(postingRepository.findById(ids[0]).orElseThrow().getDeletedAt());
+        });
+        verifyNoInteractions(mediaOperations);
+        verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
+    }
+
+    @Test
+    void deletingSingleStoryRespectsTheEffectivePostingDeletePrincipal() {
+        UUID[] ids = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            target.setParentDeletePrincipal(Principal.NONE);
+            return new UUID[]{target.getId(), story(target, Feed.NEWS, 1).getId()};
+        });
+        StoryController controller = storyDeletionController(
+            mock(UniversalContext.class),
+            mock(MediaOperations.class),
+            deletionRequestContext(null, Scope.NONE, Scope.ALL)
+        );
+
+        assertThrows(AuthenticationException.class, () -> controller.delete(ids[1].toString()));
+
+        transaction.executeWithoutResult(status -> {
+            assertNotNull(entityManager.find(Story.class, ids[1]));
+            assertNull(postingRepository.findById(ids[0]).orElseThrow().getDeletedAt());
+        });
+    }
+
+    @Test
+    void basicStoryDeletionDoesNotDeleteTheUnlinkedPostingOrRequireDeleteScope() {
+        UUID[] ids = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            return new UUID[]{target.getId(), story(target, Feed.NEWS, 1).getId()};
+        });
+        UniversalContext universalContext = mock(UniversalContext.class);
+        MediaOperations mediaOperations = mock(MediaOperations.class);
+        StoryOperations operations = deletionOperations(
+            universalContext, mediaOperations, deletionRequestContext(null, Scope.NONE, Scope.NONE)
+        );
+
+        transaction.executeWithoutResult(status -> operations.delete(entityManager.find(Story.class, ids[1])));
+
+        transaction.executeWithoutResult(status -> {
+            assertNull(entityManager.find(Story.class, ids[1]));
+            assertNull(postingRepository.findById(ids[0]).orElseThrow().getDeletedAt());
+            assertTrue(postingRepository.findUnlinked(nodeId).stream().anyMatch(p -> p.getId().equals(ids[0])));
+        });
+        verifyNoInteractions(mediaOperations);
+        verify(universalContext, never()).isPrincipal(any(), any(), any());
+        verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
+    }
+
+    private RequestContextImpl deletionRequestContext(String client, Scope clientScope, Scope adminScope) {
+        Options options = mock(Options.class);
+        when(options.nodeId()).thenReturn(nodeId);
+        when(options.nodeName()).thenReturn("alice_0");
+        RequestContextImpl context = new RequestContextImpl();
+        context.setOptions(options);
+        context.setClientName(client);
+        context.setClientScope(clientScope.getMask());
+        context.setAdminScope(Scope.UPDATE_FEEDS.getMask() | adminScope.getMask());
+        return context;
+    }
+
+    private FeedController deletionController(UniversalContext context, MediaOperations mediaOperations) {
+        RequestContextImpl adminContext = deletionRequestContext(null, Scope.NONE, Scope.ALL);
+        when(requestContext.nodeName()).thenReturn("alice_0");
+        when(requestContext.isPrincipal(any(), any(), any())).thenAnswer(invocation -> adminContext.isPrincipal(
+            invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)
+        ));
+        return deletionController(context, mediaOperations, requestContext);
+    }
+
+    private FeedController deletionController(
+        UniversalContext context, MediaOperations mediaOperations, RequestContext deletionContext
+    ) {
+        FeedController controller = new FeedController();
+        ReflectionTestUtils.setField(controller, "requestContext", deletionContext);
+        ReflectionTestUtils.setField(controller, "storyOperations",
+            deletionOperations(context, mediaOperations, deletionContext));
+        return controller;
+    }
+
+    private StoryController storyDeletionController(
+        UniversalContext context, MediaOperations mediaOperations, RequestContext deletionContext
+    ) {
+        StoryController controller = new StoryController();
+        ReflectionTestUtils.setField(controller, "requestContext", deletionContext);
+        ReflectionTestUtils.setField(controller, "storyRepository",
+            new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class));
+        Transaction tx = new Transaction();
+        ReflectionTestUtils.setField(tx, "txManager", new JpaTransactionManager(factory));
+        ReflectionTestUtils.setField(tx, "universalContext", context);
+        ReflectionTestUtils.setField(controller, "tx", tx);
+        ReflectionTestUtils.setField(controller, "storyOperations",
+            deletionOperations(context, mediaOperations, deletionContext));
+        return controller;
+    }
+
+    private StoryOperations deletionOperations(
+        UniversalContext context, MediaOperations mediaOperations, RequestContext deletionContext
+    ) {
+        Options options = mock(Options.class);
+        when(options.getDuration("posting.deleted.lifetime")).thenReturn(new ExtendedDuration(Duration.ofDays(7)));
+        when(context.getOptions()).thenReturn(options);
+        when(context.nodeId()).thenReturn(nodeId);
+        when(context.nodeName()).thenAnswer(invocation -> deletionContext.nodeName());
+        when(context.getClientName(any())).thenAnswer(invocation ->
+            deletionContext.getClientName(invocation.getArgument(0))
+        );
+        when(context.isPrincipal(any(), any(), any())).thenAnswer(invocation -> deletionContext.isPrincipal(
+            invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)
+        ));
+        doAnswer(invocation -> {
+            deletionContext.send(invocation.getArgument(0));
+            return null;
+        }).when(context).send(any(Liberin.class));
+        var storyOperations = new StoryOperations();
+        ReflectionTestUtils.setField(storyOperations, "universalContext", context);
+        ReflectionTestUtils.setField(storyOperations, "entityManager", entityManager);
+        ReflectionTestUtils.setField(storyOperations, "storyRepository",
+            new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class));
+        var postingOperations = new PostingOperations();
+        ReflectionTestUtils.setField(postingOperations, "universalContext", context);
+        ReflectionTestUtils.setField(postingOperations, "postingRepository", postingRepository);
+        ReflectionTestUtils.setField(postingOperations, "storyOperations", storyOperations);
+        ReflectionTestUtils.setField(postingOperations, "mediaOperations", mediaOperations);
+        ReflectionTestUtils.setField(storyOperations, "postingRepository", postingRepository);
+        ReflectionTestUtils.setField(storyOperations, "postingOperations", postingOperations);
+        return storyOperations;
     }
 
     @Test
@@ -550,7 +1261,7 @@ class LinkedEntryIT {
         });
     }
 
-    private void story(Posting posting, String feedName, long moment) {
+    private Story story(Posting posting, String feedName, long moment) {
         Story story = new Story();
         story.setId(UUID.randomUUID());
         story.setNodeId(nodeId);
@@ -559,6 +1270,7 @@ class LinkedEntryIT {
         story.setMoment(moment);
         story.setStoryType(StoryType.POSTING_ADDED);
         entityManager.persist(story);
+        return story;
     }
 
     private MediaFile avatar() {

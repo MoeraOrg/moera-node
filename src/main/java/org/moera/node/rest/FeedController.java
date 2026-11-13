@@ -57,7 +57,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
-import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.FeedInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -93,8 +92,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class FeedController {
 
     private static final Logger log = LoggerFactory.getLogger(FeedController.class);
-
-    private static final int DELETE_BATCH_SIZE = 500;
 
     @Inject
     private PostingInfoOperations postingInfoOperations;
@@ -608,53 +605,46 @@ public class FeedController {
         @PathVariable String feedName,
         @RequestParam(required = false) StoryType type,
         @RequestParam(required = false) String receiver,
-        @RequestParam(required = false) Boolean recommended
+        @RequestParam(required = false) String receiverid,
+        @RequestParam(required = false) String postingid,
+        @RequestParam(required = false) Boolean recommended,
+        @RequestParam(defaultValue = "false") boolean unrestricted
     ) {
         log.info(
-            "DELETE /feeds/{feedName}/stories (feedName = {}, type = {}, receiver = {}, recommended = {})",
-            LogUtil.format(feedName), LogUtil.format(Objects.toString(type, null)), LogUtil.format(receiver),
-            LogUtil.format(recommended)
+            "DELETE /feeds/{feedName}/stories"
+                + " (feedName = {}, type = {}, receiver = {}, receiverid = {}, postingid = {}, recommended = {},"
+                + " unrestricted = {})",
+            LogUtil.format(feedName),
+            LogUtil.format(Objects.toString(type, null)),
+            LogUtil.format(receiver),
+            LogUtil.format(receiverid),
+            LogUtil.format(postingid),
+            LogUtil.format(recommended),
+            LogUtil.format(unrestricted)
         );
 
         if (!Feed.isStandard(feedName)) {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
 
-        while (true) {
-            List<Story> stories = findStoriesToDelete(feedName, type, receiver, recommended);
-            if (stories.isEmpty()) {
-                break;
-            }
-            for (Story story : stories) {
-                storyOperations.delete(story);
-                requestContext.send(new StoryDeletedLiberin(story));
-            }
+        UUID postingId = Util.uuid(postingid).orElse(null);
+        if (!ObjectUtils.isEmpty(postingid) && postingId == null) {
+            return Result.OK;
         }
+
+        ValidationUtil.assertion(
+            unrestricted
+                || !ObjectUtils.isEmpty(receiver)
+                || !ObjectUtils.isEmpty(receiverid)
+                || postingId != null
+                || type != null && type != StoryType.POSTING_ADDED
+                || Boolean.TRUE.equals(recommended),
+            "feed.delete-unrestricted"
+        );
+
+        storyOperations.deleteMultiple(feedName, type, receiver, receiverid, postingId, recommended);
 
         return Result.OK;
-    }
-
-    private List<Story> findStoriesToDelete(String feedName, StoryType type, String receiver, Boolean recommended) {
-        QStory story = QStory.story;
-        QEntry entry = QEntry.entry;
-        var query = new JPAQueryFactory(entityManager).selectFrom(story);
-        if (!ObjectUtils.isEmpty(receiver) || recommended != null) {
-            query = query.leftJoin(story.entry, entry);
-        }
-        BooleanBuilder where = new BooleanBuilder();
-        where
-            .and(story.nodeId.eq(requestContext.nodeId()))
-            .and(story.feedName.eq(feedName));
-        if (type != null) {
-            where.and(story.storyType.eq(type));
-        }
-        if (!ObjectUtils.isEmpty(receiver)) {
-            where.and(entry.receiverName.eq(receiver));
-        }
-        if (recommended != null) {
-            where.and(entry.recommended.eq(recommended));
-        }
-        return query.where(where).limit(DELETE_BATCH_SIZE).fetch();
     }
 
 }

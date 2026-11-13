@@ -13,6 +13,7 @@ import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
+import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestContext;
@@ -58,10 +59,12 @@ class FeedControllerPublicationUpdatesTest {
             return null;
         }).when(storyRepository).delete(any(Story.class));
         UniversalContext universalContext = mock(UniversalContext.class);
+        when(universalContext.nodeId()).thenReturn(posting.getNodeId());
         StoryOperations storyOperations = new StoryOperations();
         ReflectionTestUtils.setField(storyOperations, "storyRepository", storyRepository);
         ReflectionTestUtils.setField(storyOperations, "entityManager", entityManager);
         ReflectionTestUtils.setField(storyOperations, "universalContext", universalContext);
+        ReflectionTestUtils.setField(storyOperations, "postingRepository", mock(PostingRepository.class));
         RequestContext requestContext = mock(RequestContext.class);
         when(requestContext.nodeId()).thenReturn(posting.getNodeId());
         FeedController controller = new FeedController();
@@ -70,10 +73,10 @@ class FeedControllerPublicationUpdatesTest {
         ReflectionTestUtils.setField(controller, "storyRepository", storyRepository);
         ReflectionTestUtils.setField(controller, "storyOperations", storyOperations);
 
-        assertSame(Result.OK, controller.deleteStories(Feed.TIMELINE, null, null, null));
+        assertSame(Result.OK, controller.deleteStories(Feed.TIMELINE, null, null, null, null, null, true));
 
         assertTrue(stories.isEmpty());
-        verify(requestContext, times(2)).send(any(StoryDeletedLiberin.class));
+        verify(universalContext, times(2)).send(any(StoryDeletedLiberin.class));
         var captor = org.mockito.ArgumentCaptor.forClass(PostingPublishedAtUpdatedLiberin.class);
         verify(universalContext).send(captor.capture());
         assertEquals(posting.getId(), captor.getValue().getPostingId());

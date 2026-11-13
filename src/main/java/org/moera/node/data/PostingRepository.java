@@ -118,6 +118,27 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     )
     List<Posting> findUnlinked(UUID nodeId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(
+        "select p from Posting p"
+        + " where p.nodeId = ?1 and p.id in ?2 and p.deletedAt is null and p.parentMediaEntry is null"
+        + " and not exists(select s from Story s where s.entry.id = p.id)"
+        + " and not exists(select le from LinkedEntry le where le.linkedEntry.id = p.id)"
+    )
+    List<Posting> findUnlinked(UUID nodeId, Collection<UUID> postingIds);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(
+        "select p from Posting p"
+        + " where p.nodeId = ?1 and p.deletedAt is null and p.parentMediaEntry is null"
+        + " and (?2 is null or p.receiverName = ?2)"
+        + " and (?3 is null or p.receiverEntryId = ?3)"
+        + " and (?4 is null or p.id = ?4)"
+        + " and not exists(select s from Story s where s.entry.id = p.id)"
+        + " and not exists(select le from LinkedEntry le where le.linkedEntry.id = p.id)"
+    )
+    List<Posting> findUnlinked(UUID nodeId, String receiverName, String receiverEntryId, UUID postingId);
+
     @Query(
         "select p from Posting p left join fetch p.currentRevision"
         + " where p.deletedAt is null and p.currentRevision.deadline < ?1"

@@ -13,15 +13,23 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
 
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.node.types.FeedStatus;
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalFilter;
+import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.MediaFileOwnerRepository;
+import org.moera.node.data.Posting;
+import org.moera.node.data.PostingRepository;
+import org.moera.node.data.QEntry;
+import org.moera.node.data.QStory;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.domain.Domains;
@@ -52,6 +60,8 @@ public class StoryOperations {
 
     private static final Logger log = LoggerFactory.getLogger(StoryOperations.class);
 
+    private static final int DELETE_BATCH_SIZE = 500;
+
     private static final Timestamp PINNED_TIME = Util.toTimestamp(9000000000000L); // 9E+12
 
     @Inject
@@ -65,6 +75,13 @@ public class StoryOperations {
 
     @Inject
     private StoryRepository storyRepository;
+
+    @Inject
+    private PostingRepository postingRepository;
+
+    @Inject
+    @Lazy
+    private PostingOperations postingOperations;
 
     @Inject
     private MediaFileOwnerRepository mediaFileOwnerRepository;
@@ -224,7 +241,8 @@ public class StoryOperations {
     private List<Story> findPostingPublications(Story story) {
         if (
             Feed.TIMELINE.equals(story.getFeedName())
-            && story.getEntry() != null && story.getEntry().getEntryType() == EntryType.POSTING
+            && story.getEntry() != null
+            && story.getEntry().getEntryType() == EntryType.POSTING
             && story.getParent() == null
         ) {
             return findPostingPublications(story.getNodeId(), story.getEntry());
@@ -245,6 +263,128 @@ public class StoryOperations {
         if (!Objects.equals(previousPublishedAt, findEarliestPublishedAt(publications))) {
             universalContext.send(new PostingPublishedAtUpdatedLiberin(posting.getId()));
         }
+    }
+
+    public void deleteSingle(Story story) {
+        Entry entry = story.getEntry();
+        boolean hasPosting = entry != null && entry.getEntryType() == EntryType.POSTING;
+        if (hasPosting) {
+            entityManager.lock(entry, LockModeType.PESSIMISTIC_WRITE);
+        }
+
+        delete(story);
+
+        if (hasPosting) {
+            List<Posting> postings = postingRepository.findUnlinked(universalContext.nodeId(), List.of(entry.getId()));
+            postings.forEach(this::checkPostingDeletionAllowed);
+            postingOperations.deletePostings(postings);
+        }
+    }
+
+    public void deleteMultiple(
+        String feedName,
+        StoryType type,
+        String receiver,
+        String receiverid,
+        UUID postingId,
+        Boolean recommended
+    ) {
+        boolean singlePosting = postingId != null || !ObjectUtils.isEmpty(receiver) && !ObjectUtils.isEmpty(receiverid);
+
+        while (true) {
+            List<Story> stories = findStoriesToDelete(feedName, type, receiver, receiverid, postingId, recommended);
+            if (stories.isEmpty()) {
+                break;
+            }
+
+            for (Story story : stories) {
+                if (story.getEntry() != null) {
+                    // Serialize removal of references to the same entry from concurrent feed requests.
+                    entityManager.lock(story.getEntry(), LockModeType.PESSIMISTIC_WRITE);
+                }
+                delete(story);
+                universalContext.send(new StoryDeletedLiberin(story));
+            }
+
+            if (!singlePosting) {
+                List<UUID> postingIds = stories.stream()
+                    .map(Story::getEntry)
+                    .filter(Objects::nonNull)
+                    .map(Entry::getId)
+                    .distinct()
+                    .toList();
+                if (!postingIds.isEmpty()) {
+                    // Background cleanup would also delete these postings after losing their last reference.
+                    postingRepository.findUnlinked(universalContext.nodeId(), postingIds)
+                        .forEach(this::checkPostingDeletionAllowed);
+                }
+            }
+        }
+
+        if (singlePosting) {
+            List<Posting> postings = postingRepository.findUnlinked(
+                universalContext.nodeId(),
+                ObjectUtils.isEmpty(receiver) ? null : receiver,
+                ObjectUtils.isEmpty(receiverid) ? null : receiverid,
+                postingId
+            );
+            postings.forEach(this::checkPostingDeletionAllowed);
+            postingOperations.deletePostings(postings);
+        }
+    }
+
+    private void checkPostingDeletionAllowed(Posting posting) {
+        Scope clientScope = Objects.equals(universalContext.getClientName(Scope.IDENTIFY), posting.getOwnerName())
+            ? Scope.DELETE_OWN_CONTENT
+            : Scope.DELETE_OTHERS_CONTENT;
+        Scope adminScope = Objects.equals(posting.getOwnerName(), universalContext.nodeName())
+            ? Scope.DELETE_OWN_CONTENT
+            : Scope.DELETE_OTHERS_CONTENT;
+        if (!universalContext.isPrincipal(posting.getDeleteE(), clientScope, adminScope)) {
+            throw new AuthenticationException();
+        }
+    }
+
+    private List<Story> findStoriesToDelete(
+        String feedName,
+        StoryType type,
+        String receiverName,
+        String receiverPostingId,
+        UUID postingId,
+        Boolean recommended
+    ) {
+        QStory story = QStory.story;
+        QEntry entry = QEntry.entry;
+        var query = new JPAQueryFactory(entityManager).selectFrom(story);
+        if (
+            !ObjectUtils.isEmpty(receiverName)
+            || !ObjectUtils.isEmpty(receiverPostingId)
+            || postingId != null
+            || recommended != null
+        ) {
+            query = query.leftJoin(story.entry, entry);
+        }
+        BooleanBuilder where = new BooleanBuilder();
+        where.and(story.nodeId.eq(universalContext.nodeId()));
+        if (feedName != null) {
+            where.and(story.feedName.eq(feedName));
+        }
+        if (type != null) {
+            where.and(story.storyType.eq(type));
+        }
+        if (!ObjectUtils.isEmpty(receiverName)) {
+            where.and(entry.receiverName.eq(receiverName));
+        }
+        if (!ObjectUtils.isEmpty(receiverPostingId)) {
+            where.and(entry.receiverEntryId.eq(receiverPostingId));
+        }
+        if (postingId != null) {
+            where.and(entry.id.eq(postingId));
+        }
+        if (recommended != null) {
+            where.and(entry.recommended.eq(recommended));
+        }
+        return query.where(where).limit(DELETE_BATCH_SIZE).fetch();
     }
 
     @Scheduled(fixedDelayString = "P1D")
