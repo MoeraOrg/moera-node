@@ -80,10 +80,6 @@ public class StoryOperations {
     private PostingRepository postingRepository;
 
     @Inject
-    @Lazy
-    private PostingOperations postingOperations;
-
-    @Inject
     private MediaFileOwnerRepository mediaFileOwnerRepository;
 
     @Inject
@@ -275,9 +271,8 @@ public class StoryOperations {
         delete(story);
 
         if (hasPosting) {
-            List<Posting> postings = postingRepository.findUnlinked(universalContext.nodeId(), List.of(entry.getId()));
-            postings.forEach(this::checkPostingDeletionAllowed);
-            postingOperations.deletePostings(postings);
+            postingRepository.findUnlinked(universalContext.nodeId(), List.of(entry.getId()))
+                .forEach(this::checkPostingDeletionAllowed);
         }
     }
 
@@ -314,7 +309,7 @@ public class StoryOperations {
                     .distinct()
                     .toList();
                 if (!postingIds.isEmpty()) {
-                    // Background cleanup would also delete these postings after losing their last reference.
+                    // Removing the last reference allows background cleanup to delete the posting.
                     postingRepository.findUnlinked(universalContext.nodeId(), postingIds)
                         .forEach(this::checkPostingDeletionAllowed);
                 }
@@ -322,14 +317,12 @@ public class StoryOperations {
         }
 
         if (singlePosting) {
-            List<Posting> postings = postingRepository.findUnlinked(
+            postingRepository.findUnlinked(
                 universalContext.nodeId(),
                 ObjectUtils.isEmpty(receiver) ? null : receiver,
                 ObjectUtils.isEmpty(receiverid) ? null : receiverid,
                 postingId
-            );
-            postings.forEach(this::checkPostingDeletionAllowed);
-            postingOperations.deletePostings(postings);
+            ).forEach(this::checkPostingDeletionAllowed);
         }
     }
 

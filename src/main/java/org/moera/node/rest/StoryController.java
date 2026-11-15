@@ -116,10 +116,7 @@ public class StoryController {
         if (story == null || Feed.isAdmin(story.getFeedName()) && !requestContext.isAdmin(Scope.VIEW_FEEDS)) {
             throw new ObjectNotFoundFailure("story.not-found");
         }
-        if (
-            (story.getEntry() != null || !story.getViewPrincipal().isUnset())
-            && !requestContext.isPrincipal(story.viewPrincipalFilter(), Scope.VIEW_CONTENT)
-        ) {
+        if (!requestContext.isPrincipal(story.viewPrincipalFilter(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("story.not-found");
         }
 
@@ -156,10 +153,7 @@ public class StoryController {
         return tx.executeWrite(() -> {
             Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), storyId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
-            if (
-                (story.getEntry() != null || !story.getViewPrincipal().isUnset())
-                && !requestContext.isPrincipal(story.viewPrincipalFilter(), Scope.VIEW_CONTENT)
-            ) {
+            if (!requestContext.isPrincipal(story.viewPrincipalFilter(), Scope.VIEW_CONTENT)) {
                 throw new ObjectNotFoundFailure("story.not-found");
             }
             ValidationUtil.assertion(

@@ -32,8 +32,10 @@ import org.moera.lib.node.types.notifications.PostingUnsharedNotification;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.RequestContextImpl;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.config.DirectServeSource;
+import org.moera.node.domain.Domains;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
@@ -89,7 +91,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @EnabledIfSystemProperty(named = "moera.test.database", matches = ".+")
@@ -236,8 +237,8 @@ class LinkedEntryIT {
         "false, MEDIA_PARENT, false",
         "true, MEDIA_PARENT, false"
     })
-    void deletingFeedStoriesDeletesOnlyTheIdentifiedUnreferencedPosting(
-        boolean byReceiver, String reference, boolean deleted
+    void deletingFeedStoriesLeavesTheIdentifiedPostingForCleanup(
+        boolean byReceiver, String reference, boolean unlinked
     ) {
         UUID[] ids = transaction.execute(status -> {
             Posting target = posting(nodeId);
@@ -272,11 +273,10 @@ class LinkedEntryIT {
             Posting otherNode = posting(UUID.randomUUID());
             otherNode.setReceiverName("remote_0");
             otherNode.setReceiverEntryId("target");
-            return new UUID[]{target.getId(), target.getCurrentRevision().getId(), unrelated.getId(), otherNode.getId()};
+            return new UUID[]{target.getId(), unrelated.getId(), otherNode.getId()};
         });
         UniversalContext context = mock(UniversalContext.class);
-        MediaOperations mediaOperations = mock(MediaOperations.class);
-        FeedController controller = deletionController(context, mediaOperations);
+        FeedController controller = deletionController(context);
 
         transaction.executeWithoutResult(status -> controller.deleteStories(
             Feed.NEWS,
@@ -290,26 +290,19 @@ class LinkedEntryIT {
 
         transaction.executeWithoutResult(status -> {
             Posting target = postingRepository.findById(ids[0]).orElseThrow();
-            assertEquals(deleted, target.getDeletedAt() != null);
-            if (deleted) {
-                assertNotNull(target.getCurrentRevision().getDeletedAt());
-                assertNotNull(target.getDeadline());
-            }
+            assertNull(target.getDeletedAt());
+            assertNull(target.getCurrentRevision().getDeletedAt());
+            assertNull(target.getDeadline());
+            assertEquals(unlinked, postingRepository.findUnlinked(nodeId).stream()
+                .anyMatch(posting -> posting.getId().equals(ids[0])));
             var stories = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class)
                 .findByEntryId(nodeId, ids[0]);
             assertTrue(stories.stream().noneMatch(story -> Feed.NEWS.equals(story.getFeedName())));
+            assertNull(postingRepository.findById(ids[1]).orElseThrow().getDeletedAt());
             assertNull(postingRepository.findById(ids[2]).orElseThrow().getDeletedAt());
-            assertNull(postingRepository.findById(ids[3]).orElseThrow().getDeletedAt());
         });
         verify(requestContext, times(reference.equals("NO_STORIES") ? 0 : 2)).send(any(StoryDeletedLiberin.class));
-        var captor = ArgumentCaptor.forClass(PostingDeletedLiberin.class);
-        verify(context, times(deleted ? 1 : 0)).send(captor.capture());
-        if (deleted) {
-            assertEquals(ids[0], captor.getValue().getPosting().getId());
-            assertEquals(ids[1], captor.getValue().getLatestRevision().getId());
-            verify(mediaOperations).updatePermissions(captor.getValue().getPosting());
-            verify(mediaOperations).obsoleteMediaPostings(captor.getValue().getPosting());
-        }
+        verify(context, never()).send(any(PostingDeletedLiberin.class));
     }
 
     @ParameterizedTest
@@ -335,7 +328,7 @@ class LinkedEntryIT {
             return target.getId();
         });
         UniversalContext context = mock(UniversalContext.class);
-        FeedController controller = deletionController(context, mock(MediaOperations.class));
+        FeedController controller = deletionController(context);
 
         transaction.executeWithoutResult(status -> controller.deleteStories(
             Feed.NEWS, null, receiver, receiverid, withPostingId ? targetId.toString() : null, null, true
@@ -397,8 +390,7 @@ class LinkedEntryIT {
         });
         RequestContextImpl context = deletionRequestContext(client, clientScope, adminScope);
         UniversalContext universalContext = mock(UniversalContext.class);
-        MediaOperations mediaOperations = mock(MediaOperations.class);
-        FeedController controller = deletionController(universalContext, mediaOperations, context);
+        FeedController controller = deletionController(universalContext, context);
         Executable deletion = () -> transaction.executeWithoutResult(status -> controller.deleteStories(
             Feed.NEWS,
             null,
@@ -415,21 +407,16 @@ class LinkedEntryIT {
             assertThrows(AuthenticationException.class, deletion);
         }
 
-        boolean deleted = allowed && !selector.equals("ALL");
         transaction.executeWithoutResult(status -> {
             Posting target = postingRepository.findById(targetId).orElseThrow();
-            assertEquals(deleted, target.getDeletedAt() != null);
-            assertEquals(deleted, target.getCurrentRevision().getDeletedAt() != null);
+            assertNull(target.getDeletedAt());
+            assertNull(target.getCurrentRevision().getDeletedAt());
             StoryRepository stories = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class);
             assertEquals(allowed ? 0 : 2, stories.findByEntryId(nodeId, targetId).size());
-            if (!allowed) {
-                assertTrue(postingRepository.findUnlinked(nodeId).stream().noneMatch(p -> p.getId().equals(targetId)));
-            }
+            assertEquals(allowed, postingRepository.findUnlinked(nodeId).stream()
+                .anyMatch(posting -> posting.getId().equals(targetId)));
         });
-        verify(universalContext, times(deleted ? 1 : 0)).send(any(PostingDeletedLiberin.class));
-        if (!deleted) {
-            verifyNoInteractions(mediaOperations);
-        }
+        verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
     }
 
     @ParameterizedTest
@@ -442,9 +429,8 @@ class LinkedEntryIT {
             return target.getId();
         });
         UniversalContext universalContext = mock(UniversalContext.class);
-        MediaOperations mediaOperations = mock(MediaOperations.class);
         FeedController controller = deletionController(
-            universalContext, mediaOperations, deletionRequestContext(null, Scope.NONE, Scope.NONE)
+            universalContext, deletionRequestContext(null, Scope.NONE, Scope.NONE)
         );
 
         assertThrows(AuthenticationException.class, () -> transaction.executeWithoutResult(status ->
@@ -463,7 +449,6 @@ class LinkedEntryIT {
             assertNull(postingRepository.findById(targetId).orElseThrow().getDeletedAt())
         );
         verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
-        verifyNoInteractions(mediaOperations);
     }
 
     @ParameterizedTest
@@ -484,9 +469,8 @@ class LinkedEntryIT {
             return target.getId();
         });
         UniversalContext universalContext = mock(UniversalContext.class);
-        MediaOperations mediaOperations = mock(MediaOperations.class);
         FeedController controller = deletionController(
-            universalContext, mediaOperations, deletionRequestContext(null, Scope.NONE, Scope.NONE)
+            universalContext, deletionRequestContext(null, Scope.NONE, Scope.NONE)
         );
 
         assertDoesNotThrow(() -> transaction.executeWithoutResult(status ->
@@ -500,7 +484,6 @@ class LinkedEntryIT {
             assertTrue(postingRepository.findUnlinked(nodeId).stream().noneMatch(p -> p.getId().equals(targetId)));
         });
         verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
-        verifyNoInteractions(mediaOperations);
     }
 
     @Test
@@ -516,7 +499,6 @@ class LinkedEntryIT {
         });
         FeedController controller = deletionController(
             mock(UniversalContext.class),
-            mock(MediaOperations.class),
             deletionRequestContext(null, Scope.NONE, Scope.DELETE_OWN_CONTENT)
         );
 
@@ -543,7 +525,6 @@ class LinkedEntryIT {
         });
         FeedController controller = deletionController(
             mock(UniversalContext.class),
-            mock(MediaOperations.class),
             deletionRequestContext(null, Scope.NONE, Scope.ALL)
         );
 
@@ -580,9 +561,8 @@ class LinkedEntryIT {
             return target.getId();
         });
         UniversalContext universalContext = mock(UniversalContext.class);
-        MediaOperations mediaOperations = mock(MediaOperations.class);
         StoryController controller = storyDeletionController(
-            universalContext, mediaOperations, deletionRequestContext(null, Scope.NONE, adminScope)
+            universalContext, deletionRequestContext(null, Scope.NONE, adminScope)
         );
         Executable deletion = () -> transaction.executeWithoutResult(status ->
             controller.deleteStories(null, null, null, targetId.toString(), null, false)
@@ -592,19 +572,18 @@ class LinkedEntryIT {
             assertDoesNotThrow(deletion);
         } else {
             assertThrows(AuthenticationException.class, deletion);
-            verifyNoInteractions(mediaOperations);
         }
 
         transaction.executeWithoutResult(status -> {
             Posting target = postingRepository.findById(targetId).orElseThrow();
-            assertEquals(allowed, target.getDeletedAt() != null);
-            assertEquals(allowed, target.getCurrentRevision().getDeletedAt() != null);
+            assertNull(target.getDeletedAt());
+            assertNull(target.getCurrentRevision().getDeletedAt());
             List<Story> stories = entityManager.createQuery(
                 "select s from Story s where s.nodeId = :nodeId and s.entry.id = :entryId", Story.class
             ).setParameter("nodeId", nodeId).setParameter("entryId", targetId).getResultList();
             assertEquals(allowed ? 0 : 4, stories.size());
         });
-        verify(universalContext, times(allowed ? 1 : 0)).send(any(PostingDeletedLiberin.class));
+        verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
     }
 
     @ParameterizedTest
@@ -651,7 +630,6 @@ class LinkedEntryIT {
         });
         StoryController controller = storyDeletionController(
             mock(UniversalContext.class),
-            mock(MediaOperations.class),
             deletionRequestContext(null, Scope.NONE, Scope.ALL)
         );
 
@@ -680,7 +658,6 @@ class LinkedEntryIT {
         });
         StoryController controller = storyDeletionController(
             mock(UniversalContext.class),
-            mock(MediaOperations.class),
             deletionRequestContext(null, Scope.NONE, Scope.ALL)
         );
 
@@ -691,7 +668,7 @@ class LinkedEntryIT {
         transaction.executeWithoutResult(status -> {
             StoryRepository stories = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class);
             assertTrue(stories.findByEntryId(nodeId, targetId).isEmpty());
-            assertNotNull(postingRepository.findById(targetId).orElseThrow().getDeletedAt());
+            assertNull(postingRepository.findById(targetId).orElseThrow().getDeletedAt());
         });
     }
 
@@ -708,7 +685,7 @@ class LinkedEntryIT {
         "bob_0, bob_0, DELETE_OWN_CONTENT, NONE, true",
         "bob_0, bob_0, DELETE_OTHERS_CONTENT, NONE, false"
     }, nullValues = "null")
-    void deletingSingleStoryChecksPostingPermissionsAndDeletesTheLastReferencedPosting(
+    void deletingSingleStoryChecksPostingPermissionsAndLeavesThePostingForCleanup(
         String owner, String client, Scope clientScope, Scope adminScope, boolean allowed
     ) {
         UUID[] ids = transaction.execute(status -> {
@@ -720,27 +697,25 @@ class LinkedEntryIT {
         });
         RequestContextImpl context = deletionRequestContext(client, clientScope, adminScope);
         UniversalContext universalContext = mock(UniversalContext.class);
-        MediaOperations mediaOperations = mock(MediaOperations.class);
-        StoryController controller = storyDeletionController(universalContext, mediaOperations, context);
+        StoryController controller = storyDeletionController(universalContext, context);
 
         if (allowed) {
             assertDoesNotThrow(() -> controller.delete(ids[1].toString()));
         } else {
             assertThrows(AuthenticationException.class, () -> controller.delete(ids[1].toString()));
-            verifyNoInteractions(mediaOperations);
         }
 
         transaction.executeWithoutResult(status -> {
             Posting target = postingRepository.findById(ids[0]).orElseThrow();
-            assertEquals(allowed, target.getDeletedAt() != null);
-            assertEquals(allowed, target.getCurrentRevision().getDeletedAt() != null);
-            assertEquals(allowed, target.getDeadline() != null);
+            assertNull(target.getDeletedAt());
+            assertNull(target.getCurrentRevision().getDeletedAt());
+            assertNull(target.getDeadline());
             assertEquals(!allowed, entityManager.find(Story.class, ids[1]) != null);
-            assertEquals(1, postingRepository.findUnlinked(nodeId).size());
+            assertEquals(allowed ? 2 : 1, postingRepository.findUnlinked(nodeId).size());
         });
         assertEquals(allowed ? 1 : 0, context.getAfterCommitLiberins().stream()
             .filter(StoryDeletedLiberin.class::isInstance).count());
-        verify(universalContext, times(allowed ? 1 : 0)).send(any(PostingDeletedLiberin.class));
+        verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
     }
 
     @ParameterizedTest
@@ -772,9 +747,8 @@ class LinkedEntryIT {
             return new UUID[]{target.getId(), story.getId()};
         });
         UniversalContext universalContext = mock(UniversalContext.class);
-        MediaOperations mediaOperations = mock(MediaOperations.class);
         StoryController controller = storyDeletionController(
-            universalContext, mediaOperations, deletionRequestContext(null, Scope.NONE, Scope.NONE)
+            universalContext, deletionRequestContext(null, Scope.NONE, Scope.NONE)
         );
 
         assertDoesNotThrow(() -> controller.delete(ids[1].toString()));
@@ -783,7 +757,6 @@ class LinkedEntryIT {
             assertNull(entityManager.find(Story.class, ids[1]));
             assertNull(postingRepository.findById(ids[0]).orElseThrow().getDeletedAt());
         });
-        verifyNoInteractions(mediaOperations);
         verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
     }
 
@@ -796,7 +769,6 @@ class LinkedEntryIT {
         });
         StoryController controller = storyDeletionController(
             mock(UniversalContext.class),
-            mock(MediaOperations.class),
             deletionRequestContext(null, Scope.NONE, Scope.ALL)
         );
 
@@ -815,9 +787,8 @@ class LinkedEntryIT {
             return new UUID[]{target.getId(), story(target, Feed.NEWS, 1).getId()};
         });
         UniversalContext universalContext = mock(UniversalContext.class);
-        MediaOperations mediaOperations = mock(MediaOperations.class);
         StoryOperations operations = deletionOperations(
-            universalContext, mediaOperations, deletionRequestContext(null, Scope.NONE, Scope.NONE)
+            universalContext, deletionRequestContext(null, Scope.NONE, Scope.NONE)
         );
 
         transaction.executeWithoutResult(status -> operations.delete(entityManager.find(Story.class, ids[1])));
@@ -827,9 +798,63 @@ class LinkedEntryIT {
             assertNull(postingRepository.findById(ids[0]).orElseThrow().getDeletedAt());
             assertTrue(postingRepository.findUnlinked(nodeId).stream().anyMatch(p -> p.getId().equals(ids[0])));
         });
-        verifyNoInteractions(mediaOperations);
         verify(universalContext, never()).isPrincipal(any(), any(), any());
         verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
+    }
+
+    @Test
+    void periodicCleanupDeletesPostingLeftAfterStoryDeletion() {
+        UUID[] ids = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            return new UUID[]{target.getId(), story(target, Feed.NEWS, 1).getId()};
+        });
+        UniversalContext deletionContext = mock(UniversalContext.class);
+        StoryController controller = storyDeletionController(
+            deletionContext, deletionRequestContext(null, Scope.NONE, Scope.ALL)
+        );
+
+        controller.delete(ids[1].toString());
+
+        transaction.executeWithoutResult(status -> {
+            assertNull(entityManager.find(Story.class, ids[1]));
+            assertNull(postingRepository.findById(ids[0]).orElseThrow().getDeletedAt());
+        });
+        verify(deletionContext, never()).send(any(PostingDeletedLiberin.class));
+
+        UniversalContext cleanupContext = mock(UniversalContext.class);
+        when(cleanupContext.nodeId()).thenReturn(nodeId);
+        Options options = mock(Options.class);
+        when(options.getDuration("posting.deleted.lifetime")).thenReturn(new ExtendedDuration(Duration.ofDays(7)));
+        when(cleanupContext.getOptions()).thenReturn(options);
+        Domains domains = mock(Domains.class);
+        when(domains.getAllDomainNames()).thenReturn(List.of("cleanup.example"));
+        when(domains.getDomainNodeId("cleanup.example")).thenReturn(nodeId);
+        Transaction tx = new Transaction();
+        ReflectionTestUtils.setField(tx, "txManager", new JpaTransactionManager(factory));
+        ReflectionTestUtils.setField(tx, "universalContext", cleanupContext);
+        MediaOperations mediaOperations = mock(MediaOperations.class);
+        PostingOperations postingOperations = new PostingOperations();
+        ReflectionTestUtils.setField(postingOperations, "requestCounter", mock(RequestCounter.class));
+        ReflectionTestUtils.setField(postingOperations, "universalContext", cleanupContext);
+        ReflectionTestUtils.setField(postingOperations, "domains", domains);
+        ReflectionTestUtils.setField(postingOperations, "postingRepository", postingRepository);
+        ReflectionTestUtils.setField(postingOperations, "mediaOperations", mediaOperations);
+        ReflectionTestUtils.setField(postingOperations, "tx", tx);
+
+        postingOperations.purgeUnlinked();
+
+        transaction.executeWithoutResult(status -> {
+            Posting target = postingRepository.findById(ids[0]).orElseThrow();
+            assertNotNull(target.getDeletedAt());
+            assertNotNull(target.getCurrentRevision().getDeletedAt());
+            assertNotNull(target.getDeadline());
+            assertTrue(postingRepository.findUnlinked(nodeId).isEmpty());
+        });
+        var captor = ArgumentCaptor.forClass(PostingDeletedLiberin.class);
+        verify(cleanupContext).send(captor.capture());
+        assertEquals(ids[0], captor.getValue().getPosting().getId());
+        verify(mediaOperations).updatePermissions(captor.getValue().getPosting());
+        verify(mediaOperations).obsoleteMediaPostings(captor.getValue().getPosting());
     }
 
     private RequestContextImpl deletionRequestContext(String client, Scope clientScope, Scope adminScope) {
@@ -844,27 +869,27 @@ class LinkedEntryIT {
         return context;
     }
 
-    private FeedController deletionController(UniversalContext context, MediaOperations mediaOperations) {
+    private FeedController deletionController(UniversalContext context) {
         RequestContextImpl adminContext = deletionRequestContext(null, Scope.NONE, Scope.ALL);
         when(requestContext.nodeName()).thenReturn("alice_0");
         when(requestContext.isPrincipal(any(), any(), any())).thenAnswer(invocation -> adminContext.isPrincipal(
             invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)
         ));
-        return deletionController(context, mediaOperations, requestContext);
+        return deletionController(context, requestContext);
     }
 
     private FeedController deletionController(
-        UniversalContext context, MediaOperations mediaOperations, RequestContext deletionContext
+        UniversalContext context, RequestContext deletionContext
     ) {
         FeedController controller = new FeedController();
         ReflectionTestUtils.setField(controller, "requestContext", deletionContext);
         ReflectionTestUtils.setField(controller, "storyOperations",
-            deletionOperations(context, mediaOperations, deletionContext));
+            deletionOperations(context, deletionContext));
         return controller;
     }
 
     private StoryController storyDeletionController(
-        UniversalContext context, MediaOperations mediaOperations, RequestContext deletionContext
+        UniversalContext context, RequestContext deletionContext
     ) {
         StoryController controller = new StoryController();
         ReflectionTestUtils.setField(controller, "requestContext", deletionContext);
@@ -875,16 +900,13 @@ class LinkedEntryIT {
         ReflectionTestUtils.setField(tx, "universalContext", context);
         ReflectionTestUtils.setField(controller, "tx", tx);
         ReflectionTestUtils.setField(controller, "storyOperations",
-            deletionOperations(context, mediaOperations, deletionContext));
+            deletionOperations(context, deletionContext));
         return controller;
     }
 
     private StoryOperations deletionOperations(
-        UniversalContext context, MediaOperations mediaOperations, RequestContext deletionContext
+        UniversalContext context, RequestContext deletionContext
     ) {
-        Options options = mock(Options.class);
-        when(options.getDuration("posting.deleted.lifetime")).thenReturn(new ExtendedDuration(Duration.ofDays(7)));
-        when(context.getOptions()).thenReturn(options);
         when(context.nodeId()).thenReturn(nodeId);
         when(context.nodeName()).thenAnswer(invocation -> deletionContext.nodeName());
         when(context.getClientName(any())).thenAnswer(invocation ->
@@ -902,13 +924,7 @@ class LinkedEntryIT {
         ReflectionTestUtils.setField(storyOperations, "entityManager", entityManager);
         ReflectionTestUtils.setField(storyOperations, "storyRepository",
             new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class));
-        var postingOperations = new PostingOperations();
-        ReflectionTestUtils.setField(postingOperations, "universalContext", context);
-        ReflectionTestUtils.setField(postingOperations, "postingRepository", postingRepository);
-        ReflectionTestUtils.setField(postingOperations, "storyOperations", storyOperations);
-        ReflectionTestUtils.setField(postingOperations, "mediaOperations", mediaOperations);
         ReflectionTestUtils.setField(storyOperations, "postingRepository", postingRepository);
-        ReflectionTestUtils.setField(storyOperations, "postingOperations", postingOperations);
         return storyOperations;
     }
 

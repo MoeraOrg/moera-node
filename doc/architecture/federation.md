@@ -66,6 +66,13 @@ fetches from the same peer from stepping on each other's posting state.
 republish API uses it for publication picks. These picks are persisted and queued only after the caller's transaction
 commits, so rolled-back notification processing and republish requests do not start downloads.
 
+For `STORY_ADDED`, the receiver validates the feed subscription and skips reposts whose original node is itself.
+When the notification identifies both the original node and posting, the pick targets that original directly.
+The sending node, its feed, and its posting ID remain the source of the pick; the picker fetches the source profile
+separately and retains it in `EntrySource`. Notifications without a complete original address start at the sender.
+The optional original-address fields are copied from the story and defined in the
+[notification specification](../../../moeraorg.github.io/_data/notifications.yml).
+
 A pick's nullable recommendation flag records whether to change the cached posting's recommendation status. A null
 value preserves the status; explicit true or false values apply even when the posting is already cached and its
 revision is unchanged. New cached postings are not recommended unless the pick explicitly requests it. Redirects,

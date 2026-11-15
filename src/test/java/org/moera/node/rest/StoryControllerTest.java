@@ -49,7 +49,6 @@ import org.moera.node.model.StoryAttributesUtil;
 import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.PostingInfoOperations;
-import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -84,9 +83,6 @@ class StoryControllerTest {
 
     @Mock
     private PostingRepository postingRepository;
-
-    @Mock
-    private PostingOperations postingOperations;
 
     @Mock
     private EntryOperations entryOperations;
@@ -458,7 +454,6 @@ class StoryControllerTest {
         StoryOperations operations = new StoryOperations();
         ReflectionTestUtils.setField(operations, "storyRepository", storyRepository);
         ReflectionTestUtils.setField(operations, "postingRepository", postingRepository);
-        ReflectionTestUtils.setField(operations, "postingOperations", postingOperations);
         ReflectionTestUtils.setField(operations, "universalContext", universalContext);
         ReflectionTestUtils.setField(operations, "entityManager", entityManager);
         ReflectionTestUtils.setField(storyController, "storyOperations", operations);
@@ -479,6 +474,7 @@ class StoryControllerTest {
         StoryAttributes attributes = new StoryAttributes();
         when(requestContext.isPrincipal(Principal.ADMIN, Scope.VIEW_FEEDS)).thenReturn(false);
         when(requestContext.isPrincipal(Principal.ADMIN, Scope.VIEW_CONTENT)).thenReturn(true);
+        when(requestContext.isPrincipal(Principal.PUBLIC, Scope.VIEW_CONTENT)).thenReturn(true);
         attributes.setExternalSourceUri(sources);
         attributes.setViewed(true);
 

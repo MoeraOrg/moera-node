@@ -119,23 +119,25 @@ parse the local posting ID, and enforce the guard against unrestricted deletion.
 When deletion identifies a single posting by its local or remote identity, it also checks whether the
 posting has become unused. Stories in any feed, stories without a feed, resolved references from any posting revision,
 and a parent media entry keep the posting alive. Referenced entries are locked before removing stories to serialize
-concurrent feed deletions. The check and posting deletion share the story-deletion transaction.
+concurrent feed deletions. The unused-posting and permission checks run in the story-deletion transaction.
 Removing the last reference requires the same effective delete principal and separate client and admin deletion scopes
 as direct posting deletion, in addition to `UPDATE_FEEDS`. Missing permission aborts the transaction and preserves all
 stories. This also applies to broader feed deletions: each batch checks newly unlinked postings, so background cleanup
 cannot turn feed-editing permission into posting-deletion permission. `unrestricted` only bypasses the filter guard.
-The matching unused posting is locked and deleted through `PostingOperations`, including its retention deadline,
-media cleanup, and `PostingDeletedLiberin`; events and notifications follow the normal post-commit path. Broader feed
-deletions leave unused postings to scheduled cleanup. See
+Story deletion leaves postings intact, including when the filters identify a posting that is already unused.
+`PostingOperations.purgeUnlinked` runs hourly and deletes postings that remain unused, setting their retention
+deadline, cleaning up media, and emitting `PostingDeletedLiberin`. Events and notifications follow the normal
+post-commit path. See
 [`FeedController`](../../src/main/java/org/moera/node/rest/FeedController.java),
 [`StoryController`](../../src/main/java/org/moera/node/rest/StoryController.java),
-[`StoryOperations`](../../src/main/java/org/moera/node/operations/StoryOperations.java), and
+[`StoryOperations`](../../src/main/java/org/moera/node/operations/StoryOperations.java),
+[`PostingOperations`](../../src/main/java/org/moera/node/operations/PostingOperations.java), and
 [`PostingRepository`](../../src/main/java/org/moera/node/data/PostingRepository.java).
 
 Deleting an individual story through `DELETE /stories/{id}` uses `StoryOperations.deleteSingle` and applies the
-same last-reference check and posting permissions. The story and any newly unused posting are deleted in one
-transaction; missing posting permission rolls back the story deletion. The basic `StoryOperations.delete` operation
-only removes the story and updates publication dates, so internal callers can use it without deleting its posting.
+same last-reference check and posting permissions. The posting remains for scheduled cleanup; missing posting
+permission rolls back the story deletion. The basic `StoryOperations.delete` operation only removes the story and
+updates publication dates, without checking posting-deletion permissions for internal callers.
 
 Each story owns an optional viewing permission. `unset` derives visibility from the linked entry; an explicit
 principal controls the story independently. A private story belongs to the local node and is visible only to its admin.
