@@ -1,114 +1,82 @@
 # Asynchronous processing
 
-## Task execution
+[Architecture index](../architecture.md)
 
-`Task` is the base for work that runs outside an HTTP request. `TaskAutowire` creates or injects a task and gives it a
-`UniversalContext`, a transaction helper, the remote Node API, and either a particular hosted node or no domain for
-global work. The task wrapper centralizes context setup, logging, and exception handling.
+## Signals, work, and delivery
 
-The application uses separate bounded executors for remote jobs, federation notification senders, pickers, naming,
-push work, and other scheduled tasks. Rejection from an executor is treated as backpressure: components either queue,
-pause, or reschedule their work.
+These mechanisms have different ownership and recovery contracts:
 
-## Persistent jobs
-
-`Job<P, S>` extends `Task` with serializable parameters, optional checkpoint state, retry policy, and a persistent ID.
-`Jobs` stores durable instances in `pending_jobs` and keeps near-term instances in an in-memory priority queue. On
-startup and once per hour, it loads persisted jobs whose next execution falls within the next hour.
-
-A job may be associated with one hosted node or be global. Retry policies include no retry, a fixed retry count,
-exponential backoff, and a fixed-then-exponential sequence. Jobs can also cap the number of parallel instances of their
-class.
-
-Calling `Job.success()`, `Job.fail()`, or `Job.retry()` terminates the current attempt by throwing an internal control
-exception. A completed or permanently failed job is removed from `pending_jobs`; a retry stores its state, retry count,
-and next execution time.
-
-`Jobs.runAfterCommit()` persists the job inside the caller's transaction and registers its in-memory execution only
-after commit. This is used when local state must refer to the job ID atomically, such as video compression or handling
-an incoming OCR update. A rollback leaves neither a runnable task nor a committed pending job.
-
-Non-persistent jobs are available for best-effort work that does not need restart recovery. They still use the same
-task context and executor.
-
-## Liberins
-
-A liberin is an internal description of a completed domain change. Controllers and operations send liberins instead of
-calling all secondary consumers directly. `LiberinManager` routes each concrete liberin type to methods on
-`@LiberinReceptor` components.
-
-Liberins are transaction-aware:
-
-- request code adds them to `RequestContext`, and the MVC after-commit interceptor dispatches them after success;
-- background transactions are held by `UniversalContext` and released by `Transaction` after commit;
-- a rollback discards held liberins; and
-- nested background transactions merge their liberins into the outer holding scope.
-
-Receptors are the integration point for derived side effects. Depending on the change, they update instant stories,
-publish local events, queue signed notifications to other nodes, send push or mail messages, invalidate caches, or
-start further jobs. This preserves the transaction boundary of the primary operation and gives related reactions one
-consistent ordering point.
-
-`StoryUpdatedLiberin` carries only the story ID. `StoryReceptor.updated()` reloads the story by node and story ID in the
-receptor's transaction before building client events and push content. Lazy relationships therefore belong to the
-active session, and updates for stories deleted before delivery are skipped.
-
-`PostingOperations` clears a posting's recommendation flag and emits
-`PostingRecommendationUpdatedLiberin` with the posting ID.
-`PostingReceptor` reloads the posting and sends a visibility-filtered `posting-updated` client event. This local flag
-change does not initiate content-edit notifications to other nodes.
-
-## Client events
-
-`EventManager` distributes protected events to authenticated WebSocket/STOMP sessions. It maintains a time-limited
-queue in memory, assigns monotonically increasing ordinals within the process, and lets reconnecting clients report the
-queue start and last seen ordinal. A changed queue start tells a client that its previous cursor is no longer usable.
-
-Before delivery, the queued event checks its principal filter. `EventManager` then copies the packet and event,
-including nested payload objects, and removes fields the subscriber is not allowed to see from the copy. Permission
-state and packet metadata are preserved. Protection never modifies the queued payload or packets sent to other
-subscribers, so later deliveries and replays use the full original data. A daemon delivery thread sends queued events,
-while a scheduled task retries delivery and emits ping events once per minute. The queue is transient across process
-restarts.
-
-Only subscribers with administrative `VIEW_CONTENT` scope receive external source metadata in story events.
-
-`PushController` also exposes an SSE stream backed by the push subsystem. Its bounded in-memory queue falls back to
-stored offline packets when a consumer cannot keep up. Mobile push delivery is handled separately through the FCM
-relay integration.
-
-SSE push subscriptions use administrative `OTHER` scope. Their story packets omit external source references.
-
-## Scheduled maintenance
-
-Spring scheduling runs database and storage maintenance such as:
-
-- loading and restarting pending jobs;
-- retrying picks and federation senders;
-- recalculating contact distance and visited-node counts;
-- expiring uploads, media leases, unused media, drafts, and frozen notifications;
-- uploading eligible media to S3 and removing media tombstones;
-- OCR scheduling, feed maintenance, reminders, and sitemap work; and
-- retrying client events and push delivery.
-
-Scheduled methods use `RequestCounter.allot()` to register an active operation for diagnostics. `RequestCounter`
-assigns it an MDC request ID, logs the number of concurrent operations, and warns when an operation runs for more than
-a minute. Global maintenance iterates warm domains and associates `UniversalContext` before reading or changing
-tenant-specific state.
-
-## Coordination patterns
-
-The asynchronous subsystems use several distinct mechanisms:
-
-| Need | Mechanism |
+| Mechanism | State and recovery owner |
 | --- | --- |
-| survive a restart | database row in `pending_jobs`, `pending_notifications`, `picks`, or a focused queue table |
-| start only after commit | transaction synchronization or held liberins |
-| serialize by remote node | one sender or picker per local-node/remote-node direction |
-| serialize by media identity | PostgreSQL advisory lock using the media hash |
-| distribute work across instances | short row claim with `FOR UPDATE SKIP LOCKED` and a renewable lease |
-| avoid overlap inside one process | `AtomicBoolean` or a keyed in-memory lock |
-| tolerate retry | idempotent update, fenced lease token, or revalidation under a lock |
+| Liberin | Transient domain-change signal; `LiberinManager` invokes a receptor in a separate write transaction |
+| Job | Executable intent/checkpoint in `pending_jobs`; `Jobs` restores and retries it |
+| Pick | Remote download/publication intent in `picks`; `PickerPool` owns bounded retries |
+| Peer notification | Normally backed by `pending_notifications`; sender owns remote delivery |
+| WebSocket event | Protected local update with transient replay state in `EventManager` |
+| SSE push | Offline packet rows plus bounded live queues, managed by `PushService` |
+| FCM relay / mail | Separate in-memory delivery queues; no restart recovery |
 
-External calls are kept outside database transactions when they may block. The worker first captures or claims a
-snapshot, performs the external operation, then publishes only if the database still matches the snapshot.
+A task only supplies execution/context handling; it is not durable by itself. For worker coordination and multi-instance
+limitations, see [runtime](runtime.md#process-and-deployment-boundary). Protocol-specific recovery belongs to
+[federation](federation.md); physical deletion uses [storage tombstones](media-storage.md#cleanup).
+
+## Commit boundaries
+
+HTTP code collects liberins in `RequestContext`. `AfterCommitLiberinsInterceptor` sends them when MVC completion has no
+exception. This is request-completion logic, not a database outbox. Background `Transaction` scopes use
+`UniversalContext` to hold liberins until commit and discard them on rollback. Nested holding scopes merge, although
+their database transactions commit independently. Do not wrap this in a second holding mechanism.
+
+[LiberinManager](../../src/main/java/org/moera/node/liberin/LiberinManager.java) delivers signals from an in-memory
+queue. Receptors update derived state or initiate delivery/jobs; a consumed signal that fails is logged without durable
+replay. A crash between the primary commit and delivery can lose its side effects. Pass IDs or captured deletion
+context across this boundary and recheck current existence before acting on delayed work.
+
+Scheduling APIs differ in when intent becomes durable:
+
+| API | Persistence and start |
+| --- | --- |
+| `Jobs.runAfterCommit()` | Pending row participates in caller transaction; execution starts after commit |
+| `Jobs.run()` | Independent persistence attempt, immediate execution; storage errors can leave only transient work |
+| `Jobs.runNoPersist()` | Immediate best-effort work |
+| `PickerPool.pickAfterCommit()` | Callback persists/starts the pick after commit, leaving a commit-to-callback gap |
+
+Without an active transaction, after-commit APIs start immediately after persistence. Use `Jobs.runAfterCommit()` with
+the local node ID when mutation and job intent must commit together. This is required for long work delegated from
+incoming notification handlers. A pick callback prevents work on rollback but does not commit a pick atomically with
+the mutation that requested it.
+
+Implementation: [Transaction](../../src/main/java/org/moera/node/util/Transaction.java),
+[Jobs](../../src/main/java/org/moera/node/task/Jobs.java), and
+[JobsTest](../../src/test/java/org/moera/node/task/JobsTest.java).
+
+## Jobs and retry ownership
+
+Each job chooses its transaction scopes, checkpoint state, retry classification, and any class parallelism limit.
+`Jobs` restores committed pending rows and submits due attempts; success or permanent failure removes the row, while
+retry persists state and next execution time. Unexpected exceptions normally fail an attempt permanently unless the
+concrete job overrides that behavior. Executor rejection postpones execution.
+
+Persisted job class names and JSON parameters/state are a compatibility boundary: renaming a class or changing payload
+shape must account for already queued work. External effects can repeat after a crash before checkpoint/removal;
+receivers and final writes need deduplication, existence checks, or fencing. There is no system-wide exactly-once
+transaction. Outgoing notification and SSE persistence also use quiet error handling, so live delivery alone does not
+prove that a recovery record was stored.
+
+## Client delivery
+
+[EventManager](../../src/main/java/org/moera/node/event/EventManager.java) authenticates STOMP sessions and maintains a
+short-lived replay queue/cursor. It checks tenant and principal, copies the packet and nested payload, then protects
+fields on that recipient's copy. Protection must not mutate the original retained for other recipients or replay.
+Restart loses the queue and changes its identity; cursors are not positions in a durable domain log.
+
+SSE push uses registered clients and a moment cursor. `PushClients` stores offline packets; `Pusher` combines those
+slices with a bounded live queue, falling back to stored data under pressure. Retention is bounded. SSE requires admin
+`OTHER` scope, and story push content omits external source references.
+
+FCM relay delivery signs remote calls, has bounded retries, and can disable activity when no devices remain. Mail queues
+preparators for rate-limited SMTP delivery and logs failed sends without automatically retrying the failed message.
+Both queues and their retry state are transient. Adapter implementation lives in
+[presentation and integrations](presentation-and-integrations.md#adapters).
+
+[EventManagerTest](../../src/test/java/org/moera/node/event/EventManagerTest.java) covers recipient/replay isolation.

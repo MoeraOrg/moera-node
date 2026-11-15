@@ -1,89 +1,55 @@
 # API and access control
 
-## HTTP surfaces
+[Architecture index](../architecture.md)
 
-The public Node API is rooted at `/moera/api`. Controllers under `rest` cover profiles and credentials, postings and
-comments, revisions and reactions, feeds and stories, social relationships, subscriptions, moderation, media,
-notifications, push delivery, and provider operations.
+## Protocol boundary
 
-The protocol schema is maintained in the sibling `moeraorg.github.io` repository. Generated Java structures and the
-Node API client arrive through `java-moeralib`; node code does not maintain handwritten duplicates of those wire
-structures. Controller inputs call generated validation methods, while conversion helpers under `model` populate
-responses, notifications, and events.
+Controllers under [rest](../../src/main/java/org/moera/node/rest) expose `/moera/api`. Generated moeralib structures
+and validation represent the public contract; handwritten [model helpers](../../src/main/java/org/moera/node/model)
+convert between it and stored entities. Wire changes start in the sibling specifications listed in the architecture
+index. Error mapping belongs to `ExceptionsControllerAdvice` and `messages.properties`.
 
-OpenAPI metadata is served under `/moera/api-docs`, with Swagger UI at `/moera/api-ui.html`.
+## Authentication and authorization
 
-## Authentication
+[AuthenticationInterceptor](../../src/main/java/org/moera/node/auth/AuthenticationInterceptor.java) establishes
+request identity and enforces endpoint annotations. `AuthenticationManager` validates tokens and cartes:
 
-`AuthenticationInterceptor` and `AuthenticationManager` populate the request's authentication state from local access
-tokens, cartes delegated to another node, or the deployment root secret used for provider administration. Federation
-controllers that accept signed objects verify those signatures and then authenticate the claimed node identity for the
-rest of that request.
+| Credential | Authority and limit |
+| --- | --- |
+| Local token | Node administrator scopes, constrained by expiry and optional IP binding |
+| Carte | Signed peer identity/scopes, constrained by target/time/address checks and delegated grants |
+| Root secret | Deployment/provider administration, distinct from hosted-node permissions |
+| Signed content/notification | Claimed identity becomes trusted only after the receiving controller verifies it |
 
-Local access tokens are stored as SHA-256 digests of the UTF-8 token strings. `AuthenticationManager` hashes each
-presented token and looks up its digest within the local node, checking expiration and any IP binding. The full secret
-is returned only when `TokenController` creates it; later API responses and events use a separately stored
-four-character prefix followed by an ellipsis. Token IDs, scopes, and usage metadata belong to the same record. The
-[token storage migration](../../src/main/resources/db/migration/V320__hash_tokens.sql) defines the persisted fields and
-unique digest index.
+Tokens are stored as SHA-256 digests; only creation returns the full secret. Later output uses a stored prefix.
+For REST cartes, the local owner's declared admin scope applies directly and gains view permissions from client scope;
+other owners' admin scopes are intersected with local grants. WebSocket authentication is a separate path in
+`EventManager` and must be reviewed alongside HTTP changes.
 
-Authentication produces scopes rather than a single logged-in flag. `RequestContext` records separate local admin and
-remote client scopes, the authenticated node name, ownership, friend groups, and whether the local node subscribes to
-the remote node.
+Authorization requires both an object's effective principal and credential scope. Principals express public, admin,
+named-node, subscriber, and friend-group rights. Effective permissions can inherit parent or receiver policy.
+`isPrincipal(principal, clientScope, adminScope)` keeps client and administrative rights distinct; ownership alone
+must not replace this check. For deletion, own-content and others-content scopes depend on the acting role and author,
+while the effective delete principal still applies.
 
-A carte signed by the hosted node's owner applies its declared admin scope without requiring a grant to itself.
-The owner's client scope also contributes its view-only permissions to the effective admin scope. For other carte
-owners, the effective admin scope is the intersection of the carte's declared admin scope and the permissions granted
-by the hosted node. See
-[`AuthenticationInterceptor`](../../src/main/java/org/moera/node/auth/AuthenticationInterceptor.java).
+See [UniversalContext](../../src/main/java/org/moera/node/global/UniversalContext.java) and the
+[deletion authorization tests](../../src/test/java/org/moera/node/rest/CommentAndReactionDeleteAuthorizationTest.java).
 
-Incoming notification packets have their own authentication path. `NotificationController` resolves the sender's
-public signing key through naming, verifies the versioned packet fingerprint, and then marks the request as signed by
-that node before routing the notification.
+## Protect every representation
 
-## Authorization
+A successful lookup is not the end of authorization. Preserve object and field permissions when producing:
 
-Controller annotations such as `@Admin`, `@RootAdmin`, and related access annotations state endpoint requirements.
-Domain objects use generated `Principal` and `PrincipalFilter` values to express visibility or mutation rights for the
-public, administrators, named nodes, subscribers, and friend groups. Scope checks constrain which authenticated rights
-may be used for a particular operation.
+- REST content, operations, reactions, and feed references;
+- linked-posting expansions, without traversing inaccessible intermediate targets;
+- events and peer notifications, including recipients losing access after a permission change;
+- public HTML, RSS, sitemaps, and media metadata/bytes.
 
-Principal checks in `RequestContext` and `UniversalContext` can use separate client and admin scopes, in that order;
-the single-scope form applies the same scope to both. Deleting a posting, comment, or reaction checks the client's
-authorship under `DELETE_OWN_CONTENT`. A client deleting another author's comment or reaction through rights on the
-parent posting or comment needs `DELETE_OTHERS_CONTENT`. Administrative deletion uses `DELETE_OWN_CONTENT` for content
-owned by the hosted node and `DELETE_OTHERS_CONTENT` for other authors' content, including when administrative rights
-are delegated to another node. Both roles remain subject to the object's effective delete principal. See
-[`PostingController`](../../src/main/java/org/moera/node/rest/PostingController.java),
-[`CommentController`](../../src/main/java/org/moera/node/rest/CommentController.java),
-[`ReactionOperations`](../../src/main/java/org/moera/node/operations/ReactionOperations.java),
-[`RequestContextImpl`](../../src/main/java/org/moera/node/global/RequestContextImpl.java), and
-[`UniversalContext`](../../src/main/java/org/moera/node/global/UniversalContext.java).
+A story and its entry have independent access decisions; [stories and feeds](stories-and-feeds.md#visibility) owns
+that rule. Story external sources require administrative `VIEW_CONTENT`, separately from feed flags under `VIEW_FEEDS`.
+Push payloads omit those sources. Event payloads need per-recipient protection without mutating replay state; see
+[client delivery](asynchronous-processing.md#client-delivery). Media grants and direct URLs have their own
+[serving boundary](media-storage.md#serving).
 
-Permission data is stored with entries, reactions, media owners, friends, grants, and other protected records. API
-conversion helpers apply protection before returning structures to a particular requester. Private media performs the
-same checks before revealing metadata or bytes; unauthorized private media is returned as missing so its existence is
-not disclosed.
-
-Story external sources are administrator-only metadata under `VIEW_CONTENT`, independently of feed flags protected
-by `VIEW_FEEDS`. Individual-story and feed conversion enforce this distinction; story events protect the sources for
-each subscriber before delivery. Searching stories by these sources also requires administrative `VIEW_CONTENT` scope.
-
-## Failures and caching
-
-Controllers translate validation, not-found, authentication, concurrency, and operation failures through
-`ExceptionsControllerAdvice` into the Node API error model. Error codes and user-facing default messages are defined in
-`src/main/resources/messages.properties`.
-
-Caching annotations and `CacheControlInterceptor` select response cache policy. Some serialized attachment data is
-also cached in the database. Such caches contain expiring URLs and are refreshed or invalidated by the components that
-change their underlying media or storage backend.
-
-## Built-in web interface
-
-Controllers under `ui` render profiles, timelines, postings, people pages, RSS, sitemaps, and browser-friendly media
-routes. Handlebars templates live under `src/main/resources/templates`, with helper objects discovered through
-`@HelperSource`.
-
-Per-node Web UI options decide whether these limited pages are rendered, hidden, or redirected to the full client.
-Crawler detection allows server-rendered pages to remain available when interactive users are sent to the client.
+Response caching must preserve these decisions. Serialized attachment caches are an optimization, not permission
+authority: conversion supplies requester-specific grants/URLs and refreshes expired paths. Mutation owners invalidate
+caches when their inputs change. HTTP cache policy itself belongs to `CacheControlInterceptor`.

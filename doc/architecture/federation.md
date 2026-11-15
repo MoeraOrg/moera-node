@@ -1,241 +1,83 @@
 # Federation
 
-## Locating and calling nodes
+[Architecture index](../architecture.md)
 
-`NamingClient` talks to the Moera naming service. `NamingCache` caches registered-name details, including the current
-node URI and signing key. `NodeApi` resolves a remote registered name through this cache and creates a generated
-`MoeraNode` client over OkHttp. Calls may be anonymous or carry a carte and authenticated mode.
+## Naming and trust
 
-Remote writes are generally performed by jobs under `rest.task`. A job retains enough parameters and state to retry a
-multi-step exchange without keeping an HTTP request open. Remote verification tasks fetch signed objects again and
-record whether a posting, comment, or reaction still matches its claimed fingerprint.
+`NamingClient`/`NamingCache` resolve registered names to location and signing information.
+[NodeApi](../../src/main/java/org/moera/node/api/node/NodeApi.java) constructs the remote moeralib client, optionally
+with a carte. A downloaded copy is not independently verified merely because it was fetched: separate verification
+workflows validate versioned fingerprints and may require the key valid at the object's timestamp. Incoming packets
+use the sender's current naming record. Signed-field changes must preserve fingerprint-version compatibility.
 
-`SubscriptionTask` creates the subscriber record on the remote node. Its visibility follows the subscribing node's
-`subscriptions.view` setting: `public` and `signed` are preserved, while all other principals become `private`
-on the remote node so the subscribing node retains access. Changes to this setting propagate to existing remote feed
-subscriber records through `AllRemoteSubscribersUpdateJob` with the same principal mapping. The request structures are
-defined in the [Node API](https://moera.org/development/api/node/).
+## Notifications
 
-## Outgoing notifications
+Receptors submit typed notifications to
+[NotificationSenderPool](../../src/main/java/org/moera/node/notification/send/NotificationSenderPool.java), which
+filters recipients and normally stores one pending message per recipient. A sender drains each local-node/peer
+direction serially; startup restores pending rows. Each network attempt creates a fresh signed packet, so packet ID
+is not a durable deduplication key. Retry policy distinguishes transient connectivity/naming failures, fatal responses,
+and stale subscriptions/leases; work is removed after delivery or abandonment.
 
-Liberin receptors construct typed notification objects and send them through `NotificationSenderPool`. Directions can
-target one node, subscribers to a feed or entry, members of a friend group, or holders of a media lease. Principal
-filters are evaluated before a notification is queued for a recipient.
+[NotificationController](../../src/main/java/org/moera/node/rest/NotificationController.java) verifies freshness and
+signature before trusting a handled message's sender, validates its payload, and routes it to an annotated processor.
+Recognized unhandled types are acknowledged without processing. A frozen node stores verified packets for later replay
+and expiry, returning `FROZEN`; the sender then considers that item delivered and pauses further work to reduce load.
+`DefrostNodeJob` deletes replayed rows even on processing failure, so this is bounded buffering, not permanent recovery.
 
-Each outbound notification is serialized into `pending_notifications` before delivery. A
-`NotificationSender` is serialized per `(local node ID, remote node name)` direction, which preserves order to one
-peer while allowing unrelated peers to progress concurrently. Pending rows are restored after domains are configured.
+Mapped handlers must keep validation/local updates short. Delegate downloads and other long work to persistent jobs
+with the local node ID. [Asynchronous processing](asynchronous-processing.md#commit-boundaries) defines atomic job
+scheduling, transient liberins, and the gaps that remain. Lost replies can cause duplicate remote effects.
 
-The sender wraps the notification in a `NotificationPacket` containing a unique ID, local profile snapshot, creation
-time, notification type, and JSON payload. It signs a versioned packet fingerprint with the local node's signing key.
-Delivery uses exponential delay from 30 seconds to six hours, normally for up to seven days. Naming failures have a
-shorter overall retry period, and permanent authentication, validation, or not-found failures stop delivery.
+## Subscriptions and picking
 
-The receiver's `FROZEN` result records the peer as frozen and delays further sends. Connectivity state is retained so a
-known failing or frozen peer does not consume sender capacity as aggressively as a healthy peer.
+`SubscriptionManager` repairs pending remote registrations through `SubscriptionTask`; visibility-setting changes update
+existing registrations. Record ownership is defined in
+[persistence](persistence.md#relationships-and-snapshots).
+Feed seeding excludes this node's originals, duplicate original identities, and publications already in the destination
+feed; a cached posting without that publication remains eligible.
 
-## Incoming notifications
+[PickerPool](../../src/main/java/org/moera/node/picker/PickerPool.java) persists fetch/refresh intent and runs a
+[Picker](../../src/main/java/org/moera/node/picker/Picker.java) per local-node/peer direction. Picks retain target,
+provenance, optional publication attributes, recommendation intent, and parent/reference context across redirects and
+retries. A complete original address targets that original while preserving the sending node as `EntrySource`.
+Authoritative receiver and discovery source need not coincide.
 
-`POST /moera/api/notifications` validates the packet type and freshness, resolves the sender's current signing key, and
-verifies the fingerprint before deserializing the typed notification. `NotificationRouter` maps each notification type
-to one method on an `@NotificationProcessor` component.
+Picker fetches remote state and [prepares media](media.md#remote-downloads), then locks/reloads the posting for final
+publication. Changed snapshots or missing parents request retry instead of overwriting concurrent state. The cached
+entry, local ownership/attachments, source, totals, reference resolution, and requested stories commit together.
+Additional work follows successful publication. A fetch without a destination feed need not add a story.
 
-If the local node is frozen, the original packet is stored in `frozen_notifications` for later processing. Otherwise,
-sender name, full name, source URI, gender, and avatar are attached to the notification before its processor runs.
-Processors may update small state synchronously or enqueue a persistent after-commit job.
+An unchanged content revision can still require receiver-date, sharing-total, or recommendation updates. Absent
+recommendation intent preserves local state; explicit intent applies even without an edit. Story permissions and source
+references remain independent of downloaded entry permissions. Picks have bounded retries/expiry and are discarded for
+absent local nodes; they are not permanent synchronization requests. Pick scheduling differs from atomic job scheduling
+as documented in the asynchronous chapter.
 
-Versioned fingerprints preserve compatibility. The current notification signature covers the source URI as well as
-the sender's full name; receivers can still verify older packet versions that did not include it.
+Evidence: [PickerTest](../../src/test/java/org/moera/node/picker/PickerTest.java) and
+[MediaDownloadTransactionsIT](../../src/test/java/org/moera/node/media/MediaDownloadTransactionsIT.java).
 
-## Picking remote content
+## Sharing flow
 
-`RemoteFeedFetchJob` seeds a subscription's destination feed from a remote feed. Existing postings by the remote
-author in the destination feed count toward the fetch limit. Subscription creation clears their recommendation flag
-before scheduling the job. The job reads existing postings in a short read transaction, then requests the remote feed
-outside that transaction using the remaining limit. Candidates whose original node is the local node are skipped.
-Other candidates already published in the destination feed are skipped using their original node and posting ID,
-including reposts; cached remote postings without a publication in that feed remain eligible for picking. The job
-continues through older slices until enough distinct eligible postings are selected or the remote feed is exhausted,
-then submits picks from oldest to newest. Skipped stories and duplicate reposts do not consume the remaining limit.
+Timeline republishing of a picked posting and links from finalized posting bodies use shared/unshared notifications,
+with separate sharing types. `PostingReceptor` compares persisted reference sets and visibility on edits, deletion,
+and restoration; it does not reparse bodies during delivery. Notification identity/ownership is defined in
+[persistence](persistence.md#references-and-sharings).
 
-A `Pick` is durable work to fetch or refresh a remote posting and its related data. `PickerPool` restores pending picks
-at startup and runs one `Picker` for each `(local node ID, remote node name)` direction. This prevents concurrent
-fetches from the same peer from stepping on each other's posting state.
+1. `PostingSharingProcessor` validates the reference and changes the sharing/counter under the original posting lock.
+   A new sharing and its `PostingSharedJob` commit in the same transaction.
+2. The job resolves avatar work outside the handler, then completes only a still-existing sharing under the lock.
+3. The added liberin's receptor rechecks existence before creating the instant. Removal captures substory IDs for
+   post-commit group rebuilding/deletion. Older added work cannot resurrect an already removed sharing.
 
-`PostingProcessor` uses `PickerPool.pickAfterCommit()` for `STORY_ADDED` and `POSTING_UPDATED`; the remote-posting
-republish API uses it for publication picks. These picks are persisted and queued only after the caller's transaction
-commits, so rolled-back notification processing and republish requests do not start downloads.
-
-For `STORY_ADDED`, the receiver validates the feed subscription and skips reposts whose original node is itself.
-When the notification identifies both the original node and posting, the pick targets that original directly.
-The sending node, its feed, and its posting ID remain the source of the pick; the picker fetches the source profile
-separately and retains it in `EntrySource`. Notifications without a complete original address start at the sender.
-The optional original-address fields are copied from the story and defined in the
-[notification specification](../../../moeraorg.github.io/_data/notifications.yml).
-
-A pick's nullable recommendation flag records whether to change the cached posting's recommendation status. A null
-value preserves the status; explicit true or false values apply even when the posting is already cached and its
-revision is unchanged. New cached postings are not recommended unless the pick explicitly requests it. Redirects,
-retries, and process restarts preserve this intent.
-
-The earliest timeline publication is derived from a posting's stories. A story's feed is fixed at creation;
-updating a story rejects a different feed name. `StoryOperations` applies story attributes, updates ordering, and
-emits story and publication-date liberins. The controller validates requests before its write transaction, which
-contains lookup, access checks, updates, and response construction. Adding or deleting publications and editing dates
-use shared methods to
-lock the posting and compare the earliest date before and after the change in the same transaction. Existing
-publication dates are refreshed under the lock to account for concurrent changes. Single-story deletion and feed
-clearing use the same deletion operation. A changed minimum, including removal of the last timeline publication,
-emits a dedicated liberin after commit; its receptor sends a posting-updated client event and notifies posting
-subscribers using the posting's current visibility. Adding several publications together emits one date update.
-Changes that preserve the earliest date do not send this posting notification. Publication-date changes do not
-repeat important content-update notifications.
-
-Picked postings retain the original publication date in `receiverPublishedAt`. A refresh synchronizes this value,
-including its absence, even when the content edit time is unchanged. A date-only refresh emits the same dedicated
-liberin without creating a content revision. Restoring a deleted copy also emits this liberin if the date changed.
-
-A picker retries recoverable failures with an increasing delay from 30 seconds up to six hours. The final write
-transaction locks and reloads the local posting, revalidates the earlier snapshot, and commits the entry, revision,
-attachments, permissions, reaction totals, and sources together. Liberins and child picks follow the successful
-commit.
-
-Picks expire six hours after creation. Startup restoration, scheduling, and the ten-second retry scan discard picks
-that have expired or refer to a local node absent from `Domains`. This also removes picks left marked as running after
-a picker stops before processing its queue. Not-found failures discard the affected pick immediately. Failure updates
-affect only existing durable picks, so a late failure cannot recreate a discarded row.
-
-The remote-posting republish API creates one durable pick for each requested feed publication. Each pick retains the
-remote source feed name, local destination feed name, publication time, external source references, and pinned, viewed,
-read, and satisfied flags, so retries, redirects, and process restarts preserve the publication intent. The external
-source references belong to the resulting story rather than to the downloaded posting. After downloading or refreshing
-the posting, the picker adds a new story for the requested publication. A publication without an explicit local feed
-name downloads the posting without adding a story.
-
-Creating a local or picked posting revision stores its outgoing references through `LinkedEntryOperations` after the
-body is finalized. Existing live copies are reused. `LinkedEntryOperations` submits unresolved remote references through
-`PickerPool.pickAfterCommit()`, which starts picks after commit, without a feed publication.
-Rolled-back revisions do not start downloads. Outside a transaction, `pickAfterCommit()` starts a pick immediately.
-`PostingReceptor` reads the stored references only to send notifications.
-The durable pick retains its linked entry through redirects, and the download transaction associates that reference
-with the resulting local posting.
-Redirects to the current node resolve to its existing original.
-Media child revisions do not schedule linked-posting downloads. The reference and pick relationships are defined in
-[V325](../../src/main/resources/db/migration/V325__linked_entries.sql).
-
-Remote attachments initially use `RemoteMediaFile` metadata and an optional lease. A later download may add a local
-`MediaFileOwner` to the same attachment. The remote record retains origin identity and metadata needed for federation,
-while the local owner supplies bytes and local access control.
-
-## Sharing notifications
-
-Publishing a picked posting in `timeline` sends `POSTING_SHARED` to the original owner's node. Removing that
-publication sends `POSTING_UNSHARED`. Both notifications are delivered only if
-the owner's node can view the entry referenced by the story. Deletion uses the visibility filter captured in the
-deletion liberin. Owner name and original node name are assumed to coincide. Timeline republishing refers to the
-posting as a whole and omits the revision ID. A remote story is identified by its ID; feed name and moment are
-descriptive metadata and do not participate in deduplication or unsharing matches. Notifications carry the current
-story moment.
-
-Posting revision creation extracts universal links from the final HTML body into `linked_entries`.
-Like `MentionsExtractor`, `PostingReferencesExtractor` parses the body with Jsoup and traverses its elements.
-It reads anchor `href` attributes, with HTML entities decoded by the parser, and accepts named HTTP(S) universal URLs
-on `moera.page` and `web.moera.org` whose target is `/post/{id}`; comment and media targets are excluded. Plain text,
-subjects, and other attributes do not create references. Node names are expanded and duplicate node/posting pairs
-are collapsed across URL spellings.
-On creation, editing, deletion, and restoration of an original posting, `PostingReceptor` reads these stored references
-without parsing the body again. It compares them with the previous signed revision, excludes the posting author's
-own node, and applies each revision's visibility to the referenced node. Newly visible references send
-`POSTING_SHARED` with `SharingType.REFER`; removed or newly inaccessible references send `POSTING_UNSHARED` with the
-same type. Both identify the source posting, without a revision or feed/story reference. Reference additions also
-carry the source posting's author, heading, and moderation metadata in dedicated notification fields.
-
-The receiver validates the sharing type, posting ID, optional revision, and complete remote reference. Sharing
-mutations lock the tenant's original posting, deduplicate or remove exact matching sharings, and update the counter.
-For references, the receiver builds the source posting's instant summary from the notification fields.
-For every new sharing, the processor persists a `PostingSharedJob` in the same transaction through
-`Jobs.runAfterCommit`, with the local node ID, sharing identity, optional avatar snapshot, and source posting summary.
-The job resolves any matching avatar from the contact before downloading it, then locks the posting and completes the
-sharing only if it still exists. The job cannot recreate a sharing removed by a subsequent unshared notification.
-It initiates the added liberin after completion, including when the notification has no avatar. Before deletion,
-sharing mutations capture the IDs of related instant substories for cleanup after commit. Committed liberins initiate
-instant creation or cleanup
-and send sharing-added or sharing-deleted events, independently of total events. List and total events use their own
-viewing permission and posting visibility. The creation receptor locks the posting and verifies that the sharing
-still exists, so a delayed added liberin cannot recreate an instant or announce a deleted sharing. Event payloads are
-defined in `moeraorg.github.io/_data/events.yml`.
-
-References use the same receiving processor and durable avatar job as republishing. `PostingSharingInstants` selects
-`posting-referred` for references and `posting-shared` for republishing, with separate groups and blocking by type.
-The reference instant identifies the original local posting and the latest referring remote posting; its client and
-push target opens the latter. Each reference substory stores its source posting summary. Group rebuilds select the
-two latest source summaries in the same order as the authors, while the latest source supplies the navigation target.
-Removing a reference rebuilds these summaries and the target from the remaining substories. A single-reference instant
-displays both the original and source posting headings. Grouped instants list the authors and only the original posting
-heading. Moderation metadata is checked for the postings whose headings are displayed.
-
-Posting subscribers receive counter updates through `POSTING_SHARINGS_UPDATED` when their access permits it. The
-initial state of a new posting subscription includes the current counter even when the content edit time matches.
-The subscription receptor reads this state under the posting lock and applies the posting and counter visibility
-rules. Picked copies also refresh the counter during downloads when the content edit time is unchanged. A counter-only
-refresh emits the total event. The picked copy does not own the original sharing list. Public list and permission
-fields are specified in the [Node API](https://moera.org/development/api/node/), and notification payloads are defined
-in `moeraorg.github.io/_data/notifications.yml`.
-
-## Node source URI
-
-Every public structure that carries a node full-name snapshot also carries an optional source URI snapshot. The usual
-field-name rule replaces the final `FullName` with `SourceUri`, preserving any prefix. Profile structures use the
-shorter `sourceUri` name because the subject is already unambiguous.
-
-The source URI is historical identity metadata. Creation and ingestion code captures it from the same profile or
-notification object as the full name and stores both in one transaction. Conversion helpers return the stored pair;
-they do not decorate an old object with the node's current profile. A contact refresh may update its current snapshot,
-but it does not rewrite older entries, reactions, stories, or moderation records.
-
-The value is optional, at most 1024 characters, and is not validated as a URI by `moera-node`. Omission leaves a
-profile value unchanged on update; an empty profile attribute resets it.
-
-Moeralib provides `NodeSourceUri` helpers for the serialized form:
-
-```text
-<uri>;<parameter-name>=<parameter-value>;...
-```
-
-The first semicolon begins the parameter block. Names and values use UTF-8 RFC 3986 percent encoding, duplicate names
-keep their first position and last value, empty names are ignored, and unknown parameters are preserved. `via_email`
-is the currently published parameter name. The node itself stores and transports the full string as opaque metadata.
-
-## Federated OCR metadata
-
-Locally recognized media text is stored as `MediaFile.recognizedText` and exposed as `textContent`. For every local
-owner of a non-empty recognized result, a liberin sends `LEASED_MEDIA_TEXT_UPDATED` to nodes holding a lease for that
-owner.
-
-The receiving processor first verifies the exact tuple of local node, sender node, media ID, and lease ID. It then
-schedules a persistent after-commit `MediaTextUpdatedJob`. The job updates only matching `RemoteMediaFile` rows,
-recomputes derived headings and descriptions, invalidates attachment caches, and emits media-text and heading changes.
-If the lease has disappeared before the job runs, the operation becomes a no-op.
-
-Media-text notifications carry an optional media node name so equal media IDs from different nodes cannot collide in
-posting or search updates. Empty OCR results mark recognition complete on the source node but do not clear text already
-propagated to lease holders.
+List, total, and subscriber-counter notifications have separate viewing permissions. Picked copies receive totals,
+not ownership of the original's list. Publication/contact-favor effects are local and do not depend on peer delivery.
+See [PostingSharedJob](../../src/main/java/org/moera/node/rest/notification/PostingSharedJob.java) and
+[PostingSharingProcessorTest](../../src/test/java/org/moera/node/rest/notification/PostingSharingProcessorTest.java).
 
 ## Search subscribers
 
-Moera Search participates as a normal subscriber to search-oriented notifications. Node receptors send full posting,
-comment, reaction, profile, and incremental media-text updates through the same durable notification pipeline used for
-other peers.
-
-Removing a posting story from a public feed sends a search update to subscribers that can see the posting. The update
-identifies the removed story and the posting, preserving the original posting identity for picked copies. When posting
-deletion also removes its stories, those story deletions suppress their search updates; the posting receptor sends the
-posting deletion update instead. The deletion context is captured before the transaction closes, so delivery does not
-depend on loading a deleted story or its relationships. See
-[`StoryDeletedLiberin`](../../src/main/java/org/moera/node/liberin/model/StoryDeletedLiberin.java),
-[`StoryOperations`](../../src/main/java/org/moera/node/operations/StoryOperations.java), and
-[`StoryReceptor`](../../src/main/java/org/moera/node/liberin/receptor/StoryReceptor.java).
-
-Source URI fields and remote-media node names are retained in these payloads. This lets search preserve historical
-identity metadata and update the correct attachment when two nodes use the same media ID. The search index itself is
-owned by the separate `moera-search` service; it is not part of the node's PostgreSQL schema.
+Moera Search receives content/profile/reaction and incremental media-text updates through the same peer pipeline.
+Visibility and deletion context must survive entity removal. Posting deletion suppresses redundant story-removal
+updates, while standalone removal from a public feed has its own search update. Historical identity snapshots and
+remote media node/ID pairs must be preserved. The search index belongs to the separate service, outside node storage.

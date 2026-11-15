@@ -16,12 +16,21 @@
 2. Format all documents with a maximum line length of 120 characters.
 3. `doc/architecture.md` is the entry point to the architecture documentation. Put detailed architecture descriptions
    in the most specific chapter under `doc/architecture/` and update the entry point when adding or renaming a chapter.
-4. Architecture documentation describes the current implementation. Verify claims against code, configuration, and
-   migrations; do not put implementation plans, rollout instructions, or historical behavior in these documents.
-5. When a change alters component boundaries, data ownership, transaction boundaries, durable workflows, federation,
+4. When a change alters component boundaries, data ownership, transaction boundaries, durable workflows, federation,
    or deployment requirements, update the affected architecture chapter in the same change.
-6. Keep detailed wire fields in the public API specifications and exact database definitions in Flyway migrations.
+5. Keep detailed wire fields in the public API specifications and exact database definitions in Flyway migrations.
    Architecture documents should explain their stable relationships and invariants and link to the source of truth.
+6. Before every documentation creation or update, read and apply the `document-architecture` skill. This includes
+   small additions and documentation updates made as part of a code change.
+7. Keep documentation concise: explain responsibilities, boundaries, invariants, important workflows, and failure or
+   recovery guarantees. Link to code instead of reproducing fields, methods, constants, algorithm details, or class and
+   test catalogs, unless those details are necessary to explain an architectural constraint.
+8. Give each topic one primary home in the most specific chapter. Replace repeated explanations with links; avoid
+   duplicate overviews and descriptions of the same mechanism across chapters.
+9. Split chapters that mix distinct responsibilities or become difficult to navigate. Merge overlapping sections and
+   introductions; do not create extra chapters merely to move text or match a template.
+10. When extending documentation, revise and simplify the affected section rather than append feature-by-feature notes.
+    Remove stale or redundant text while preserving important invariants, transaction boundaries, and failure behavior.
 
 # Testing
 

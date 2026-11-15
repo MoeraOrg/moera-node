@@ -1,84 +1,59 @@
 # Runtime and node contexts
 
-## Hosted domains
+[Architecture index](../architecture.md)
 
-`Domains` maps HTTP domain names and internal node UUIDs to per-node `Options`. It loads this mapping after option
-metadata is configured. A fresh database receives a `_default_` domain and the initial per-node records. Once domains
-are configured, a `DomainsConfiguredEvent` starts components that restore pending jobs, notifications, and picks.
+## Hosted identities
 
-`node.multi` selects `NONE`, `PRIVATE`, or `PUBLIC` hosting. In single-host mode an arbitrary request host resolves to
-the default domain. In multi-host modes, `DomainInterceptor` accepts configured hosts; provider endpoints remain
-available for provisioning operations on an otherwise unknown host. `node.domain` supplies the server's default DNS
-domain and is also required for public registration.
+A local node UUID partitions tenant state. An HTTP domain selects that node; a registered Moera name identifies it to
+peers and resolves through naming to a URI and signing key. These identities are not interchangeable. Repository
+queries must select the intended local `node_id`; JPA does not apply a universal tenant filter.
 
-Most tenant-owned rows contain `node_id`. It is the stable partition key even when a hosted domain name or the node's
-registered Moera name changes.
+[Domains](../../src/main/java/org/moera/node/domain/Domains.java) loads hosted nodes and their options before pending
+work is restored, creating `_default_` for a fresh database.
+[DomainInterceptor](../../src/main/java/org/moera/node/domain/DomainInterceptor.java) maps request hosts to this state.
+Single-host mode permits fallback to the default node; multi-host mode restricts ordinary requests to configured hosts
+while allowing provider provisioning on unknown hosts. Provider authority is distinct from node administration.
 
-## Request context
+## Request and background context
 
-`RequestContext` is a request-scoped object populated by MVC interceptors. It carries:
+`RequestContext` holds the selected node, request identity, URLs, scopes, and deferred completion actions.
+[UniversalContext](../../src/main/java/org/moera/node/global/UniversalContext.java) delegates to it on HTTP threads
+and uses thread-local state otherwise. `TaskAutowire` assigns a background task's node; `Task.run()` associates it
+before execution. Global maintenance selects a node when it reaches tenant-specific work.
 
-- the selected node ID, node name, profile metadata, and per-node options;
-- the effective site and request URLs;
-- local admin and client scopes;
-- the authenticated remote node, friend-group membership, and subscription relationship;
-- user-agent, remote-address, and client-session information; and
-- deferred liberins and cache invalidations that are applied after a successful request.
-
-The main interceptor sequence performs request-rate accounting, domain selection, user-agent and crawler detection,
-authentication, rate limiting, virtual-page handling, cache headers, client-ID capture, after-commit dispatch, and
-entitlement checks. Slow-request timing can wrap this sequence when enabled.
-
-## Background context
-
-`UniversalContext` presents the same node and authorization interface to request code and background tasks. During an
-HTTP request it delegates to `RequestContext`. In a background thread it uses thread-local state associated by
-`TaskAutowire` or by a task that intentionally switches to a particular node.
-
-Background work must be associated with the relevant node before reading options, profile data, signing keys, or
-tenant-owned records. Global jobs may run without a node until they encounter node-specific work; for example, video
-compression groups media owners by node and associates each group before creating replacement owners and events.
-
-`UniversalContext.associate()` changes the context of the whole thread. It is therefore limited to code semantically
-bound to a concrete job or background task.
+`UniversalContext.associate()` changes subsequent execution on the whole thread. Call it at a concrete worker/task
+boundary, not inside a reusable helper. Selecting a node supplies its options and signing identity; it does not itself
+grant administrator rights. Warm-domain scans exclude frozen nodes; all-domain scans intentionally include them.
 
 ## Transactions
 
-HTTP controller methods commonly use Jakarta `@Transactional`. Background and maintenance components use the
-`Transaction` helper, whose read and write methods create `REQUIRES_NEW` transactions and expose variants that either
-propagate or handle exceptions.
+HTTP mutations use `@Transactional` or an explicit
+[Transaction](../../src/main/java/org/moera/node/util/Transaction.java) scope. That helper uses `REQUIRES_NEW` for both
+reads and writes: nested scopes suspend the caller's transaction and commit independently.
 
-`Transaction` also coordinates background liberins. It starts a holding scope with every transaction, sends held
-liberins only after the database commit succeeds, and discards them on rollback. Nested scopes merge into their parent
-until the outer commit. HTTP requests keep deferred liberins in `RequestContext`; `AfterCommitLiberinsInterceptor`
-dispatches them after the controller transaction has completed successfully.
+JPA open-in-view is disabled. Load and convert lazy relationships inside the relevant transaction. Across asynchronous
+or download boundaries, pass IDs/scalar snapshots and reload before publication. Database transactions do not make
+filesystem, S3, or peer API effects atomic. The media/picker paths explicitly prepare data before final publication;
+older callers can still perform external I/O inside their transactions.
 
-Spring JPA open-in-view is disabled. Callers must load or convert lazy relationships inside an explicit transaction.
-This is especially relevant when building media previews, events, or federation payloads.
+Liberin completion handling and transaction-synchronized job creation are defined once in
+[asynchronous processing](asynchronous-processing.md#commit-boundaries).
 
-## Executors and schedulers
+## Process and deployment boundary
 
-`MoeraNodeApplication` creates fixed-size pools from `node.pools`:
+[MoeraNodeApplication](../../src/main/java/org/moera/node/MoeraNodeApplication.java) configures MVC, schedulers, and
+separate fixed-worker executors for naming, jobs, peer senders, pickers, and push. Its builder does not bound executor
+queue capacity. Pool settings limit concurrent execution inside one JVM.
 
-| Bean | Main use |
-| --- | --- |
-| `namingTaskExecutor` | naming service work |
-| `remoteTaskExecutor` | persistent jobs and remote operations |
-| `notificationSenderTaskExecutor` | outgoing federation notifications |
-| `pickerTaskExecutor` | downloading remote postings and comments |
-| `pushTaskExecutor` | local push and streaming work |
-| `eventScheduler` | client event retry and heartbeat scheduling |
-| `taskScheduler` | other `@Scheduled` work |
+Domain/permission caches, job registries, sender/picker maps, and live sessions are process-local. General jobs and
+per-peer workers have no database claim before every attempt. Particular row locks and S3 leases do not establish
+support for multiple competing application instances on one database.
 
-The pools bound concurrency inside one process. Database leases, row locks, advisory locks, and idempotent state
-transitions provide coordination between multiple application instances.
+[Config](../../src/main/java/org/moera/node/config/Config.java) binds deployment settings; Spring configures HTTP,
+PostgreSQL, Flyway, and SMTP. Per-node `Options` resolve stored values against descriptors/defaults from
+[options.yaml](../../src/main/resources/options.yaml). Default overrides and privilege policy are handled by
+`OptionsMetadata`; private profile/signing settings are not public preferences.
 
-## Configuration layers
-
-Deployment-wide configuration is bound from Spring properties into `Config` and its nested classes. It includes
-hosting mode, addresses, thread-pool sizes, root credentials, mail, media storage, external services, and diagnostics.
-
-Per-node configuration is defined in `src/main/resources/options.yaml` and stored in the database. `Options` resolves
-these values for the active node. Examples include profile metadata, feature switches, permissions, media limits, and
-Web UI behavior. Privileged options cannot be treated as ordinary user preferences because they influence resource or
-server policy.
+Startup requires a configured domain, root secret, database, and writable media root. Reverse-proxy and external-tool
+requirements belong to [media storage](media-storage.md#deployment). Backups require the database and the actual media
+copies it references.

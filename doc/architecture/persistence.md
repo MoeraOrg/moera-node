@@ -1,240 +1,65 @@
-# Persistence and social model
+# Persistence and content model
 
-## Database access
+[Architecture index](../architecture.md)
 
-PostgreSQL is the authoritative store for node state. Spring Data JPA maps entities under `data`; repository interfaces
-declare their queries explicitly. Hibernate schema generation is disabled. Flyway migrations under
-`src/main/resources/db/migration` are the executable schema history.
+## Ownership and lifecycle
 
-Many operations use ordinary JPQL, pessimistic row locks, or update queries. Native SQL is reserved for database-level
-coordination and bulk state transitions, including PostgreSQL advisory locks, `FOR UPDATE SKIP LOCKED`, partial
-indexes, and trigger-maintained reference counts.
+PostgreSQL holds local authority, remote copies, derived records, and pending work. Entities/explicit queries live in
+[data](../../src/main/java/org/moera/node/data); Flyway owns schema evolution and trigger-maintained relationships.
+Tenant state belongs to a local node UUID; shared media bytes are the exception described in [media](media.md).
 
-## Hosted-node partitioning
+| Concept | Owns |
+| --- | --- |
+| `Entry` (`Posting` or `Comment`) | Identity, author/receiver snapshots, permissions, counters, current revision |
+| `EntryRevision` | Versioned body/signature, derived text, attachments, outgoing references, revision reactions |
+| `Draft` | Unpublished editable content and draft attachments, independently of entries |
+| `EntryAttachment` | Ordered/embedded use of local ownership and/or remote media metadata by a revision or draft |
 
-The `domains` table maps host names to node UUIDs. Tenant-owned entities carry `node_id`, and the active request or
-background context supplies this ID to repository queries. Options are also stored per node. A single process can
-therefore host multiple independent Moera identities while sharing application pools and content-addressed media.
+A comment's parent is its posting. An original has no `receiverName`; a picked copy retains the authoritative remote
+node and entry/revision IDs. Authorship is separate: a remotely authored entry can be an original received here.
 
-## Entries and revisions
+[PostingOperations](../../src/main/java/org/moera/node/operations/PostingOperations.java) and `CommentOperations` own
+revision creation, restoration, and soft deletion; retention cleanup performs physical deletion later. An unsigned
+latest revision can be replaced rather than retained as signed history. Sanitized HTML and derived OCR text must not
+replace the body covered by a signature. Draft update/deletion use the same tenant-scoped row lock, preventing an
+update from attaching media after deletion wins.
 
-`Entry` is the common JPA base for `Posting` and `Comment`, using a discriminator to distinguish them. A comment's
-`parent` is its posting. An entry stores stable identity, ownership and receiver snapshots, lifecycle timestamps,
-permissions, counters, and a link to its current revision.
+### Revision timestamp discrepancy
 
-`EntryRevision` stores editable text and derived representations: source format, encoded body, sanitized body,
-preview, heading, description, signatures, digest, attachments, and reaction totals. Revisions form a history through
-their parent relation. Controllers query the current revision for ordinary reads and expose revision history through
-dedicated endpoints.
+`AGENTS.md` equates non-null revision `deleted_at` with the current revision. Mutation code instead stamps superseded
+revisions, creates the new current revision without that timestamp, and stamps it on entry deletion; picker restoration
+clears it again. This discrepancy remains unresolved. Select current content through `Entry.currentRevision`, not a
+new timestamp shortcut. The restoration behavior is asserted in
+[PickerTest](../../src/test/java/org/moera/node/picker/PickerTest.java).
 
-`EntryAttachment` links a revision or draft to either a local `MediaFileOwner`, a `RemoteMediaFile`, or both after a
-remote attachment has been downloaded locally. Its ordinal preserves attachment order, and `embedded` distinguishes
-inline use from a separate attachment.
+## References and sharings
 
-## Linked postings
+`LinkedEntry` belongs to a source revision and stores destination identity plus optional local resolution. Extraction
+runs after the body is finalized; unresolved remote targets may be picked without feed publication. Deleting
+the source revision cascades to its links/picks; physical target deletion clears resolution but preserves destination
+identity. Resolved historical links prevent unused-posting cleanup, not an original-deletion workflow.
 
-`LinkedEntry` belongs to a posting revision and records a distinct destination node/posting pair extracted from its
-final body. Local targets resolve within the same hosted node; remote targets resolve to cached postings. A reference
-may remain unresolved when its target is unavailable. Media child postings do not own these references.
+`PostingInfoOperations` expands only visible live targets, with each target's own permissions. Cycles are cut per
+ancestor branch, preserving shared descendants in independent branches. Media children do not own outgoing references.
+See [LinkedEntryOperations](../../src/main/java/org/moera/node/operations/LinkedEntryOperations.java),
+[V325](../../src/main/resources/db/migration/V325__linked_entries.sql), and
+[PostingInfoOperationsTest](../../src/test/java/org/moera/node/operations/PostingInfoOperationsTest.java).
 
-The revision owns the reference's lifetime: deleting a revision cascades to its linked entries and their pending picks.
-Deleting a target posting clears the resolution while preserving the destination identity. Any resolved reference,
-including one from a historical revision, keeps its target out of unused-posting cleanup. This does not prevent
-deletion of the target when its original is deleted. The foreign keys and indexes are defined in
-[V325](../../src/main/resources/db/migration/V325__linked_entries.sql).
+`EntrySharing` belongs to the original posting and may retain a specific revision. Picked copies retain the received
+total, not the original's sharing list. Mutations lock the original posting and update list/counter together.
+Identity includes sender, sharing type, optional revision, and remote story/posting references, including nulls;
+feed/moment metadata is descriptive. [Federation](federation.md#sharing-flow) owns the delayed-completion workflow.
+Implementation and schema: [SharingOperations](../../src/main/java/org/moera/node/operations/SharingOperations.java)
+and [V313](../../src/main/resources/db/migration/V313__entry_sharings.sql).
 
-`PostingInfo` includes the current revision's resolved, live targets that the requesting client can view under
-`VIEW_CONTENT`. Each target uses its own content and metadata permissions. Linked postings are expanded at every level;
-a posting already present in the current ancestor chain is omitted. Self-references and cycles therefore produce
-finite trees, while a shared target remains available in independent branches. The wire field is defined in the
-[public API schema](../../../moeraorg.github.io/_data/node_api.yml).
+## Relationships and snapshots
 
-`PostingInfoUtil` converts a supplied posting without traversing its outgoing references. REST responses load linked
-targets through `PostingInfoOperations`, using the source revision IDs. References and previously unseen targets are
-loaded breadth-first in batches shared across the slice. Inaccessible targets are not traversed. Top-level stories,
-media attachments, reactions, and blockings are prepared in bulk for all distinct visible targets, with the same client
-permissions as the single-posting response. Sheriff user-list lookups are grouped by sheriff and applied according to
-each target's own sheriffs. Each target is converted once; response occurrences copy its prepared metadata and build
-separate linked-posting lists according to their ancestor paths. An explicit traversal stack avoids recursive Java
-calls when assembling deep trees. Media children and notification metadata do not expand linked postings.
+`Subscription` records this node's interest in a peer; `Subscriber` records a peer's interest here. Friend groups and
+grants add authorization relationships. `OwnPosting`, `OwnComment`, and `OwnReaction` retain knowledge of actions
+stored remotely. Contacts cache profile/relationship summaries; favors represent decaying interaction signals used for
+contact distance. Blocking, sheriff orders, complaints, and malware lists remain separate policy state.
 
-## Drafts
-
-`Draft` owns editable text and its draft attachments independently of published entries. Draft updates acquire a
-pessimistic write lock on the draft row, scoped to the hosted node, before validating media or changing text and
-attachments. The lock lasts until the update transaction completes, preventing concurrent deletion from removing the
-draft while new attachments are being saved. If deletion completes first, the update returns `draft.not-found`.
-Explicit draft deletion acquires the same row lock before cascading attachment removal, keeping the lock order
-consistent with updates.
-
-See [`DraftController`](../../src/main/java/org/moera/node/rest/DraftController.java),
-[`DraftRepository`](../../src/main/java/org/moera/node/data/DraftRepository.java), and the draft attachment foreign key
-in [V137](../../src/main/resources/db/migration/V137__drafts_entry_attachments.sql).
-
-## Posting sharings
-
-`EntrySharing` records a sharing reported by another node. The original entry owns the list and its `totalSharings`
-counter; picked entries retain the counter received from the original. An optional revision link identifies the shared
-content revision and prevents revision cleanup while the sharing remains. The sharing keeps its remote identity
-snapshot and either a complete feed/story/moment reference, a remote posting reference, or both.
-Timeline republishing and references from another posting do not select a revision, so their revision links are null.
-References use `SharingType.REFER` and identify the referring remote posting. The sharing type participates in identity,
-so a reference and a republishing from the same node can coexist.
-
-Each sharing has a local pagination moment, unique within its entry and independent of the remote story moment.
-The API reads bounded slices in descending moment order. The inclusive upper bound and exclusive lower bound let
-clients continue from the returned lower bound without skipping sharings created at the same timestamp. The list and
-the total in a slice remain subject to their separate viewing permissions.
-
-Sharing mutations lock the original posting row and update the records and counter in one transaction. Duplicate
-shared notifications are idempotent. Unsharing matches every identity dimension exactly, including nulls for omitted
-values, and removes all matching rows. A remote story is identified solely by its ID. Feed name, story moment, and
-display metadata do not participate in identity matching.
-
-Sharing instants group substories by posting and instant type using the reaction instant grouping window.
-`posting-referred` groups references, and `posting-shared` groups republishing. Each substory has an optional
-relationship to its `EntrySharing`. The group refers to the sharing of its latest substory and updates this relationship
-when its substories change. The foreign key becomes null when the sharing is deleted; the deletion liberin retains the
-affected substory IDs and removes them after commit. Removing the last substory removes its group.
-Sharing avatars participate in the usual media reference-count triggers.
-
-The sharing and publication schema is defined in
-[V313](../../src/main/resources/db/migration/V313__entry_sharings.sql),
-[V314](../../src/main/resources/db/migration/V314__entry_sharings_moment.sql),
-[V315](../../src/main/resources/db/migration/V315__drop_shared_story_moment.sql),
-[V316](../../src/main/resources/db/migration/V316__story_sharing_relationship.sql),
-[V317](../../src/main/resources/db/migration/V317__drop_sharing_remote_title.sql), and
-[V318](../../src/main/resources/db/migration/V318__drop_entry_sharings_created_at_index.sql).
-
-## Feeds and stories
-
-`Story` is a materialized feed item. It belongs to a node and optional feed, has a `StoryType`, ordering moment,
-publication state, read/viewed state, and a serialized summary. It may link to a local entry or retain remote node,
-posting, comment, avatar, and parent-media snapshots.
-
-Bulk story deletion in `StoryOperations` serves both `DELETE /feeds/{feedName}/stories` and `DELETE /stories`.
-The latter searches every story on the current node, including stories without a feed. Controllers validate filters,
-parse the local posting ID, and enforce the guard against unrestricted deletion. The shared operation uses
-`UniversalContext` for the node, authorization, and events, and processes matching stories in batches.
-When deletion identifies a single posting by its local or remote identity, it also checks whether the
-posting has become unused. Stories in any feed, stories without a feed, resolved references from any posting revision,
-and a parent media entry keep the posting alive. Referenced entries are locked before removing stories to serialize
-concurrent feed deletions. The unused-posting and permission checks run in the story-deletion transaction.
-Removing the last reference requires the same effective delete principal and separate client and admin deletion scopes
-as direct posting deletion, in addition to `UPDATE_FEEDS`. Missing permission aborts the transaction and preserves all
-stories. This also applies to broader feed deletions: each batch checks newly unlinked postings, so background cleanup
-cannot turn feed-editing permission into posting-deletion permission. `unrestricted` only bypasses the filter guard.
-Story deletion leaves postings intact, including when the filters identify a posting that is already unused.
-`PostingOperations.purgeUnlinked` runs hourly and deletes postings that remain unused, setting their retention
-deadline, cleaning up media, and emitting `PostingDeletedLiberin`. Events and notifications follow the normal
-post-commit path. See
-[`FeedController`](../../src/main/java/org/moera/node/rest/FeedController.java),
-[`StoryController`](../../src/main/java/org/moera/node/rest/StoryController.java),
-[`StoryOperations`](../../src/main/java/org/moera/node/operations/StoryOperations.java),
-[`PostingOperations`](../../src/main/java/org/moera/node/operations/PostingOperations.java), and
-[`PostingRepository`](../../src/main/java/org/moera/node/data/PostingRepository.java).
-
-Deleting an individual story through `DELETE /stories/{id}` uses `StoryOperations.deleteSingle` and applies the
-same last-reference check and posting permissions. The posting remains for scheduled cleanup; missing posting
-permission rolls back the story deletion. The basic `StoryOperations.delete` operation only removes the story and
-updates publication dates, without checking posting-deletion permissions for internal callers.
-
-Each story owns an optional viewing permission. `unset` derives visibility from the linked entry; an explicit
-principal controls the story independently. A private story belongs to the local node and is visible only to its admin.
-Reading a visible story does not grant access to its posting: API responses omit an unreadable posting while retaining
-the story's other metadata. Feed queries and direct story reads enforce the same principal; events and notifications
-use the story's effective visibility. Public timeline and RSS output also respect story visibility.
-Changing a story's permission sends added, updated, or deleted events to newly permitted, continuing, or excluded
-readers respectively, and updates feed, search, and sharing notifications. Posting permission changes affect the
-visibility of a story only when its permission is `unset`. Posting feed references omit stories the reader cannot view.
-
-`posting-added` stories for cached remote postings retain the receiver node and posting identity independently of the
-embedded posting. Publication initializes these snapshots for every feed, so API consumers can resolve a visible story
-even when its posting is omitted. Durable picks store the requested story permission and preserve it through retries
-and redirects. Remote republishing sets this permission through publication attributes; downloaded posting permissions
-derive from the remote posting independently of the story's visibility. The public fields are defined in the
-[API schema](../../../moeraorg.github.io/_data/node_api.yml); persistence is defined in
-[V326](../../src/main/resources/db/migration/V326__story_view_principal.sql) and
-[V328](../../src/main/resources/db/migration/V328__pick_story_view_principal.sql).
-
-External source references belong to each story independently of its linked entry. Publication and story updates use
-the same attributes conversion: omitted references preserve their value, and an empty list clears them. Stories without
-external sources retain an empty array, which is omitted from API responses and story events. Durable picks retain the
-requested story sources through retries and redirects. See
-[`StoryAttributesUtil`](../../src/main/java/org/moera/node/model/StoryAttributesUtil.java),
-[`StoryInfoUtil`](../../src/main/java/org/moera/node/model/StoryInfoUtil.java), and
-[V321](../../src/main/resources/db/migration/V321__story_external_source_uri.sql).
-
-Liberin receptors create and update stories after primary state changes. Creation in `Feed.INSTANT` is initiated by
-liberin receptors and delegated to a focused component derived from `InstantsCreator`. This keeps instant creation on
-the same post-commit path as events and notifications.
-
-## Media child postings
-
-An attached media object may have a child posting used for media-specific reactions and presentation. The child keeps
-the actual parent media relation and a direct `Entry.parentMediaEntry` relation to the entry that owns the attachment.
-Local media uses `parent_media_id`; remotely represented media can use `parent_remote_media_id`.
-
-The direct parent-entry relation avoids inferring ownership through revisions, attachments, or receiver names. A unique
-database index allows one local-media child per `(parent_media_entry_id, parent_media_id)`. Picks retain parent-entry
-and remote-media context so asynchronously created child postings preserve the same relationship.
-
-Attachment responses derive `MediaAttachment.postingId` in the context of the parent entry. The `.../attached`
-endpoints return child postings only for media in the parent's current revision. The structural parent relation can
-remain while an older or deleted revision still references the media.
-
-Child permissions and metadata derive from the exact parent entry. If the parent is absent or no revision of that
-parent references the media, application cleanup deletes the child through normal posting operations. Legacy children
-that could not be linked during migration keep a null parent and restrictive permissions. Physical deletion of a
-parent also has a database cascade as a final safety net.
-
-The parent-entry ID is local structural metadata and is not part of posting fingerprints. Content signatures continue
-to cover the parent media digest and attachment digests.
-
-## Contacts, favors, and visited nodes
-
-`Contact` is the local cache and relationship summary for another node. It stores profile snapshots, relationship
-counts, a computed distance, and `visitCount`. `Favor` records decaying signals used by `FavorOperations` when
-calculating contact distance.
-
-Publishing a posting in the local timeline records a `PUBLICATION` favor for its author; removing that publication
-records an `UNPUBLICATION` favor. Each timeline story contributes separately, including stories removed with the
-posting itself. These local signals are independent of the author's access to the posting and of federation
-notification delivery. `StoryReceptor` records them through `FavorOperations` in the liberin delivery transaction.
-
-Adding or removing a distinct outgoing posting reference records a `REFERENCE` or `UNREFERENCE` favor for the linked
-node. These signals have the same weight and decay as `COMMENT` and `UNCOMMENT`. `PostingReceptor` compares node/posting
-pairs, so repeated URLs do not multiply favors and changes of visibility alone do not add or remove them. Deleting
-or restoring the source posting removes or restores its references. Existing persisted favor ordinals remain stable;
-the reference types follow the publication types in [FavorType](../../src/main/java/org/moera/node/data/FavorType.java).
-
-The admin-only `/moera/api/people/visited` API records and searches node visits. Every POST adds a separate `VISITED`
-favor with value `10` and a ten-day decay period, and increments the contact's visit count. DELETE removes all visited
-favors for that node and resets the count. GET reuses `ContactSearch`, returns only positive visit counts, and sorts by
-contact distance without fetching missing profile data during the request.
-
-Every day, maintenance removes expired favors and recomputes positive visit counts from the remaining `VISITED`
-records. Visited status reduces the contact distance by `0.25`, making the node closer in contact ordering.
-
-## Historical identity metadata
-
-The node's current source URI is the per-node option `profile.source-uri`. The API exposes it as `sourceUri` in profile
-structures. Wherever a stored object captures a node full name, it also captures the corresponding optional source URI
-from the same profile snapshot.
-
-This rule applies to entries and their owner, receiver, and replied-to data; sources; drafts; reactions; contacts;
-stories; locally remembered remote postings, comments, and reactions; and sheriff orders and complaints. These values
-are historical metadata. A later profile refresh updates the contact snapshot but does not rewrite old postings,
-reactions, or stories.
-
-Source URI columns are nullable and limited to 1024 characters. Rows created before the fields were introduced remain
-null unless a normal workflow later refreshes that specific record.
-
-## Reference counts and deferred deletion
-
-Database triggers maintain `usage_count` on shared objects such as media files and owners. When the count drops to
-zero, a trigger assigns a deadline; a new reference clears it. This lets transactions update graph relationships while
-scheduled cleanup performs expensive physical deletion later.
-
-The same general pattern appears in durable work queues: primary transactions publish enough database state to make a
-later action restartable, and workers delete queue records only after the external or derived work is complete.
+Historical profile snapshots belong to the stored object: full name and source URI are captured together, and a later
+contact refresh does not rewrite old content. Source URI is opaque identity metadata, distinct from external source
+references on content/publications. [Stories and feeds](stories-and-feeds.md) defines publication ownership and cleanup;
+[media storage](media-storage.md#cleanup) defines reference-counted physical deletion.
