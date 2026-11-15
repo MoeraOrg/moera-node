@@ -13,6 +13,8 @@ public class StoryAddedNotificationUtil {
         if (story.getEntry() != null) {
             notification.setPostingId(story.getEntry().getId().toString());
         }
+        notification.setRemoteNodeName(story.getRemoteNodeName());
+        notification.setRemotePostingId(story.getRemotePostingId());
         return notification;
     }
 

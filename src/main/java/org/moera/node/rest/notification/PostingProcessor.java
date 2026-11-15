@@ -37,6 +37,7 @@ import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.picker.PickerPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.ObjectUtils;
 
 @NotificationProcessor
 public class PostingProcessor {
@@ -91,6 +92,13 @@ public class PostingProcessor {
             return;
         }
 
+        if (
+            notification.getRemoteNodeName() != null
+            && notification.getRemoteNodeName().equals(universalContext.nodeName())
+        ) {
+            return;
+        }
+
         List<UserSubscription> userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
             universalContext.nodeId(),
             SubscriptionType.FEED,
@@ -104,6 +112,12 @@ public class PostingProcessor {
             pick.setRemoteFeedName(userSubscription.getRemoteFeedName());
             pick.setRemotePostingId(notification.getPostingId());
             pick.setFeedName(userSubscription.getFeedName());
+            if (
+                !ObjectUtils.isEmpty(notification.getRemoteNodeName())
+                && !ObjectUtils.isEmpty(notification.getRemotePostingId())
+            ) {
+                pick = pick.redirectTo(notification.getRemoteNodeName(), notification.getRemotePostingId());
+            }
             pickerPool.pickAfterCommit(pick);
         }
     }
