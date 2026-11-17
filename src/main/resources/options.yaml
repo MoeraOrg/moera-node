@@ -287,6 +287,11 @@
   defaultValue: false
   title: Do not delete Newsfeed posts when original is deleted
 
+- name: posting.referenced.hide-on-delete
+  type: bool
+  defaultValue: true
+  title: Do not delete referenced posts when original is deleted
+
 - name: posting.published.notification.age
   type: Duration
   defaultValue: 30d

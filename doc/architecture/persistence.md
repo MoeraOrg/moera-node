@@ -37,7 +37,9 @@ new timestamp shortcut. The restoration behavior is asserted in
 `LinkedEntry` belongs to a source revision and stores destination identity plus optional local resolution. Extraction
 runs after the body is finalized; unresolved remote targets may be picked without feed publication. Deleting
 the source revision cascades to its links/picks; physical target deletion clears resolution but preserves destination
-identity. Resolved historical links prevent unused-posting cleanup, not an original-deletion workflow.
+identity. Resolved links from any retained revision prevent unused-posting cleanup. When an original is deleted,
+`posting.referenced.hide-on-delete` (enabled by default) preserves a referenced picked copy with admin-only visibility;
+`posting.picked.hide-on-delete` applies that retention to all picked copies. Otherwise the copy is soft-deleted.
 
 `PostingInfoOperations` expands only visible live targets, with each target's own permissions. Cycles are cut per
 ancestor branch, preserving shared descendants in independent branches. Media children do not own outgoing references.

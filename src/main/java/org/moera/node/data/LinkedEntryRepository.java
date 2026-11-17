@@ -22,4 +22,7 @@ public interface LinkedEntryRepository extends JpaRepository<LinkedEntry, UUID> 
     )
     List<LinkedEntry> findResolvedByRevisionIds(UUID nodeId, Collection<UUID> revisionIds);
 
+    @Query("select count(le) from LinkedEntry le where le.linkedEntry.id = ?1")
+    long countByLinkedEntryId(UUID entryId);
+
 }

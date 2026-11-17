@@ -32,6 +32,7 @@ import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Feed;
+import org.moera.node.data.LinkedEntryRepository;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -86,6 +87,9 @@ public class PostingOperations {
 
     @Inject
     private EntryAttachmentRepository entryAttachmentRepository;
+
+    @Inject
+    private LinkedEntryRepository linkedEntryRepository;
 
     @Inject
     private RemoteMediaFileRepository remoteMediaFileRepository;
@@ -369,7 +373,11 @@ public class PostingOperations {
 
     public void deletePickedPosting(Posting posting) {
         EntryRevision latest = posting.getCurrentRevision();
-        if (universalContext.getOptions().getBool("posting.picked.hide-on-delete")) {
+        if (
+            universalContext.getOptions().getBool("posting.picked.hide-on-delete")
+            || universalContext.getOptions().getBool("posting.referenced.hide-on-delete")
+                && linkedEntryRepository.countByLinkedEntryId(posting.getId()) > 0
+        ) {
             Principal latestView = posting.getViewE();
             posting.setViewPrincipal(Principal.ADMIN);
             posting.setEditedAt(Util.now());

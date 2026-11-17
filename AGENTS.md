@@ -86,3 +86,6 @@
    it in methods that are not semantically bound to a concrete job or background task.
 5. Before downloading avatars with `mediaManager.downloadAvatar/downloadAvatars`, call
    `Contact.toAvatar(contactOperations.find(...), ...)` to fetch the avatar that is already downloaded.
+6. When adding or removing an option in `src/main/resources/options.yaml`, add or remove its description in every
+   translation file in `../moera-client-react/src/i18n/locales/*/message.json`. When changing an option description,
+   update its descriptions in all those translation files as well.

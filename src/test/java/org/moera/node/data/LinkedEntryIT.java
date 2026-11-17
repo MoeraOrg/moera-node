@@ -38,6 +38,7 @@ import org.moera.node.config.DirectServeSource;
 import org.moera.node.domain.Domains;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
+import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.liberin.receptor.PostingReceptor;
 import org.moera.node.media.DirectServeOperations;
@@ -926,6 +927,86 @@ class LinkedEntryIT {
             new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class));
         ReflectionTestUtils.setField(storyOperations, "postingRepository", postingRepository);
         return storyOperations;
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "false, false, false, false, false",
+        "false, false, true,  false, false",
+        "false, true,  false, false, false",
+        "false, true,  true,  false, true",
+        "true,  false, false, false, true",
+        "true,  false, true,  false, true",
+        "true,  true,  false, false, true",
+        "true,  true,  true,  false, true",
+        "false, true,  true,  true,  true",
+        "false, false, true,  true,  false"
+    })
+    void originalDeletionRespectsPickedAndReferencedRetentionOptions(
+        boolean hidePicked,
+        boolean hideReferenced,
+        boolean referenced,
+        boolean historical,
+        boolean hidden
+    ) {
+        UniversalContext context = mock(UniversalContext.class);
+        when(context.nodeId()).thenReturn(nodeId);
+        Options options = mock(Options.class);
+        when(context.getOptions()).thenReturn(options);
+        when(options.getBool("posting.picked.hide-on-delete")).thenReturn(hidePicked);
+        when(options.getBool("posting.referenced.hide-on-delete")).thenReturn(hideReferenced);
+        when(options.getDuration("posting.deleted.lifetime")).thenReturn(ExtendedDuration.NEVER);
+        var storyRepository = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class);
+        var storyOperations = new StoryOperations();
+        ReflectionTestUtils.setField(storyOperations, "universalContext", context);
+        ReflectionTestUtils.setField(storyOperations, "storyRepository", storyRepository);
+        var postingOperations = new PostingOperations();
+        ReflectionTestUtils.setField(postingOperations, "universalContext", context);
+        ReflectionTestUtils.setField(postingOperations, "postingRepository", postingRepository);
+        ReflectionTestUtils.setField(postingOperations, "linkedEntryRepository", linkedEntryRepository);
+        ReflectionTestUtils.setField(postingOperations, "storyOperations", storyOperations);
+        ReflectionTestUtils.setField(postingOperations, "mediaOperations", mock(MediaOperations.class));
+
+        UUID postingId = transaction.execute(status -> {
+            Posting target = posting(nodeId);
+            target.setReceiverName("remote_0");
+            target.setReceiverEntryId("original");
+            target.setViewPrincipal(Principal.PUBLIC);
+            story(target, Feed.NEWS, 1);
+            Posting source = posting(nodeId);
+            link(source, referenced ? target : posting(nodeId));
+            if (historical) {
+                EntryRevision revision = new EntryRevision();
+                revision.setId(UUID.randomUUID());
+                revision.setEntry(source);
+                entityManager.persist(revision);
+                source.setCurrentRevision(revision);
+            }
+            return target.getId();
+        });
+
+        transaction.executeWithoutResult(status ->
+            postingOperations.deletePickedPosting(postingRepository.findById(postingId).orElseThrow())
+        );
+
+        transaction.executeWithoutResult(status -> {
+            Posting target = postingRepository.findById(postingId).orElseThrow();
+            assertEquals(hidden, target.getDeletedAt() == null);
+            assertEquals(hidden, target.getCurrentRevision().getDeletedAt() == null);
+            assertEquals(hidden ? Principal.ADMIN : Principal.PUBLIC, target.getViewPrincipal());
+            assertEquals(hidden, target.getReceiverDeletedAt() != null);
+            assertEquals(hidden ? 1 : 0, storyRepository.findByEntryId(nodeId, postingId).size());
+            if (hidden) {
+                assertNotNull(target.getEditedAt());
+            }
+        });
+        if (hidden) {
+            verify(context).send(any(PostingUpdatedLiberin.class));
+            verify(context, never()).send(any(PostingDeletedLiberin.class));
+        } else {
+            verify(context).send(any(PostingDeletedLiberin.class));
+            verify(context, never()).send(any(PostingUpdatedLiberin.class));
+        }
     }
 
     @Test
