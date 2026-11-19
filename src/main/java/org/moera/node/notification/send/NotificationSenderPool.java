@@ -228,7 +228,7 @@ public class NotificationSenderPool {
 
     private void sendSingle(SingleDirection direction, Notification notification) {
         String nodeName = domains.getDomainOptions(direction.getNodeId()).nodeName();
-        long adminScope = grantCache.get(direction.getNodeId(), nodeName);
+        long adminScope = grantCache.get(direction.getNodeId(), direction.getNodeName());
         boolean adminViewContent = Scope.VIEW_CONTENT.included(adminScope);
         if (
             !direction.isPermitted(

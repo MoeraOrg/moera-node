@@ -182,13 +182,17 @@ public class StoryOperations {
         Long earliestPublishedAt = findEarliestPublishedAt(publications);
         Principal viewPrincipal = story.getViewPrincipal();
         PrincipalFilter previousViewFilter = story.viewPrincipalFilter();
+        Long previousMoment = story.getMoment();
         StoryAttributesUtil.toStory(attributes, story);
         if (attributes.getPublishAt() != null || attributes.getPinned() != null) {
             updateMoment(story, story.getNodeId());
         }
         notifyPostingPublishedAtChanged(story.getEntry(), earliestPublishedAt, publications);
+        boolean visibilityChanged = !viewPrincipal.equals(story.getViewPrincipal());
         universalContext.send(new StoryUpdatedLiberin(
-            story.getId(), !viewPrincipal.equals(story.getViewPrincipal()) ? previousViewFilter : null
+            story.getId(),
+            visibilityChanged ? previousViewFilter : null,
+            visibilityChanged || !Objects.equals(previousMoment, story.getMoment()) ? previousMoment : null
         ));
     }
 

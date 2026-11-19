@@ -6,7 +6,9 @@ import org.moera.lib.node.types.SharingType;
 import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.lib.node.types.notifications.NotificationType;
 import org.moera.lib.node.types.notifications.PostingSharedNotification;
+import org.moera.lib.node.types.notifications.PostingSharingUpdatedNotification;
 import org.moera.lib.node.types.notifications.PostingUnsharedNotification;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.data.EntrySharing;
 import org.moera.node.model.StorySummaryEntryUtil;
@@ -70,6 +72,21 @@ public class PostingSharingProcessor {
                 );
             }
         });
+    }
+
+    @NotificationMapping(NotificationType.POSTING_SHARING_UPDATED)
+    public void updated(PostingSharingUpdatedNotification notification) {
+        ValidationUtil.notNull(notification.getRemoteStoryId(), "sharing.remote-story-id.missing");
+        SharingOperations.validate(
+            SharingType.REPUBLISH,
+            notification.getPostingId(),
+            notification.getPostingRevisionId(),
+            notification.getRemoteFeedName(),
+            notification.getRemoteStoryId(),
+            notification.getRemoteStoryMoment(),
+            notification.getRemotePostingId()
+        );
+        tx.executeWrite(() -> sharingOperations.updated(notification));
     }
 
     @NotificationMapping(NotificationType.POSTING_UNSHARED)

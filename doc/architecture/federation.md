@@ -59,13 +59,17 @@ Evidence: [PickerTest](../../src/test/java/org/moera/node/picker/PickerTest.java
 
 ## Sharing flow
 
-Timeline republishing of a picked posting and links from finalized posting bodies use shared/unshared notifications,
-with separate sharing types. `PostingReceptor` compares persisted reference sets and visibility on edits, deletion,
-and restoration; it does not reparse bodies during delivery. Notification identity/ownership is defined in
-[persistence](persistence.md#references-and-sharings).
+Timeline republications report to the node hosting the original posting. While that node can view the story, a change
+in its feed position sends `POSTING_SHARING_UPDATED`. Gaining access sends `POSTING_SHARED` with the current position.
+Losing access sends `POSTING_UNSHARED` with the previously visible position.
 
-1. `PostingSharingProcessor` validates the reference and changes the sharing/counter under the original posting lock.
-   A new sharing and its `PostingSharedJob` commit in the same transaction.
+Links from finalized posting bodies use a separate sharing type. `PostingReceptor` compares persisted reference sets
+and visibility on edits, deletion, and restoration. Both types follow the same
+[identity rules](persistence.md#references-and-sharings).
+
+1. `PostingSharingProcessor` applies changes under the original posting lock. A move updates only an existing
+   republication from the same sender and preserves its list position and total. A late move after removal is ignored.
+   Creating a sharing updates the total and schedules its `PostingSharedJob` in the same transaction.
 2. The job resolves avatar work outside the handler, then completes only a still-existing sharing under the lock.
 3. The added liberin's receptor rechecks existence before creating the instant. Removal captures substory IDs for
    post-commit group rebuilding/deletion. Older added work cannot resurrect an already removed sharing.

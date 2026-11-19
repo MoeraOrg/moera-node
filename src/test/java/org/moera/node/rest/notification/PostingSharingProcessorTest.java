@@ -8,7 +8,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.SharingType;
+import org.moera.lib.node.types.notifications.NotificationType;
 import org.moera.lib.node.types.notifications.PostingSharedNotification;
+import org.moera.lib.node.types.notifications.PostingSharingUpdatedNotification;
 import org.moera.lib.node.types.validate.ValidationFailure;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.data.EntrySharing;
@@ -25,6 +27,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -147,6 +150,30 @@ class PostingSharingProcessorTest {
         assertThrows(ValidationFailure.class, () -> processor.shared(notification));
 
         verifyNoInteractions(jobs, mediaManager, sharingOperations);
+    }
+
+    @Test
+    void sharingUpdateValidatesStoryFieldsAndAcceptsZeroMoment() {
+        var type = NotificationType.forValue("posting-sharing-updated");
+        var notification = new ObjectMapper().readValue("""
+            {"postingId": "original", "remoteFeedName": "timeline", "remoteStoryId": "story", "remotePostingId": "copy"}
+            """, type.getStructure());
+        var update = assertInstanceOf(PostingSharingUpdatedNotification.class, notification);
+        var missingMoment = assertThrows(ValidationFailure.class, update::validate);
+        assertEquals("sharing.remote-story-moment.missing", missingMoment.getErrorCode());
+        update.setRemoteStoryMoment(0L);
+        assertDoesNotThrow(update::validate);
+
+        update.setRemoteStoryId(null);
+        var missingId = assertThrows(ValidationFailure.class, update::validate);
+        assertEquals("sharing.remote-story-id.missing", missingId.getErrorCode());
+        var handlerFailure = assertThrows(ValidationFailure.class, () -> processor.updated(update));
+        assertEquals("sharing.remote-story-id.missing", handlerFailure.getErrorCode());
+
+        update.setRemoteStoryId("story");
+        update.setRemoteFeedName(null);
+        var missingFeed = assertThrows(ValidationFailure.class, update::validate);
+        assertEquals("sharing.remote-feed-name.missing", missingFeed.getErrorCode());
     }
 
     private static PostingSharedNotification notification() {

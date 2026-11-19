@@ -9,14 +9,20 @@ public class StoryUpdatedLiberin extends Liberin {
 
     private UUID storyId;
     private PrincipalFilter previousViewFilter;
+    private Long previousMoment;
 
     public StoryUpdatedLiberin(UUID storyId) {
         this(storyId, null);
     }
 
     public StoryUpdatedLiberin(UUID storyId, PrincipalFilter previousViewFilter) {
+        this(storyId, previousViewFilter, null);
+    }
+
+    public StoryUpdatedLiberin(UUID storyId, PrincipalFilter previousViewFilter, Long previousMoment) {
         this.storyId = storyId;
         this.previousViewFilter = previousViewFilter;
+        this.previousMoment = previousMoment;
     }
 
     public UUID getStoryId() {
@@ -33,6 +39,14 @@ public class StoryUpdatedLiberin extends Liberin {
 
     public void setPreviousViewFilter(PrincipalFilter previousViewFilter) {
         this.previousViewFilter = previousViewFilter;
+    }
+
+    public Long getPreviousMoment() {
+        return previousMoment;
+    }
+
+    public void setPreviousMoment(Long previousMoment) {
+        this.previousMoment = previousMoment;
     }
 
 }

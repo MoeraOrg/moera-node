@@ -158,7 +158,7 @@ public class PostingReceptor extends LiberinReceptorBase {
                 send(
                     Directions.single(
                         liberin.getNodeId(),
-                        posting.getOwnerName(),
+                        posting.getReceiverName(),
                         posting.getViewE().a().andNot(liberin.getLatestViewPrincipal())
                     ),
                     PostingSharedNotificationUtil.buildRepublish(
@@ -173,7 +173,7 @@ public class PostingReceptor extends LiberinReceptorBase {
                 send(
                     Directions.single(
                         liberin.getNodeId(),
-                        posting.getOwnerName(),
+                        posting.getReceiverName(),
                         posting.getViewE().not().and(liberin.getLatestViewPrincipal())
                     ),
                     PostingUnsharedNotificationUtil.build(
@@ -294,7 +294,7 @@ public class PostingReceptor extends LiberinReceptorBase {
                 .toList();
             for (var story : timelineStories) {
                 send(
-                    Directions.single(liberin.getNodeId(), posting.getOwnerName(), story.viewPrincipalFilter()),
+                    Directions.single(liberin.getNodeId(), posting.getReceiverName(), story.viewPrincipalFilter()),
                     PostingUnsharedNotificationUtil.build(
                         SharingType.REPUBLISH,
                         posting.getReceiverEntryId(),

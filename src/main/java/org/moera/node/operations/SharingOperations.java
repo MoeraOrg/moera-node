@@ -9,6 +9,7 @@ import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.SharingsSliceInfo;
 import org.moera.lib.node.types.notifications.PostingSharedNotification;
+import org.moera.lib.node.types.notifications.PostingSharingUpdatedNotification;
 import org.moera.lib.node.types.notifications.PostingUnsharedNotification;
 import org.moera.lib.node.types.validate.ValidationFailure;
 import org.moera.lib.node.types.validate.ValidationUtil;
@@ -85,17 +86,12 @@ public class SharingOperations {
     ) {
         ValidationUtil.notNull(sharingType, "sharing.sharing-type.missing");
         ValidationUtil.notBlank(postingId, "sharing.posting-id.missing");
-        if (postingRevisionId != null) {
-            ValidationUtil.notBlank(postingRevisionId, "sharing.posting-revision-id.missing");
-            if (Util.uuid(postingRevisionId).isEmpty()) {
-                throw new ValidationFailure("sharing.posting-revision-id.invalid");
-            }
-        }
+        parseRevisionId(postingRevisionId);
         boolean hasStory = remoteFeedName != null || remoteStoryId != null || remoteStoryMoment != null;
         if (hasStory) {
-            ValidationUtil.notBlank(remoteFeedName, "sharing.story-reference-incomplete");
-            ValidationUtil.notBlank(remoteStoryId, "sharing.story-reference-incomplete");
-            ValidationUtil.notNull(remoteStoryMoment, "sharing.story-reference-incomplete");
+            ValidationUtil.notBlank(remoteFeedName, "sharing.remote-feed-name.missing");
+            ValidationUtil.notBlank(remoteStoryId, "sharing.remote-story-id.missing");
+            ValidationUtil.notNull(remoteStoryMoment, "sharing.remote-story-moment.missing");
         }
         if (remotePostingId != null) {
             ValidationUtil.notBlank(remotePostingId, "sharing.remote-posting-id.missing");
@@ -103,6 +99,15 @@ public class SharingOperations {
         if (!hasStory && remotePostingId == null) {
             throw new ValidationFailure("sharing.reference-missing");
         }
+    }
+
+    private static UUID parseRevisionId(String postingRevisionId) {
+        if (postingRevisionId == null) {
+            return null;
+        }
+        ValidationUtil.notBlank(postingRevisionId, "sharing.posting-revision-id.missing");
+        return Util.uuid(postingRevisionId)
+            .orElseThrow(() -> new ValidationFailure("sharing.posting-revision-id.invalid"));
     }
 
     private Posting findPosting(String postingId) {
@@ -117,9 +122,7 @@ public class SharingOperations {
 
     public EntrySharing shared(PostingSharedNotification notification) {
         Posting posting = findPosting(notification.getPostingId());
-        UUID revisionId = notification.getPostingRevisionId() != null
-            ? Util.uuid(notification.getPostingRevisionId()).orElseThrow()
-            : null;
+        UUID revisionId = parseRevisionId(notification.getPostingRevisionId());
         EntryRevision revision = revisionId != null
             ? entryRevisionRepository.findByEntryIdAndId(universalContext.nodeId(), posting.getId(), revisionId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting-revision.not-found"))
@@ -181,16 +184,29 @@ public class SharingOperations {
             );
     }
 
+    public void updated(PostingSharingUpdatedNotification notification) {
+        Posting posting = findPosting(notification.getPostingId());
+        List<EntrySharing> sharings = entrySharingRepository.findMatching(
+            posting.getId(),
+            SharingType.REPUBLISH,
+            notification.getSenderNodeName(),
+            parseRevisionId(notification.getPostingRevisionId()),
+            notification.getRemoteStoryId(),
+            notification.getRemotePostingId()
+        );
+        for (EntrySharing sharing : sharings) {
+            sharing.setRemoteFeedName(notification.getRemoteFeedName());
+            sharing.setRemoteStoryMoment(notification.getRemoteStoryMoment());
+        }
+    }
+
     public void unshared(PostingUnsharedNotification notification) {
         Posting posting = findPosting(notification.getPostingId());
-        UUID revisionId = notification.getPostingRevisionId() != null
-            ? Util.uuid(notification.getPostingRevisionId()).orElseThrow()
-            : null;
         List<EntrySharing> sharings = entrySharingRepository.findMatching(
             posting.getId(),
             notification.getSharingType(),
             notification.getSenderNodeName(),
-            revisionId,
+            parseRevisionId(notification.getPostingRevisionId()),
             notification.getRemoteStoryId(),
             notification.getRemotePostingId()
         );

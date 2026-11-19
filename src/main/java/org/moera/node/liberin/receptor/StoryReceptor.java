@@ -26,6 +26,7 @@ import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.model.notification.PostingSharedNotificationUtil;
+import org.moera.node.model.notification.PostingSharingUpdatedNotificationUtil;
 import org.moera.node.model.notification.PostingUnsharedNotificationUtil;
 import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.model.notification.StoryAddedNotificationUtil;
@@ -69,31 +70,35 @@ public class StoryReceptor extends LiberinReceptorBase {
                 StoryAddedNotificationUtil.build(story)
             );
         }
-        if (
-            story.getStoryType() == StoryType.POSTING_ADDED
-            && Feed.TIMELINE.equals(story.getFeedName())
-            && story.getEntry() != null
-        ) {
+        if (isTimelinePosting(story)) {
             favorOperations.addFavor(liberin.getNodeId(), story.getEntry().getOwnerName(), FavorType.PUBLICATION);
             if (!story.getEntry().isOriginal()) {
-                send(
-                    Directions.single(
-                        liberin.getNodeId(), story.getEntry().getOwnerName(), story.viewPrincipalFilter()
-                    ),
-                    PostingSharedNotificationUtil.buildRepublish(
-                        story.getEntry().getReceiverEntryId(),
-                        null,
-                        story.getFeedName(),
-                        story.getId(),
-                        story.getMoment(),
-                        story.getEntry().getId()
-                    )
-                );
+                notifyRepublished(liberin.getNodeId(), story, story.viewPrincipalFilter());
             }
         }
 
         push(story);
         feedStatusUpdated(story.getFeedName());
+    }
+
+    private static boolean isTimelinePosting(Story story) {
+        return story.getStoryType() == StoryType.POSTING_ADDED
+            && Feed.TIMELINE.equals(story.getFeedName())
+            && story.getEntry() != null;
+    }
+
+    private void notifyRepublished(UUID nodeId, Story story, PrincipalFilter filter) {
+        send(
+            Directions.single(nodeId, story.getEntry().getReceiverName(), filter),
+            PostingSharedNotificationUtil.buildRepublish(
+                story.getEntry().getReceiverEntryId(),
+                null,
+                story.getFeedName(),
+                story.getId(),
+                story.getMoment(),
+                story.getEntry().getId()
+            )
+        );
     }
 
     private boolean isNotifyWhenPublished(Story story) {
@@ -115,10 +120,23 @@ public class StoryReceptor extends LiberinReceptorBase {
         }
 
         if (!Feed.isAdmin(story.getFeedName())) {
+            PrincipalFilter retainedView = story.viewPrincipalFilter();
             StoryUpdatedEvent updatedEvent = new StoryUpdatedEvent(story, false, directServeOperations);
             if (liberin.getPreviousViewFilter() != null) {
-                updatedEvent.setFilter(updatedEvent.getFilter().a().and(liberin.getPreviousViewFilter().a()));
+                retainedView = retainedView.a().and(liberin.getPreviousViewFilter().a());
+                updatedEvent.setFilter(retainedView.a().andNot(Principal.ADMIN));
                 visibilityUpdated(liberin, story);
+            }
+            if (
+                liberin.getPreviousMoment() != null
+                && !liberin.getPreviousMoment().equals(story.getMoment())
+                && isTimelinePosting(story)
+                && !story.getEntry().isOriginal()
+            ) {
+                send(
+                    Directions.single(liberin.getNodeId(), story.getEntry().getReceiverName(), retainedView),
+                    PostingSharingUpdatedNotificationUtil.build(story)
+                );
             }
             send(liberin, updatedEvent);
         }
@@ -138,11 +156,12 @@ public class StoryReceptor extends LiberinReceptorBase {
         addedEvent.setFilter(addedFilter.a().andNot(Principal.ADMIN));
         send(liberin, addedEvent);
         StoryDeletedLiberin deletion = new StoryDeletedLiberin(story);
+        long previousMoment = Objects.requireNonNullElse(liberin.getPreviousMoment(), deletion.getMoment());
         send(liberin, new StoryDeletedEvent(
             deletion.getId().toString(),
             deletion.getStoryType(),
             deletion.getFeedName(),
-            deletion.getMoment(),
+            previousMoment,
             Objects.toString(deletion.getPostingId(), null),
             Objects.toString(deletion.getCommentId(), null),
             false,
@@ -172,26 +191,16 @@ public class StoryReceptor extends LiberinReceptorBase {
                 )
             );
             if (Feed.TIMELINE.equals(story.getFeedName()) && !story.getEntry().isOriginal()) {
+                notifyRepublished(liberin.getNodeId(), story, addedFilter);
                 send(
-                    Directions.single(liberin.getNodeId(), story.getEntry().getOwnerName(), addedFilter),
-                    PostingSharedNotificationUtil.buildRepublish(
-                        story.getEntry().getReceiverEntryId(),
-                        null,
-                        story.getFeedName(),
-                        story.getId(),
-                        story.getMoment(),
-                        story.getEntry().getId()
-                    )
-                );
-                send(
-                    Directions.single(liberin.getNodeId(), story.getEntry().getOwnerName(), deletedFilter),
+                    Directions.single(liberin.getNodeId(), story.getEntry().getReceiverName(), deletedFilter),
                     PostingUnsharedNotificationUtil.build(
                         SharingType.REPUBLISH,
                         story.getEntry().getReceiverEntryId(),
                         null,
                         story.getFeedName(),
                         story.getId(),
-                        story.getMoment(),
+                        previousMoment,
                         story.getEntry().getId()
                     )
                 );
@@ -249,7 +258,7 @@ public class StoryReceptor extends LiberinReceptorBase {
             favorOperations.addFavor(liberin.getNodeId(), liberin.getPostingOwnerName(), FavorType.UNPUBLICATION);
             if (liberin.getReceiverName() != null) {
                 send(
-                    Directions.single(liberin.getNodeId(), liberin.getPostingOwnerName(), liberin.getViewFilter()),
+                    Directions.single(liberin.getNodeId(), liberin.getReceiverName(), liberin.getViewFilter()),
                     PostingUnsharedNotificationUtil.build(
                         SharingType.REPUBLISH,
                         liberin.getReceiverPostingId(),

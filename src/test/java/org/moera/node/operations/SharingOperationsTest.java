@@ -1,10 +1,13 @@
 package org.moera.node.operations;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.moera.lib.node.types.SharingType;
 import org.moera.lib.node.types.validate.ValidationFailure;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class SharingOperationsTest {
@@ -16,12 +19,17 @@ class SharingOperationsTest {
         assertDoesNotThrow(() -> validate("timeline", "story", 0L, "posting"));
     }
 
-    @Test
-    void requiresACompleteStoryEvenWhenPostingIsProvided() {
-        assertThrows(ValidationFailure.class, () -> validate("timeline", null, 1L, "posting"));
-        assertThrows(ValidationFailure.class, () -> validate(null, "story", 1L, "posting"));
-        assertThrows(ValidationFailure.class, () -> validate("timeline", "story", null, "posting"));
-        assertThrows(ValidationFailure.class, () -> validate("", "story", 1L, "posting"));
+    @ParameterizedTest
+    @CsvSource({
+        "timeline, , 1, sharing.remote-story-id.missing",
+        "timeline, '', 1, sharing.remote-story-id.missing",
+        ", story, 1, sharing.remote-feed-name.missing",
+        "'', story, 1, sharing.remote-feed-name.missing",
+        "timeline, story, , sharing.remote-story-moment.missing"
+    })
+    void requiresACompleteStoryEvenWhenPostingIsProvided(String feed, String story, Long moment, String errorCode) {
+        var failure = assertThrows(ValidationFailure.class, () -> validate(feed, story, moment, "posting"));
+        assertEquals(errorCode, failure.getErrorCode());
     }
 
     @Test

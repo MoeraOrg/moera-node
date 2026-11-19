@@ -25,7 +25,9 @@ import org.moera.lib.node.types.SharingInfo;
 import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.lib.node.types.StoryType;
+import org.moera.lib.node.types.notifications.NotificationType;
 import org.moera.lib.node.types.notifications.PostingSharedNotification;
+import org.moera.lib.node.types.notifications.PostingSharingUpdatedNotification;
 import org.moera.lib.node.types.notifications.PostingUnsharedNotification;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.instant.PostingSharingInstants;
@@ -40,6 +42,8 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.model.StorySummaryEntryUtil;
+import org.moera.node.notification.receive.NotificationProcessor;
+import org.moera.node.notification.receive.NotificationRouter;
 import org.moera.node.operations.SharingOperations;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.notification.PostingSharingProcessor;
@@ -49,6 +53,7 @@ import org.moera.node.option.Options;
 import org.moera.node.util.SafeInteger;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -68,6 +73,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /** Applies all migrations to an isolated PostgreSQL database supplied by moera.test.database. */
 @EnabledIfSystemProperty(named = "moera.test.database", matches = ".+")
@@ -77,6 +83,7 @@ class EntrySharingIT {
     private static EntityManagerFactory factory;
 
     private EntityManager entityManager;
+    private final Transaction tx = new Transaction();
     private TransactionTemplate transaction;
     private EntrySharingRepository sharings;
     private PostingRepository postings;
@@ -115,7 +122,8 @@ class EntrySharingIT {
     @BeforeEach
     void setUp() {
         entityManager = SharedEntityManagerCreator.createSharedEntityManager(factory);
-        transaction = new TransactionTemplate(new JpaTransactionManager(factory));
+        JpaTransactionManager txManager = new JpaTransactionManager(factory);
+        transaction = new TransactionTemplate(txManager);
         JpaRepositoryFactory repositories = new JpaRepositoryFactory(entityManager);
         sharings = repositories.getRepository(EntrySharingRepository.class);
         postings = repositories.getRepository(PostingRepository.class);
@@ -124,6 +132,8 @@ class EntrySharingIT {
         postingId = UUID.randomUUID();
         revisionId = UUID.randomUUID();
         context = mock(UniversalContext.class);
+        ReflectionTestUtils.setField(tx, "txManager", txManager);
+        ReflectionTestUtils.setField(tx, "universalContext", context);
         when(context.nodeId()).thenReturn(nodeId);
         when(context.nodeName()).thenReturn("local");
         when(context.getOptions()).thenReturn(mock(Options.class));
@@ -168,17 +178,61 @@ class EntrySharingIT {
     }
 
     @Test
-    void storyIdentityIgnoresFeedAndMomentForRetriesAndUnsharing() {
-        add(shared("alice", null, "timeline", "story", 12L, "copy"));
-        add(shared("alice", null, "news", "story", 99L, "copy"));
-        transaction.executeWithoutResult(status -> assertEquals(1, sharings.countByEntryId(postingId)));
-        transaction.executeWithoutResult(status ->
-            operations.unshared(unshared("alice", null, "news", "story", 200L, "copy"))
+    void sharingUpdateAffectsOnlyTheMatchingRepublishAndCannotRecreateIt() throws ReflectiveOperationException {
+        var original = shared("alice", null, "timeline", "story", 12L, "copy");
+        add(original);
+        SharingInfo initial = transaction.execute(status ->
+            operations.getBefore(postingId, SafeInteger.MAX_VALUE, 1).getSharings().getFirst()
         );
+        add(shared("bob", null, "timeline", "story", 11L, "copy"));
+        add(shared(SharingType.REFER, "alice", null, "timeline", "story", 10L, "copy"));
+        add(shared("alice", revisionId.toString(), "timeline", "story", 8L, "copy"));
+        List<Liberin> liberins = new ArrayList<>();
+        captureLiberins(liberins);
+        var update = new PostingSharingUpdatedNotification();
+        update.setSenderNodeName("alice");
+        update.setPostingId(postingId.toString());
+        update.setRemoteFeedName("news");
+        update.setRemoteStoryId("story");
+        update.setRemoteStoryMoment(9L);
+        update.setRemotePostingId("copy");
+        Jobs jobs = mock(Jobs.class);
+        PostingSharingProcessor processor = processor(jobs);
+        ApplicationContext application = mock(ApplicationContext.class);
+        when(application.getBeansWithAnnotation(NotificationProcessor.class)).thenReturn(Map.of("sharing", processor));
+        NotificationRouter router = new NotificationRouter();
+        ReflectionTestUtils.setField(router, "applicationContext", application);
+        router.init();
+        var handler = router.getHandler(NotificationType.POSTING_SHARING_UPDATED);
+        assertNotNull(handler);
+
+        handler.getMethod().invoke(handler.getBean(), update);
+        handler.getMethod().invoke(handler.getBean(), update);
+        add(original);
         transaction.executeWithoutResult(status -> {
-            assertEquals(0, sharings.countByEntryId(postingId));
-            assertEquals(0, postings.findByNodeIdAndId(nodeId, postingId).orElseThrow().getTotalSharings());
+            var list = operations.getBefore(postingId, SafeInteger.MAX_VALUE, 10).getSharings();
+            assertEquals(4, list.size());
+            SharingInfo updated = list.stream()
+                .filter(s -> s.getId().equals(initial.getId()))
+                .findFirst().orElseThrow();
+            assertEquals(initial.getMoment(), updated.getMoment());
+            assertEquals("news", updated.getRemoteFeedName());
+            assertEquals(9L, updated.getRemoteStoryMoment());
+            assertEquals(4, postings.findByNodeIdAndId(nodeId, postingId).orElseThrow().getTotalSharings());
         });
+        assertTrue(liberins.isEmpty());
+        processor.unshared(unshared("alice", null, "news", "story", 200L, "copy"));
+        liberins.clear();
+        handler.getMethod().invoke(handler.getBean(), update);
+        transaction.executeWithoutResult(status -> {
+            List<EntrySharing> remaining = sharings.findByEntryId(postingId);
+            assertEquals(
+                List.of(8L, 10L, 11L), remaining.stream().map(EntrySharing::getRemoteStoryMoment).sorted().toList()
+            );
+            assertEquals(3, postings.findByNodeIdAndId(nodeId, postingId).orElseThrow().getTotalSharings());
+        });
+        assertTrue(liberins.isEmpty());
+        verifyNoInteractions(jobs);
     }
 
     @Test
@@ -493,14 +547,7 @@ class EntrySharingIT {
             scheduled.add(invocation.getArgument(1));
             return UUID.randomUUID();
         }).when(jobs).runAfterCommit(any(), any(), any());
-        Transaction tx = new Transaction();
-        ReflectionTestUtils.setField(tx, "txManager", new JpaTransactionManager(factory));
-        ReflectionTestUtils.setField(tx, "universalContext", context);
-        PostingSharingProcessor processor = new PostingSharingProcessor();
-        ReflectionTestUtils.setField(processor, "universalContext", context);
-        ReflectionTestUtils.setField(processor, "jobs", jobs);
-        ReflectionTestUtils.setField(processor, "sharingOperations", operations);
-        ReflectionTestUtils.setField(processor, "tx", tx);
+        PostingSharingProcessor processor = processor(jobs);
         PostingSharedNotification notification = shared("alice", null, "timeline", "story", 12L, "copy");
         AvatarImage avatar = new AvatarImage();
         avatar.setMediaId("avatar");
@@ -647,6 +694,15 @@ class EntrySharingIT {
             assertEquals(2, groups.size());
             assertEquals(2, groups.getFirst().getSummaryData().getTotalSharings());
         });
+    }
+
+    private PostingSharingProcessor processor(Jobs jobs) {
+        PostingSharingProcessor processor = new PostingSharingProcessor();
+        ReflectionTestUtils.setField(processor, "universalContext", context);
+        ReflectionTestUtils.setField(processor, "jobs", jobs);
+        ReflectionTestUtils.setField(processor, "sharingOperations", operations);
+        ReflectionTestUtils.setField(processor, "tx", tx);
+        return processor;
     }
 
     private void add(PostingSharedNotification notification) {
