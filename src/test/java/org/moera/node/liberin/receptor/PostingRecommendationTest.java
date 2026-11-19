@@ -4,6 +4,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Posting;
@@ -12,14 +14,12 @@ import org.moera.node.event.EventManager;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.PostingRecommendationUpdatedLiberin;
 import org.moera.node.model.event.Event;
-import org.moera.node.model.event.EventType;
-import org.moera.node.model.event.PostingUpdatedEvent;
 import org.moera.node.operations.PostingOperations;
 import org.springframework.test.util.ReflectionTestUtils;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -29,11 +29,9 @@ import static org.mockito.Mockito.when;
 class PostingRecommendationTest {
 
     @Test
-    void clearingRecommendationEmitsPostingUpdatedEventWithVisibility() {
+    void clearingRecommendationSignalsTheAffectedPosting() {
         Posting posting = new Posting();
-        posting.setNodeId(UUID.randomUUID());
         posting.setId(UUID.randomUUID());
-        posting.setViewPrincipal(Principal.ADMIN);
         posting.setRecommended(true);
         UniversalContext context = mock(UniversalContext.class);
         PostingOperations operations = new PostingOperations();
@@ -45,10 +43,20 @@ class PostingRecommendationTest {
         ArgumentCaptor<PostingRecommendationUpdatedLiberin> liberins =
             ArgumentCaptor.forClass(PostingRecommendationUpdatedLiberin.class);
         verify(context).send(liberins.capture());
-        PostingRecommendationUpdatedLiberin liberin = liberins.getValue();
+        assertEquals(posting.getId(), liberins.getValue().getPostingId());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void recommendationEventCarriesCurrentFlagAndVisibility(boolean recommended) {
+        Posting posting = new Posting();
+        posting.setNodeId(UUID.randomUUID());
+        posting.setId(UUID.randomUUID());
+        posting.setViewPrincipal(Principal.ADMIN);
+        posting.setRecommended(recommended);
+        PostingRecommendationUpdatedLiberin liberin = new PostingRecommendationUpdatedLiberin(posting.getId());
         liberin.setNodeId(posting.getNodeId());
         liberin.setClientId("client");
-        assertEquals(posting.getId(), liberin.getPostingId());
         PostingRepository repository = mock(PostingRepository.class);
         when(repository.findByNodeIdAndId(posting.getNodeId(), posting.getId())).thenReturn(Optional.of(posting));
         EventManager events = mock(EventManager.class);
@@ -60,10 +68,13 @@ class PostingRecommendationTest {
 
         ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
         verify(events).send(eq(posting.getNodeId()), eq("client"), captor.capture());
-        PostingUpdatedEvent event = assertInstanceOf(PostingUpdatedEvent.class, captor.getValue());
-        assertEquals(EventType.POSTING_UPDATED, event.getType());
-        assertEquals(posting.getId().toString(), event.getId());
+        Event event = captor.getValue().copy();
         assertEquals(Principal.ADMIN, event.getFilter());
+        ObjectMapper mapper = new ObjectMapper();
+        var payload = mapper.valueToTree(event);
+        assertEquals("POSTING_RECOMMENDATION_UPDATED", payload.path("type").asString());
+        assertEquals(posting.getId().toString(), payload.path("id").asString());
+        assertEquals(mapper.valueToTree(recommended), payload.get("recommended"));
     }
 
     @Test

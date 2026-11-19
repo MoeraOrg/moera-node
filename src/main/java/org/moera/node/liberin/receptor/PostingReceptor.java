@@ -49,6 +49,7 @@ import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.event.PostingAddedEvent;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.event.PostingDeletedEvent;
+import org.moera.node.model.event.PostingRecommendationUpdatedEvent;
 import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
 import org.moera.node.model.event.PostingViewedEvent;
@@ -561,7 +562,7 @@ public class PostingReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void recommendationUpdated(PostingRecommendationUpdatedLiberin liberin) {
         postingRepository.findByNodeIdAndId(liberin.getNodeId(), liberin.getPostingId())
-            .ifPresent(posting -> send(liberin, new PostingUpdatedEvent(posting, posting.getViewE())));
+            .ifPresent(posting -> send(liberin, new PostingRecommendationUpdatedEvent(posting)));
     }
 
     @LiberinMapping
