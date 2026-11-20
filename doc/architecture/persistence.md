@@ -56,10 +56,16 @@ and [V313](../../src/main/resources/db/migration/V313__entry_sharings.sql).
 
 ## Relationships and snapshots
 
-`Subscription` records this node's interest in a peer; `Subscriber` records a peer's interest here. Friend groups and
-grants add authorization relationships. `OwnPosting`, `OwnComment`, and `OwnReaction` retain knowledge of actions
-stored remotely. Contacts cache profile/relationship summaries; favors represent decaying interaction signals used for
-contact distance. Blocking, sheriff orders, complaints, and malware lists remain separate policy state.
+A feed `UserSubscription` connects a remote feed to one local destination. The database enforces uniqueness per hosted
+node, remote feed and destination. Creating or removing a feed subscription updates the contact's subscription count
+in the same transaction. Multiple destinations share one active `Subscription` for the remote feed. PostgreSQL counts
+its local references so that removing one destination preserves delivery to the others. A `Subscriber` records a
+peer's interest here.
+[Subscription schema](../../src/main/resources/db/migration/V331__feed_subscription_identity.sql)
+
+Friend groups and grants add authorization relationships. `OwnPosting`, `OwnComment`, and `OwnReaction` retain knowledge
+of actions stored remotely. Contacts cache profile and relationship summaries. Favors represent decaying interaction
+signals used for contact distance. Blocking, sheriff orders, complaints, and malware lists remain separate policy state.
 
 Historical profile snapshots belong to the stored object: full name and source URI are captured together, and a later
 contact refresh does not rewrite old content. Source URI is opaque identity metadata, distinct from external source

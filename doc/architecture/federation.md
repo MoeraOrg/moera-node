@@ -31,9 +31,9 @@ scheduling, transient liberins, and the gaps that remain. Lost replies can cause
 
 ## Subscriptions and picking
 
-`SubscriptionManager` repairs pending remote registrations through `SubscriptionTask`; visibility-setting changes update
-existing registrations. Record ownership is defined in
-[persistence](persistence.md#relationships-and-snapshots).
+`SubscriptionManager` uses the [local reference count](persistence.md#relationships-and-snapshots) to establish
+pending remote registrations and close registrations after their last reference disappears. Visibility-setting changes
+update existing registrations.
 Feed seeding excludes this node's originals, duplicate original identities, and publications already in the destination
 feed; a cached posting without that publication remains eligible.
 

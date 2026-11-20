@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.moera.lib.node.types.SubscriptionType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
@@ -73,5 +74,18 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
     int countByTypeAndNodeAndFeedName(
         UUID nodeId, SubscriptionType subscriptionType, String remoteNodeName, String remoteFeedName
     );
+
+    // Authorization fetched the subscription and its contact before acquiring the contact lock.
+    // Discard that snapshot so the subsequent count update reads the latest committed value.
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("delete from UserSubscription s where s.nodeId = ?1 and s.id = ?2 and s.subscriptionType = FEED")
+    int deleteFeedById(UUID nodeId, UUID id);
+
+    @Modifying
+    @Query(
+        "delete from UserSubscription s where s.nodeId = ?1 and s.subscriptionType = FEED and s.remoteNodeName = ?2"
+        + " and coalesce(s.remoteFeedName, '') = coalesce(?3, '')"
+    )
+    int deleteFeedsBySource(UUID nodeId, String remoteNodeName, String remoteFeedName);
 
 }

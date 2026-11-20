@@ -219,9 +219,10 @@ public class SubscriptionController {
         if (!requestContext.isPrincipal(subscription.getDeleteE(requestContext.getOptions()), Scope.SUBSCRIBE)) {
             throw new AuthenticationException();
         }
-        userSubscriptionRepository.delete(subscription);
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
-            contactOperations.updateFeedSubscriptionCount(subscription.getRemoteNodeName(), -1).fill(subscription);
+            subscriptionOperations.deleteFeedSubscription(subscription);
+        } else {
+            userSubscriptionRepository.delete(subscription);
         }
 
         requestContext.subscriptionsUpdated();

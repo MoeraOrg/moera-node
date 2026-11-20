@@ -30,6 +30,10 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
     @Modifying
     void updateRetryAtById(UUID id, Timestamp retryAt);
 
+    @Modifying
+    @Query("update Subscription s set s.retryAt = ?2 where s.id = ?1 and s.usageCount > 0")
+    int updateRetryAtIfUsed(UUID id, Timestamp retryAt);
+
     @Query("update Subscription s"
             + " set s.status = org.moera.node.data.SubscriptionStatus.ESTABLISHED, s.remoteSubscriberId = ?2"
             + " where s.id = ?1")

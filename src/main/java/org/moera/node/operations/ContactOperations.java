@@ -21,6 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.util.Assert;
 
 @Component
 public class ContactOperations {
@@ -50,6 +53,29 @@ public class ContactOperations {
     private record ContactKey(UUID nodeId, String remoteNodeName) {
     }
 
+    void lockForTransaction(UUID nodeId, String remoteNodeName) {
+        Assert.state(TransactionSynchronizationManager.isSynchronizationActive(), "A contact transaction is required");
+        var held = lock.lock(new ContactKey(nodeId, remoteNodeName));
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                held.close();
+            }
+        });
+    }
+
+    Contact findOrCreate(UUID nodeId, String remoteNodeName) {
+        Contact contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName).orElse(null);
+        if (contact == null) {
+            contact = new Contact();
+            contact.setId(UUID.randomUUID());
+            contact.setNodeId(nodeId);
+            contact.setRemoteNodeName(remoteNodeName);
+            contact = contactRepository.save(contact);
+        }
+        return contact;
+    }
+
     private Contact updateAtomically(UUID nodeId, String remoteNodeName, Consumer<Contact> updater) {
         if (remoteNodeName == null) {
             return null;
@@ -57,14 +83,7 @@ public class ContactOperations {
 
         try (var ignored = lock.lock(new ContactKey(nodeId, remoteNodeName))) {
             return tx.executeWrite(() -> {
-                Contact contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName).orElse(null);
-                if (contact == null) {
-                    contact = new Contact();
-                    contact.setId(UUID.randomUUID());
-                    contact.setNodeId(nodeId);
-                    contact.setRemoteNodeName(remoteNodeName);
-                    contact = contactRepository.save(contact);
-                }
+                Contact contact = findOrCreate(nodeId, remoteNodeName);
                 updater.accept(contact);
                 return contact;
             });
@@ -86,14 +105,6 @@ public class ContactOperations {
             universalContext.nodeId(),
             remoteNodeName,
             contact -> contact.setDistance(distance)
-        );
-    }
-
-    public Contact updateFeedSubscriptionCount(String remoteNodeName, int delta) {
-        return updateAtomically(
-            universalContext.nodeId(),
-            remoteNodeName,
-            contact -> contact.setFeedSubscriptionCount(Math.max(contact.getFeedSubscriptionCount() + delta, 0))
         );
     }
 

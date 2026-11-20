@@ -23,7 +23,6 @@ import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Transaction;
-import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -172,11 +171,7 @@ public class SubscriptionManager {
         } else {
             log.info("Subscription {} cannot be established", subscription.getId());
             tx.executeWriteQuietly(
-                () -> {
-                    subscriptionRepository.updateRetryAtById(subscription.getId(), Util.farFuture());
-                    subscriptionOperations.deleteParents(subscription);
-                    // The subscription itself becomes a pending unused subscription and will be removed by trigger
-                },
+                () -> subscriptionOperations.abandon(subscription),
                 e -> log.error("Error deleting hopeless subscription", e)
             );
         }
@@ -190,9 +185,7 @@ public class SubscriptionManager {
         }
         tx.executeWriteQuietly(
             () -> {
-                subscriptionRepository.updateRetryAtById(subscription.getId(), Util.farFuture());
-                subscriptionOperations.deleteParents(subscription);
-                // The subscription itself becomes a pending unused subscription and will be removed by trigger
+                subscriptionOperations.abandon(subscription);
                 if (subscription.getSubscriptionType() == SubscriptionType.POSTING) {
                     deletePickedPosting(subscription);
                 }

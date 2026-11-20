@@ -5,6 +5,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import jakarta.inject.Inject;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.moera.lib.node.types.SubscriptionReason;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.SubscriptionType;
@@ -15,15 +16,18 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.Subscription;
+import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.UserSubscription;
 import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.SubscriptionAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.rest.task.RemoteFeedFetchJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.Transaction;
+import org.moera.node.util.Util;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
@@ -34,6 +38,9 @@ public class SubscriptionOperations {
 
     @Inject
     private UniversalContext universalContext;
+
+    @Inject
+    private SubscriptionRepository subscriptionRepository;
 
     @Inject
     private UserSubscriptionRepository userSubscriptionRepository;
@@ -61,32 +68,20 @@ public class SubscriptionOperations {
     private Jobs jobs;
 
     public UserSubscription subscribe(Consumer<UserSubscription> toUserSubscription) {
-        UserSubscription subscription;
-        try {
-            subscription = tx.executeWrite(() -> {
-                UserSubscription userSubscription = new UserSubscription();
-                userSubscription.setId(UUID.randomUUID());
-                userSubscription.setNodeId(universalContext.nodeId());
-                if (toUserSubscription != null) {
-                    toUserSubscription.accept(userSubscription);
-                }
-                userSubscription = userSubscriptionRepository.save(userSubscription);
-
-                Contact contact;
-                if (userSubscription.getSubscriptionType() == SubscriptionType.FEED) {
-                    contactOperations.updateFeedSubscriptionCount(userSubscription.getRemoteNodeName(), 1);
-                    contact = contactOperations.updateViewPrincipal(userSubscription);
-                    unsetRecommendedPostings(userSubscription);
-                } else {
-                    contact = contactOperations.find(userSubscription.getRemoteNodeName());
-                }
-                contact.fill(userSubscription);
-
-                return userSubscription;
-            });
-        } catch (DataIntegrityViolationException e) {
-            throw new OperationFailure("subscription.already-exists");
-        }
+        UserSubscription subscription = tx.executeWrite(() -> {
+            UserSubscription draft = new UserSubscription();
+            draft.setId(UUID.randomUUID());
+            draft.setNodeId(universalContext.nodeId());
+            if (toUserSubscription != null) {
+                toUserSubscription.accept(draft);
+            }
+            if (draft.getSubscriptionType() == SubscriptionType.FEED) {
+                return createFeedSubscription(draft);
+            }
+            UserSubscription saved = userSubscriptionRepository.save(draft);
+            contactOperations.find(saved.getRemoteNodeName()).fill(saved);
+            return saved;
+        });
 
         universalContext.subscriptionsUpdated();
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
@@ -109,6 +104,33 @@ public class SubscriptionOperations {
                 universalContext.nodeId()
             );
         }
+
+        return subscription;
+    }
+
+    private UserSubscription createFeedSubscription(UserSubscription draft) {
+        contactOperations.lockForTransaction(draft.getNodeId(), draft.getRemoteNodeName());
+        draft.setRemoteEntryId(null);
+
+        UserSubscription subscription;
+        try {
+            subscription = userSubscriptionRepository.saveAndFlush(draft);
+        } catch (DataIntegrityViolationException e) {
+            if (
+                e.getCause() instanceof ConstraintViolationException violation
+                && "user_subscriptions_feed_identity_idx".equals(violation.getConstraintName())
+            ) {
+                throw new OperationFailure("subscription.already-exists");
+            }
+            throw e;
+        }
+
+        // Both inserts update the same PROFILE registration through PostgreSQL triggers.
+        Contact contact = contactOperations.findOrCreate(subscription.getNodeId(), subscription.getRemoteNodeName());
+        contact.setFeedSubscriptionCount(contact.getFeedSubscriptionCount() + 1);
+        subscription.toContactViewPrincipal(contact);
+        contact.fill(subscription);
+        unsetRecommendedPostings(subscription);
 
         return subscription;
     }
@@ -143,13 +165,19 @@ public class SubscriptionOperations {
         if (count > 0) {
             return;
         }
-        subscribe(subscription -> {
-            subscription.setSubscriptionType(SubscriptionType.FEED);
-            subscription.setFeedName(Feed.NEWS);
-            subscription.setRemoteNodeName(remoteNodeName);
-            subscription.setRemoteFeedName(Feed.TIMELINE);
-            subscription.setReason(SubscriptionReason.AUTO);
-        });
+        try {
+            subscribe(subscription -> {
+                subscription.setSubscriptionType(SubscriptionType.FEED);
+                subscription.setFeedName(Feed.NEWS);
+                subscription.setRemoteNodeName(remoteNodeName);
+                subscription.setRemoteFeedName(Feed.TIMELINE);
+                subscription.setReason(SubscriptionReason.AUTO);
+            });
+        } catch (OperationFailure e) {
+            if (!"subscription.already-exists".equals(e.getErrorCode())) {
+                throw e;
+            }
+        }
     }
 
     public void subscribeToPostingComments(String nodeName, String entryId, SubscriptionReason reason) {
@@ -176,36 +204,59 @@ public class SubscriptionOperations {
         universalContext.subscriptionsUpdated();
     }
 
-    public void deleteParents(Subscription subscription) {
-        List<UserSubscription> userSubscriptions = null;
-        switch (subscription.getSubscriptionType()) {
-            case FEED:
-                userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
-                    universalContext.nodeId(), subscription.getSubscriptionType(), subscription.getRemoteNodeName(),
-                    subscription.getRemoteFeedName()
-                );
-                contactOperations.updateFeedSubscriptionCount(subscription.getRemoteNodeName(), -1);
-                break;
-            case POSTING:
-            case POSTING_COMMENTS:
-                userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndEntryId(
-                    universalContext.nodeId(), subscription.getSubscriptionType(), subscription.getRemoteNodeName(),
-                    subscription.getRemoteEntryId()
-                );
-                break;
-            case PROFILE:
-            case SEARCH:
-                userSubscriptions = userSubscriptionRepository.findAllByType(
-                    universalContext.nodeId(), subscription.getSubscriptionType()
-                );
-                break;
-            case USER_LIST:
-                userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
-                    universalContext.nodeId(), subscription.getSubscriptionType(), subscription.getRemoteNodeName(),
-                    subscription.getRemoteFeedName()
-                );
-                break;
+    public void deleteFeedSubscription(UserSubscription subscription) {
+        UUID nodeId = subscription.getNodeId();
+        String remoteNodeName = subscription.getRemoteNodeName();
+        contactOperations.lockForTransaction(nodeId, remoteNodeName);
+        if (userSubscriptionRepository.deleteFeedById(nodeId, subscription.getId()) == 0) {
+            throw new ObjectNotFoundFailure("subscription.not-found");
         }
+        decrementFeedSubscriptionCount(nodeId, remoteNodeName, 1).fill(subscription);
+    }
+
+    private Contact decrementFeedSubscriptionCount(UUID nodeId, String remoteNodeName, int removed) {
+        Contact contact = contactOperations.findOrCreate(nodeId, remoteNodeName);
+        contact.setFeedSubscriptionCount(Math.max(contact.getFeedSubscriptionCount() - removed, 0));
+        return contact;
+    }
+
+    public void abandon(Subscription subscription) {
+        if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
+            UUID nodeId = subscription.getNodeId();
+            String remoteNodeName = subscription.getRemoteNodeName();
+            contactOperations.lockForTransaction(nodeId, remoteNodeName);
+            if (subscriptionRepository.updateRetryAtIfUsed(subscription.getId(), Util.farFuture()) == 0) {
+                return;
+            }
+            int removed = userSubscriptionRepository.deleteFeedsBySource(
+                nodeId, remoteNodeName, subscription.getRemoteFeedName()
+            );
+            if (removed > 0) {
+                decrementFeedSubscriptionCount(nodeId, remoteNodeName, removed);
+            }
+            return;
+        }
+
+        subscriptionRepository.updateRetryAtById(subscription.getId(), Util.farFuture());
+        List<UserSubscription> userSubscriptions = switch (subscription.getSubscriptionType()) {
+            case POSTING, POSTING_COMMENTS -> userSubscriptionRepository.findAllByTypeAndNodeAndEntryId(
+                universalContext.nodeId(),
+                subscription.getSubscriptionType(),
+                subscription.getRemoteNodeName(),
+                subscription.getRemoteEntryId()
+            );
+            case PROFILE, SEARCH -> userSubscriptionRepository.findAllByType(
+                universalContext.nodeId(),
+                subscription.getSubscriptionType()
+            );
+            case USER_LIST -> userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
+                universalContext.nodeId(),
+                subscription.getSubscriptionType(),
+                subscription.getRemoteNodeName(),
+                subscription.getRemoteFeedName()
+            );
+            default -> null;
+        };
         if (userSubscriptions != null) {
             userSubscriptionRepository.deleteAll(userSubscriptions);
         }
