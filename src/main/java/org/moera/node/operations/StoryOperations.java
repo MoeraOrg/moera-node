@@ -222,7 +222,15 @@ public class StoryOperations {
     }
 
     public void unpublish(UUID entryId) {
-        storyRepository.findByEntryId(universalContext.nodeId(), entryId).stream()
+        unpublishStories(storyRepository.findByEntryId(universalContext.nodeId(), entryId));
+    }
+
+    public void unpublish(Collection<UUID> entryIds) {
+        unpublishStories(storyRepository.findByEntryIds(universalContext.nodeId(), entryIds));
+    }
+
+    private void unpublishStories(Collection<Story> stories) {
+        stories.stream()
             .filter(story -> story.getFeedName() != null)
             .peek(story -> universalContext.send(new StoryDeletedLiberin(story, true)))
             .forEach(storyRepository::delete);

@@ -57,10 +57,11 @@ public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment
 
     @Query(
         "select distinct mfo from EntryAttachment ea join ea.entryRevision r"
-        + " join ea.mediaFileOwner mfo left join fetch mfo.postings p left join fetch p.currentRevision"
-        + " where r.entry.id = ?1"
+        + " join ea.mediaFileOwner mfo left join fetch mfo.mediaFile"
+        + " left join fetch mfo.postings p left join fetch p.currentRevision"
+        + " where r.entry.id in ?1"
     )
-    Set<MediaFileOwner> findMediaByEntry(UUID entryId);
+    Set<MediaFileOwner> findMediaByEntries(Collection<UUID> entryIds);
 
     @Query(
         "select distinct mfo from EntryAttachment ea join ea.entryRevision r"
@@ -75,6 +76,13 @@ public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment
         + " and ea.mediaFileOwner.nodeId = ?1 and ea.mediaFileOwner.id = ?2"
     )
     Set<Entry> findEntriesByMedia(UUID nodeId, UUID mediaId);
+
+    @Query(
+        "select new org.moera.node.data.MediaOwnerEntry(ea.mediaFileOwner.id, e)"
+        + " from EntryAttachment ea join ea.entryRevision er join er.entry e left join fetch e.parent"
+        + " where e.deletedAt is null and e.currentRevision = er and ea.mediaFileOwner.id in ?1"
+    )
+    List<MediaOwnerEntry> findEntriesByMedia(Collection<UUID> mediaIds);
 
     @Query(
         "select ea.draft from EntryAttachment ea"

@@ -15,6 +15,10 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface PostingRepository extends JpaRepository<Posting, UUID> {
 
+    String CONDITION_UNLINKED = "p.deletedAt is null and p.parentMediaEntry is null"
+        + " and not exists(select s.id from Story s where s.entry.id = p.id)"
+        + " and not exists(select le.id from LinkedEntry le where le.linkedEntry.id = p.id)";
+
     @Query(
         "select new org.moera.node.data.MediaPostingId(p.id, p.parentMedia.id, p.parentRemoteMedia.id)"
         + " from Posting p"
@@ -110,32 +114,36 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     )
     int countByOwnerNameAndFeed(UUID nodeId, String ownerName, String feedName);
 
+    // FOR UPDATE conflicts with foreign-key checks that add a story or a resolved link to a posting.
     @Query(
-        "select p from Posting p"
-        + " where p.nodeId = ?1 and p.deletedAt is null and p.parentMediaEntry is null"
-        + " and not exists(select s from Story s where s.entry.id = p.id)"
-        + " and not exists(select le from LinkedEntry le where le.linkedEntry.id = p.id)"
+        value = "select p.id from entries p"
+            + " where p.node_id = ?1 and p.entry_type = 0 and p.deleted_at is null and p.parent_media_entry_id is null"
+            + " and p.id >= coalesce(?2, cast('00000000-0000-0000-0000-000000000000' as uuid))"
+            + " and p.id is distinct from ?2"
+            + " and not exists(select 1 from stories s where s.entry_id = p.id)"
+            + " and not exists(select 1 from linked_entries le where le.linked_entry_id = p.id)"
+            + " order by p.id limit ?3 for update",
+        nativeQuery = true
     )
-    List<Posting> findUnlinked(UUID nodeId);
+    List<UUID> findUnlinkedIdsForUpdate(UUID nodeId, UUID afterId, int limit);
+
+    @Query(
+        "select p from Posting p left join fetch p.currentRevision"
+        + " where p.nodeId = ?1 and p.id in ?2 and " + CONDITION_UNLINKED
+    )
+    List<Posting> findUnlinkedWithRevision(UUID nodeId, Collection<UUID> postingIds);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query(
-        "select p from Posting p"
-        + " where p.nodeId = ?1 and p.id in ?2 and p.deletedAt is null and p.parentMediaEntry is null"
-        + " and not exists(select s from Story s where s.entry.id = p.id)"
-        + " and not exists(select le from LinkedEntry le where le.linkedEntry.id = p.id)"
-    )
+    @Query("select p from Posting p where p.nodeId = ?1 and p.id in ?2 and " + CONDITION_UNLINKED)
     List<Posting> findUnlinked(UUID nodeId, Collection<UUID> postingIds);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query(
         "select p from Posting p"
-        + " where p.nodeId = ?1 and p.deletedAt is null and p.parentMediaEntry is null"
+        + " where p.nodeId = ?1 and " + CONDITION_UNLINKED
         + " and (?2 is null or p.receiverName = ?2)"
         + " and (?3 is null or p.receiverEntryId = ?3)"
         + " and (?4 is null or p.id = ?4)"
-        + " and not exists(select s from Story s where s.entry.id = p.id)"
-        + " and not exists(select le from LinkedEntry le where le.linkedEntry.id = p.id)"
     )
     List<Posting> findUnlinked(UUID nodeId, String receiverName, String receiverEntryId, UUID postingId);
 

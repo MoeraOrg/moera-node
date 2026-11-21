@@ -426,8 +426,9 @@ public class CommentOperations {
             );
         }
 
-        mediaOperations.updatePermissions(comment);
-        postingOperations.deletePostings(mediaOperations.obsoleteMediaPostings(comment));
+        postingOperations.deletePostings(
+            mediaOperations.updatePermissionsAndFindObsoletePostings(List.of(comment.getId()))
+        );
     }
 
     @Scheduled(fixedDelayString = "PT15M")

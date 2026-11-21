@@ -59,6 +59,7 @@ import org.moera.node.data.MediaFilePreviewRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.MediaLease;
 import org.moera.node.data.MediaLeaseRepository;
+import org.moera.node.data.MediaOwnerEntry;
 import org.moera.node.data.Posting;
 import org.moera.node.data.RemoteMediaFile;
 import org.moera.node.global.RequestCounter;
@@ -606,7 +607,7 @@ public class MediaOperations {
             return;
         }
 
-        entryAttachmentRepository.findMediaByEntry(entry.getId()).forEach(this::updatePermissions);
+        entryAttachmentRepository.findMediaByEntries(List.of(entry.getId())).forEach(this::updatePermissions);
     }
 
     public void updatePermissions(MediaFileOwner mediaFileOwner) {
@@ -616,12 +617,7 @@ public class MediaOperations {
 
         Collection<Entry> entries =
             entryAttachmentRepository.findEntriesByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId());
-        mediaFileOwner.setUnrestricted(
-            entries.stream()
-                .map(this::entryViewPrincipal)
-                .anyMatch(Principal::isPublic)
-        );
-        mediaFileOwner.setPermissionsUpdatedAt(Util.now());
+        updatePermissions(mediaFileOwner, entries.stream().map(this::entryViewPrincipal).anyMatch(Principal::isPublic));
     }
 
     public void deleteObsoleteMediaPostings(Collection<MediaFileOwner> mediaFileOwners) {
@@ -631,15 +627,28 @@ public class MediaOperations {
         });
     }
 
-    public List<Posting> obsoleteMediaPostings(Entry entry) {
-        if (entry == null) {
-            return Collections.emptyList();
+    public List<Posting> updatePermissionsAndFindObsoletePostings(Collection<UUID> entryIds) {
+        Set<MediaFileOwner> media = entryAttachmentRepository.findMediaByEntries(entryIds);
+        if (media.isEmpty()) {
+            return List.of();
         }
 
+        List<UUID> mediaIds = media.stream().map(MediaFileOwner::getId).toList();
+        Set<UUID> unrestricted = entryAttachmentRepository.findEntriesByMedia(mediaIds).stream()
+            .filter(row -> entryViewPrincipal(row.entry()).isPublic())
+            .map(MediaOwnerEntry::mediaOwnerId)
+            .collect(Collectors.toSet());
+        media.forEach(owner -> updatePermissions(owner, unrestricted.contains(owner.getId())));
+
         List<Posting> obsoletePostings = new ArrayList<>();
-        entryAttachmentRepository.findMediaByEntry(entry.getId())
-            .forEach(mediaFileOwner -> obsoletePostings.addAll(obsoleteMediaPostings(mediaFileOwner)));
+        media.forEach(mediaFileOwner -> obsoletePostings.addAll(obsoleteMediaPostings(mediaFileOwner)));
+
         return obsoletePostings;
+    }
+
+    private void updatePermissions(MediaFileOwner mediaFileOwner, boolean unrestricted) {
+        mediaFileOwner.setUnrestricted(unrestricted);
+        mediaFileOwner.setPermissionsUpdatedAt(Util.now());
     }
 
     private List<Posting> obsoleteMediaPostings(MediaFileOwner mediaFileOwner) {

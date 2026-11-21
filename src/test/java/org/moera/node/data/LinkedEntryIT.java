@@ -2,9 +2,14 @@ package org.moera.node.data;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 
@@ -75,6 +80,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.ObjectMapper;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -209,7 +215,7 @@ class LinkedEntryIT {
         });
 
         transaction.executeWithoutResult(status -> {
-            assertFalse(postingRepository.findUnlinked(nodeId).stream().anyMatch(p -> p.getId().equals(ids[1])));
+            assertFalse(unlinkedIds().contains(ids[1]));
             assertTrue(linkedEntryRepository.findByNodeIdAndId(UUID.randomUUID(), ids[2]).isEmpty());
             entityManager.createNativeQuery("DELETE FROM entries WHERE id = ?1").setParameter(1, ids[0])
                 .executeUpdate();
@@ -217,7 +223,7 @@ class LinkedEntryIT {
         transaction.executeWithoutResult(status -> {
             assertTrue(linkedEntryRepository.findById(ids[2]).isEmpty());
             assertNull(entityManager.find(Pick.class, ids[3]));
-            assertEquals(ids[1], postingRepository.findUnlinked(nodeId).getFirst().getId());
+            assertEquals(ids[1], unlinkedIds().getFirst());
         });
     }
 
@@ -294,8 +300,7 @@ class LinkedEntryIT {
             assertNull(target.getDeletedAt());
             assertNull(target.getCurrentRevision().getDeletedAt());
             assertNull(target.getDeadline());
-            assertEquals(unlinked, postingRepository.findUnlinked(nodeId).stream()
-                .anyMatch(posting -> posting.getId().equals(ids[0])));
+            assertEquals(unlinked, unlinkedIds().contains(ids[0]));
             var stories = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class)
                 .findByEntryId(nodeId, ids[0]);
             assertTrue(stories.stream().noneMatch(story -> Feed.NEWS.equals(story.getFeedName())));
@@ -414,8 +419,7 @@ class LinkedEntryIT {
             assertNull(target.getCurrentRevision().getDeletedAt());
             StoryRepository stories = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class);
             assertEquals(allowed ? 0 : 2, stories.findByEntryId(nodeId, targetId).size());
-            assertEquals(allowed, postingRepository.findUnlinked(nodeId).stream()
-                .anyMatch(posting -> posting.getId().equals(targetId)));
+            assertEquals(allowed, unlinkedIds().contains(targetId));
         });
         verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
     }
@@ -482,7 +486,7 @@ class LinkedEntryIT {
             assertNull(postingRepository.findById(targetId).orElseThrow().getDeletedAt());
             StoryRepository stories = new JpaRepositoryFactory(entityManager).getRepository(StoryRepository.class);
             assertTrue(stories.findByEntryId(nodeId, targetId).stream().noneMatch(s -> Feed.NEWS.equals(s.getFeedName())));
-            assertTrue(postingRepository.findUnlinked(nodeId).stream().noneMatch(p -> p.getId().equals(targetId)));
+            assertFalse(unlinkedIds().contains(targetId));
         });
         verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
     }
@@ -712,7 +716,7 @@ class LinkedEntryIT {
             assertNull(target.getCurrentRevision().getDeletedAt());
             assertNull(target.getDeadline());
             assertEquals(!allowed, entityManager.find(Story.class, ids[1]) != null);
-            assertEquals(allowed ? 2 : 1, postingRepository.findUnlinked(nodeId).size());
+            assertEquals(allowed ? 2 : 1, unlinkedIds().size());
         });
         assertEquals(allowed ? 1 : 0, context.getAfterCommitLiberins().stream()
             .filter(StoryDeletedLiberin.class::isInstance).count());
@@ -797,32 +801,155 @@ class LinkedEntryIT {
         transaction.executeWithoutResult(status -> {
             assertNull(entityManager.find(Story.class, ids[1]));
             assertNull(postingRepository.findById(ids[0]).orElseThrow().getDeletedAt());
-            assertTrue(postingRepository.findUnlinked(nodeId).stream().anyMatch(p -> p.getId().equals(ids[0])));
+            assertTrue(unlinkedIds().contains(ids[0]));
         });
         verify(universalContext, never()).isPrincipal(any(), any(), any());
         verify(universalContext, never()).send(any(PostingDeletedLiberin.class));
     }
 
-    @Test
-    void periodicCleanupDeletesPostingLeftAfterStoryDeletion() {
-        UUID[] ids = transaction.execute(status -> {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void periodicCleanupDeletesPostingLeftAfterStoryDeletion(boolean sharedMedia) {
+        record Targets(UUID posting, UUID publication, UUID media, UUID child, UUID childPublication) {
+        }
+        Targets ids = transaction.execute(status -> {
             Posting target = posting(nodeId);
-            return new UUID[]{target.getId(), story(target, Feed.NEWS, 1).getId()};
+            MediaFileOwner media = mediaOwner();
+            media.setUnrestricted(true);
+            entityManager.persist(new EntryAttachment(target.getCurrentRevision(), media, 0));
+            Posting child = posting(nodeId);
+            child.setParentMediaEntry(target);
+            child.setParentMedia(media);
+            if (sharedMedia) {
+                Posting retained = posting(nodeId);
+                story(retained, Feed.TIMELINE, 3);
+                entityManager.persist(new EntryAttachment(retained.getCurrentRevision(), media, 0));
+            }
+            return new Targets(
+                target.getId(),
+                story(target, Feed.NEWS, 1).getId(),
+                media.getId(),
+                child.getId(),
+                story(child, Feed.NEWS, 2).getId()
+            );
         });
         UniversalContext deletionContext = mock(UniversalContext.class);
         StoryController controller = storyDeletionController(
             deletionContext, deletionRequestContext(null, Scope.NONE, Scope.ALL)
         );
 
-        controller.delete(ids[1].toString());
+        controller.delete(ids.publication().toString());
 
         transaction.executeWithoutResult(status -> {
-            assertNull(entityManager.find(Story.class, ids[1]));
-            assertNull(postingRepository.findById(ids[0]).orElseThrow().getDeletedAt());
+            assertNull(entityManager.find(Story.class, ids.publication()));
+            assertNull(postingRepository.findById(ids.posting()).orElseThrow().getDeletedAt());
         });
         verify(deletionContext, never()).send(any(PostingDeletedLiberin.class));
 
         UniversalContext cleanupContext = mock(UniversalContext.class);
+        cleanupOperations(cleanupContext).purgeUnlinked();
+
+        transaction.executeWithoutResult(status -> {
+            for (UUID postingId : List.of(ids.posting(), ids.child())) {
+                Posting deleted = postingRepository.findById(postingId).orElseThrow();
+                assertNotNull(deleted.getDeletedAt());
+                assertNotNull(deleted.getCurrentRevision().getDeletedAt());
+                assertNotNull(deleted.getDeadline());
+            }
+            assertEquals(sharedMedia, entityManager.find(MediaFileOwner.class, ids.media()).isUnrestricted());
+            assertNull(entityManager.find(Story.class, ids.childPublication()));
+        });
+        var captor = ArgumentCaptor.forClass(PostingDeletedLiberin.class);
+        verify(cleanupContext, times(2)).send(captor.capture());
+        assertEquals(Set.of(ids.posting(), ids.child()), captor.getAllValues().stream()
+            .map(PostingDeletedLiberin::getPosting).map(Entry::getId).collect(Collectors.toSet()));
+    }
+
+    @Test
+    void unlinkedPostingPagesIncludeTheMinimumUuidAndExcludeTheCursor() {
+        transaction.executeWithoutResult(status -> {
+            status.setRollbackOnly();
+            Posting first = new Posting();
+            first.setId(new UUID(0, 0));
+            first.setNodeId(nodeId);
+            entityManager.persist(first);
+            Posting next = posting(nodeId);
+
+            assertEquals(List.of(first.getId()), postingRepository.findUnlinkedIdsForUpdate(nodeId, null, 1));
+            assertEquals(List.of(next.getId()), postingRepository.findUnlinkedIdsForUpdate(nodeId, first.getId(), 1));
+            assertTrue(postingRepository.findUnlinkedIdsForUpdate(nodeId, next.getId(), 1).isEmpty());
+        });
+    }
+
+    @Test
+    void periodicCleanupKeepsPostingWhenAConcurrentStoryInsertionCommits() throws Exception {
+        UUID targetId = transaction.execute(status -> posting(nodeId).getId());
+        UniversalContext context = mock(UniversalContext.class);
+        PostingOperations cleanup = cleanupOperations(context);
+
+        try (var executor = Executors.newSingleThreadExecutor()) {
+            var cleaning = transaction.execute(status -> {
+                story(entityManager.getReference(Posting.class, targetId), Feed.NEWS, 1);
+                entityManager.flush();
+                var task = executor.submit(cleanup::purgeUnlinked);
+                // Commit the new reference once cleanup has reached this transaction's row lock.
+                await().pollInSameThread().atMost(Duration.ofSeconds(10)).until(() ->
+                    task.isDone() || (boolean) entityManager.createNativeQuery(
+                        "select exists(select 1 from pg_locks where not granted"
+                        + " and pg_backend_pid() = any(pg_blocking_pids(pid)))"
+                    ).getSingleResult()
+                );
+                return task;
+            });
+            cleaning.get(10, TimeUnit.SECONDS);
+        }
+
+        transaction.executeWithoutResult(status ->
+            assertNull(entityManager.find(Posting.class, targetId).getDeletedAt())
+        );
+        verify(context, never()).send(any(PostingDeletedLiberin.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void periodicCleanupProcessesTheWholeBacklogWithBoundedTransactionsAndFlushes(boolean withMedia) {
+        Set<UUID> ids = transaction.execute(status -> {
+            Set<UUID> unlinked = new HashSet<>();
+            for (int i = 0; i < 125; i++) {
+                Posting parent = posting(nodeId);
+                unlinked.add(parent.getId());
+                if (withMedia) {
+                    MediaFileOwner owner = mediaOwner();
+                    entityManager.persist(new EntryAttachment(parent.getCurrentRevision(), owner, 0));
+                    Posting child = posting(nodeId);
+                    child.setParentMediaEntry(parent);
+                    child.setParentMedia(owner);
+                    story(child, Feed.NEWS, i + 1);
+                    unlinked.add(child.getId());
+                }
+            }
+            return unlinked;
+        });
+        UniversalContext context = mock(UniversalContext.class);
+        PostingOperations cleanup = cleanupOperations(context);
+        var statistics = factory.unwrap(SessionFactory.class).getStatistics();
+        statistics.clear();
+
+        cleanup.purgeUnlinked();
+
+        long transactions = statistics.getSuccessfulTransactionCount();
+        assertTrue(transactions > 1 && transactions < ids.size(), "Cleanup transactions: " + transactions);
+        assertTrue(statistics.getFlushCount() <= transactions * 4, "Flushes: " + statistics.getFlushCount());
+        long queries = statistics.getQueryExecutionCount();
+        assertTrue(queries <= transactions * 6, "Queries: " + queries);
+        assertEquals(2L * ids.size() + (withMedia ? 125 : 0), statistics.getEntityUpdateCount());
+        var captor = ArgumentCaptor.forClass(PostingDeletedLiberin.class);
+        verify(context, times(ids.size())).send(captor.capture());
+        assertEquals(ids, captor.getAllValues().stream().map(PostingDeletedLiberin::getPosting)
+            .map(Entry::getId).collect(Collectors.toSet()));
+    }
+
+    private PostingOperations cleanupOperations(UniversalContext cleanupContext) {
         when(cleanupContext.nodeId()).thenReturn(nodeId);
         Options options = mock(Options.class);
         when(options.getDuration("posting.deleted.lifetime")).thenReturn(new ExtendedDuration(Duration.ofDays(7)));
@@ -833,29 +960,25 @@ class LinkedEntryIT {
         Transaction tx = new Transaction();
         ReflectionTestUtils.setField(tx, "txManager", new JpaTransactionManager(factory));
         ReflectionTestUtils.setField(tx, "universalContext", cleanupContext);
-        MediaOperations mediaOperations = mock(MediaOperations.class);
+        var repositories = new JpaRepositoryFactory(entityManager);
+        MediaOperations mediaOperations = new MediaOperations();
+        ReflectionTestUtils.setField(mediaOperations, "entryAttachmentRepository",
+            repositories.getRepository(EntryAttachmentRepository.class));
+        StoryOperations storyOperations = new StoryOperations();
+        ReflectionTestUtils.setField(storyOperations, "universalContext", cleanupContext);
+        ReflectionTestUtils.setField(
+            storyOperations, "storyRepository", repositories.getRepository(StoryRepository.class)
+        );
         PostingOperations postingOperations = new PostingOperations();
         ReflectionTestUtils.setField(postingOperations, "requestCounter", mock(RequestCounter.class));
         ReflectionTestUtils.setField(postingOperations, "universalContext", cleanupContext);
         ReflectionTestUtils.setField(postingOperations, "domains", domains);
         ReflectionTestUtils.setField(postingOperations, "postingRepository", postingRepository);
         ReflectionTestUtils.setField(postingOperations, "mediaOperations", mediaOperations);
+        ReflectionTestUtils.setField(postingOperations, "storyOperations", storyOperations);
         ReflectionTestUtils.setField(postingOperations, "tx", tx);
-
-        postingOperations.purgeUnlinked();
-
-        transaction.executeWithoutResult(status -> {
-            Posting target = postingRepository.findById(ids[0]).orElseThrow();
-            assertNotNull(target.getDeletedAt());
-            assertNotNull(target.getCurrentRevision().getDeletedAt());
-            assertNotNull(target.getDeadline());
-            assertTrue(postingRepository.findUnlinked(nodeId).isEmpty());
-        });
-        var captor = ArgumentCaptor.forClass(PostingDeletedLiberin.class);
-        verify(cleanupContext).send(captor.capture());
-        assertEquals(ids[0], captor.getValue().getPosting().getId());
-        verify(mediaOperations).updatePermissions(captor.getValue().getPosting());
-        verify(mediaOperations).obsoleteMediaPostings(captor.getValue().getPosting());
+        ReflectionTestUtils.setField(mediaOperations, "postingOperations", postingOperations);
+        return postingOperations;
     }
 
     private RequestContextImpl deletionRequestContext(String client, Scope clientScope, Scope adminScope) {
@@ -1096,7 +1219,7 @@ class LinkedEntryIT {
             );
             postingInfoOperations.withLinkedPostings(info);
             assertEquals(targetId.toString(), info.getLinkedPostings().getFirst().getId());
-            assertFalse(postingRepository.findUnlinked(nodeId).stream().anyMatch(p -> p.getId().equals(targetId)));
+            assertFalse(unlinkedIds().contains(targetId));
         });
         verifyNoMoreInteractions(pickerPool);
     }
@@ -1410,6 +1533,10 @@ class LinkedEntryIT {
         entityManager.persist(revision);
         posting.setCurrentRevision(revision);
         return posting;
+    }
+
+    private List<UUID> unlinkedIds() {
+        return postingRepository.findUnlinkedIdsForUpdate(nodeId, null, Integer.MAX_VALUE);
     }
 
     private LinkedEntry link(Posting source, Posting target) {

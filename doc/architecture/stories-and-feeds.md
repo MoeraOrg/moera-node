@@ -39,10 +39,13 @@ rights, because background cleanup can later remove the unused posting. Posting 
 missing permission rolls back deletion. The broad-delete override bypasses only the filter guard, not authorization.
 Internal deletion helpers omit this user-facing check and must be chosen deliberately.
 
-Story deletion leaves the posting for cleanup. Stories in any feed or without a feed, and resolved links from any
-retained revision, keep a normal posting linked. `PostingOperations.purgeUnlinked()` soft-deletes unused postings;
-retention cleanup handles physical deletion. Media children have a separate parent lifecycle in
-[media](media.md#attachments-and-child-postings).
+Story deletion leaves the posting for cleanup. A story with or without a feed, or a resolved link from any retained
+revision, keeps a normal posting linked.
+[PostingOperations](../../src/main/java/org/moera/node/operations/PostingOperations.java) locks candidates and rechecks
+their references in batches per node. Each batch commits soft deletions and media
+permission changes together, then releases its events. If a batch fails, a later run can retry the remaining postings.
+Retention cleanup handles physical deletion. Media children follow their
+[parent lifecycle](media.md#attachments-and-child-postings).
 
 See [StoryController](../../src/main/java/org/moera/node/rest/StoryController.java),
 [PostingRepository](../../src/main/java/org/moera/node/data/PostingRepository.java), and

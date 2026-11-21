@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -66,6 +67,7 @@ import org.springframework.util.ObjectUtils;
 public class PostingOperations {
 
     public static final int MAX_POSTINGS_PER_REQUEST = 200;
+    private static final int UNLINKED_BATCH_SIZE = 100;
     private static final Duration UNSIGNED_TTL = Duration.of(15, ChronoUnit.MINUTES);
 
     private static final Logger log = LoggerFactory.getLogger(PostingOperations.class);
@@ -339,7 +341,7 @@ public class PostingOperations {
         return revision;
     }
 
-    public void deletePosting(Posting posting) {
+    private void markDeleted(Posting posting) {
         posting.setDeletedAt(Util.now());
         ExtendedDuration postingTtl = universalContext.getOptions().getDuration("posting.deleted.lifetime");
         if (!postingTtl.isNever()) {
@@ -349,26 +351,34 @@ public class PostingOperations {
         if (posting.getCurrentRevision() != null) {
             posting.getCurrentRevision().setDeletedAt(Util.now());
         }
-        posting = postingRepository.saveAndFlush(posting);
+    }
 
+    public void deletePosting(Posting posting) {
+        markDeleted(posting);
+        posting = postingRepository.save(posting);
         if (posting.getParentMediaEntry() == null) {
-            mediaOperations.updatePermissions(posting);
-            deletePostings(mediaOperations.obsoleteMediaPostings(posting));
+            deletePostings(mediaOperations.updatePermissionsAndFindObsoletePostings(List.of(posting.getId())));
         }
     }
 
     public void deletePostings(Collection<Posting> postings) {
-        Set<UUID> deleted = new HashSet<>();
+        Set<UUID> deletedIds = new HashSet<>();
+        List<Posting> deleted = new ArrayList<>();
         for (Posting posting : postings) {
-            if (posting == null || posting.getDeletedAt() != null || !deleted.add(posting.getId())) {
+            if (posting == null || posting.getDeletedAt() != null || !deletedIds.add(posting.getId())) {
                 continue;
             }
-
-            EntryRevision latest = posting.getCurrentRevision();
             deletePosting(posting);
-            storyOperations.unpublish(posting.getId());
-            universalContext.send(new PostingDeletedLiberin(posting, latest));
+            deleted.add(posting);
         }
+        if (!deleted.isEmpty()) {
+            storyOperations.unpublish(deletedIds);
+            deleted.forEach(this::sendPostingDeleted);
+        }
+    }
+
+    private void sendPostingDeleted(Posting posting) {
+        universalContext.send(new PostingDeletedLiberin(posting, posting.getCurrentRevision()));
     }
 
     public void deletePickedPosting(Posting posting) {
@@ -441,17 +451,35 @@ public class PostingOperations {
             log.info("Purging unlinked postings");
 
             for (String domainName : domains.getAllDomainNames()) {
-                universalContext.associate(domains.getDomainNodeId(domainName));
-                tx.executeWrite(() ->
-                    postingRepository.findUnlinked(universalContext.nodeId()).forEach(posting -> {
-                        log.info("Deleting unlinked posting {}", posting.getId());
-                        EntryRevision latest = posting.getCurrentRevision();
-                        deletePosting(posting);
-                        universalContext.send(new PostingDeletedLiberin(posting, latest));
-                    })
-                );
+                UUID nodeId = domains.getDomainNodeId(domainName);
+                universalContext.associate(nodeId);
+                UUID cursor = null;
+                do {
+                    UUID afterId = cursor;
+                    cursor = tx.executeWrite(() -> purgeUnlinkedBatch(nodeId, afterId));
+                } while (cursor != null);
             }
         }
+    }
+
+    private UUID purgeUnlinkedBatch(UUID nodeId, UUID afterId) {
+        List<UUID> ids = postingRepository.findUnlinkedIdsForUpdate(nodeId, afterId, UNLINKED_BATCH_SIZE);
+        if (ids.isEmpty()) {
+            return null;
+        }
+        // A reference may have been committed while the candidate query was waiting for a posting lock.
+        List<Posting> postings = postingRepository.findUnlinkedWithRevision(nodeId, ids);
+        if (!postings.isEmpty()) {
+            for (Posting posting : postings) {
+                log.info("Deleting unlinked posting {}", posting.getId());
+                markDeleted(posting);
+            }
+            postingRepository.flush();
+            List<UUID> deletedIds = postings.stream().map(Posting::getId).toList();
+            deletePostings(mediaOperations.updatePermissionsAndFindObsoletePostings(deletedIds));
+            postings.forEach(this::sendPostingDeleted);
+        }
+        return ids.size() == UNLINKED_BATCH_SIZE ? ids.getLast() : null;
     }
 
     @Scheduled(fixedDelayString = "PT15M")

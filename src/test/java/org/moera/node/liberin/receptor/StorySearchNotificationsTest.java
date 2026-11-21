@@ -2,6 +2,7 @@ package org.moera.node.liberin.receptor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -159,6 +160,8 @@ class StorySearchNotificationsTest {
         List<Story> stories = new ArrayList<>(List.of(story));
         when(storyRepository.findByEntryId(story.getNodeId(), posting.getId()))
             .thenAnswer(invocation -> List.copyOf(stories));
+        when(storyRepository.findByEntryIds(story.getNodeId(), Set.of(posting.getId())))
+            .thenAnswer(invocation -> List.copyOf(stories));
         doAnswer(invocation -> {
             stories.remove(invocation.getArgument(0));
             return null;
@@ -167,7 +170,7 @@ class StorySearchNotificationsTest {
         ReflectionTestUtils.setField(storyOperations, "universalContext", universalContext);
         ReflectionTestUtils.setField(storyOperations, "storyRepository", storyRepository);
         PostingRepository postingRepository = mock(PostingRepository.class);
-        when(postingRepository.saveAndFlush(posting)).thenReturn(posting);
+        when(postingRepository.save(posting)).thenReturn(posting);
         PostingOperations postingOperations = new PostingOperations();
         ReflectionTestUtils.setField(postingOperations, "universalContext", universalContext);
         ReflectionTestUtils.setField(postingOperations, "storyOperations", storyOperations);

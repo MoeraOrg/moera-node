@@ -133,7 +133,7 @@ class PostingControllerDeleteAuthorizationTest {
             story.setMoment(1L);
             stories.put(posting.getId(), story);
         }
-        when(postingRepository.saveAndFlush(any(Posting.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(postingRepository.save(any(Posting.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(storyRepository.findByEntryId(eq(nodeId), any(UUID.class))).thenAnswer(invocation -> {
             Story story = stories.get(invocation.<UUID>getArgument(1));
             return story != null ? List.of(story) : List.of();
