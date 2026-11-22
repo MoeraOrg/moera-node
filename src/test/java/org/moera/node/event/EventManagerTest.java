@@ -17,6 +17,7 @@ import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.domain.Domains;
 import org.moera.node.model.event.FriendshipUpdatedEvent;
+import org.moera.node.model.event.PingEvent;
 import org.moera.node.model.event.PostingSharingDeletedEvent;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryEvent;
@@ -33,6 +34,28 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EventManagerTest {
+
+    @Test
+    void warnsOnlyTheLaggingSubscriberThenReplaysEveryRetainedEvent() {
+        Fixture fixture = new Fixture();
+        fixture.sendPing();
+        fixture.sendPing();
+        fixture.expireQueuedPackets();
+        fixture.sendPing();
+        fixture.sendPing();
+
+        fixture.publicSubscriber.setLastEventSeen(1);
+        fixture.deliver(fixture.publicSubscriber);
+        fixture.deliver(fixture.publicSubscriber);
+        fixture.adminSubscriber.setLastEventSeen(2);
+        fixture.deliver(fixture.adminSubscriber);
+
+        assertEquals(List.of("WAKE_UP", "PING", "PING", "PING", "PING"), fixture.delivered.stream()
+            .map(packet -> packet.getEvent().getType().name()).toList());
+        assertEquals(List.of(2, 3, 4, 3, 4), fixture.delivered.stream().map(EventPacket::getOrdinal).toList());
+        assertEquals(fixture.delivered.get(1).getQueueStartedAt(), fixture.delivered.getFirst().getQueueStartedAt());
+        assertEquals(4, fixture.publicSubscriber.getLastEventSeen());
+    }
 
     @Test
     void deliversPayloadFieldsWithTypesDifferentFromConstructorParameters() {
@@ -193,6 +216,16 @@ class EventManagerTest {
 
         void deliver(EventSubscriber subscriber) {
             ReflectionTestUtils.invokeMethod(eventManager, "deliver", subscriber);
+        }
+
+        void sendPing() {
+            eventManager.send(nodeId, new PingEvent());
+        }
+
+        @SuppressWarnings("unchecked")
+        void expireQueuedPackets() {
+            List<EventPacket> packets = (List<EventPacket>) ReflectionTestUtils.getField(eventManager, "queue");
+            packets.forEach(packet -> packet.setSentAt(1));
         }
 
     }

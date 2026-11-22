@@ -31,6 +31,7 @@ import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PingEvent;
+import org.moera.node.model.event.WakeUpEvent;
 import org.moera.node.operations.GrantCache;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -48,7 +49,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 @Service
@@ -93,6 +93,7 @@ public class EventManager {
     private int lastOrdinal = 0;
     private final ReadWriteLock eventsLock = new ReentrantReadWriteLock();
     private final Object deliverySignal = new Object();
+    private boolean deliveryPending;
 
     @EventListener(SessionConnectEvent.class)
     public void sessionConnect(SessionConnectEvent event) {
@@ -160,10 +161,9 @@ public class EventManager {
         return InetAddress.getByName(address);
     }
 
-    @EventListener(SessionSubscribeEvent.class)
-    public void subscribed(SessionSubscribeEvent event) {
-        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-        if (!(USER_PREFIX + EVENT_DESTINATION).equals(accessor.getDestination())) {
+    void subscribed(StompHeaderAccessor accessor) {
+        String destination = accessor.getFirstNativeHeader(SimpMessageHeaderAccessor.ORIGINAL_DESTINATION);
+        if (!(USER_PREFIX + EVENT_DESTINATION).equals(destination)) {
             return;
         }
 
@@ -180,14 +180,31 @@ public class EventManager {
         if (subscriber == null) {
             return;
         }
-        if (seen.queueStartedAt() == null) {
-            subscriber.setLastEventSeen(lastOrdinal);
-        } else if (seen.queueStartedAt() != startedAt) {
-            subscriber.setLastEventSeen(0);
-        } else {
-            subscriber.setLastEventSeen(seen.lastEvent());
+        eventsLock.writeLock().lock();
+        try {
+            purge();
+            if (seen.queueStartedAt() == null || seen.lastEvent() == null) {
+                subscriber.setLastEventSeen(lastOrdinal);
+            } else if (seen.queueStartedAt() != startedAt || seen.lastEvent() > lastOrdinal) {
+                // Even the beginning of this queue is past the client's recoverable history.
+                subscriber.setLastEventSeen(-1);
+            } else {
+                subscriber.setLastEventSeen(seen.lastEvent());
+            }
+            subscriber.setSubscribed(true);
+        } finally {
+            eventsLock.writeLock().unlock();
         }
-        subscriber.setSubscribed(true);
+        retryDelivery();
+    }
+
+    String currentSeen() {
+        eventsLock.readLock().lock();
+        try {
+            return startedAt + "," + lastOrdinal;
+        } finally {
+            eventsLock.readLock().unlock();
+        }
     }
 
     @EventListener(SessionUnsubscribeEvent.class)
@@ -222,7 +239,10 @@ public class EventManager {
             while (true) {
                 try {
                     synchronized (deliverySignal) {
-                        deliverySignal.wait();
+                        while (!deliveryPending) {
+                            deliverySignal.wait();
+                        }
+                        deliveryPending = false;
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -249,20 +269,22 @@ public class EventManager {
         eventsLock.writeLock().lock();
         try {
             purge();
-            EventPacket packet = new EventPacket();
-            packet.setNodeId(nodeId);
-            packet.setQueueStartedAt(startedAt);
-            packet.setOrdinal(++lastOrdinal);
-            packet.setSentAt(Instant.now().getEpochSecond());
-            packet.setCid(clientId);
-            packet.setEvent(event);
-            queue.add(packet);
+            queue.add(createPacket(nodeId, clientId, ++lastOrdinal, event));
         } finally {
             eventsLock.writeLock().unlock();
         }
-        synchronized (deliverySignal) {
-            deliverySignal.notifyAll();
-        }
+        retryDelivery();
+    }
+
+    private EventPacket createPacket(UUID nodeId, String clientId, int ordinal, Event event) {
+        EventPacket packet = new EventPacket();
+        packet.setNodeId(nodeId);
+        packet.setQueueStartedAt(startedAt);
+        packet.setOrdinal(ordinal);
+        packet.setSentAt(Instant.now().getEpochSecond());
+        packet.setCid(clientId);
+        packet.setEvent(event);
+        return packet;
     }
 
     @Scheduled(fixedDelayString = "PT1M", scheduler = "eventScheduler")
@@ -277,6 +299,7 @@ public class EventManager {
 
     private void retryDelivery() {
         synchronized (deliverySignal) {
+            deliveryPending = true;
             deliverySignal.notifyAll();
         }
     }
@@ -294,13 +317,9 @@ public class EventManager {
 
         eventsLock.readLock().lock();
         try {
-            if (queue.isEmpty()) {
-                return;
-            }
-            int last = queue.getFirst().getOrdinal() + queue.size() - 1;
             subscribers.values().stream()
                 .filter(EventSubscriber::isSubscribed)
-                .filter(sub -> sub.getLastEventSeen() < last)
+                .filter(sub -> sub.getLastEventSeen() < lastOrdinal)
                 .forEach(this::deliver);
         } finally {
             eventsLock.readLock().unlock();
@@ -315,32 +334,34 @@ public class EventManager {
         headerAccessor.setSessionId(subscriber.getSessionId());
         MessageHeaders headers = headerAccessor.getMessageHeaders();
 
-        int first = queue.getFirst().getOrdinal();
-        int beginIndex = Math.max(0, subscriber.getLastEventSeen() - first + 1);
+        int beforeFirst = queue.isEmpty() ? lastOrdinal : queue.getFirst().getOrdinal() - 1;
         try {
-            for (int i = beginIndex; i < queue.size(); i++) {
+            if (subscriber.getLastEventSeen() < beforeFirst) {
+                EventPacket wakeUp = createPacket(subscriber.getNodeId(), null, beforeFirst, new WakeUpEvent());
+                sendPacket(subscriber, headers, wakeUp);
+            }
+            for (int i = subscriber.getLastEventSeen() - beforeFirst; i < queue.size(); i++) {
                 EventPacket packet = queue.get(i);
                 if (
                     !Objects.equals(packet.getNodeId(), subscriber.getNodeId())
                     || !packet.getEvent().isPermitted(subscriber)
                 ) {
-                    subscriber.setLastEventSeen(first + i);
+                    subscriber.setLastEventSeen(packet.getOrdinal());
                     continue;
                 }
-                log.debug("Sending event {}: {}", first + i, packet.getEvent().getType());
                 EventPacket deliveryPacket = packet.copy();
                 deliveryPacket.getEvent().protect(subscriber);
-                messagingTemplate.convertAndSendToUser(
-                    subscriber.getSessionId(),
-                    EVENT_DESTINATION,
-                    deliveryPacket,
-                    headers
-                );
-                subscriber.setLastEventSeen(first + i);
+                sendPacket(subscriber, headers, deliveryPacket);
             }
         } catch (MessagingException e) {
             log.error("Error sending event", e);
         }
+    }
+
+    private void sendPacket(EventSubscriber subscriber, MessageHeaders headers, EventPacket packet) {
+        log.debug("Sending event {}: {}", packet.getOrdinal(), packet.getEvent().getType());
+        messagingTemplate.convertAndSendToUser(subscriber.getSessionId(), EVENT_DESTINATION, packet, headers);
+        subscriber.setLastEventSeen(packet.getOrdinal());
     }
 
 }

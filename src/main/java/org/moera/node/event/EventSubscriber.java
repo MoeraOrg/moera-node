@@ -18,7 +18,7 @@ public class EventSubscriber implements AccessChecker {
     private String clientName;
     private boolean subscribedToClient;
     private String[] friendGroups;
-    private boolean subscribed;
+    private volatile boolean subscribed;
 
     public UUID getNodeId() {
         return nodeId;

@@ -66,9 +66,10 @@ prove that a recovery record was stored.
 ## Client delivery
 
 [EventManager](../../src/main/java/org/moera/node/event/EventManager.java) authenticates STOMP sessions and maintains a
-short-lived replay queue/cursor. It checks tenant and principal, copies the packet and nested payload, then protects
-fields on that recipient's copy. Protection must not mutate the original retained for other recipients or replay.
-Restart loses the queue and changes its identity; cursors are not positions in a durable domain log.
+short-lived replay queue. A new client saves the cursor offered at connection and reuses it after an interruption.
+When expiry or a restart makes replay incomplete, the node asks that subscriber to refresh its cached data and then
+sends the retained events in order. It checks each queued event against the recipient's tenant and permissions,
+then protects fields on a copy so the original remains available for other recipients and later replay.
 
 SSE push uses registered clients and a moment cursor. `PushClients` stores offline packets; `Pusher` combines those
 slices with a bounded live queue, falling back to stored data under pressure. Retention is bounded. SSE requires admin

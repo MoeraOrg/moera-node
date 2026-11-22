@@ -10,7 +10,7 @@ public class SeenHeader {
     ) {
     }
 
-    private static final String HEADER_NAME = "seen";
+    static final String HEADER_NAME = "seen";
 
     public static Details parse(StompHeaderAccessor accessor) {
         String seen = String.valueOf(accessor.getFirstNativeHeader(HEADER_NAME));
