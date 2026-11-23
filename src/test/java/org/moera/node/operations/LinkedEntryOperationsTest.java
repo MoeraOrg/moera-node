@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.moera.lib.Rules;
 import org.moera.lib.node.types.body.Body;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.LinkedEntry;
@@ -88,6 +89,22 @@ class LinkedEntryOperationsTest {
         assertEquals("target", pick.getRemotePostingId());
         assertSame(link, pick.getLinkedEntry());
         assertNull(pick.getFeedName());
+    }
+
+    @Test
+    void nodeNameLengthIsCheckedWithAndWithoutTheGeneration() {
+        String name = "x".repeat(Rules.NAME_MAX_LENGTH);
+        EntryRevision valid = revision(name + "_1234567", "target");
+        EntryRevision oversizedName = revision(name + "x_0", "target");
+        EntryRevision oversizedFullName = revision(name + "_12345678", "target");
+
+        operations.create(valid);
+        operations.create(oversizedName);
+        operations.create(oversizedFullName);
+
+        assertEquals(name + "_1234567", valid.getLinkedEntries().iterator().next().getReceiverNodeName());
+        assertTrue(oversizedName.getLinkedEntries().isEmpty());
+        assertTrue(oversizedFullName.getLinkedEntries().isEmpty());
     }
 
     @Test

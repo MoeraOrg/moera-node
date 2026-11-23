@@ -457,12 +457,15 @@ public class CommentOperations {
                             }
                             commentRepository.delete(comment);
 
-                            liberins.add(new CommentDeletedLiberin(comment, latest).withNodeId(posting.getNodeId()));
+                            liberins.add(new CommentDeletedLiberin(
+                                comment, comment.getDeletedAt() == null ? latest : null
+                            ).withNodeId(posting.getNodeId()));
                         } else {
                             EntryRevision revision = comment.getRevisions().stream()
                                 .min(Comparator.comparing(EntryRevision::getCreatedAt))
                                 .orElse(null);
                             if (revision != null) { // always
+                                EntryRevision previousSigned = comment.resolvePreviousRevision(null, latest);
                                 revision.setDeletedAt(null);
                                 entryRevisionRepository.delete(comment.getCurrentRevision());
                                 comment.setCurrentRevision(revision);
@@ -470,7 +473,7 @@ public class CommentOperations {
 
                                 liberins.add(
                                     new CommentUpdatedLiberin(
-                                        comment, latest, comment.getViewE(), comment.isPremoderating()
+                                        comment, previousSigned, comment.getViewE(), comment.isPremoderating()
                                     ).withNodeId(posting.getNodeId())
                                 );
                             }

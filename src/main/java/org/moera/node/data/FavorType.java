@@ -22,7 +22,10 @@ public enum FavorType {
     UNPUBLICATION(-20f, 14 * 24),
 
     REFERENCE(10f, 7 * 24),
-    UNREFERENCE(-10f, 7 * 24);
+    UNREFERENCE(-10f, 7 * 24),
+
+    MENTION(10f, 7 * 24),
+    UNMENTION(-10f, 7 * 24);
 
     private final float value;
     private final int decayHours;

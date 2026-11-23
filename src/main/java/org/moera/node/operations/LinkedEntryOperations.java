@@ -1,11 +1,14 @@
 package org.moera.node.operations;
 
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.naming.NodeName;
 import org.moera.lib.node.types.body.Body;
+import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.LinkedEntry;
 import org.moera.node.data.LinkedEntryRepository;
@@ -15,8 +18,10 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.picker.PickerPool;
 import org.moera.node.text.PostingReferencesExtractor;
+import org.moera.node.text.PostingReferencesExtractor.Reference;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 public class LinkedEntryOperations {
@@ -33,21 +38,23 @@ public class LinkedEntryOperations {
     @Inject
     private PickerPool pickerPool;
 
-    public void create(EntryRevision revision) {
-        var entry = revision.getEntry();
+    private Set<Reference> extractReferences(EntryRevision revision) {
+        Entry entry = revision.getEntry();
         if (
             entry.getParentMediaEntry() != null
             || entry.getParentMedia() != null
             || entry.getParentRemoteMedia() != null
+            || !StringUtils.hasLength(revision.getBody())
         ) {
-            return;
+            return Set.of();
         }
+        return PostingReferencesExtractor.extract(new Body(revision.getBody())).stream()
+            .filter(reference -> NodeName.isLengthValid(reference.nodeName()) && reference.postingId().length() <= 40)
+            .collect(Collectors.toSet());
+    }
 
-        for (var reference : PostingReferencesExtractor.extract(new Body(revision.getBody()))) {
-            if (reference.postingId().length() > 40) {
-                continue;
-            }
-
+    public void create(EntryRevision revision) {
+        for (var reference : extractReferences(revision)) {
             LinkedEntry link = new LinkedEntry();
             link.setId(UUID.randomUUID());
             link.setEntryRevision(revision);

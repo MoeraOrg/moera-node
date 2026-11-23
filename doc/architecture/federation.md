@@ -63,9 +63,12 @@ Timeline republications report to the node hosting the original posting. While t
 in its feed position sends `POSTING_SHARING_UPDATED`. Gaining access sends `POSTING_SHARED` with the current position.
 Losing access sends `POSTING_UNSHARED` with the previously visible position.
 
-Links from finalized posting bodies use a separate sharing type. `PostingReceptor` compares persisted reference sets
-and visibility on edits, deletion, and restoration. Both types follow the same
-[identity rules](persistence.md#references-and-sharings).
+Links from original postings use a separate sharing type with the same
+[identity rules](persistence.md#references-and-sharings). For these links and for mentions in postings and comments,
+signing the source revision triggers direct notifications. The node compares the sets of targets in the current and
+preceding signed revisions. It expands mentioned names first, so `alice` and `alice_0` identify one target, reported as
+`alice_0`. Removing its last occurrence withdraws the mention. Deleting the entry withdraws its previously visible
+mentions and links.
 
 1. `PostingSharingProcessor` applies changes under the original posting lock. A move updates only an existing
    republication from the same sender and preserves its list position and total. A late move after removal is ignored.
@@ -81,7 +84,11 @@ See [PostingSharedJob](../../src/main/java/org/moera/node/rest/notification/Post
 
 ## Search subscribers
 
-Moera Search receives content/profile/reaction and incremental media-text updates through the same peer pipeline.
+Moera Search owns the index and receives content, profile, reaction, and media-text updates through the peer pipeline.
+The [notification schema](../../../moeraorg.github.io/_data/notifications.yml) defines the payloads.
+Deploy support for new update types to search receivers first. A receiver that rejects an unknown type can delay
+subsequent notifications to that peer during retries.
+
 Visibility and deletion context must survive entity removal. Posting deletion suppresses redundant story-removal
 updates, while standalone removal from a public feed has its own search update. Historical identity snapshots and
-remote media node/ID pairs must be preserved. The search index belongs to the separate service, outside node storage.
+remote media node/ID pairs must be preserved.

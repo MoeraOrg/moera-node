@@ -1,6 +1,7 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -656,6 +657,17 @@ public class Entry {
     public void removeRevision(EntryRevision revision) {
         revisions.removeIf(r -> r.getId().equals(revision.getId()));
         revision.setEntry(null);
+    }
+
+    public EntryRevision resolvePreviousRevision(EntryRevision current, EntryRevision previous) {
+        if (previous == null || previous.getSignature() != null || current != null && current.getSignature() == null) {
+            return previous;
+        }
+
+        return revisions.stream()
+            .filter(r -> r.getSignature() != null && (current == null || !r.getId().equals(current.getId())))
+            .max(Comparator.comparing(r -> r.getDeletedAt() != null ? r.getDeletedAt() : r.getCreatedAt()))
+            .orElse(null);
     }
 
     public Set<ReactionTotal> getReactionTotals() {

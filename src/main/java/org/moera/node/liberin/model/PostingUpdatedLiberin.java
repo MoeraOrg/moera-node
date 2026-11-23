@@ -13,7 +13,7 @@ public class PostingUpdatedLiberin extends Liberin {
 
     public PostingUpdatedLiberin(Posting posting, EntryRevision latestRevision, Principal latestViewPrincipal) {
         this.posting = posting;
-        this.latestRevision = latestRevision;
+        this.latestRevision = posting.resolvePreviousRevision(posting.getCurrentRevision(), latestRevision);
         this.latestViewPrincipal = latestViewPrincipal;
     }
 

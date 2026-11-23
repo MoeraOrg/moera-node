@@ -9,8 +9,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.NodeFilter;
+import org.moera.lib.naming.NodeName;
+import org.moera.lib.naming.NodeNameParsingException;
 import org.moera.lib.node.types.body.Body;
-import org.springframework.util.ObjectUtils;
 
 public class MentionsExtractor {
 
@@ -38,10 +39,14 @@ public class MentionsExtractor {
 
         @Override
         public FilterResult head(Node node, int depth) {
-            if (node instanceof Element) {
-                String nodeName = ((Element) node).dataset().get("nodename");
-                if (!ObjectUtils.isEmpty(nodeName)) {
-                    result.add(nodeName);
+            if (node instanceof Element element) {
+                String nodeName = element.attr("data-nodename");
+                if (!nodeName.isBlank() && !nodeName.equals(":") && NodeName.isLengthValid(nodeName)) {
+                    try {
+                        result.add(NodeName.expand(nodeName));
+                    } catch (NodeNameParsingException | IndexOutOfBoundsException ignored) {
+                        // A malformed mention must not prevent processing the other mentions in the entry.
+                    }
                 }
             }
             return FilterResult.CONTINUE;

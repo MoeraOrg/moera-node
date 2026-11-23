@@ -12,6 +12,8 @@ import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.SheriffMark;
 import org.moera.lib.node.types.SharingType;
 import org.moera.lib.node.types.body.Body;
+import org.moera.lib.node.types.notifications.MentionPostingAddedNotification;
+import org.moera.lib.node.types.notifications.MentionPostingDeletedNotification;
 import org.moera.lib.node.types.notifications.Notification;
 import org.moera.lib.node.types.notifications.PostingSharedNotification;
 import org.moera.lib.node.types.notifications.PostingUnsharedNotification;
@@ -28,6 +30,7 @@ import org.moera.node.liberin.Liberin;
 import org.moera.node.model.event.Event;
 import org.moera.node.option.Options;
 import org.moera.node.util.ExtendedDuration;
+import org.moera.node.util.Util;
 import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.SubscribedCache;
@@ -76,6 +79,7 @@ class PostingReferencesReceptorTest {
         ReflectionTestUtils.setField(receptor, "friendCache", mock(FriendCache.class));
         ReflectionTestUtils.setField(receptor, "sheriffUserListOperations", sheriffUserListOperations);
         UniversalContext context = mock(UniversalContext.class);
+        when(context.nodeName()).thenReturn("author_0");
         Options options = mock(Options.class);
         when(context.getOptions()).thenReturn(options);
         when(options.getDuration("posting.revealed.notification.age")).thenReturn(ExtendedDuration.NEVER);
@@ -94,7 +98,7 @@ class PostingReferencesReceptorTest {
     }
 
     @Test
-    void addedReferenceSendsOneNotificationWithTheSourcePostingAndFavorsItsAuthor() {
+    void addedReferenceNotifiesItsAuthorOnce() {
         posting.setCurrentRevision(revision("""
             <a href="https://moera.page/@alice/~/post/target">a post</a>
             <a href="https://web.moera.org/@alice_0/alice.example/post/target">the same post</a>
@@ -214,30 +218,134 @@ class PostingReferencesReceptorTest {
     }
 
     @Test
-    void unsignedPreviousRevisionHasNotAnnouncedItsReferences() {
-        EntryRevision previous = posting.getCurrentRevision();
+    void signingThePostingNotifiesOnlyPeersAboutMentionsAndReferences() {
+        String text = """
+            <a data-nodename="alice_0">Alice</a>
+            <a href="https://moera.page/@alice/~/post/target">Alice's posting</a>
+            """;
+        var previous = revision(text);
         previous.setSignature(null);
+        posting.setCurrentRevision(previous);
+        receptor.added(new PostingAddedLiberin(posting));
+        receptor.updated(new PostingUpdatedLiberin(posting, previous, Principal.ADMIN));
+        receptor.deleted(new PostingDeletedLiberin(posting, previous));
+        receptor.restored(new PostingRestoredLiberin(posting));
+        assertTrue(receptor.mentions.isEmpty());
+        assertTrue(receptor.notifications.isEmpty());
+        assertTrue(favors.isEmpty());
 
-        receptor.updated(new PostingUpdatedLiberin(posting, previous, Principal.PUBLIC));
+        references.remove(previous.getId());
+        var signed = revision(text);
+        posting.setCurrentRevision(signed);
+        receptor.updated(new PostingUpdatedLiberin(posting, previous, posting.getViewE()));
 
+        receptor.updated(new PostingUpdatedLiberin(posting, signed, posting.getViewE()));
+        assertEquals(1, receptor.mentions.size());
+        assertInstanceOf(MentionPostingAddedNotification.class, receptor.mentions.getFirst());
         assertEquals(1, receptor.notifications.size());
         assertInstanceOf(PostingSharedNotification.class, receptor.notifications.getFirst());
-        assertFavors("REFERENCE");
+        assertFavors("MENTION", "REFERENCE");
     }
 
     @Test
-    void pickedPostingsAndSelfReferencesDoNotCreateReferences() {
+    void signingAnEditedPostingComparesWithItsLastSignedContent() {
+        String unchanged = """
+            <a data-nodename="alice_0">Alice</a>
+            <a href="https://moera.page/@alice/~/post/keep">keep</a>
+            """;
+        var original = revision(unchanged + "<a href='https://moera.page/@alice/~/post/old'>old</a>");
+        var earlier = revision("<a data-nodename='older_0'>older</a>");
+        earlier.setDeletedAt(Util.farPast());
+        original.setDeletedAt(Util.now());
+        posting.addRevision(earlier);
+        posting.addRevision(original);
+        var unsigned = revision("<a data-nodename='draft_0'>draft</a>");
+        unsigned.setSignature(null);
+        posting.setCurrentRevision(unsigned);
+        receptor.updated(new PostingUpdatedLiberin(posting, original, Principal.PUBLIC));
+        assertTrue(receptor.mentions.isEmpty());
+        assertTrue(receptor.notifications.isEmpty());
+        assertTrue(favors.isEmpty());
+
+        var signed = revision(unchanged + "<a href='https://moera.page/@alice/~/post/new'>new</a>");
+        posting.addRevision(signed);
+        posting.setCurrentRevision(signed);
+        receptor.updated(new PostingUpdatedLiberin(posting, unsigned, Principal.PUBLIC));
+
+        assertTrue(receptor.mentions.isEmpty());
+        assertEquals(2, receptor.notifications.size());
+        var shared = assertInstanceOf(PostingSharedNotification.class, receptor.notifications.getFirst());
+        var unshared = assertInstanceOf(PostingUnsharedNotification.class, receptor.notifications.getLast());
+        assertEquals("new", shared.getPostingId());
+        assertEquals("old", unshared.getPostingId());
+        assertFavors("REFERENCE", "UNREFERENCE");
+    }
+
+    @Test
+    void deletingAPostingDuringAnUnsignedEditWithdrawsItsSignedMentionAndLink() {
+        var signed = revision("""
+            <a data-nodename="alice_0">Alice</a><a href="https://moera.page/@alice/~/post/published">published</a>
+            """);
+        posting.addRevision(signed);
+        var unsigned = revision("<a href='https://moera.page/@other/~/post/pending'>pending</a>");
+        unsigned.setSignature(null);
+        posting.addRevision(unsigned);
+        posting.setCurrentRevision(unsigned);
+
+        receptor.deleted(new PostingDeletedLiberin(posting, unsigned));
+
+        assertEquals(1, receptor.mentions.size());
+        assertInstanceOf(MentionPostingDeletedNotification.class, receptor.mentions.getFirst());
+        assertEquals(1, receptor.notifications.size());
+        var unshared = assertInstanceOf(PostingUnsharedNotification.class, receptor.notifications.getFirst());
+        assertEquals("published", unshared.getPostingId());
+        assertFavors("UNMENTION", "UNREFERENCE");
+    }
+
+    @Test
+    void pickedPostingsAndLinksToTheSameAuthorDoNotNotifyOrUpdateFavors() {
         posting.setReceiverName("source_0");
         receptor.added(new PostingAddedLiberin(posting));
         receptor.deleted(new PostingDeletedLiberin(posting, posting.getCurrentRevision()));
         receptor.updated(new PostingUpdatedLiberin(posting, posting.getCurrentRevision(), Principal.PUBLIC));
         receptor.restored(new PostingRestoredLiberin(posting));
+        assertTrue(receptor.notifications.isEmpty());
+        assertTrue(favors.isEmpty());
+
         posting.setReceiverName(null);
-        posting.setCurrentRevision(revision("<a href=\"https://moera.page/@author/~/post/own-post\">own post</a>"));
+        posting.setId(UUID.fromString("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"));
+        posting.setCurrentRevision(revision("""
+            <a href="https://moera.page/@author/~/post/own-post">another post</a>
+            <a href="https://moera.page/@author/~/post/%1$s">this post</a>
+            <a href="https://moera.page/@author/~/post/%1$S">this post in uppercase</a>
+            """.formatted(posting.getId())));
         receptor.added(new PostingAddedLiberin(posting));
+        receptor.deleted(new PostingDeletedLiberin(posting, posting.getCurrentRevision()));
 
         assertTrue(receptor.notifications.isEmpty());
         assertTrue(favors.isEmpty());
+    }
+
+    @Test
+    void postingReportsOneMentionUntilTheLastSpellingIsRemoved() {
+        var both = revision("""
+            <a data-nodename="alice">Alice</a> and <a data-nodename="alice_0">Alice again</a>
+            """);
+        posting.setCurrentRevision(both);
+        receptor.added(new PostingAddedLiberin(posting));
+
+        var shortOnly = revision("<a data-nodename='alice'>Alice</a>");
+        posting.setCurrentRevision(shortOnly);
+        receptor.updated(new PostingUpdatedLiberin(posting, both, Principal.PUBLIC));
+
+        assertEquals(1, receptor.mentions.size());
+        assertInstanceOf(MentionPostingAddedNotification.class, receptor.mentions.getFirst());
+
+        receptor.deleted(new PostingDeletedLiberin(posting, shortOnly));
+
+        assertEquals(2, receptor.mentions.size());
+        assertInstanceOf(MentionPostingDeletedNotification.class, receptor.mentions.getLast());
+        assertFavors("MENTION", "UNMENTION");
     }
 
     @Test
@@ -259,7 +367,7 @@ class PostingReferencesReceptorTest {
         for (Favor favor : favors) {
             assertEquals(posting.getNodeId(), favor.getNodeId());
             assertEquals("alice_0", favor.getNodeName());
-            assertEquals(favor.getFavorType().name().equals("REFERENCE") ? 10f : -10f, favor.getValue());
+            assertEquals(favor.getFavorType().name().startsWith("UN") ? -10f : 10f, favor.getValue());
             assertEquals(7 * 24, favor.getDecayHours());
         }
     }
@@ -298,6 +406,7 @@ class PostingReferencesReceptorTest {
     private static class TestReceptor extends PostingReceptor {
 
         private final List<Notification> notifications = new ArrayList<>();
+        private final List<Notification> mentions = new ArrayList<>();
         private final List<Direction> directions = new ArrayList<>();
 
         @Override
@@ -306,6 +415,10 @@ class PostingReferencesReceptorTest {
 
         @Override
         protected void send(Direction direction, Notification notification) {
+            if (notification instanceof MentionPostingAddedNotification
+                || notification instanceof MentionPostingDeletedNotification) {
+                mentions.add(notification);
+            }
             if (notification instanceof PostingSharedNotification || notification instanceof PostingUnsharedNotification) {
                 directions.add(direction);
                 notifications.add(notification);

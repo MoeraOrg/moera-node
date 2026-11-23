@@ -1,10 +1,7 @@
 package org.moera.node.liberin.receptor;
 
-import java.util.Collections;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
@@ -12,7 +9,6 @@ import org.moera.lib.Rules;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.SearchContentUpdateType;
-import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
@@ -22,12 +18,9 @@ import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
-import org.moera.node.friends.FriendCache;
-import org.moera.node.friends.SubscribedCache;
 import org.moera.node.instant.CommentInstants;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
-import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.CommentAddedLiberin;
 import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentHeadingUpdatedLiberin;
@@ -51,24 +44,17 @@ import org.moera.node.model.notification.ReplyCommentDeletedNotificationUtil;
 import org.moera.node.model.notification.SearchContentUpdatedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.MediaAttachmentsProvider;
-import org.moera.node.text.MentionsExtractor;
 import org.moera.node.userlist.SheriffUserListOperations;
 import org.moera.node.util.Transaction;
 
 @LiberinReceptor
-public class CommentReceptor extends LiberinReceptorBase {
+public class CommentReceptor extends EntryReceptor {
 
     @Inject
     private CommentRepository commentRepository;
 
     @Inject
     private CommentInstants commentInstants;
-
-    @Inject
-    private FriendCache friendCache;
-
-    @Inject
-    private SubscribedCache subscribedCache;
 
     @Inject
     private SheriffUserListOperations sheriffUserListOperations;
@@ -86,14 +72,7 @@ public class CommentReceptor extends LiberinReceptorBase {
 
         notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
-        notifyMentioned(
-            posting,
-            comment,
-            comment.getCurrentRevision(),
-            comment.getViewE(),
-            null,
-            Principal.PUBLIC
-        );
+        notifyMentioned(comment, comment.getCurrentRevision(), null, Principal.PUBLIC);
 
         send(liberin, new CommentAddedEvent(comment, visibilityFilter(posting, comment)));
         send(liberin, new PostingCommentsChangedEvent(posting, generalVisibilityFilter(posting)));
@@ -115,10 +94,8 @@ public class CommentReceptor extends LiberinReceptorBase {
         notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
         notifyMentioned(
-            posting,
             comment,
             comment.getCurrentRevision(),
-            comment.getViewE(),
             liberin.getLatestRevision(),
             liberin.getLatestViewE()
         );
@@ -173,14 +150,7 @@ public class CommentReceptor extends LiberinReceptorBase {
             notifyPremoderatedCommentDecided(posting, comment, false);
         }
         notifyReplyDeleted(posting, comment);
-        notifyMentioned(
-            posting,
-            comment,
-            null,
-            Principal.PUBLIC,
-            liberin.getLatestRevision(),
-            comment.getViewE()
-        );
+        notifyMentioned(comment, null, liberin.getLatestRevision(), comment.getViewE());
 
         send(
             Directions.postingSubscribers(comment.getNodeId(), posting.getId(), generalVisibilityFilter(posting)),
@@ -385,24 +355,23 @@ public class CommentReceptor extends LiberinReceptorBase {
     }
 
     private void notifyMentioned(
-        Entry posting,
         Comment comment,
         EntryRevision current,
-        Principal currentView,
         EntryRevision latest,
         Principal latestView
     ) {
-        // TODO it is better to do this only for signed revisions. But it this case 'latest' should be the latest
-        // signed revision
+        if (current != null && current.getSignature() == null) {
+            return;
+        }
+        Entry posting = comment.getPosting();
         String ownerName = comment.getOwnerName();
         String ownerFullName = comment.getOwnerFullName();
         String ownerSourceUri = comment.getOwnerSourceUri();
-        Set<String> currentMentions = current != null
-            ? filterMentions(MentionsExtractor.extract(new Body(current.getBody())), ownerName, currentView)
-            : Collections.emptySet();
-        Set<String> latestMentions = latest != null
-            ? filterMentions(MentionsExtractor.extract(new Body(latest.getBody())), ownerName, latestView)
-            : Collections.emptySet();
+        Set<String> names = mentions(current);
+        Set<String> latestNames = mentions(latest);
+        updateMentionFavors(comment, names, latestNames);
+        Set<String> currentMentions = mentionedRecipients(names, ownerName, comment.getViewE());
+        Set<String> latestMentions = mentionedRecipients(latestNames, ownerName, latestView);
         if (!currentMentions.isEmpty()) {
             PostingInfo postingInfo = PostingInfoUtil.build(
                 posting,
@@ -453,21 +422,6 @@ public class CommentReceptor extends LiberinReceptorBase {
             .filter(m -> !currentMentions.contains(m))
             .map(m -> Directions.single(posting.getNodeId(), m))
             .forEach(d -> send(d, MentionCommentDeletedNotificationUtil.build(posting.getId(), comment.getId())));
-    }
-
-    private Set<String> filterMentions(Set<String> mentions, String ownerName, Principal view) {
-        return mentions.stream()
-            .filter(m -> !Objects.equals(ownerName, m))
-            .filter(m -> !m.equals(":"))
-            .filter(m ->
-                view.includes(
-                    false,
-                    m,
-                    () -> subscribedCache.isSubscribed(m),
-                    () -> friendCache.getClientGroupIds(m)
-                )
-            )
-            .collect(Collectors.toSet());
     }
 
     private PrincipalExpression generalVisibilityFilter(Entry posting) {

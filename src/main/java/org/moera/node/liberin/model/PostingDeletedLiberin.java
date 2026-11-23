@@ -11,7 +11,7 @@ public class PostingDeletedLiberin extends Liberin {
 
     public PostingDeletedLiberin(Posting posting, EntryRevision latestRevision) {
         this.posting = posting;
-        this.latestRevision = latestRevision;
+        this.latestRevision = posting.resolvePreviousRevision(null, latestRevision);
     }
 
     public Posting getPosting() {

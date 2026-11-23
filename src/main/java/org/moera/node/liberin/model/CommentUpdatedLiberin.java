@@ -23,7 +23,7 @@ public class CommentUpdatedLiberin extends Liberin {
         boolean latestPremoderating
     ) {
         this.comment = comment;
-        this.latestRevision = latestRevision;
+        this.latestRevision = comment.resolvePreviousRevision(comment.getCurrentRevision(), latestRevision);
         this.latestViewE = latestViewE;
         this.latestPremoderating = latestPremoderating;
     }

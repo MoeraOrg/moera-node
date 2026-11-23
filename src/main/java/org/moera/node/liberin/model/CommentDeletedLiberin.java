@@ -11,7 +11,7 @@ public class CommentDeletedLiberin extends Liberin {
 
     public CommentDeletedLiberin(Comment comment, EntryRevision latestRevision) {
         this.comment = comment;
-        this.latestRevision = latestRevision;
+        this.latestRevision = comment.resolvePreviousRevision(null, latestRevision);
     }
 
     public Comment getComment() {

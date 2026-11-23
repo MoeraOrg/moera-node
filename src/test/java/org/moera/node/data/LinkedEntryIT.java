@@ -29,6 +29,7 @@ import org.mockito.ArgumentCaptor;
 import org.moera.lib.node.types.FeedSliceInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SharingType;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
@@ -1281,18 +1282,25 @@ class LinkedEntryIT {
         });
     }
 
-    @Test
-    void referenceNotificationsReadRevisionsAfterTheProducingTransactionHasClosed() {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void referenceNotificationsReadRevisionsAfterTheProducingTransactionHasClosed(boolean pendingEdit) {
         UUID sourceId = transaction.execute(status -> {
             Posting source = posting(nodeId);
             source.getCurrentRevision().setSignature(new byte[]{1});
             link(source, posting(nodeId));
+            if (pendingEdit) {
+                var unsigned = new EntryRevision();
+                unsigned.setId(UUID.randomUUID());
+                source.addRevision(unsigned);
+                entityManager.persist(unsigned);
+                source.setCurrentRevision(unsigned);
+            }
             return source.getId();
         });
-        Posting source = transaction.execute(status -> {
+        var deletion = transaction.execute(status -> {
             Posting posting = postingRepository.findById(sourceId).orElseThrow();
-            posting.getCurrentRevision().getSignature();
-            return posting;
+            return new PostingDeletedLiberin(posting, posting.getCurrentRevision());
         });
         var notifications = new ArrayList<Notification>();
         PostingReceptor receptor = new PostingReceptor() {
@@ -1301,15 +1309,21 @@ class LinkedEntryIT {
                 notifications.add(notification);
             }
         };
+        ReflectionTestUtils.setField(
+            receptor, "universalContext", ReflectionTestUtils.getField(operations, "universalContext")
+        );
         ReflectionTestUtils.setField(receptor, "favorOperations", mock(FavorOperations.class));
         ReflectionTestUtils.setField(receptor, "linkedEntryRepository", linkedEntryRepository);
 
         transaction.executeWithoutResult(status -> ReflectionTestUtils.invokeMethod(
-            receptor, "notifyReferences", source, null, Principal.PUBLIC, source.getCurrentRevision(), Principal.PUBLIC
+            receptor, "notifyReferences", deletion.getPosting(), null, Principal.PUBLIC,
+            deletion.getLatestRevision(), Principal.PUBLIC
         ));
 
         assertEquals(1, notifications.size());
-        assertInstanceOf(PostingUnsharedNotification.class, notifications.getFirst());
+        var unshared = assertInstanceOf(PostingUnsharedNotification.class, notifications.getFirst());
+        assertEquals(SharingType.REFER, unshared.getSharingType());
+        assertEquals(sourceId.toString(), unshared.getRemotePostingId());
     }
 
     @ParameterizedTest

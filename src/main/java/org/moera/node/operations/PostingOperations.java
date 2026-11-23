@@ -503,12 +503,13 @@ public class PostingOperations {
                             .min(Comparator.comparing(EntryRevision::getCreatedAt))
                             .orElse(null);
                         if (revision != null) { // always
+                            EntryRevision previousSigned = posting.resolvePreviousRevision(null, latest);
                             revision.setDeletedAt(null);
                             entryRevisionRepository.delete(posting.getCurrentRevision());
                             posting.setCurrentRevision(revision);
                             posting.setTotalRevisions(posting.getTotalRevisions() - 1);
 
-                            universalContext.send(new PostingUpdatedLiberin(posting, latest, posting.getViewE()));
+                            universalContext.send(new PostingUpdatedLiberin(posting, previousSigned, posting.getViewE()));
                         }
                     }
                 }
