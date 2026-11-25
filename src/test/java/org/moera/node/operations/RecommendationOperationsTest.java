@@ -1,5 +1,7 @@
 package org.moera.node.operations;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,11 +23,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 class RecommendationOperationsTest {
@@ -34,11 +39,13 @@ class RecommendationOperationsTest {
     private final StoryRepository storyRepository = mock(StoryRepository.class);
     private final Jobs jobs = mock(Jobs.class);
     private final UniversalContext universalContext = mock(UniversalContext.class);
+    private final Options options = mock(Options.class);
     private final RecommendationOperations operations = new RecommendationOperations();
 
     @BeforeEach
     void setUp() {
         when(universalContext.nodeId()).thenReturn(nodeId);
+        when(universalContext.getOptions()).thenReturn(options);
         Domains domains = mock(Domains.class);
         when(domains.getWarmDomainNames()).thenReturn(List.of("test.example"));
         when(domains.getDomainNodeId("test.example")).thenReturn(nodeId);
@@ -89,7 +96,8 @@ class RecommendationOperationsTest {
     }
 
     @Test
-    void populateExploreRecountsFeedOnEveryRun() {
+    void populateExploreRecountsFeedWhenDue() {
+        when(options.getTimestamp("explore.next-update")).thenReturn(Timestamp.from(Instant.EPOCH));
         when(storyRepository.countInFeed(nodeId, Feed.EXPLORE)).thenReturn(0, 20, 50);
 
         operations.populateExplore();
@@ -103,11 +111,40 @@ class RecommendationOperationsTest {
             .map(FetchRecommendationJob.Parameters::limit).toList());
     }
 
+    @Test
+    void populateExploreSkipsDomainsBeforeTheirNextUpdate() {
+        when(options.getTimestamp("explore.next-update"))
+            .thenReturn(Timestamp.from(Instant.now().plusSeconds(3600)));
+
+        operations.populateExplore();
+
+        verifyNoInteractions(storyRepository);
+        verify(jobs).isReady();
+        verifyNoMoreInteractions(jobs);
+    }
+
+    @Test
+    void populateExploreStoresNextUpdateAfterSchedulingTheFetch() {
+        Instant before = Instant.now();
+
+        operations.populateExplore();
+
+        Instant after = Instant.now();
+        var calls = inOrder(jobs, options);
+        calls.verify(jobs).run(
+            FetchRecommendationJob.class,
+            new FetchRecommendationJob.Parameters(Feed.EXPLORE, 20),
+            nodeId
+        );
+        var nextUpdate = ArgumentCaptor.forClass(Timestamp.class);
+        calls.verify(options).set(eq("explore.next-update"), nextUpdate.capture());
+        assertFalse(nextUpdate.getValue().toInstant().isBefore(before.plusSeconds(30 * 60)));
+        assertFalse(nextUpdate.getValue().toInstant().isAfter(after.plusSeconds(90 * 60)));
+    }
+
     private void configureNewsRecommendations() {
-        Options options = mock(Options.class);
         when(options.getString("recommendations.frequency")).thenReturn("normal");
         when(options.getInt("recommendations.max-non-viewed-news")).thenReturn(10);
-        when(universalContext.getOptions()).thenReturn(options);
     }
 
 }

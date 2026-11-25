@@ -417,6 +417,10 @@
     min: 1d
     max: 180d
 
+- name: explore.next-update
+  type: Timestamp
+  internal: true
+
 - name: comment.max-size
   type: int
   privileged: true

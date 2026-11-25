@@ -52,6 +52,10 @@ Implementation: [Transaction](../../src/main/java/org/moera/node/util/Transactio
 
 ## Jobs and retry ownership
 
+Explore checks warm domains periodically against each domain's stored next update time. For a due domain, it submits
+the fetch job and then saves the randomized next update time.
+See [RecommendationOperations](../../src/main/java/org/moera/node/operations/RecommendationOperations.java).
+
 Each job chooses its transaction scopes, checkpoint state, retry classification, and any class parallelism limit.
 `Jobs` restores committed pending rows and submits due attempts; success or permanent failure removes the row, while
 retry persists state and next execution time. Unexpected exceptions normally fail an attempt permanently unless the

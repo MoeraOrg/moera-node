@@ -37,6 +37,10 @@ update existing registrations.
 Feed seeding excludes this node's originals, duplicate original identities, and publications already in the destination
 feed; a cached posting without that publication remains eligible.
 
+The node selects feed recommendations locally from candidates supplied by the configured search service. For each
+selected posting it submits a pick and reports acceptance to the service.
+See [FetchRecommendationJob](../../src/main/java/org/moera/node/rest/task/FetchRecommendationJob.java).
+
 [PickerPool](../../src/main/java/org/moera/node/picker/PickerPool.java) persists fetch/refresh intent and runs a
 [Picker](../../src/main/java/org/moera/node/picker/Picker.java) per local-node/peer direction. Picks retain target,
 provenance, optional publication attributes, recommendation intent, and parent/reference context across redirects and

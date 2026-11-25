@@ -14,6 +14,7 @@ import org.moera.node.option.type.enums.RecommendationFrequency;
 import org.moera.node.rest.task.FetchRecommendationJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.Transaction;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -142,7 +143,7 @@ public class RecommendationOperations {
         }
     }
 
-    @Scheduled(fixedDelayString = "PT1H")
+    @Scheduled(fixedDelayString = "PT10M")
     public void populateExplore() {
         if (!jobs.isReady()) {
             return;
@@ -152,6 +153,11 @@ public class RecommendationOperations {
             log.info("Fetching recommendations for 'explore' feed");
             for (String domainName : domains.getWarmDomainNames()) {
                 universalContext.associate(domains.getDomainNodeId(domainName));
+                var options = universalContext.getOptions();
+                Timestamp nextUpdate = options.getTimestamp("explore.next-update");
+                if (nextUpdate != null && nextUpdate.toInstant().isAfter(Instant.now())) {
+                    continue;
+                }
 
                 int size = tx.executeRead(() ->
                     storyRepository.countInFeed(universalContext.nodeId(), Feed.EXPLORE)
@@ -165,6 +171,9 @@ public class RecommendationOperations {
                     new FetchRecommendationJob.Parameters(Feed.EXPLORE, limit),
                     universalContext.nodeId()
                 );
+
+                int delay = Util.random(30, 90 + 1);
+                options.set("explore.next-update", Timestamp.from(Instant.now().plus(delay, ChronoUnit.MINUTES)));
             }
         }
     }
