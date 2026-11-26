@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import jakarta.inject.Inject;
 
 import org.moera.lib.naming.NodeName;
@@ -21,6 +22,8 @@ import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
+import org.moera.node.data.Entry;
+import org.moera.node.data.LinkedEntry;
 import org.moera.node.data.LinkedEntryRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -41,6 +44,7 @@ import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.liberin.model.PostingViewedLiberin;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.PostingInfoUtil;
+import org.moera.node.operations.SharingOperations;
 import org.moera.node.model.event.PostingAddedEvent;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.event.PostingDeletedEvent;
@@ -85,6 +89,9 @@ public class PostingReceptor extends EntryReceptor {
 
     @Inject
     private SheriffUserListOperations sheriffUserListOperations;
+
+    @Inject
+    private SharingOperations sharingOperations;
 
     @Inject
     private RequestCounter requestCounter;
@@ -274,6 +281,7 @@ public class PostingReceptor extends EntryReceptor {
         Posting posting = liberin.getPosting();
 
         if (posting.isOriginal()) {
+            sharingOperations.refreshTotal(posting.getNodeId(), posting.getId());
             notifyMentionsAndReferences(posting, posting.getCurrentRevision(), null, Principal.PUBLIC);
         }
         send(liberin, new PostingRestoredEvent(posting, posting.getViewE()));
@@ -346,16 +354,17 @@ public class PostingReceptor extends EntryReceptor {
         EntryRevision latest,
         Principal latestView
     ) {
-        Set<Reference> links = references(posting.getNodeId(), current);
-        Set<Reference> latestLinks = references(posting.getNodeId(), latest);
+        List<LinkedEntry> links = links(posting.getNodeId(), current);
+        List<LinkedEntry> latestLinks = links(posting.getNodeId(), latest);
         if (links.isEmpty() && latestLinks.isEmpty()) {
             return;
         }
 
         String owner = NodeName.expand(posting.getOwnerName());
+        updateOwnSharingTotals(posting.getNodeId(), owner, links, latestLinks);
         Predicate<Reference> otherOwner = ref -> !Objects.equals(owner, ref.nodeName());
-        Set<Reference> currentReferences = links.stream().filter(otherOwner).collect(Collectors.toSet());
-        Set<Reference> latestReferences = latestLinks.stream().filter(otherOwner).collect(Collectors.toSet());
+        Set<Reference> currentReferences = references(links, otherOwner);
+        Set<Reference> latestReferences = references(latestLinks, otherOwner);
         updateReferenceFavors(posting.getNodeId(), currentReferences, latestReferences);
 
         Set<Reference> currentVisible = visible(currentReferences, currentView);
@@ -401,12 +410,34 @@ public class PostingReceptor extends EntryReceptor {
             ));
     }
 
-    private Set<Reference> references(UUID nodeId, EntryRevision revision) {
-        if (revision == null) {
-            return Set.of();
-        }
-        return linkedEntryRepository.findByRevisionId(nodeId, revision.getId()).stream()
+    private List<LinkedEntry> links(UUID nodeId, EntryRevision revision) {
+        return revision != null ? linkedEntryRepository.findByRevisionId(nodeId, revision.getId()) : List.of();
+    }
+
+    private Set<Reference> references(List<LinkedEntry> links, Predicate<Reference> filter) {
+        return links.stream()
             .map(link -> new Reference(link.getReceiverNodeName(), link.getReceiverEntryId()))
+            .filter(filter)
+            .collect(Collectors.toSet());
+    }
+
+    private void updateOwnSharingTotals(
+        UUID nodeId, String owner, List<LinkedEntry> now, List<LinkedEntry> before
+    ) {
+        Set<UUID> newTargets = ownTargets(now, owner);
+        Set<UUID> oldTargets = ownTargets(before, owner);
+        Stream.concat(newTargets.stream(), oldTargets.stream())
+            .filter(id -> newTargets.contains(id) != oldTargets.contains(id))
+            .sorted()
+            .forEach(id -> sharingOperations.refreshTotal(nodeId, id));
+    }
+
+    private Set<UUID> ownTargets(List<LinkedEntry> links, String owner) {
+        return links.stream()
+            .filter(link -> Objects.equals(owner, link.getReceiverNodeName()))
+            .map(LinkedEntry::getLinkedEntry)
+            .filter(Objects::nonNull)
+            .map(Entry::getId)
             .collect(Collectors.toSet());
     }
 

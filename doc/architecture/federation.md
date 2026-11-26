@@ -67,7 +67,7 @@ Timeline republications report to the node hosting the original posting. While t
 in its feed position sends `POSTING_SHARING_UPDATED`. Gaining access sends `POSTING_SHARED` with the current position.
 Losing access sends `POSTING_UNSHARED` with the previously visible position.
 
-Links from original postings use a separate sharing type with the same
+Links from original postings to other authors' nodes use a separate sharing type with the same
 [identity rules](persistence.md#references-and-sharings). For these links and for mentions in postings and comments,
 signing the source revision triggers direct notifications. The node compares the sets of targets in the current and
 preceding signed revisions. It expands mentioned names first, so `alice` and `alice_0` identify one target, reported as

@@ -47,12 +47,18 @@ See [LinkedEntryOperations](../../src/main/java/org/moera/node/operations/Linked
 [V325](../../src/main/resources/db/migration/V325__linked_entries.sql), and
 [PostingInfoOperationsTest](../../src/test/java/org/moera/node/operations/PostingInfoOperationsTest.java).
 
-`EntrySharing` belongs to the original posting and may retain a specific revision. Picked copies retain the received
-total, not the original's sharing list. Mutations lock the original posting and update list/counter together.
-Identity includes sender, sharing type, optional revision, and remote story/posting references, including nulls;
-feed/moment metadata is descriptive. [Federation](federation.md#sharing-flow) owns the delayed-completion workflow.
-Implementation and schema: [SharingOperations](../../src/main/java/org/moera/node/operations/SharingOperations.java)
-and [V313](../../src/main/resources/db/migration/V313__entry_sharings.sql).
+`EntrySharing` records federated sharings of an original posting and may retain a specific revision. Identity includes
+the sender, type, optional revision, and remote story/posting references. Picked copies retain the received total.
+
+A reference whose destination name matches its source author is counted locally from `LinkedEntry`. Only the active
+signed content of a live source posting contributes, with one sharing per source and target. The list merges these
+references with federated sharings using unique moments, and checks source visibility before disclosing a local
+reference. The node assigns the local moments when saving or resolving links. Sharing changes update the original
+posting's stored total under its lock. Local link changes refresh the total when the node handles the source posting
+change. Read operations use the stored value under the target's counter permission.
+See [SharingOperations](../../src/main/java/org/moera/node/operations/SharingOperations.java),
+[V333](../../src/main/resources/db/migration/V333__own_posting_sharings.sql), and
+[Federation](federation.md#sharing-flow) for federated delivery.
 
 ## Relationships and snapshots
 

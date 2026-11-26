@@ -160,6 +160,8 @@ class LinkedEntryIT {
         ReflectionTestUtils.setField(operations, "universalContext", context);
         ReflectionTestUtils.setField(operations, "linkedEntryRepository", linkedEntryRepository);
         ReflectionTestUtils.setField(operations, "postingRepository", postingRepository);
+        ReflectionTestUtils.setField(operations, "entrySharingRepository",
+            repositories.getRepository(EntrySharingRepository.class));
         ReflectionTestUtils.setField(operations, "pickerPool", pickerPool);
         doCallRealMethod().when(pickerPool).pickAfterCommit(any(Pick.class));
 

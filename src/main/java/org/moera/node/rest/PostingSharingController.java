@@ -69,7 +69,7 @@ public class PostingSharingController {
             : SharingOperations.MAX_SHARINGS_PER_REQUEST;
         ValidationUtil.assertion(limit >= 0, "limit.invalid");
         before = before != null ? before : SafeInteger.MAX_VALUE;
-        SharingsSliceInfo sliceInfo = sharingOperations.getBefore(id, before, limit);
+        SharingsSliceInfo sliceInfo = sharingOperations.getBefore(id, before, limit, requestContext);
         Principal viewTotalSharings = posting.isOriginal()
             ? posting.getViewTotalSharingsE()
             : posting.getReceiverViewTotalSharingsE();

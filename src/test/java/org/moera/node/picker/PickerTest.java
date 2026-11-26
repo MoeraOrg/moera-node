@@ -39,6 +39,7 @@ import org.moera.node.media.DirectServeOperations;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.LinkedEntryOperations;
+import org.moera.node.operations.SharingOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
@@ -263,6 +264,11 @@ class PickerTest {
         original.setReceiverName(null);
         LinkedEntry link = new LinkedEntry();
         link.setId(UUID.randomUUID());
+        Posting source = posting(nodeId);
+        source.setReceiverName(null);
+        source.setOwnerName("relay_0");
+        link.setEntryRevision(source.getCurrentRevision());
+        link.setReceiverNodeName("relay_0");
         Pick pick = new Pick();
         pick.setLinkedEntry(link);
         pick.setRemoteNodeName("relay_0");
@@ -271,13 +277,17 @@ class PickerTest {
         LinkedEntryRepository links = mock(LinkedEntryRepository.class);
         when(links.findByNodeIdAndId(nodeId, link.getId())).thenReturn(Optional.of(link));
         PostingRepository postings = mock(PostingRepository.class);
-        when(postings.findByNodeIdAndId(nodeId, original.getId())).thenReturn(Optional.of(original));
+        when(postings.findByNodeIdAndIdIncludingDeleted(nodeId, original.getId())).thenReturn(Optional.of(original));
         UniversalContext context = mock(UniversalContext.class);
         when(context.nodeName()).thenReturn("local_0");
         when(context.nodeId()).thenReturn(nodeId);
         LinkedEntryOperations operations = new LinkedEntryOperations();
         ReflectionTestUtils.setField(operations, "universalContext", context);
         ReflectionTestUtils.setField(operations, "linkedEntryRepository", links);
+        ReflectionTestUtils.setField(operations, "entrySharingRepository",
+            mock(org.moera.node.data.EntrySharingRepository.class));
+        SharingOperations sharingOperations = mock(SharingOperations.class);
+        ReflectionTestUtils.setField(operations, "sharingOperations", sharingOperations);
         ReflectionTestUtils.setField(operations, "postingRepository", postings);
         PickerPool pool = mock(PickerPool.class);
         Picker picker = new Picker(pool, "relay_0");
@@ -287,6 +297,7 @@ class PickerTest {
         ReflectionTestUtils.invokeMethod(picker, "redirected", pick, redirected);
 
         assertSame(original, link.getLinkedEntry());
+        verify(sharingOperations).refreshTotal(nodeId, original.getId());
         verify(pool, never()).pick(any());
     }
 

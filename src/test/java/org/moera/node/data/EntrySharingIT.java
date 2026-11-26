@@ -19,6 +19,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.moera.lib.node.types.principal.AccessCheckers;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.SharingType;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.SharingInfo;
@@ -45,10 +46,12 @@ import org.moera.node.model.StorySummaryEntryUtil;
 import org.moera.node.notification.receive.NotificationProcessor;
 import org.moera.node.notification.receive.NotificationRouter;
 import org.moera.node.operations.SharingOperations;
+import org.moera.node.operations.LinkedEntryOperations;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.notification.PostingSharingProcessor;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.Transaction;
+import org.moera.node.util.Util;
 import org.moera.node.option.Options;
 import org.moera.node.util.SafeInteger;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
@@ -135,12 +138,14 @@ class EntrySharingIT {
         ReflectionTestUtils.setField(tx, "txManager", txManager);
         ReflectionTestUtils.setField(tx, "universalContext", context);
         when(context.nodeId()).thenReturn(nodeId);
-        when(context.nodeName()).thenReturn("local");
+        when(context.nodeName()).thenReturn("local_0");
         when(context.getOptions()).thenReturn(mock(Options.class));
         operations = new SharingOperations();
         ReflectionTestUtils.setField(operations, "universalContext", context);
         ReflectionTestUtils.setField(operations, "postingRepository", postings);
         ReflectionTestUtils.setField(operations, "entrySharingRepository", sharings);
+        ReflectionTestUtils.setField(operations, "linkedEntryRepository",
+            repositories.getRepository(LinkedEntryRepository.class));
         ReflectionTestUtils.setField(operations, "storyRepository", stories);
         ReflectionTestUtils.setField(operations, "entryRevisionRepository",
             repositories.getRepository(EntryRevisionRepository.class));
@@ -158,6 +163,58 @@ class EntrySharingIT {
             revision.setBodyPreview("{\"text\":\"Shared posting\"}");
             entityManager.persist(revision);
             posting.setCurrentRevision(revision);
+        });
+    }
+
+    @Test
+    void localReferencesAppearAlongsideOtherSharingsUntilTheSourceIsDeleted() {
+        add(shared("alice", null, null, null, null, "copy"));
+        UUID sourceId = addLocalReference("local", Principal.PUBLIC);
+
+        transaction.executeWithoutResult(status -> {
+            assertEquals(2, entityManager.find(Posting.class, postingId).getTotalSharings());
+            var first = operations.getBefore(postingId, SafeInteger.MAX_VALUE, 1);
+            assertEquals(SharingType.REFER, first.getSharings().getFirst().getSharingType());
+            assertEquals(sourceId.toString(), first.getSharings().getFirst().getRemotePostingId());
+            var second = operations.getBefore(postingId, first.getAfter(), 1);
+            assertEquals("alice", second.getSharings().getFirst().getRemoteNodeName());
+            entityManager.find(Posting.class, sourceId).setDeletedAt(Util.now());
+            operations.refreshTotal(nodeId, postingId);
+        });
+        transaction.executeWithoutResult(status -> {
+            assertEquals(1, entityManager.find(Posting.class, postingId).getTotalSharings());
+            var slice = operations.getBefore(postingId, SafeInteger.MAX_VALUE, 10);
+            assertEquals(1, slice.getSharings().size());
+            assertEquals("alice", slice.getSharings().getFirst().getRemoteNodeName());
+        });
+    }
+
+    @Test
+    void localReferenceUsesTheSignedRevisionAndRespectsSourceVisibility() {
+        UUID sourceId = addLocalReference("local_0", Principal.PRIVATE);
+        addLocalReference("guest_0", Principal.PUBLIC);
+
+        transaction.executeWithoutResult(status -> {
+            Posting source = entityManager.find(Posting.class, sourceId);
+            source.getCurrentRevision().setDeletedAt(Util.now());
+            EntryRevision draft = new EntryRevision();
+            draft.setId(UUID.randomUUID());
+            source.addRevision(draft);
+            entityManager.persist(draft);
+            source.setCurrentRevision(draft);
+        });
+        transaction.executeWithoutResult(status -> {
+            assertEquals(1, entityManager.find(Posting.class, postingId).getTotalSharings());
+            assertTrue(operations.getBefore(postingId, SafeInteger.MAX_VALUE, 10, AccessCheckers.PUBLIC)
+                .getSharings().isEmpty());
+            assertEquals(sourceId.toString(), operations.getBefore(postingId, SafeInteger.MAX_VALUE, 10,
+                AccessCheckers.node("local_0")).getSharings().getFirst().getRemotePostingId());
+            entityManager.find(Posting.class, sourceId).getCurrentRevision().setSignature(new byte[]{1});
+            operations.refreshTotal(nodeId, postingId);
+        });
+        transaction.executeWithoutResult(status -> {
+            assertEquals(0, entityManager.find(Posting.class, postingId).getTotalSharings());
+            assertTrue(operations.getBefore(postingId, SafeInteger.MAX_VALUE, 10).getSharings().isEmpty());
         });
     }
 
@@ -795,6 +852,35 @@ class EntrySharingIT {
             assertEquals("alice-post", info.getRemotePostingId());
             assertEquals("Alice source", info.getSummaryData().getReferences().getFirst().getHeading());
         });
+    }
+
+    private UUID addLocalReference(String ownerName, Principal view) {
+        UUID sourceId = UUID.randomUUID();
+        transaction.executeWithoutResult(status -> {
+            Posting source = new Posting();
+            source.setId(sourceId);
+            source.setNodeId(nodeId);
+            source.setOwnerName(ownerName);
+            source.setViewPrincipal(view);
+            entityManager.persist(source);
+            EntryRevision revision = new EntryRevision();
+            revision.setId(UUID.randomUUID());
+            revision.setSignature(new byte[]{1});
+            source.addRevision(revision);
+            entityManager.persist(revision);
+            source.setCurrentRevision(revision);
+            LinkedEntryOperations links = new LinkedEntryOperations();
+            ReflectionTestUtils.setField(links, "universalContext", context);
+            ReflectionTestUtils.setField(links, "postingRepository", postings);
+            ReflectionTestUtils.setField(links, "linkedEntryRepository", new JpaRepositoryFactory(entityManager)
+                .getRepository(LinkedEntryRepository.class));
+            ReflectionTestUtils.setField(links, "entrySharingRepository", sharings);
+            revision.setBody("{\"text\":\"<a href='https://moera.page/@local/~/post/"
+                + postingId + "'>post</a>\"}");
+            links.create(revision);
+        });
+        transaction.executeWithoutResult(status -> operations.refreshTotal(nodeId, postingId));
+        return sourceId;
     }
 
     private PostingSharedNotification shared(

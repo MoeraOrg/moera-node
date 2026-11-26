@@ -23,6 +23,9 @@ public interface EntrySharingRepository extends JpaRepository<EntrySharing, UUID
     @Query("select count(s) from EntrySharing s where s.entry.id = ?1")
     int countByEntryId(UUID entryId);
 
+    @Query("select coalesce(max(s.moment), 0) from EntrySharing s where s.entry.id = ?1")
+    long lastMoment(UUID postingId);
+
     @Query("select count(s) from EntrySharing s where s.entry.id = ?1 and s.moment = ?2")
     int countMoments(UUID entryId, long moment);
 

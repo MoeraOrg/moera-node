@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.moera.node.operations.SharingOperations;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.moera.lib.node.types.PostingInfo;
@@ -53,12 +54,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class PostingReferencesReceptorTest {
 
     private final TestReceptor receptor = new TestReceptor();
     private final Posting posting = new Posting();
+    private final SharingOperations sharingOperations = mock(SharingOperations.class);
     private final List<Favor> favors = new ArrayList<>();
     private final Map<UUID, List<LinkedEntry>> references = new HashMap<>();
     private final SubscribedCache subscribedCache = mock(SubscribedCache.class);
@@ -74,6 +78,7 @@ class PostingReferencesReceptorTest {
         }).when(repository).save(any(Favor.class));
         FavorOperations operations = new FavorOperations();
         ReflectionTestUtils.setField(operations, "favorRepository", repository);
+        ReflectionTestUtils.setField(receptor, "sharingOperations", sharingOperations);
         ReflectionTestUtils.setField(receptor, "favorOperations", operations);
         ReflectionTestUtils.setField(receptor, "subscribedCache", subscribedCache);
         ReflectionTestUtils.setField(receptor, "friendCache", mock(FriendCache.class));
@@ -323,6 +328,22 @@ class PostingReferencesReceptorTest {
         receptor.deleted(new PostingDeletedLiberin(posting, posting.getCurrentRevision()));
 
         assertTrue(receptor.notifications.isEmpty());
+        assertTrue(favors.isEmpty());
+    }
+
+    @Test
+    void addingAndRemovingOwnReferenceRefreshesTheTargetsStoredTotal() {
+        Posting target = new Posting();
+        target.setId(UUID.randomUUID());
+        var revision = revision("<a href='https://moera.page/@author/~/post/" + target.getId() + "'>post</a>");
+        references.get(revision.getId()).getFirst().setLinkedEntry(target);
+        posting.setCurrentRevision(revision);
+
+        receptor.added(new PostingAddedLiberin(posting));
+        verify(sharingOperations).refreshTotal(posting.getNodeId(), target.getId());
+
+        receptor.deleted(new PostingDeletedLiberin(posting, revision));
+        verify(sharingOperations, times(2)).refreshTotal(posting.getNodeId(), target.getId());
         assertTrue(favors.isEmpty());
     }
 

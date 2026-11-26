@@ -25,4 +25,26 @@ public interface LinkedEntryRepository extends JpaRepository<LinkedEntry, UUID> 
     @Query("select count(le) from LinkedEntry le where le.linkedEntry.id = ?1")
     long countByLinkedEntryId(UUID entryId);
 
+    @Query("""
+        select le from LinkedEntry le
+        join fetch le.entryRevision revision
+        join fetch revision.entry source
+        join fetch source.currentRevision current
+        where le.linkedEntry.id = ?1 and le.linkedEntry.receiverName is null
+            and source.deletedAt is null and source.receiverName is null
+            and le.sharingMoment is not null and revision.signature is not null
+            and (revision.id = current.id or current.signature is null)
+        order by le.sharingMoment desc
+        """)
+    List<LinkedEntry> findSharingLinks(UUID postingId);
+
+    @Query(
+        value = "select pg_advisory_xact_lock(hashtextextended('posting-own-sharing:' || ?1, 0))",
+        nativeQuery = true
+    )
+    void lockSharingMoments(String postingId);
+
+    @Query("select coalesce(max(le.sharingMoment), 0) from LinkedEntry le where le.linkedEntry.id = ?1")
+    long lastSharingMoment(UUID postingId);
+
 }

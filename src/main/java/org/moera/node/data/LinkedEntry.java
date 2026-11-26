@@ -31,6 +31,8 @@ public class LinkedEntry {
     @ManyToOne(fetch = FetchType.LAZY)
     private Entry linkedEntry;
 
+    private Long sharingMoment;
+
     public UUID getId() {
         return id;
     }
@@ -69,6 +71,14 @@ public class LinkedEntry {
 
     public void setLinkedEntry(Entry linkedEntry) {
         this.linkedEntry = linkedEntry;
+    }
+
+    public Long getSharingMoment() {
+        return sharingMoment;
+    }
+
+    public void setSharingMoment(Long sharingMoment) {
+        this.sharingMoment = sharingMoment;
     }
 
 }

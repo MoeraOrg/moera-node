@@ -16,6 +16,7 @@ import org.moera.node.instant.PostingSharingInstants;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.model.PostingSharingAddedLiberin;
 import org.moera.node.liberin.model.PostingSharingDeletedLiberin;
+import org.moera.node.liberin.model.PostingTotalSharingsUpdatedLiberin;
 import org.moera.node.model.event.Event;
 import org.springframework.test.util.ReflectionTestUtils;
 import tools.jackson.databind.JsonNode;
@@ -85,6 +86,20 @@ class PostingSharingEventsTest {
         fixture.receptor.added(new PostingSharingAddedLiberin(fixture.posting, fixture.sharing, null));
 
         assertTrue(fixture.receptor.events.isEmpty());
+    }
+
+    @Test
+    void totalUpdateUsesTheValueCarriedByTheLiberin() {
+        Fixture fixture = new Fixture();
+        fixture.posting.setReceiverName("remote");
+        fixture.posting.setTotalSharings(3);
+        var liberin = new PostingTotalSharingsUpdatedLiberin(fixture.posting, fixture.posting.getTotalSharings());
+        fixture.posting.setTotalSharings(4);
+
+        fixture.receptor.totalUpdated(liberin);
+
+        JsonNode json = new ObjectMapper().valueToTree(fixture.receptor.events.getFirst());
+        assertEquals(3, json.get("total").asInt());
     }
 
     private static void assertViewingPermissions(Event event) {

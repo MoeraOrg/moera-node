@@ -18,6 +18,7 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.validate.ValidationFailure;
 import org.moera.node.data.EntrySharing;
 import org.moera.node.data.EntrySharingRepository;
+import org.moera.node.data.LinkedEntryRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.global.RequestContext;
@@ -49,6 +50,9 @@ class PostingSharingControllerTest {
     private EntrySharingRepository entrySharingRepository;
 
     @Mock
+    private LinkedEntryRepository linkedEntryRepository;
+
+    @Mock
     private DirectServeOperations directServeOperations;
 
     @Spy
@@ -60,6 +64,7 @@ class PostingSharingControllerTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(sharingOperations, "entrySharingRepository", entrySharingRepository);
+        ReflectionTestUtils.setField(sharingOperations, "linkedEntryRepository", linkedEntryRepository);
         ReflectionTestUtils.setField(sharingOperations, "directServeOperations", directServeOperations);
     }
 

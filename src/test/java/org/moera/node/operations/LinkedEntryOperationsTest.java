@@ -40,7 +40,7 @@ class LinkedEntryOperationsTest {
     @BeforeEach
     void setUp() {
         UniversalContext context = mock(UniversalContext.class);
-        when(context.nodeName()).thenReturn("local");
+        when(context.nodeName()).thenReturn("local_0");
         when(context.nodeId()).thenReturn(nodeId);
         when(linkedEntryRepository.save(any(LinkedEntry.class))).thenAnswer(invocation -> invocation.getArgument(0));
         ReflectionTestUtils.setField(operations, "universalContext", context);
@@ -54,7 +54,7 @@ class LinkedEntryOperationsTest {
         UUID targetId = UUID.randomUUID();
         Posting target = new Posting();
         target.setId(targetId);
-        when(postingRepository.findByNodeIdAndId(nodeId, targetId)).thenReturn(Optional.of(target));
+        when(postingRepository.findByNodeIdAndIdIncludingDeleted(nodeId, targetId)).thenReturn(Optional.of(target));
         EntryRevision revision = revision("local", targetId.toString());
         Body body = new Body(revision.getBody());
         body.setText(body.getText() + body.getText());
@@ -156,6 +156,8 @@ class LinkedEntryOperationsTest {
     void redirectedPickKeepsTheLinkAndResolvesToTheOriginalCopy() {
         LinkedEntry link = new LinkedEntry();
         link.setId(UUID.randomUUID());
+        link.setEntryRevision(revision("relay", "copy"));
+        link.setReceiverNodeName("relay_0");
         when(linkedEntryRepository.findByNodeIdAndId(nodeId, link.getId())).thenReturn(Optional.of(link));
         Pick pick = new Pick();
         pick.setNodeId(nodeId);

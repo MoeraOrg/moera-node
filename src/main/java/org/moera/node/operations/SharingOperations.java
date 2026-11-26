@@ -1,22 +1,34 @@
 package org.moera.node.operations;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 import jakarta.inject.Inject;
 
+import org.moera.lib.naming.NodeName;
 import org.moera.lib.node.types.SharingType;
 import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SharingInfo;
 import org.moera.lib.node.types.SharingsSliceInfo;
 import org.moera.lib.node.types.notifications.PostingSharedNotification;
 import org.moera.lib.node.types.notifications.PostingSharingUpdatedNotification;
 import org.moera.lib.node.types.notifications.PostingUnsharedNotification;
+import org.moera.lib.node.types.principal.AccessChecker;
+import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.validate.ValidationFailure;
 import org.moera.lib.node.types.validate.ValidationUtil;
+import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntrySharing;
 import org.moera.node.data.EntrySharingRepository;
+import org.moera.node.data.LinkedEntry;
+import org.moera.node.data.LinkedEntryRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.StoryRepository;
@@ -52,6 +64,9 @@ public class SharingOperations {
     private EntrySharingRepository entrySharingRepository;
 
     @Inject
+    private LinkedEntryRepository linkedEntryRepository;
+
+    @Inject
     private StoryRepository storyRepository;
 
     @Inject
@@ -60,19 +75,60 @@ public class SharingOperations {
     private final MomentFinder momentFinder = new MomentFinder();
 
     public SharingsSliceInfo getBefore(UUID entryId, long before, int limit) {
+        return getBefore(entryId, before, limit, AccessCheckers.ADMIN);
+    }
+
+    public SharingsSliceInfo getBefore(UUID entryId, long before, int limit, AccessChecker accessChecker) {
         List<EntrySharing> sharings = entrySharingRepository.findSlice(
             entryId, SafeInteger.MIN_VALUE, before, PageRequest.of(0, limit + 1)
         );
+        // Federated sharings use even moments, own sharings use odd moments, so it is possible to join them
+        // in a single stream
+        List<SharingInfo> page = Stream.concat(
+            sharings.stream().map(sharing -> SharingInfoUtil.build(sharing, directServeOperations)),
+            ownReferences(entryId).stream()
+                .filter(link -> link.getSharingMoment() <= before)
+                .filter(link ->
+                    accessChecker.isPrincipal(link.getEntryRevision().getEntry().getViewE(), Scope.VIEW_CONTENT)
+                )
+                .limit(limit + 1L)
+                .map(link -> SharingInfoUtil.build(link, universalContext.nodeName(), directServeOperations))
+        ).sorted(Comparator.comparingLong(SharingInfo::getMoment).reversed()).limit(limit + 1L).toList();
+
         SharingsSliceInfo sliceInfo = new SharingsSliceInfo();
         sliceInfo.setBefore(before);
-        sliceInfo.setAfter(sharings.size() <= limit ? SafeInteger.MIN_VALUE : sharings.get(limit).getMoment());
-        sliceInfo.setSharings(
-            sharings.stream()
-                .limit(limit)
-                .map(sharing -> SharingInfoUtil.build(sharing, directServeOperations))
-                .toList()
-        );
+        sliceInfo.setAfter(page.size() <= limit ? SafeInteger.MIN_VALUE : page.getLast().getMoment());
+        sliceInfo.setSharings(page.subList(0, Math.min(page.size(), limit)));
         return sliceInfo;
+    }
+
+    public void refreshTotal(UUID nodeId, UUID postingId) {
+        postingRepository.findByNodeIdAndIdForUpdate(nodeId, postingId)
+            .filter(Posting::isOriginal)
+            .ifPresent(this::updateTotal);
+    }
+
+    private void updateTotal(Posting posting) {
+        UUID id = posting.getId();
+        int total = entrySharingRepository.countByEntryId(id) + ownReferences(id).size();
+        if (total != posting.getTotalSharings()) {
+            posting.setTotalSharings(total);
+            universalContext.send(new PostingTotalSharingsUpdatedLiberin(posting, total));
+        }
+    }
+
+    private List<LinkedEntry> ownReferences(UUID postingId) {
+        List<LinkedEntry> links = linkedEntryRepository.findSharingLinks(postingId);
+        Set<UUID> sources = new HashSet<>();
+        return links.stream()
+            .filter(link -> {
+                EntryRevision revision = link.getEntryRevision();
+                Entry source = revision.getEntry();
+                EntryRevision signed = source.resolvePreviousRevision(null, source.getCurrentRevision());
+                return link.getReceiverNodeName().equals(NodeName.expand(source.getOwnerName()))
+                    && signed != null && revision.getId().equals(signed.getId()) && sources.add(source.getId());
+            })
+            .toList();
     }
 
     public static void validate(
@@ -154,11 +210,11 @@ public class SharingOperations {
         sharing.setEntry(posting);
         sharing.setEntryRevision(revision);
         sharing.setMoment(momentFinder.find(
-            moment -> entrySharingRepository.countMoments(posting.getId(), moment) == 0, sharing.getCreatedAt()
+            moment -> moment % 2 == 0 && entrySharingRepository.countMoments(posting.getId(), moment) == 0,
+            sharing.getCreatedAt()
         ));
         entrySharingRepository.saveAndFlush(sharing);
-        posting.setTotalSharings(entrySharingRepository.countByEntryId(posting.getId()));
-        universalContext.send(new PostingTotalSharingsUpdatedLiberin(posting, posting.getTotalSharings()));
+        updateTotal(posting);
 
         return sharing;
     }
@@ -222,10 +278,8 @@ public class SharingOperations {
 
         entrySharingRepository.deleteAll(sharings);
         entrySharingRepository.flush();
-        posting.setTotalSharings(entrySharingRepository.countByEntryId(posting.getId()));
-
         deletedLiberins.forEach(universalContext::send);
-        universalContext.send(new PostingTotalSharingsUpdatedLiberin(posting, posting.getTotalSharings()));
+        updateTotal(posting);
     }
 
 }
