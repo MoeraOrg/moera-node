@@ -1,6 +1,5 @@
 package org.moera.node.model;
 
-import org.moera.lib.naming.NodeName;
 import org.moera.lib.node.types.SubscriptionDescription;
 import org.moera.lib.node.types.SubscriptionOperations;
 import org.moera.lib.node.types.principal.Principal;
@@ -11,7 +10,7 @@ public class SubscriptionDescriptionUtil {
     public static void toUserSubscription(SubscriptionDescription description, UserSubscription subscription) {
         subscription.setSubscriptionType(description.getType());
         subscription.setFeedName(description.getFeedName());
-        subscription.setRemoteNodeName(NodeName.expand(description.getRemoteNodeName()));
+        subscription.setRemoteNodeName(description.getRemoteNodeName());
         subscription.setRemoteFeedName(description.getRemoteFeedName());
         subscription.setRemoteEntryId(description.getRemotePostingId());
         if (description.getReason() != null) {

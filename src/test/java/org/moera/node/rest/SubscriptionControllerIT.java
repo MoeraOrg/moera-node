@@ -146,7 +146,7 @@ class SubscriptionControllerIT {
 
         description.setType(SubscriptionType.FEED);
         description.setFeedName(Feed.NEWS);
-        description.setRemoteNodeName("remote");
+        description.setRemoteNodeName("remote_0");
         description.setRemoteFeedName(Feed.TIMELINE);
     }
 

@@ -153,7 +153,7 @@ class EntrySharingIT {
             Posting posting = new Posting();
             posting.setId(postingId);
             posting.setNodeId(nodeId);
-            posting.setOwnerName("local");
+            posting.setOwnerName("local_0");
             entityManager.persist(posting);
             EntryRevision revision = new EntryRevision();
             revision.setId(revisionId);
@@ -169,7 +169,7 @@ class EntrySharingIT {
     @Test
     void localReferencesAppearAlongsideOtherSharingsUntilTheSourceIsDeleted() {
         add(shared("alice", null, null, null, null, "copy"));
-        UUID sourceId = addLocalReference("local", Principal.PUBLIC);
+        UUID sourceId = addLocalReference("local_0", Principal.PUBLIC);
 
         transaction.executeWithoutResult(status -> {
             assertEquals(2, entityManager.find(Posting.class, postingId).getTotalSharings());

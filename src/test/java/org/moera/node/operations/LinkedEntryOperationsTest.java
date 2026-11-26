@@ -162,9 +162,9 @@ class LinkedEntryOperationsTest {
         Pick pick = new Pick();
         pick.setNodeId(nodeId);
         pick.setLinkedEntry(link);
-        pick.setRemoteNodeName("relay");
+        pick.setRemoteNodeName("relay_0");
         pick.setRemotePostingId("copy");
-        Pick redirected = pick.redirectTo("original", "original-posting");
+        Pick redirected = pick.redirectTo("original_0", "original-posting");
         Posting target = new Posting();
         target.setNodeId(nodeId);
 

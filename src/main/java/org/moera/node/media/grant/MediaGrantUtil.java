@@ -5,7 +5,6 @@ import java.security.interfaces.ECPrivateKey;
 import java.sql.Timestamp;
 
 import org.moera.lib.crypto.CryptoUtil;
-import org.moera.lib.naming.NodeName;
 import org.moera.lib.node.Fingerprints;
 import org.moera.lib.util.Util;
 
@@ -37,7 +36,7 @@ public class MediaGrantUtil {
         PrivateKey signingKey
     ) {
         byte[] fingerprint = Fingerprints.mediaGrant(
-            NodeName.expand(nodeName),
+            nodeName,
             mediaId,
             expires,
             download,

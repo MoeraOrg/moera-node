@@ -107,7 +107,7 @@ public class LinkedEntryOperations {
             target == null
             || !target.isOriginal()
             || !source.isOriginal()
-            || !Objects.equals(NodeName.expand(source.getOwnerName()), link.getReceiverNodeName())
+            || !Objects.equals(source.getOwnerName(), link.getReceiverNodeName())
         ) {
             return;
         }
@@ -162,7 +162,7 @@ public class LinkedEntryOperations {
     }
 
     private boolean isLocal(String nodeName) {
-        return Objects.equals(universalContext.nodeName(), NodeName.expand(nodeName));
+        return Objects.equals(universalContext.nodeName(), nodeName);
     }
 
 }

@@ -8,7 +8,6 @@ import java.util.UUID;
 import java.util.stream.Stream;
 import jakarta.inject.Inject;
 
-import org.moera.lib.naming.NodeName;
 import org.moera.lib.node.types.SharingType;
 import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.lib.node.types.AvatarImage;
@@ -125,7 +124,7 @@ public class SharingOperations {
                 EntryRevision revision = link.getEntryRevision();
                 Entry source = revision.getEntry();
                 EntryRevision signed = source.resolvePreviousRevision(null, source.getCurrentRevision());
-                return link.getReceiverNodeName().equals(NodeName.expand(source.getOwnerName()))
+                return link.getReceiverNodeName().equals(source.getOwnerName())
                     && signed != null && revision.getId().equals(signed.getId()) && sources.add(source.getId());
             })
             .toList();

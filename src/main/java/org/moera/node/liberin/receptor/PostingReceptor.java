@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import jakarta.inject.Inject;
 
-import org.moera.lib.naming.NodeName;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.SearchContentUpdateType;
@@ -360,7 +359,7 @@ public class PostingReceptor extends EntryReceptor {
             return;
         }
 
-        String owner = NodeName.expand(posting.getOwnerName());
+        String owner = posting.getOwnerName();
         updateOwnSharingTotals(posting.getNodeId(), owner, links, latestLinks);
         Predicate<Reference> otherOwner = ref -> !Objects.equals(owner, ref.nodeName());
         Set<Reference> currentReferences = references(links, otherOwner);

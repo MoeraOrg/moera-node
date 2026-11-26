@@ -5,7 +5,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
-import org.moera.lib.naming.NodeName;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Entry;
@@ -41,7 +40,7 @@ abstract class EntryReceptor extends LiberinReceptorBase {
         if (names.equals(previousNames)) {
             return;
         }
-        String ownerName = NodeName.expand(entry.getOwnerName());
+        String ownerName = entry.getOwnerName();
         names.stream()
             .filter(name -> !name.equals(ownerName) && !previousNames.contains(name))
             .forEach(name -> favorOperations.addFavor(entry.getNodeId(), name, FavorType.MENTION));
@@ -60,9 +59,8 @@ abstract class EntryReceptor extends LiberinReceptorBase {
     }
 
     protected Set<String> mentionedRecipients(Set<String> mentions, String ownerName, Principal view) {
-        String owner = NodeName.expand(ownerName);
         return mentions.stream()
-            .filter(name -> !name.equals(owner))
+            .filter(name -> !name.equals(ownerName))
             .filter(name -> canView(name, view))
             .collect(Collectors.toSet());
     }

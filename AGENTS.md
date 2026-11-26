@@ -55,6 +55,13 @@
    public API. A media file owner ID in the implementation is called a media file ID in the public API, and a media
    file ID in the implementation is called a media file hash in the public API.
 
+# Node names
+
+1. Use full (expanded) node names, including the generation suffix, in API requests and responses and in the database.
+   Internal code can rely on this format without expanding or checking the name again.
+2. Short node names may appear only in URLs, text such as posting or comment bodies, and search queries. Normalize
+   names extracted from these inputs with `NodeName.expand()` before passing them to other code.
+
 # Web UI
 
 1. Web UI is the built-in web interface of `moera-node`, intended for limited clients, search engines, and AI agents.
