@@ -47,6 +47,8 @@
 - name: naming.operation.registered-name
   type: string
   internal: true
+  modifiers:
+    nodeName: true
 
 - name: naming.operation.signing-key
   type: PrivateKey
@@ -69,6 +71,8 @@
 - name: profile.node-name
   type: string
   internal: true
+  modifiers:
+    nodeName: true
 
 - name: profile.full-name
   type: string
@@ -649,6 +653,8 @@
   privileged: true
   defaultValue:
   title: Automatically subscribe to the blog
+  modifiers:
+    nodeName: true
 
 - name: subscription.auto.forced
   type: bool
@@ -689,6 +695,9 @@
   type: string
   defaultValue: ""
   title: Sheriffs allowed to supervise the Timeline
+  modifiers:
+    nodeName: true
+    separator: ","
 
 - name: sheriffs.timeline.marks
   type: string
@@ -712,6 +721,9 @@
   type: string
   defaultValue: "search_0"
   title: Known search engines that are automatically allowed to receive notifications
+  modifiers:
+    nodeName: true
+    separator: ","
 
 - name: search.max-unknown
   type: int
@@ -726,6 +738,8 @@
   type: string
   defaultValue: "search_0"
   title: Recommendation service to use
+  modifiers:
+    nodeName: true
 
 - name: recommendations.safe
   type: bool
@@ -736,6 +750,8 @@
   type: string
   defaultValue: "google-play-sheriff_0"
   title: Sheriff supervising the recommendations for safety
+  modifiers:
+    nodeName: true
 
 - name: recommendations.frequency
   type: string
@@ -793,3 +809,6 @@
   type: string
   defaultValue: "security-guard_0"
   title: Nodes serving as malware detection services
+  modifiers:
+    nodeName: true
+    separator: ","
